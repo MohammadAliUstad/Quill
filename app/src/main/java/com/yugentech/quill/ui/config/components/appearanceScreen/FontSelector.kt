@@ -21,10 +21,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.yugentech.quill.theme.ThemeViewModel
-import com.yugentech.quill.theme.getters.AppFont
-import com.yugentech.quill.theme.tokens.corners
-import com.yugentech.quill.theme.tokens.spacing
 import com.yugentech.quill.ui.dash.common.SectionHeader
+import com.yugentech.theme.getters.AppFont
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.spacing
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
