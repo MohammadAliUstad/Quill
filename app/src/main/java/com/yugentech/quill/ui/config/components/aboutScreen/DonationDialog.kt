@@ -36,10 +36,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.yugentech.quill.theme.tokens.components
-import com.yugentech.quill.theme.tokens.corners
-import com.yugentech.quill.theme.tokens.icons
-import com.yugentech.quill.theme.tokens.spacing
+import com.yugentech.theme.tokens.components
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.icons
+import com.yugentech.theme.tokens.spacing
 
 @Composable
 fun DonationDialog(
