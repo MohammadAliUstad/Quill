@@ -49,14 +49,14 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.core.net.toUri
-import com.yugentech.quill.theme.tokens.components
-import com.yugentech.quill.theme.tokens.corners
-import com.yugentech.quill.theme.tokens.icons
-import com.yugentech.quill.theme.tokens.spacing
+import com.yugentech.theme.tokens.components
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.icons
+import com.yugentech.theme.tokens.spacing
 import com.yugentech.quill.ui.config.models.license.LicensesContent
 import com.yugentech.quill.ui.dash.common.SectionHeader
 import com.yugentech.quill.ui.dash.common.itemShape
-import com.yugentech.quill.utils.AppConstants.GITHUB_URL
+import com.yugentech.theme.tokens.AppConstants.GITHUB_URL
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
