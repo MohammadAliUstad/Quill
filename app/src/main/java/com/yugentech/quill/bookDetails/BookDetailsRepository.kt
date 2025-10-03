@@ -1,29 +1,20 @@
 package com.yugentech.quill.bookDetails
 
 import com.yugentech.quill.network.domain.Book
-import com.yugentech.quill.room.entities.BookDetailsEntity
-import com.yugentech.quill.room.entities.LibraryBookEntity
-import com.yugentech.quill.room.entities.UserCategoryEntity
+import com.yugentech.quill.room.entities.BookEntity
+import com.yugentech.quill.room.entities.CategoryEntity
 import kotlinx.coroutines.flow.Flow
 
 interface BookDetailsRepository {
-
-    // --- Flow-based queries for real-time updates ---
-    fun getDetails(bookId: String): Flow<BookDetailsEntity?>
-    fun getLibraryBook(bookId: String): Flow<LibraryBookEntity?>
-    fun getAllCategories(): Flow<List<UserCategoryEntity>>
-
-    // --- Snapshot queries for immediate state ---
-    suspend fun getDetailsSnapshot(bookId: String): BookDetailsEntity?
-    suspend fun getLibraryBookSnapshot(bookId: String): LibraryBookEntity?
-
-    // --- Download management ---
+    fun getBook(bookId: String): Flow<BookEntity?>
+    fun getAllCategories(): Flow<List<CategoryEntity>>
+    suspend fun isBookInLibrary(bookId: String): Boolean
+    suspend fun getBookOnce(bookId: String): BookEntity?
     suspend fun startDownload(book: Book)
     suspend fun removeDownload(bookId: String)
-
-    // --- Category management ---
-    suspend fun updateCategory(bookId: String, newCategory: String)
-
-    // --- Favorite management ---
-    suspend fun toggleFavorite(bookId: String, isFavorite: Boolean)
+    suspend fun deleteBook(bookId: String)
+    suspend fun updateCategory(book: Book, newCategory: String)
+    suspend fun updateFavorite(book: Book, isFavorite: Boolean)
+    suspend fun updateProgress(bookId: String, progressPercent: Float, chapterIndex: Int)
+    suspend fun resetReadingProgress(bookId: String)
 }

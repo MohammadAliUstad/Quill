@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/liked"
-        android:drawable="@drawable/vd_heart_full"
+        android:drawable="@drawable/vd_heart_filled"
         android:state_activated="true"/>
 
     <item
