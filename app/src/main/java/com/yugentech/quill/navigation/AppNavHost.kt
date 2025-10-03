@@ -4,39 +4,44 @@ package com.yugentech.quill.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.yugentech.quill.bookDetails.BookDetailsViewModel
+import com.yugentech.quill.category.CategoryViewModel
+import com.yugentech.quill.library.AllBooksArgs
 import com.yugentech.quill.library.LibraryViewModel
+import com.yugentech.quill.network.api.GutenbergViewModel
+import com.yugentech.quill.reader.ReaderActivity
+import com.yugentech.quill.standardEBooks.StandardViewModel
 import com.yugentech.quill.theme.ThemeViewModel
 import com.yugentech.quill.ui.config.screens.AboutScreen
 import com.yugentech.quill.ui.config.screens.AppearanceScreen
 import com.yugentech.quill.ui.config.screens.AttributionsScreen
+import com.yugentech.quill.ui.dash.screens.StorageScreen
 import com.yugentech.quill.ui.dash.screens.airaScreen.AiraChatScreen
+import com.yugentech.quill.ui.dash.screens.bookDetailsScreen.parent.BookDetailsScreen
+import com.yugentech.quill.ui.dash.screens.categoryScreen.parent.CategoryScreen
+import com.yugentech.quill.ui.dash.screens.standardScreen.parent.GutenbergScreen
+import com.yugentech.quill.ui.dash.screens.libraryScreen.parent.AllBooksScreen
 import com.yugentech.quill.ui.dash.screens.mainScreen.parent.MainScreen
+import com.yugentech.quill.ui.dash.screens.standardScreen.parent.StandardScreen
 import com.yugentech.quill.ui.dash.utils.defaultEnterTransition
 import com.yugentech.quill.ui.dash.utils.defaultExitTransition
 import com.yugentech.quill.ui.dash.utils.defaultPopEnterTransition
 import com.yugentech.quill.ui.dash.utils.defaultPopExitTransition
-import com.yugentech.quill.ui.dash.screens.readerScreen.parent.ReaderScreen
-import com.yugentech.quill.ui.dash.screens.bookDetailsScreen.parent.BookDetailsScreen
-import com.yugentech.quill.ui.dash.screens.ManageCategoriesScreen
-import com.yugentech.quill.ui.dash.screens.standardScreen.parent.StandardScreen
-import com.yugentech.quill.viewModels.StandardViewModel
-import kotlinx.serialization.json.Json
 import org.koin.androidx.compose.koinViewModel
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AppNavHost(
     navController: NavHostController
 ) {
-    AnimatedNavHost(
+    // Context is needed to start the Activity directly
+    val context = LocalContext.current
+
+    NavHost(
         navController = navController,
         startDestination = Screens.Main.route,
         enterTransition = { defaultEnterTransition() },
@@ -44,148 +49,144 @@ fun AppNavHost(
         popEnterTransition = { defaultPopEnterTransition() },
         popExitTransition = { defaultPopExitTransition() }
     ) {
-        composable(Screens.Licenses.route) {
-            AttributionsScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-
         composable(Screens.Main.route) {
             val libraryViewModel: LibraryViewModel = koinViewModel()
 
             MainScreen(
                 onLibraryBookClick = { book ->
-                    val bookJson = Json.encodeToString(book)
-                    val encodedJson = URLEncoder.encode(bookJson, StandardCharsets.UTF_8.toString())
-                    navController.navigate("${Screens.BookDetailsScreen.route}/$encodedJson")
+                    navController.navigate(Screens.BookDetailsScreen.createRoute(bookId = book.id))
                 },
-                onDiscoverItemClick = { },
+                onSeeAllClick = { title, books ->
+                    AllBooksArgs.title = title
+                    AllBooksArgs.books = books
+                    navController.navigate("all_books")
+                },
+                onResumeClick = { book ->
+                    context.startActivity(
+                        ReaderActivity.createIntent(context, book.id, null)
+                    )
+                },
                 onSourceClick = { sourceId ->
                     if (sourceId == "standard_ebooks") {
                         navController.navigate(Screens.StandardEbooks.route)
+                    } else if (sourceId == "gutenberg") {
+                        navController.navigate(Screens.Gutenberg.route)
                     }
                 },
-                onAboutClick = {
-                    navController.navigate(Screens.About.route)
-                },
-                onAppearanceClick = {
-                    navController.navigate(Screens.Appearance.route)
-                },
-                onManageCategories = {
-                    navController.navigate(Screens.ManageCategories.route)
-                },
-                onFABClick = {
-                    navController.navigate(Screens.Aira.route)
-                },
+                onAboutClick = { navController.navigate(Screens.About.route) },
+                onAppearanceClick = { navController.navigate(Screens.Appearance.route) },
+                onManageStorage = { navController.navigate(Screens.Storage.route) },
+                onManageCategories = { navController.navigate(Screens.ManageCategories.route) },
                 libraryViewModel = libraryViewModel
             )
         }
 
-        composable(Screens.Aira.route) {
-            AiraChatScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                }
+        composable(Screens.Gutenberg.route) {
+            val gutenbergViewModel: GutenbergViewModel = koinViewModel()
+            GutenbergScreen(
+                onBackClick = { navController.popBackStack() },
+                onNavigateByContent = { book ->
+                    navController.navigate(Screens.BookDetailsScreen.createRoute(book = book))
+                },
+                viewModel = gutenbergViewModel
             )
         }
 
-        composable(Screens.ManageCategories.route) {
-            ManageCategoriesScreen(
-                onBack = {
-                    navController.popBackStack()
+        composable(Screens.AllBooks.route) {
+            AllBooksScreen(
+                onBackClick = { navController.popBackStack() },
+                onBookClick = { book ->
+                    navController.navigate(Screens.BookDetailsScreen.createRoute(bookId = book.id))
                 }
             )
         }
 
         composable(Screens.StandardEbooks.route) {
             val standardViewModel: StandardViewModel = koinViewModel()
+
             StandardScreen(
                 onBackClick = { navController.popBackStack() },
-                onBookClick = { book ->
-                    val bookJson = Json.encodeToString(book)
-                    val encodedJson = URLEncoder.encode(bookJson, StandardCharsets.UTF_8.toString())
-                    navController.navigate("${Screens.BookDetailsScreen.route}/$encodedJson")
+                onNavigateById = { bookId ->
+                    navController.navigate(Screens.BookDetailsScreen.createRoute(bookId = bookId))
                 },
+                onNavigateByContent = { book ->
+                    navController.navigate(Screens.BookDetailsScreen.createRoute(book = book))
+                },
+
                 standardViewModel = standardViewModel
             )
         }
 
-        // ... inside AppNavHost content
-
         composable(
-            route = "${Screens.BookDetailsScreen.route}/{book_json}",
-            arguments = listOf(
-                navArgument("book_json") { type = NavType.StringType }
-            )
+            route = Screens.BookDetailsScreen.routeWithArgs,
+            arguments = Screens.BookDetailsScreen.arguments
         ) {
             val bookDetailsViewModel: BookDetailsViewModel = koinViewModel()
 
             BookDetailsScreen(
                 onBackClick = { navController.popBackStack() },
-                // Inside AppNavHost composable for BookDetailsScreen
                 onReadClick = { bookId, chapterHref ->
-                    // FIX: Always encode the bookId before passing it in a route
-                    val encodedBookId = URLEncoder.encode(bookId, StandardCharsets.UTF_8.toString())
-
-                    if (chapterHref != null) {
-                        val encodedHref = URLEncoder.encode(chapterHref, StandardCharsets.UTF_8.toString())
-                        navController.navigate("reader/$encodedBookId?href=$encodedHref")
-                    } else {
-                        navController.navigate("reader/$encodedBookId")
-                    }
+                    context.startActivity(
+                        ReaderActivity.createIntent(context, bookId, chapterHref)
+                    )
                 },
-                onManageCategoriesClick = {
-                    navController.navigate(Screens.ManageCategories.route)
-                },
+                // ADDED: Navigation to Aira Chat
+                onAiraClick = { navController.navigate(Screens.Aira.route) },
                 bookDetailsViewModel = bookDetailsViewModel
             )
         }
 
-        composable(
-            route = "reader/{bookId}?href={href}",
-            arguments = listOf(
-                navArgument("bookId") { type = NavType.StringType },
-                navArgument("href") {
-                    type = NavType.StringType
-                    nullable = true // It's optional!
-                    defaultValue = null
-                }
-            )
-        ) { backStackEntry ->
-            val bookId = backStackEntry.arguments?.getString("bookId") ?: return@composable
-            val href = backStackEntry.arguments?.getString("href")
-
-            ReaderScreen(
-                bookId = bookId,
-                initialChapterHref = href,
-                onBackClick = {
-                    navController.popBackStack()
+        composable("all_books") {
+            AllBooksScreen(
+                onBackClick = { navController.popBackStack() },
+                onBookClick = { book ->
+                    navController.navigate(Screens.BookDetailsScreen.createRoute(bookId = book.id))
                 }
             )
         }
 
-        // Defines the appearance settings screen
         composable(Screens.Appearance.route) {
             val themeViewModel: ThemeViewModel = koinViewModel()
+
             AppearanceScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
+                onNavigateBack = { navController.popBackStack() },
                 themeViewModel = themeViewModel
             )
         }
 
-        // Defines the about screen
         composable(Screens.About.route) {
             AboutScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
+                onNavigateBack = { navController.popBackStack() },
                 onNavigateToLicenses = {
                     navController.navigate(Screens.Licenses.route) {
                         launchSingleTop = true
                     }
                 }
+            )
+        }
+
+        composable(Screens.Aira.route) {
+            AiraChatScreen(onBackClick = { navController.popBackStack() })
+        }
+
+        composable(Screens.Licenses.route) {
+            AttributionsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screens.Storage.route) {
+            StorageScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screens.ManageCategories.route) {
+            val categoryViewModel: CategoryViewModel = koinViewModel()
+
+            CategoryScreen(
+                onBack = { navController.popBackStack() },
+                categoryViewModel = categoryViewModel
             )
         }
     }
