@@ -28,9 +28,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.yugentech.quill.R
-import com.yugentech.quill.theme.tokens.components
-import com.yugentech.quill.theme.tokens.corners
-import com.yugentech.quill.theme.tokens.spacing
+import com.yugentech.theme.tokens.components
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.spacing
 
 @Composable
 fun AppInfoCard() {
