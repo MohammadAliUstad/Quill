@@ -1,4 +1,4 @@
-package com.yugentech.quill.theme
+package com.yugentech.theme
 
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme

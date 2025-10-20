@@ -21,11 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.yugentech.quill.theme.ThemeViewModel
-import com.yugentech.quill.theme.tokens.spacing
 import com.yugentech.quill.ui.config.components.appearanceScreen.AmoledThemeSelector
 import com.yugentech.quill.ui.config.components.appearanceScreen.FontSelector
 import com.yugentech.quill.ui.config.components.appearanceScreen.ThemeColorSelector
 import com.yugentech.quill.ui.config.components.appearanceScreen.ThemeModeSelector
+import com.yugentech.theme.tokens.spacing
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
