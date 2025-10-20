@@ -1,4 +1,4 @@
-package com.yugentech.quill.theme.tokens.dimensions
+package com.yugentech.theme.tokens.dimensions
 
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.EaseInOutCubic
