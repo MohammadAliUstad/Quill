@@ -1,4 +1,4 @@
-package com.yugentech.quill.theme.getters
+package com.yugentech.theme.getters
 
 import androidx.annotation.FontRes
 import androidx.compose.ui.text.ExperimentalTextApi
@@ -6,12 +6,12 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
-import com.yugentech.quill.R
+import com.yugentech.theme.R
 
 enum class AppFont(
     val id: String,
     val displayName: String,
-    @FontRes val regularResId: Int
+    @param:FontRes val regularResId: Int
 ) {
     Google("google", "Google Sans", R.font.google_sans_flex),
     Outfit("outfit", "Outfit", R.font.outfit),
