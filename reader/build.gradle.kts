@@ -45,6 +45,7 @@ dependencies {
     implementation(project(":aira"))
     implementation(project(":theme"))
     implementation(project(":database"))
+    implementation(project(":domain"))
 
     implementation(libs.readium.shared)
     implementation(libs.readium.streamer)
