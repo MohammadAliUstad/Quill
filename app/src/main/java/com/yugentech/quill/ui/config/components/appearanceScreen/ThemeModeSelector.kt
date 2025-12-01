@@ -28,10 +28,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.R
 import com.yugentech.quill.theme.ThemeViewModel
-import com.yugentech.quill.theme.models.ThemeMode
-import com.yugentech.quill.theme.tokens.spacing
-import com.yugentech.quill.ui.dash.common.itemShape
 import com.yugentech.quill.ui.dash.common.SectionHeader
+import com.yugentech.quill.ui.dash.common.itemShape
+import com.yugentech.theme.models.ThemeMode
+import com.yugentech.theme.tokens.spacing
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
