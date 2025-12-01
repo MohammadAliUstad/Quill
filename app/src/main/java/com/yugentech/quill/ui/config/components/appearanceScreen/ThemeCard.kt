@@ -27,8 +27,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.yugentech.quill.R
-import com.yugentech.quill.theme.tokens.icons
-import com.yugentech.quill.theme.tokens.spacing
+import com.yugentech.theme.tokens.icons
+import com.yugentech.theme.tokens.spacing
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
