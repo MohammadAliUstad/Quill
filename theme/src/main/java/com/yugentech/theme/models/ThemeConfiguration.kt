@@ -1,12 +1,14 @@
-package com.yugentech.quill.theme.models
+package com.yugentech.theme.models
 
-import com.yugentech.quill.theme.getters.AppFont
+import android.os.Parcelable
+import com.yugentech.theme.getters.AppFont
+import kotlinx.parcelize.Parcelize
 
-// Holds all user-customizable theme settings in a single state object
+@Parcelize
 data class ThemeConfiguration(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val colorTheme: ColorTheme = ColorTheme.CANYON,
     val useDynamicColors: Boolean = false,
     val isAmoledMode: Boolean = false,
     val appFont: AppFont = AppFont.Google
-)
+) : Parcelable
