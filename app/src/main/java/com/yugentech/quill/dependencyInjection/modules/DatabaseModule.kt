@@ -16,18 +16,14 @@ val databaseModule = module {
     }
 
     single {
-        get<AppDatabase>().libraryDao()
-    }
-
-    single {
-        get<AppDatabase>().catalogDao()
-    }
-
-    single {
-        get<AppDatabase>().bookDetailsDao()
+        get<AppDatabase>().bookDao()
     }
 
     single {
         get<AppDatabase>().categoryDao()
+    }
+
+    single {
+        get<AppDatabase>().catalogDao()
     }
 }
