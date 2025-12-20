@@ -1,12 +1,12 @@
-package com.yugentech.quill.theme.tokens
+package com.yugentech.theme.tokens
 
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.theme.tokens.dimensions.ComponentTokens
-import com.yugentech.quill.theme.tokens.dimensions.CornerTokens
-import com.yugentech.quill.theme.tokens.dimensions.ElevationTokens
-import com.yugentech.quill.theme.tokens.dimensions.IconSizeTokens
-import com.yugentech.quill.theme.tokens.dimensions.SpacingTokens
-import com.yugentech.quill.theme.tokens.dimensions.StrokeTokens
+import com.yugentech.theme.tokens.dimensions.ComponentTokens
+import com.yugentech.theme.tokens.dimensions.CornerTokens
+import com.yugentech.theme.tokens.dimensions.ElevationTokens
+import com.yugentech.theme.tokens.dimensions.IconSizeTokens
+import com.yugentech.theme.tokens.dimensions.SpacingTokens
+import com.yugentech.theme.tokens.dimensions.StrokeTokens
 
 // Aggregates all specific token categories into a single design system object
 data class DesignTokens(
@@ -31,8 +31,8 @@ val TokensCompact = DesignTokens(
         l = 24.dp,
         xl = 32.dp,
         xxl = 48.dp,
-        jumbo  = 56.dp,
-        edge  = 32.dp,
+        jumbo = 56.dp,
+        edge = 32.dp,
     ),
     corners = CornerTokens(
         small = 8.dp,
@@ -74,7 +74,7 @@ val TokensCompact = DesignTokens(
         controlBarItemSize = 96.dp,
         controlBarItemWidthWide = 128.dp,
         onboardingImageContainer = 280.dp,
-        onboardingIndicatorHeight  = 10.dp,
+        onboardingIndicatorHeight = 10.dp,
     ),
     elevation = ElevationTokens(
         level0 = 0.dp,
