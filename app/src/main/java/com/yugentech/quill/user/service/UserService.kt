@@ -1,9 +1,9 @@
-package com.yugentech.sessions.user.service
+package com.yugentech.quill.user.service
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.yugentech.sessions.auth.mapper.AuthErrorMapper
-import com.yugentech.sessions.user.model.UserData
-import com.yugentech.sessions.user.result.UserResult
+import com.yugentech.quill.auth.mapper.AuthErrorMapper
+import com.yugentech.quill.database.model.UserData
+import com.yugentech.quill.user.result.UserResult
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
