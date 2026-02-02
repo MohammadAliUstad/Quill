@@ -1,0 +1,131 @@
+package com.yugentech.quill.utils
+
+import android.app.Activity
+import android.content.Context
+import com.android.billingclient.api.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
+import timber.log.Timber
+
+class BillingManager(context: Context) {
+
+    // Emits purchase success messages OR errors to be collected by the UI
+    private val _purchaseEvent = MutableSharedFlow<String>()
+    val purchaseEvent = _purchaseEvent.asSharedFlow()
+
+    private var productDetailsCache: List<ProductDetails> = emptyList()
+
+    // List of product IDs defined in the Google Play Console
+    private val productIds = listOf("donation_coffee", "donation_lunch")
+
+    // Handles updates when a purchase is completed or canceled
+    private val purchasesUpdatedListener = PurchasesUpdatedListener { result, purchases ->
+        if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+            for (purchase in purchases) {
+                handlePurchase(purchase)
+            }
+        } else if (result.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
+            Timber.i("User canceled the purchase")
+        } else {
+            // ERROR HANDLING: Emit the error to the UI so the Toast can show it
+            val errorMessage = "Billing error: ${result.debugMessage.ifBlank { "Unknown Error" }}"
+            Timber.e(errorMessage)
+            CoroutineScope(Dispatchers.Main).launch {
+                _purchaseEvent.emit(errorMessage)
+            }
+        }
+    }
+
+    // Initializes the BillingClient with the listener attached
+    private val billingClient = BillingClient.newBuilder(context)
+        .setListener(purchasesUpdatedListener)
+        .enablePendingPurchases()
+        .build()
+
+    // Connects to Google Play Billing service and queries products on success
+    fun startConnection() {
+        billingClient.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(billingResult: BillingResult) {
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    Timber.d("Billing Setup Done")
+                    queryProducts()
+                } else {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        _purchaseEvent.emit("Billing Setup Failed")
+                    }
+                }
+            }
+            override fun onBillingServiceDisconnected() {
+                Timber.w("Billing Service Disconnected")
+            }
+        })
+    }
+
+    // Fetches product details (price, title) asynchronously from Google Play
+    private fun queryProducts() {
+        val params = QueryProductDetailsParams.newBuilder()
+            .setProductList(
+                productIds.map {
+                    QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId(it)
+                        .setProductType(BillingClient.ProductType.INAPP)
+                        .build()
+                }
+            )
+            .build()
+
+        billingClient.queryProductDetailsAsync(params) { result, productDetailsList ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                productDetailsCache = productDetailsList
+                Timber.d("Products fetched: ${productDetailsList.size}")
+            } else {
+                Timber.e("Failed to query products: ${result.debugMessage}")
+            }
+        }
+    }
+
+    // Initiates the Google Play purchase flow for a specific product
+    fun launchPurchaseFlow(activity: Activity, productId: String) {
+        val productDetails = productDetailsCache.find { it.productId == productId }
+
+        if (productDetails != null) {
+            val productDetailsParamsList = listOf(
+                BillingFlowParams.ProductDetailsParams.newBuilder()
+                    .setProductDetails(productDetails)
+                    .build()
+            )
+
+            val billingFlowParams = BillingFlowParams.newBuilder()
+                .setProductDetailsParamsList(productDetailsParamsList)
+                .build()
+
+            billingClient.launchBillingFlow(activity, billingFlowParams)
+        } else {
+            // ERROR HANDLING: Product not found (e.g. no internet when loading)
+            CoroutineScope(Dispatchers.Main).launch {
+                _purchaseEvent.emit("Product details not loaded. Please check internet.")
+            }
+        }
+    }
+
+    // Consumes the purchase to allow it to be bought again (for donations/consumables)
+    private fun handlePurchase(purchase: Purchase) {
+        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+            val consumeParams = ConsumeParams.newBuilder()
+                .setPurchaseToken(purchase.purchaseToken)
+                .build()
+
+            billingClient.consumeAsync(consumeParams) { result, _ ->
+                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                    Timber.d("Donation Consumed")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        _purchaseEvent.emit("Thank you for your support!")
+                    }
+                }
+            }
+        }
+    }
+}
