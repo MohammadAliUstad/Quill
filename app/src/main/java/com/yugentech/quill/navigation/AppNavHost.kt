@@ -34,6 +34,7 @@ import com.yugentech.quill.ui.dash.utils.defaultExitTransition
 import com.yugentech.quill.ui.dash.utils.defaultPopEnterTransition
 import com.yugentech.quill.ui.dash.utils.defaultPopExitTransition
 import com.yugentech.quill.ui.dash.utils.formatTime
+import com.yugentech.quill.ui.screens.BookDetailsScreen
 import com.yugentech.quill.viewModels.HomeViewModel
 import com.yugentech.quill.viewModels.LoginViewModel
 import com.yugentech.quill.viewModels.ProfileViewModel
@@ -211,59 +212,57 @@ fun AppNavHost(
             }
         }
 
-        // Defines the main dashboard screen
         composable(Screens.Main.route) {
             Timber.v("Composing Main Screen")
             val currentUserId = authState.userId
 
-            val homeViewModel: HomeViewModel = koinViewModel()
-            val notificationsViewModel: NotificationsViewModel = koinViewModel()
-            val profileViewModel: ProfileViewModel = koinViewModel()
-            val timerViewModel: TimerViewModel = koinViewModel()
+            // We only need these two ViewModels for the new setup
+            // (Home, Timer, and Profile ViewModels are no longer needed here)
             val settingsViewModel: SettingsViewModel = koinViewModel()
+            val notificationsViewModel: NotificationsViewModel = koinViewModel()
 
             if (currentUserId != null) {
                 MainScreen(
-                    userId = currentUserId,
+                    // 1. Navigation to Book Details
+                    onBookClick = {
+                        navController.navigate("Screens.BookDetails.route")
+                    },
+
+                    // 2. Settings Actions
                     onSignOut = {
-                        Timber.i("User requested Sign Out")
-                        timerViewModel.onLeave()
-                        timerViewModel.updateSessionTask("")
-                        notificationsViewModel.cancelReminders()
-                        loginViewModel.signOut()
-                    },
-                    onExit = {
-                        Timber.i("User requested App Exit")
-                        timerViewModel.onLeave()
-                        (context as? Activity)?.finish()
-                    },
-                    onEditProfile = {
-                        navController.navigate(Screens.EditProfile.route) {
-                            launchSingleTop = true
+                        // TODO: Call your AuthViewModel signOut here
+                        // authViewModel.signOut()
+                        navController.navigate(Screens.SignIn.route) {
+                            popUpTo(0) // Clear backstack
                         }
                     },
-                    homeViewModel = homeViewModel,
-                    profileViewModel = profileViewModel,
-                    timerViewModel = timerViewModel,
-                    settingsViewModel = settingsViewModel,
-                    notificationsViewModel = notificationsViewModel,
                     onAbout = {
-                        navController.navigate(Screens.About.route) {
-                            launchSingleTop = true
-                        }
+                        // TODO: Navigate to About Dialog/Screen
+                        // navController.navigate(Screens.About.route)
                     },
                     onAppearance = {
-                        navController.navigate(Screens.Appearance.route) {
-                            launchSingleTop = true
-                        }
+                        // TODO: Navigate to Appearance Settings
+                        // navController.navigate(Screens.Appearance.route)
                     },
-                    onViewInsights = {
-                        navController.navigate(Screens.Insights.route) {
-                            launchSingleTop = true
-                        }
-                    }
+
+                    // 3. Inject ViewModels
+                    settingsViewModel = settingsViewModel,
+                    notificationsViewModel = notificationsViewModel
                 )
             }
+        }
+
+        composable("Screens.BookDetails.route") {
+            BookDetailsScreen(
+                onBackClick = {
+                    // Go back to the Library/Discover list
+                    navController.popBackStack()
+                },
+                onReadClick = {
+                    // TODO: Navigate to the Reader Screen (we will build this next)
+                    Timber.d("Read Clicked")
+                }
+            )
         }
 
         // Defines the appearance settings screen
