@@ -10,6 +10,12 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface AiraMessageDao {
 
+    @Query("SELECT COUNT(*) FROM aira_messages WHERE role = 'USER'")
+    fun getTotalUserQuestionsFlow(): Flow<Int>
+
+    @Query("SELECT bookId, COUNT(*) as count FROM aira_messages WHERE role = 'USER' GROUP BY bookId")
+    fun getQuestionsPerBookFlow(): Flow<List<BookQuestionCount>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: AiraMessageEntity)
 
@@ -35,3 +41,8 @@ interface AiraMessageDao {
     @Query("DELETE FROM aira_messages")
     suspend fun clearAllMessages()
 }
+
+data class BookQuestionCount(
+    val bookId: String,
+    val count: Int
+)

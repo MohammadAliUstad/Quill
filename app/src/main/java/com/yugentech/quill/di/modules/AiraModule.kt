@@ -1,9 +1,11 @@
 package com.yugentech.quill.di.modules
 
 import com.yugentech.quill.BuildConfig
-import com.yugentech.quill.aira.aira.repository.AiraRepository
-import com.yugentech.quill.aira.aira.repository.AiraRepositoryImpl
+import com.yugentech.quill.aira.aira.repository.AiraChatRepository
+import com.yugentech.quill.aira.aira.repository.AiraChatRepositoryImpl
 import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
+import com.yugentech.quill.aira.book.BookRepository
+import com.yugentech.quill.aira.book.BookRepositoryImpl
 import com.yugentech.quill.aira.rag.EmbeddingEngine
 import com.yugentech.quill.aira.rag.RagRetriever
 import org.koin.android.ext.koin.androidContext
@@ -26,19 +28,34 @@ val airaModule = module {
         )
     }
 
-    single<AiraRepository> {
-        AiraRepositoryImpl(
-            ragRetriever = get(),
-            chunkDao = get(),
+    // 1. Provide the new BookRepository (Handles Book Metadata & Chunk Status)
+    single<BookRepository> {
+        BookRepositoryImpl(
             bookDao = get(),
-            airaMessageDao = get(),
-            geminiApiKey = BuildConfig.GEMINI_API_KEY
+            chunkDao = get()
         )
     }
 
-    viewModel {
+    // 2. Provide the new AiraChatRepository (Handles Gemini AI & Messages)
+    single<AiraChatRepository> {
+        AiraChatRepositoryImpl(
+            geminiApiKey = BuildConfig.GEMINI_API_KEY,
+            ragRetriever = get(),
+            bookDao = get(),
+            chunkDao = get(),
+            airaMessageDao = get()
+        )
+    }
+
+    // 3. Inject both into the decoupled ViewModel
+    // 3. Inject both into the decoupled ViewModel
+    viewModel { params -> // <-- Add 'params' here
         AiraViewModel(
-            airaRepository = get()
+            bookId = params.get(),
+            airaChatRepository = get(),
+            bookRepository = get(),
+            quotaRepository = get(),
+            authRepository = get()
         )
     }
 }
