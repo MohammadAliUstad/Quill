@@ -1,31 +1,49 @@
 package com.yugentech.quill.ui.shared.airaScreen.parent
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,199 +51,317 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.aira.aira.AiraMessage
+import androidx.compose.ui.unit.lerp
 import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
-import com.yugentech.quill.ui.shared.airaScreen.components.AiraChapter
-import com.yugentech.quill.ui.shared.airaScreen.components.AiraOptionsDialog
-import com.yugentech.quill.ui.shared.airaScreen.components.ChatMessage
+import com.yugentech.quill.ui.shared.airaScreen.components.AiraChatHistory
+import com.yugentech.quill.ui.shared.airaScreen.components.AiraEmptyState
 import com.yugentech.quill.ui.shared.airaScreen.components.InputBar
-import com.yugentech.quill.ui.shared.airaScreen.components.MessageItem
 import com.yugentech.quill.ui.shared.airaScreen.components.StatusBanner
-import com.yugentech.quill.ui.shared.airaScreen.components.WelcomeState
-import com.yugentech.theme.getters.AppFont
+import com.yugentech.theme.tokens.spacing
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AiraChatScreen(
-    bookId: String,
-    bookTitle: String = "",
-    bookAuthor: String = "",
-    chapters: List<AiraChapter> = emptyList(),
-    currentChapterHref: String? = null,
-    onChapterSelected: (AiraChapter) -> Unit = {},
+    viewModel: AiraViewModel,
     onBackClick: () -> Unit,
-    viewModel: AiraViewModel
+    onNavigateToSubscriptions: () -> Unit
 ) {
-    LaunchedEffect(bookId) {
-        if (bookId.isNotBlank()) viewModel.initForBook(bookId)
-    }
-
     val uiState by viewModel.uiState.collectAsState()
-    val windSongFont = remember { AppFont.WindSong.toFontFamily() }
-    val bodyFontFamily = MaterialTheme.typography.bodyLarge.fontFamily
+    val isChatEmpty = uiState.messages.isEmpty()
 
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
-    var showOptionsDialog by remember { mutableStateOf(false) }
+    var showResetDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(uiState.messages.size, uiState.isLoading) {
-        if (uiState.messages.isNotEmpty() || uiState.isLoading) {
-            listState.animateScrollToItem(0)
-        }
+    // Reset chat dialog
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = { Text("Reset Aira Chat?") },
+            text = { Text("All your chat history for this book will be deleted. This can't be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.clearChat()
+                    showResetDialog = false
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
-    if (showOptionsDialog) {
-        AiraOptionsDialog(
-            chapters = chapters,
-            currentChapterHref = currentChapterHref,
-            spoilerLockEnabled = uiState.spoilerLockEnabled,
-            onChapterSelected = onChapterSelected,
-            onSpoilerLockToggle = { viewModel.toggleSpoilerLock() },
-            onDismiss = { showOptionsDialog = false }
+    // Quota limit dialog — shown when canSendQuery flips to false mid-session
+    if (uiState.showPaywall) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissPaywall() },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "You've reached today's limit",
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Free readers get 10 Aira queries per day. Upgrade to Pro for unlimited daily insights, or come back tomorrow when your limit resets at midnight.",
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.dismissPaywall()
+                    onNavigateToSubscriptions()
+                }) {
+                    Text("Upgrade to Pro")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissPaywall() }) {
+                    Text("Maybe Tomorrow")
+                }
+            }
         )
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
-        contentWindowInsets = WindowInsets(0)
-    ) { _ ->
-
-        Box(modifier = Modifier.fillMaxSize()) {
-
-            if (uiState.messages.isEmpty()) {
-                WelcomeState(
-                    bookTitle = bookTitle,
-                    windSongFont = windSongFont,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    reverseLayout = true,
-                    contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 100.dp,
-                        bottom = 100.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    itemsIndexed(
-                        items = uiState.messages.reversed(),
-                        key = { index, message ->
-                            val absoluteIndex = uiState.messages.size - index
-                            "${absoluteIndex}_${message.role}"
-                        }
-                    ) { index, message ->
-                        val isAira = message.role == AiraMessage.Role.AIRA
-                        val isLiveGeneration = index == 0 && isAira && (uiState.isLoading || uiState.isStreaming)
-                        val shouldRender = message.content.isNotBlank() || isLiveGeneration
-
-                        if (shouldRender) {
-                            MessageItem(
-                                message = ChatMessage(
-                                    text = message.content,
-                                    isFromAira = isAira,
-                                    isNew = isLiveGeneration,
-                                    stableKey = "${uiState.messages.size - index}_${message.role}"
-                                ),
-                                bodyFontFamily = bodyFontFamily
-                            )
+        contentWindowInsets = WindowInsets(0),
+        topBar = {
+            TopAppBar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding(),
+                title = {
+                    Column {
+                        Text(
+                            text = uiState.bookTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = uiState.bookAuthor,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                },
+                actions = {
+                    if (!isChatEmpty) {
+                        IconButton(onClick = { showResetDialog = true }) {
+                            Icon(Icons.Default.History, "Reset Chat")
                         }
                     }
+                    IconButton(onClick = { viewModel.toggleSpoilerLock() }) {
+                        Icon(
+                            imageVector = if (uiState.spoilerLockEnabled)
+                                Icons.Default.Lock else Icons.Default.LockOpen,
+                            contentDescription = "Toggle Spoiler Lock",
+                            tint = if (uiState.spoilerLockEnabled)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+            val kbFraction = (imeBottom / 300.dp).coerceIn(0f, 1f)
+            val bottomClearance = lerp(100.dp, 76.dp, kbFraction)
+
+            // Chat content
+            AnimatedContent(
+                targetState = isChatEmpty,
+                transitionSpec = {
+                    if (targetState) {
+                        (fadeIn(animationSpec = tween(300)) + slideInVertically(
+                            animationSpec = tween(
+                                300
+                            )
+                        ) { it / 8 }) togetherWith
+                                fadeOut(animationSpec = tween(300))
+                    } else {
+                        (fadeIn(animationSpec = tween(400)) + slideInVertically(
+                            animationSpec = tween(
+                                400
+                            )
+                        ) { it / 4 }) togetherWith
+                                fadeOut(animationSpec = tween(200))
+                    }
+                },
+                label = "ChatStateTransition"
+            ) { empty ->
+                if (empty) {
+                    AiraEmptyState(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .imePadding(),
+                        lastChapterTitle = uiState.lastChapterTitle,
+                        spoilerLockEnabled = uiState.spoilerLockEnabled,
+                        isIndexing = uiState.isIndexing,
+                        hasStartedReading = uiState.hasStartedReading,
+                        onToggleSpoilerLock = { viewModel.toggleSpoilerLock() }
+                    )
+                } else {
+                    AiraChatHistory(
+                        uiState = uiState,
+                        listState = listState,
+                        bottomPadding = bottomClearance,
+                        modifier = Modifier.imePadding()
+                    )
                 }
             }
 
-            // --- GRADIENT TOP BAR ---
-            val surfaceColor = MaterialTheme.colorScheme.surface
+            // Status banner — indexing or error
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.TopCenter)
             ) {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(
-                            Brush.verticalGradient(
-                                0.0f to surfaceColor.copy(alpha = 1.0f),
-                                0.3f to surfaceColor.copy(alpha = 0.95f),
-                                0.6f to surfaceColor.copy(alpha = 0.75f),
-                                0.85f to surfaceColor.copy(alpha = 0.40f),
-                                1.0f to Color.Transparent
-                            )
-                        )
-                )
-                TopAppBar(
-                    modifier = Modifier.statusBarsPadding(),
-                    title = {
-                        Column {
-                            Text(
-                                text = bookTitle.ifBlank { "Aira" },
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            if (bookAuthor.isNotBlank()) {
-                                Text(
-                                    text = bookAuthor,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        scrolledContainerColor = Color.Transparent
+                AnimatedVisibility(
+                    visible = uiState.isIndexing || uiState.error != null,
+                    enter = fadeIn() + slideInVertically { -it },
+                    exit = fadeOut() + slideOutVertically { -it }
+                ) {
+                    StatusBanner(
+                        isIndexing = uiState.isIndexing,
+                        error = uiState.error,
+                        onDismiss = { viewModel.clearError() }
                     )
-                )
+                }
             }
 
-            // --- STATUS BANNER ---
-            AnimatedVisibility(
-                visible = uiState.isIndexing || uiState.error != null,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .statusBarsPadding()
-                    .padding(top = 64.dp)
-            ) {
-                StatusBanner(
-                    isIndexing = uiState.isIndexing,
-                    error = uiState.error,
-                    onDismiss = { viewModel.clearError() }
-                )
-            }
-
-            // --- INPUT BAR ---
-            InputBar(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                inputText = inputText,
-                onInputChange = { inputText = it },
-                isEnabled = !uiState.isLoading && uiState.isReady,
-                onSend = {
-                    if (inputText.isNotBlank()) {
-                        viewModel.ask(inputText)
-                        inputText = ""
-                    }
+            // Bottom area — input bar OR quota limit message
+            AnimatedContent(
+                targetState = uiState.canSendQuery,
+                transitionSpec = {
+                    fadeIn(tween(300)) togetherWith fadeOut(tween(300))
                 },
-                onOptionsClick = { showOptionsDialog = true }
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth(),
+                label = "BottomAreaTransition"
+            ) { canSend ->
+                if (canSend) {
+                    // Normal input bar
+                    AnimatedVisibility(
+                        visible = !uiState.isIndexing && uiState.hasStartedReading,
+                        modifier = Modifier
+                            .imePadding()
+                            .fillMaxWidth(),
+                        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+                    ) {
+                        InputBar(
+                            inputText = inputText,
+                            onInputChange = { inputText = it },
+                            isEnabled = !uiState.isLoading && uiState.isReady,
+                            isStreaming = uiState.isStreaming || uiState.isLoading,
+                            onSend = {
+                                if (inputText.isNotBlank()) {
+                                    viewModel.ask(inputText)
+                                    inputText = ""
+                                }
+                            },
+                            onStop = { viewModel.stopGeneration() }
+                        )
+                    }
+                } else {
+                    // Quota limit reached — replace input bar with friendly message
+                    QuotaLimitBar(onUpgradeClick = {
+                        viewModel.dismissPaywall()
+                        onNavigateToSubscriptions()
+                    })
+                }
+            }
+        }
+    }
+}
+
+// ── QuotaLimitBar ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun QuotaLimitBar(onUpgradeClick: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 3.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(MaterialTheme.spacing.m),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Schedule,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
             )
+            Text(
+                text = "You've used all your free queries for today.",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "Your limit resets at midnight — or upgrade to Pro for unlimited daily access.",
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(MaterialTheme.spacing.xs))
+            Button(
+                onClick = onUpgradeClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.height(MaterialTheme.spacing.xs))
+                Text("Upgrade to Quill Pro")
+            }
         }
     }
 }
