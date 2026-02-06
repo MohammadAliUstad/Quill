@@ -2,10 +2,12 @@ package com.yugentech.quill.aira.aira.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.aira.aira.AiraMessage
-import com.yugentech.quill.aira.aira.repository.AiraRepository
-import com.yugentech.quill.aira.aira.AiraResponse
-import com.yugentech.quill.aira.aira.AiraUiState
+import com.yugentech.quill.aira.aira.repository.AiraChatRepository
+import com.yugentech.quill.aira.book.BookRepository
+import com.yugentech.quill.aira.response.AiraResponse
+import com.yugentech.quill.domain.AuthRepository
+import com.yugentech.quill.domain.QuotaRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -13,36 +15,49 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AiraViewModel(
-    private val airaRepository: AiraRepository
+    val bookId: String,
+    private val airaChatRepository: AiraChatRepository,
+    private val bookRepository: BookRepository,
+    private val quotaRepository: QuotaRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AiraUiState())
     val uiState = _uiState.asStateFlow()
 
-    private var currentBookId: String? = null
-
     private var isCurrentlyStreaming = false
+    private var generationJob: Job? = null
 
-    fun initForBook(bookId: String) {
-        if (currentBookId == bookId) return
-        currentBookId = bookId
+    private val currentUserId: String? get() = authRepository.currentUser
 
-        _uiState.update { AiraUiState() }
+    init {
+        observeQuota()
+        fetchInitialBookData()
+        observeChatHistory()
+    }
 
+    private fun fetchInitialBookData() {
         viewModelScope.launch {
-            val ready = airaRepository.isReady(bookId)
-            val spoilerLock = airaRepository.isSpoilerLockEnabled(bookId)
+            val ready = bookRepository.isReady(bookId)
+            val book = bookRepository.getBookDetails(bookId)
+
             _uiState.update {
                 it.copy(
                     isReady = ready,
                     isIndexing = !ready,
-                    spoilerLockEnabled = spoilerLock
+                    bookTitle = book?.title ?: "",
+                    bookAuthor = book?.author ?: "",
+                    lastChapterTitle = book?.lastChapterTitle,
+                    hasStartedReading = book?.lastChapterTitle != null,
+                    spoilerLockEnabled = book?.spoilerLockEnabled ?: true
                 )
             }
         }
+    }
 
+    private fun observeChatHistory() {
         viewModelScope.launch {
-            airaRepository.getMessagesForBook(bookId).collectLatest { messages ->
+            airaChatRepository.getMessagesForBook(bookId).collectLatest { messages ->
                 if (!isCurrentlyStreaming) {
                     _uiState.update { it.copy(messages = messages) }
                 }
@@ -50,23 +65,18 @@ class AiraViewModel(
         }
     }
 
-    fun toggleSpoilerLock() {
-        val bookId = currentBookId ?: return
-        val newValue = !_uiState.value.spoilerLockEnabled
-        _uiState.update { it.copy(spoilerLockEnabled = newValue) }
-        viewModelScope.launch {
-            airaRepository.setSpoilerLock(bookId, newValue)
-        }
-    }
-
     fun ask(question: String) {
-        val bookId = currentBookId ?: return
-        if (question.isBlank()) return
-        if (_uiState.value.isLoading) return
+        if (question.isBlank() || _uiState.value.isLoading) return
+
+        if (!_uiState.value.canSendQuery) {
+            _uiState.update { it.copy(showPaywall = true) }
+            return
+        }
 
         val userMessage = AiraMessage(AiraMessage.Role.USER, question.trim())
         val initialAiraMessage = AiraMessage(AiraMessage.Role.AIRA, "")
 
+        isCurrentlyStreaming = true
         _uiState.update {
             it.copy(
                 messages = it.messages + userMessage + initialAiraMessage,
@@ -76,87 +86,111 @@ class AiraViewModel(
             )
         }
 
-        isCurrentlyStreaming = true
+        generationJob = viewModelScope.launch {
+            var hasConsumedQuota = false
 
-        viewModelScope.launch {
-            airaRepository.ask(bookId = bookId, question = question).collect { response ->
-                when (response) {
-                    is AiraResponse.Success -> {
-                        _uiState.update { state ->
-                            val updatedMessages = state.messages.toMutableList()
+            try {
+                airaChatRepository.ask(bookId = bookId, question = question).collect { response ->
 
-                            if (updatedMessages.isNotEmpty() && updatedMessages.last().role == AiraMessage.Role.AIRA) {
-                                updatedMessages[updatedMessages.lastIndex] =
-                                    updatedMessages.last().copy(content = response.text)
-                            }
+                    if (!hasConsumedQuota && response is AiraResponse.Success) {
+                        hasConsumedQuota = true
+                        currentUserId?.let { uid ->
+                            viewModelScope.launch { quotaRepository.consumeQuery(uid) }
+                        }
+                    }
 
-                            state.copy(
-                                messages = updatedMessages,
-                                isLoading = false,
-                                isStreaming = true
-                            )
-                        }
-                    }
-                    is AiraResponse.Error -> {
-                        isCurrentlyStreaming = false
-                        _uiState.update { state ->
-                            state.copy(
-                                messages = state.messages.dropLast(1),
-                                isLoading = false,
-                                isStreaming = false,
-                                error = response.message
-                            )
-                        }
-                    }
-                    is AiraResponse.IndexingNotReady -> {
-                        isCurrentlyStreaming = false
-                        _uiState.update { state ->
-                            state.copy(
-                                messages = state.messages.dropLast(1),
-                                isLoading = false,
-                                isStreaming = false,
-                                isIndexing = true,
-                                isReady = false,
-                                error = "Aira is still indexing this book. Please wait a moment."
-                            )
-                        }
-                    }
-                    is AiraResponse.NoChaptersRead -> {
-                        isCurrentlyStreaming = false
-                        _uiState.update { state ->
-                            state.copy(
-                                messages = state.messages.dropLast(1),
-                                isLoading = false,
-                                isStreaming = false,
-                                error = "Start reading to unlock Aira's knowledge of this book."
-                            )
-                        }
-                    }
+                    handleStreamResponse(response)
                 }
-            }
-
-            isCurrentlyStreaming = false
-            _uiState.update { it.copy(isLoading = false, isStreaming = false) }
-
-            launch {
-                airaRepository.getMessagesForBook(bookId).collectLatest { finalMessages ->
-                    if (!isCurrentlyStreaming) {
-                        _uiState.update { it.copy(messages = finalMessages) }
-                    }
-                }
+            } finally {
+                isCurrentlyStreaming = false
+                _uiState.update { it.copy(isLoading = false, isStreaming = false) }
             }
         }
+    }
+
+    fun stopGeneration() {
+        resetStreamingStates()
+        _uiState.update { state ->
+            val updatedMessages = state.messages.toMutableList()
+            if (updatedMessages.isNotEmpty() && updatedMessages.last().role == AiraMessage.Role.AIRA) {
+                updatedMessages[updatedMessages.lastIndex] = updatedMessages.last().copy(
+                    content = "Stopped on your request. Let me know if you've got more questions!"
+                )
+            }
+            state.copy(messages = updatedMessages)
+        }
+    }
+
+    fun toggleSpoilerLock() {
+        val newValue = !_uiState.value.spoilerLockEnabled
+
+        _uiState.update { it.copy(spoilerLockEnabled = newValue) }
+        viewModelScope.launch {
+            bookRepository.setSpoilerLock(bookId, newValue)
+        }
+    }
+
+    fun clearChat() {
+        resetStreamingStates()
+        _uiState.update { it.copy(messages = emptyList(), error = null) }
+        viewModelScope.launch {
+            airaChatRepository.clearMessagesForBook(bookId)
+        }
+    }
+
+    fun dismissPaywall() {
+        _uiState.update { it.copy(showPaywall = false) }
     }
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
 
-    fun recheckReadiness() {
-        val bookId = currentBookId ?: return
+    private fun observeQuota() {
         viewModelScope.launch {
-            val ready = airaRepository.isReady(bookId)
-            _uiState.update { it.copy(isReady = ready, isIndexing = !ready) }
+            quotaRepository.canSendQuery.collectLatest { canSend ->
+                _uiState.update { it.copy(canSendQuery = canSend) }
+            }
         }
+        viewModelScope.launch {
+            quotaRepository.remainingQueries.collectLatest { remaining ->
+                _uiState.update { it.copy(remainingQueries = remaining) }
+            }
+        }
+    }
+
+    private fun handleStreamResponse(response: AiraResponse) {
+        when (response) {
+            is AiraResponse.Success -> {
+                _uiState.update { state ->
+                    val updatedMessages = state.messages.toMutableList()
+                    if (updatedMessages.isNotEmpty() && updatedMessages.last().role == AiraMessage.Role.AIRA) {
+                        updatedMessages[updatedMessages.lastIndex] =
+                            updatedMessages.last().copy(content = response.text)
+                    }
+                    state.copy(
+                        messages = updatedMessages,
+                        isLoading = false,
+                        isStreaming = true
+                    )
+                }
+            }
+
+            is AiraResponse.Error -> {
+                _uiState.update { state ->
+                    state.copy(
+                        messages = state.messages.dropLast(1),
+                        error = response.message
+                    )
+                }
+            }
+        }
+    }
+
+    private fun resetStreamingStates() {
+        generationJob?.cancel()
+        generationJob = null
+        isCurrentlyStreaming = false
+        _uiState.update { it.copy(isLoading = false, isStreaming = false) }
     }
 }
