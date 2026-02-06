@@ -18,7 +18,9 @@ enum class AppFont(
     Manrope("manrope", "Manrope", R.font.manrope),
     Urbanist("urbanist", "Urbanist", R.font.urbanist),
     Figtree("figtree", "Figtree", R.font.figtree),
-    Garamond("garamond", "Garamond", R.font.eb_garamond);
+    Garamond("garamond", "Garamond", R.font.eb_garamond),
+    WindSong("windsong", "windsong", R.font.windsong),
+    Charmonman("charmonman", "charmonman", R.font.charmonman);
 
     @OptIn(ExperimentalTextApi::class)
     fun toFontFamily(): FontFamily {

@@ -2,265 +2,155 @@
 
 package com.yugentech.quill.navigation
 
-import android.app.Activity
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.yugentech.quill.notifications.NotificationsViewModel
+import com.yugentech.quill.network.remote.Book
 import com.yugentech.quill.theme.ThemeViewModel
-import com.yugentech.quill.timer.TimerViewModel
-import com.yugentech.quill.ui.auth.screens.SignInScreen
-import com.yugentech.quill.ui.auth.screens.SignUpScreen
 import com.yugentech.quill.ui.config.screens.AboutScreen
 import com.yugentech.quill.ui.config.screens.AppearanceScreen
-import com.yugentech.quill.ui.config.screens.EditProfileScreen
-import com.yugentech.quill.ui.config.screens.InsightsScreen
 import com.yugentech.quill.ui.config.screens.AttributionsScreen
-import com.yugentech.quill.ui.dash.screens.MainScreen
-import com.yugentech.quill.ui.dash.screens.OnboardingScreen
+import com.yugentech.quill.ui.dash.screens.AiraChatScreen
+import com.yugentech.quill.ui.dash.screens.mainScreen.MainScreen
 import com.yugentech.quill.ui.dash.utils.defaultEnterTransition
 import com.yugentech.quill.ui.dash.utils.defaultExitTransition
 import com.yugentech.quill.ui.dash.utils.defaultPopEnterTransition
 import com.yugentech.quill.ui.dash.utils.defaultPopExitTransition
-import com.yugentech.quill.ui.dash.utils.formatTime
-import com.yugentech.quill.ui.screens.BookDetailsScreen
-import com.yugentech.quill.viewModels.HomeViewModel
-import com.yugentech.quill.viewModels.LoginViewModel
-import com.yugentech.quill.viewModels.ProfileViewModel
-import com.yugentech.quill.viewModels.SettingsViewModel
+import com.yugentech.quill.ui.dash.screens.readerScreen.parent.ReaderScreen
+import com.yugentech.quill.ui.dash.screens.bookDetailsScreen.parent.BookDetailsScreen
+import com.yugentech.quill.ui.dash.screens.ManageCategoriesScreen
+import com.yugentech.quill.ui.dash.screens.StandardScreen
+import com.yugentech.quill.viewModels.StandardViewModel
+import kotlinx.serialization.json.Json
 import org.koin.androidx.compose.koinViewModel
-import timber.log.Timber
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AppNavHost(
-    navController: NavHostController,
-    webClientId: String,
-    showOnboarding: Boolean,
-    onOnboardingComplete: () -> Unit,
-    loginViewModel: LoginViewModel,
-    shouldNavigateToHome: Boolean = false,
-    onNavigatedToHome: () -> Unit = {}
+    navController: NavHostController
 ) {
-    val authState by loginViewModel.authState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-
-    // Determines the initial screen based on onboarding and login status
-    val startDestination = remember {
-        when {
-            showOnboarding -> Screens.Onboarding.route
-            authState.isUserLoggedIn && authState.userId != null -> Screens.Main.route
-            else -> Screens.Main.route
-        }
-    }
-
-    // Handles the result from the Google Sign-In activity
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult(),
-        onResult = { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                Timber.d("Google Sign-In Activity Result OK")
-                loginViewModel.handleGoogleSignInResult(result.data)
-            } else {
-                Timber.w("Google Sign-In Activity Result Cancelled or Failed")
-            }
-        }
-    )
-
-    // Launches the Google Sign-In intent when it becomes available
-    LaunchedEffect(authState.intent) {
-        authState.intent?.let {
-            Timber.d("Launching Google Sign-In Intent")
-            launcher.launch(IntentSenderRequest.Builder(it).build())
-        }
-    }
-
-    // Manages automatic navigation based on authentication changes
-    LaunchedEffect(authState.isUserLoggedIn, authState.userId, showOnboarding) {
-        if (!authState.isLoading) {
-            val currentRoute = navController.currentDestination?.route
-
-            if (showOnboarding) {
-                if (currentRoute != Screens.Onboarding.route) {
-                    navController.navigate(Screens.Onboarding.route) {
-                        popUpTo(0) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }
-            } else if (authState.isUserLoggedIn && authState.userId != null) {
-                if (currentRoute != Screens.Main.route) {
-                    navController.navigate(Screens.Main.route) {
-                        popUpTo(0) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }
-            } else {
-                if (currentRoute != Screens.SignIn.route && currentRoute != Screens.SignUp.route) {
-                    val comingFromOnboarding = currentRoute == Screens.Onboarding.route
-
-                    navController.navigate(Screens.SignIn.route) {
-                        if (!comingFromOnboarding) {
-                            popUpTo(0) { inclusive = true }
-                        }
-
-                        launchSingleTop = true
-                    }
-                }
-            }
-        }
-    }
-
-    // Forces navigation back to the main screen when requested
-    LaunchedEffect(shouldNavigateToHome) {
-        if (shouldNavigateToHome) {
-            Timber.d("Popping back to Main screen")
-            navController.popBackStack(Screens.Main.route, inclusive = false)
-            onNavigatedToHome()
-        }
-    }
-
-    // Sets up the navigation host with custom animations
     AnimatedNavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = Screens.Main.route,
         enterTransition = { defaultEnterTransition() },
         exitTransition = { defaultExitTransition() },
         popEnterTransition = { defaultPopEnterTransition() },
         popExitTransition = { defaultPopExitTransition() }
     ) {
-        // Defines the onboarding screen
-        composable(
-            route = Screens.Onboarding.route,
-            exitTransition = { defaultExitTransition() },
-            popExitTransition = { defaultPopExitTransition() }
-        ) {
-            OnboardingScreen(onFinish = onOnboardingComplete)
-            BackHandler { (context as? Activity)?.finish() }
-        }
-
-        // Defines the licenses screen
         composable(Screens.Licenses.route) {
             AttributionsScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
 
-        // Defines the sign-in screen
-        composable(
-            route = Screens.SignIn.route,
-            enterTransition = { defaultEnterTransition() },
-            exitTransition = { defaultExitTransition() },
-            popEnterTransition = { defaultPopEnterTransition() },
-            popExitTransition = { defaultPopExitTransition() }
-        ) {
-            Timber.v("Composing SignIn Screen")
-            BackHandler { (context as? Activity)?.finish() }
-
-            SignInScreen(
-                loginViewModel = loginViewModel,
-                onSignIn = { email, password ->
-                    loginViewModel.signIn(email, password)
+        composable(Screens.Main.route) {
+            MainScreen(
+                onLibraryBookClick = { book ->
+                    val bookJson = Json.encodeToString(book)
+                    val encodedJson = URLEncoder.encode(bookJson, StandardCharsets.UTF_8.toString())
+                    navController.navigate("${Screens.BookDetailsScreen.route}/$encodedJson")
                 },
-                onGoogleSignIn = {
-                    loginViewModel.getGoogleSignInIntent(webClientId)
+                onDiscoverItemClick = { book ->
+                    val bookJson = Json.encodeToString(book)
+                    val encodedJson =
+                        URLEncoder.encode(bookJson, StandardCharsets.UTF_8.toString())
+                    navController.navigate("${Screens.BookDetailsScreen.route}/$encodedJson")
                 },
-                onNavigateToSignUp = {
-                    navController.navigate(Screens.SignUp.route) {
-                        launchSingleTop = true
+                onSourceClick = { sourceId ->
+                    if (sourceId == "standard_ebooks") {
+                        navController.navigate(Screens.StandardEbooks.route)
                     }
                 },
-                onForgotPassword = { email ->
-                    loginViewModel.forgotPassword(email)
+                onAboutClick = {
+                    navController.navigate(Screens.About.route)
+                },
+                onAppearanceClick = {
+                    navController.navigate(Screens.Appearance.route)
+                },
+                onManageCategories = {
+                    navController.navigate(Screens.ManageCategories.route)
+                },
+                onFABClick = {
+                    navController.navigate(Screens.Aira.route)
                 }
             )
         }
 
-        // Defines the sign-up screen
-        composable(
-            route = Screens.SignUp.route,
-            enterTransition = { defaultEnterTransition() },
-            exitTransition = { defaultExitTransition() },
-            popEnterTransition = { defaultPopEnterTransition() },
-            popExitTransition = { defaultPopExitTransition() }
-        ) {
-            Timber.v("Composing SignUp Screen")
-            SignUpScreen(
-                loginViewModel = loginViewModel,
-                onSignUp = { name, email, password ->
-                    loginViewModel.signUp(name, email, password)
-                },
-                onGoogleSignIn = {
-                    loginViewModel.getGoogleSignInIntent(webClientId)
-                },
-                onNavigateToSignIn = {
+        composable(Screens.Aira.route) {
+            AiraChatScreen(
+                onBackClick = {
                     navController.popBackStack()
                 }
             )
-            BackHandler {
-                navController.popBackStack()
-            }
         }
 
-        composable(Screens.Main.route) {
-            Timber.v("Composing Main Screen")
-            val currentUserId = authState.userId
+        composable(Screens.ManageCategories.route) {
+            ManageCategoriesScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
 
-            // We only need these two ViewModels for the new setup
-            // (Home, Timer, and Profile ViewModels are no longer needed here)
-            val settingsViewModel: SettingsViewModel = koinViewModel()
-            val notificationsViewModel: NotificationsViewModel = koinViewModel()
+        composable(Screens.StandardEbooks.route) {
+            val standardViewModel: StandardViewModel = koinViewModel()
+            StandardScreen(
+                onBackClick = { navController.popBackStack() },
+                onBookClick = { book ->
+                    val bookJson = Json.encodeToString(book)
+                    val encodedJson = URLEncoder.encode(bookJson, StandardCharsets.UTF_8.toString())
+                    navController.navigate("${Screens.BookDetailsScreen.route}/$encodedJson")
+                },
+                standardViewModel = standardViewModel
+            )
+        }
 
-            if (currentUserId != null) {
-                MainScreen(
-                    // 1. Navigation to Book Details
-                    onBookClick = {
-                        navController.navigate("Screens.BookDetails.route")
-                    },
+        // ... inside AppNavHost content
 
-                    // 2. Settings Actions
-                    onSignOut = {
-                        // TODO: Call your AuthViewModel signOut here
-                        // authViewModel.signOut()
-                        navController.navigate(Screens.SignIn.route) {
-                            popUpTo(0) // Clear backstack
-                        }
-                    },
-                    onAbout = {
-                        // TODO: Navigate to About Dialog/Screen
-                        // navController.navigate(Screens.About.route)
-                    },
-                    onAppearance = {
-                        // TODO: Navigate to Appearance Settings
-                        // navController.navigate(Screens.Appearance.route)
-                    },
+        composable(
+            route = "${Screens.BookDetailsScreen.route}/{bookJson}",
+            arguments = listOf(navArgument("bookJson") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val bookJson = backStackEntry.arguments?.getString("bookJson")
+            if (bookJson != null) {
+                // Decode JSON back to Book object
+                val decodedJson = URLDecoder.decode(bookJson, StandardCharsets.UTF_8.toString())
+                val book = Json.decodeFromString<Book>(decodedJson)
 
-                    // 3. Inject ViewModels
-                    settingsViewModel = settingsViewModel,
-                    notificationsViewModel = notificationsViewModel
+                BookDetailsScreen(
+                    book = book,
+                    onBackClick = { navController.popBackStack() },
+                    onReadClick = { bookId ->
+                        // Navigate to the ReaderScreen using the ID passed from BookDetails
+                        navController.navigate(Screens.Reader.createRoute(bookId))
+                    },
+                    onManageCategoriesClick = {
+                        // Navigate to Manage Categories if needed
+                        navController.navigate(Screens.ManageCategories.route)
+                    }
                 )
             }
         }
 
-        composable("Screens.BookDetails.route") {
-            BookDetailsScreen(
+        // In AppNavHost.kt
+
+        composable(
+            route = "reader/{bookId}",
+            arguments = listOf(navArgument("bookId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getString("bookId") ?: return@composable
+
+            ReaderScreen(
+                bookId = bookId,
                 onBackClick = {
-                    // Go back to the Library/Discover list
                     navController.popBackStack()
-                },
-                onReadClick = {
-                    // TODO: Navigate to the Reader Screen (we will build this next)
-                    Timber.d("Read Clicked")
                 }
             )
         }
@@ -276,31 +166,6 @@ fun AppNavHost(
             )
         }
 
-        // Defines the insights and statistics screen
-        composable(Screens.Insights.route) { it ->
-            val parentEntry = remember(it) {
-                navController.getBackStackEntry(Screens.Main.route)
-            }
-            val profileViewModel: ProfileViewModel =
-                koinViewModel(viewModelStoreOwner = parentEntry)
-            val profileUiState by profileViewModel.uiState.collectAsStateWithLifecycle()
-            val currentUserId = authState.userId
-
-            LaunchedEffect(currentUserId) {
-                currentUserId?.let { profileViewModel.loadProfile(it) }
-            }
-
-            InsightsScreen(
-                totalTime = formatTime(profileUiState.totalTime),
-                taskDistribution = profileUiState.taskDistribution,
-                onBack = { navController.popBackStack() },
-                streakCount = profileUiState.streakCount,
-                dailyVolume = profileUiState.dailyVolume,
-                peakHour = profileUiState.peakHour,
-                heatmapHistory = profileUiState.heatmapHistory,
-            )
-        }
-
         // Defines the about screen
         composable(Screens.About.route) {
             AboutScreen(
@@ -313,28 +178,6 @@ fun AppNavHost(
                     }
                 }
             )
-        }
-
-        // Defines the edit profile screen
-        composable(Screens.EditProfile.route) {
-            Timber.v("Composing EditProfile Screen")
-            val currentUserId = authState.userId
-            val profileViewModel: ProfileViewModel = koinViewModel()
-
-            if (currentUserId != null) {
-                EditProfileScreen(
-                    profileViewModel = profileViewModel,
-                    userId = currentUserId,
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            } else {
-                Timber.w("Navigated to EditProfile without valid User ID")
-                LaunchedEffect(Unit) {
-                    navController.popBackStack()
-                }
-            }
         }
     }
 }
