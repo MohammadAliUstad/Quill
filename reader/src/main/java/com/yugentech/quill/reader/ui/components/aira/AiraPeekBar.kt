@@ -1,11 +1,9 @@
-package com.yugentech.quill.reader.ui.aira
+package com.yugentech.quill.reader.ui.components.aira
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -14,35 +12,25 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,63 +40,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import com.yugentech.quill.aira.QuickActionUiState
-import com.yugentech.quill.aira.aira.AiraUiState
-import com.yugentech.quill.aira.aira.QuickIntent
-import com.yugentech.quill.reader.state.PeekState
-import com.yugentech.quill.reader.ui.aira.components.AiraPeekHeader
-import com.yugentech.quill.reader.ui.aira.components.ThinkingIndicator
-
-private fun resolveChips(
-    selectedText: String?,
-    currentChapterIndex: Int
-): List<Pair<String, QuickIntent>> {
-    if (selectedText.isNullOrBlank()) {
-        return listOf(
-            "Summarize chapter" to QuickIntent.SummarizeChapter(currentChapterIndex),
-            "Who are the characters?" to QuickIntent.WhoAreTheCharacters,
-            "What are the themes?" to QuickIntent.WhatAreTheThemes
-        )
-    }
-
-    val trimmed = selectedText.trim()
-    val words = trimmed.split("\\s+".toRegex()).filter { it.isNotBlank() }
-    val wordCount = words.size
-    val looksLikeProperNoun = words.first().first().isUpperCase()
-
-    return when {
-        wordCount == 1 -> buildList {
-            val word = words.first()
-            add("Define" to QuickIntent.DefineWord(word))
-            add("What is this?" to QuickIntent.WhatIsThis(word))
-            if (word.first().isUpperCase()) {
-                add("Who is this?" to QuickIntent.WhoIsThis(word, currentChapterIndex))
-            }
-        }
-
-        wordCount in 2..3 -> buildList {
-            add("Explain this" to QuickIntent.ExplainThis(trimmed))
-            if (looksLikeProperNoun) {
-                add("Who is this?" to QuickIntent.WhoIsThis(trimmed, currentChapterIndex))
-            }
-        }
-
-        else -> listOf(
-            "Simplify this" to QuickIntent.SimplifyThis(trimmed),
-            "Explain this" to QuickIntent.ExplainThis(trimmed),
-            "What's the significance?" to QuickIntent.WhatIsTheSignificance(trimmed),
-            "Who's speaking?" to QuickIntent.WhoIsSpeaking(trimmed)
-        )
-    }
-}
+import androidx.compose.ui.zIndex
+import com.yugentech.quill.aira.aira.viewmodel.AiraUiState
+import com.yugentech.quill.reader.quickPrompt.state.QuickPrompt
+import com.yugentech.quill.reader.quickPrompt.viewmodel.QuickChatUiState
+import com.yugentech.quill.reader.ui.components.aira.PeekState
+import com.yugentech.quill.reader.ui.components.aira.components.AiraPeekHeader
+import com.yugentech.quill.reader.ui.components.aira.components.InputBar
+import com.yugentech.quill.reader.ui.components.aira.components.PeekResponseArea
+import com.yugentech.quill.reader.ui.components.aira.components.resolveChips
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -116,11 +60,12 @@ fun AiraPeekBar(
     isVisible: Boolean,
     selectedText: String? = null,
     currentChapterIndex: Int = 0,
-    quickActionUiState: QuickActionUiState,
+    quickChatUiState: QuickChatUiState,
     airaUiState: AiraUiState,
-    onQuickAction: (QuickIntent) -> Unit,
+    onQuickAction: (QuickPrompt) -> Unit,
     onSendMessage: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onStop: () -> Unit
 ) {
     var inputText by remember { mutableStateOf("") }
 
@@ -133,38 +78,19 @@ fun AiraPeekBar(
         resolveChips(selectedText, currentChapterIndex)
     }
 
-    LaunchedEffect(selectedText) {
-        inputText = selectedText ?: ""
-    }
-
-    // FIX: Ensure it populates correctly when the bottom sheet slides up
-    LaunchedEffect(isVisible) {
-        if (!isVisible) {
-            inputText = ""
-        } else {
-            inputText = selectedText ?: ""
-        }
-    }
+    LaunchedEffect(selectedText) { inputText = selectedText ?: "" }
+    LaunchedEffect(isVisible) { inputText = if (isVisible) selectedText ?: "" else "" }
     LaunchedEffect(isImeVisible) { if (!isImeVisible) focusManager.clearFocus() }
 
-    // Response area driven by QuickActionUiState only
-    // Response area driven by QuickActionUiState only
-    val error = quickActionUiState.error
-    val response = quickActionUiState.response
+    val error = quickChatUiState.error
+    val response = quickChatUiState.response
 
     val peekState: PeekState = when {
-        quickActionUiState.isLoading -> PeekState.Loading
-        // Now the compiler knows `error` and `response` are local and can't change
+        quickChatUiState.isLoading -> PeekState.Loading
         error != null -> PeekState.Response(error)
         response != null -> PeekState.Response(response)
         else -> PeekState.Idle
     }
-
-    val contentAlpha by animateFloatAsState(
-        targetValue = if (peekState is PeekState.Idle) 0f else 1f,
-        animationSpec = tween(250, easing = FastOutSlowInEasing),
-        label = "contentAlpha"
-    )
 
     val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -172,7 +98,6 @@ fun AiraPeekBar(
     val kbFraction = (imeBottom / 300.dp).coerceIn(0f, 1f)
     val horizontalPadding = lerp(24.dp, 8.dp, kbFraction)
 
-    // Send button guarded by airaUiState — manual questions go through AiraViewModel
     val canSend = inputText.isNotBlank() && !airaUiState.isLoading
 
     val buttonContainerColor by animateColorAsState(
@@ -218,7 +143,9 @@ fun AiraPeekBar(
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = 12.dp)
+                        .offset(y = 4.dp)
+                        .zIndex(1f),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
@@ -226,21 +153,21 @@ fun AiraPeekBar(
                         key = { (label, _) -> label }
                     ) { (label, intent) ->
                         SuggestionChip(
-                            onClick = { onQuickAction(intent) },
+                            onClick = {
+                                onQuickAction(intent)
+                                inputText = ""
+                                focusManager.clearFocus()
+                            },
                             label = {
                                 Text(
                                     text = label,
                                     style = MaterialTheme.typography.labelMedium
                                 )
                             },
+                            shape = CircleShape,
                             colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                                    .copy(alpha = 0.92f),
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                                 labelColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            border = SuggestionChipDefaults.suggestionChipBorder(
-                                enabled = true,
-                                borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                             )
                         )
                     }
@@ -256,108 +183,31 @@ fun AiraPeekBar(
                         modifier = Modifier
                             .fillMaxWidth()
                             .windowInsetsPadding(WindowInsets.navigationBars)
-                            .padding(top = 20.dp, bottom = 4.dp)
+                            .padding(top = 12.dp, bottom = 4.dp)
                     ) {
                         AiraPeekHeader(
-                            isLoading = peekState is PeekState.Loading,
+                            isLoading = peekState is PeekState.Loading || airaUiState.isLoading,
                             onDismiss = onDismiss
                         )
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateContentSize(tween(350, easing = FastOutSlowInEasing))
-                                .graphicsLayer { alpha = contentAlpha }
-                        ) {
-                            when (peekState) {
-                                is PeekState.Idle -> {}
-                                is PeekState.Loading -> {
-                                    Column {
-                                        Spacer(Modifier.height(16.dp))
-                                        ThinkingIndicator(
-                                            modifier = Modifier.padding(horizontal = 16.dp)
-                                        )
-                                        Spacer(Modifier.height(16.dp))
-                                    }
-                                }
+                        PeekResponseArea(
+                            peekState = peekState
+                        )
 
-                                is PeekState.Response -> {
-                                    Column {
-                                        Spacer(Modifier.height(12.dp))
-                                        Text(
-                                            text = peekState.text,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier.padding(horizontal = 16.dp)
-                                        )
-                                        Spacer(Modifier.height(12.dp))
-                                    }
-                                }
-                            }
-                        }
-
-                        Spacer(Modifier.height(4.dp))
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = horizontalPadding),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            TextField(
-                                value = inputText,
-                                onValueChange = { inputText = it },
-                                enabled = !airaUiState.isLoading,
-                                placeholder = {
-                                    Text(
-                                        text = if (!airaUiState.isLoading) "Ask Aira anything…"
-                                        else "Aira is thinking…",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            .copy(alpha = 0.6f)
-                                    )
-                                },
-                                trailingIcon = {
-                                    FilledIconButton(
-                                        onClick = { send(inputText) },
-                                        enabled = canSend,
-                                        modifier = Modifier
-                                            .padding(end = 4.dp)
-                                            .size(36.dp),
-                                        shape = CircleShape,
-                                        colors = IconButtonDefaults.filledIconButtonColors(
-                                            containerColor = buttonContainerColor,
-                                            contentColor = buttonContentColor,
-                                            disabledContainerColor = buttonContainerColor,
-                                            disabledContentColor = buttonContentColor
-                                        )
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.ArrowUpward,
-                                            contentDescription = "Send",
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .focusRequester(focusRequester)
-                                    .onFocusChanged { isFocused = it.isFocused }
-                                    .animateContentSize(),
-                                shape = RoundedCornerShape(28.dp),
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    disabledIndicatorColor = Color.Transparent,
-                                ),
-                                textStyle = MaterialTheme.typography.bodyMedium,
-                                maxLines = 5,
-                                minLines = 1,
-                            )
-                        }
+                        InputBar(
+                            inputText = inputText,
+                            onInputChange = { inputText = it },
+                            airaUiState = airaUiState,
+                            quickChatUiState = quickChatUiState,
+                            canSend = canSend,
+                            buttonContainerColor = buttonContainerColor,
+                            buttonContentColor = buttonContentColor,
+                            horizontalPadding = horizontalPadding,
+                            focusRequester = focusRequester,
+                            onFocusChanged = { isFocused = it },
+                            onSend = ::send,
+                            onStop = onStop
+                        )
                     }
                 }
             }

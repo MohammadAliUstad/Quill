@@ -1,6 +1,6 @@
 package com.yugentech.quill.ui.shared.airaScreen.components
 
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -40,19 +40,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.R
 import com.yugentech.theme.WindSongFont
+import androidx.compose.animation.AnimatedContent
 
 @Composable
 fun AiraEmptyState(
     lastChapterTitle: String?,
     isIndexing: Boolean,
     spoilerLockEnabled: Boolean,
-    modifier: Modifier = Modifier
+    hasStartedReading: Boolean,
+    modifier: Modifier = Modifier,
+    onToggleSpoilerLock: () -> Unit,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.Center, // Back to standard centering!
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
@@ -74,7 +77,7 @@ fun AiraEmptyState(
                 contentDescription = "Aira",
                 modifier = Modifier
                     .requiredSize(180.dp)
-                    .offset(x = (-4).dp, y = 16.dp)
+                    .offset(x = (-2).dp, y = 16.dp)
             )
         }
 
@@ -103,7 +106,10 @@ fun AiraEmptyState(
         Text(
             text = if (isIndexing)
                 "Aira is going through your book. She'll be ready to chat in just a moment."
-            else "Ask me to summarize chapters, explain complex themes, or recall characters.",
+            else if (!hasStartedReading)
+                "Aira needs you to read a few pages first before she can discuss the story with you."
+            else
+                "Ask me to summarize chapters, explain complex themes, or recall characters.",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -112,74 +118,78 @@ fun AiraEmptyState(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-            modifier = Modifier.fillMaxWidth()
+        // THE FIX: Hide the entire card if they haven't started reading
+        AnimatedVisibility(
+            visible = hasStartedReading,
+            enter = fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 4 },
+            exit = fadeOut(tween(300)) + slideOutVertically(tween(300)) { it / 4 }
         ) {
-            Column(
-                modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
-                horizontalAlignment = Alignment.Start
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "Current Chapter",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = lastChapterTitle ?: "Just started reading",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // 1. Smoothly animate the background color
-                val backgroundColor by animateColorAsState(
-                    targetValue = if (spoilerLockEnabled)
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                    else
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                    label = "spoilerBgColor"
-                )
-
-// 2. Smoothly animate the text color
-                val textColor by animateColorAsState(
-                    targetValue = if (spoilerLockEnabled)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-                    label = "spoilerTextColor"
-                )
-
-                Surface(
-                    shape = CircleShape,
-                    color = backgroundColor // Use the animated background color!
+                Column(
+                    modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+                    horizontalAlignment = Alignment.Start
                 ) {
-                    // 3. Animate the actual text swapping
-                    AnimatedContent(
-                        targetState = spoilerLockEnabled,
-                        transitionSpec = {
-                            // The new text slides up and fades in, while the old text fades out
-                            (fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 2 }) togetherWith
-                                    (fadeOut(tween(100)) + slideOutVertically(tween(200)) { -it / 2 })
-                        },
-                        label = "spoilerTextAnimation"
-                    ) { isLocked ->
-                        Text(
-                            text = if (isLocked) "Spoiler lock active" else "Spoiler lock disabled",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = textColor, // Use the animated text color!
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
+                    Text(
+                        text = "Current Chapter",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = lastChapterTitle ?: "Just started reading",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    val backgroundColor by animateColorAsState(
+                        targetValue = if (spoilerLockEnabled)
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        else
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                        label = "spoilerBgColor"
+                    )
+
+                    val textColor by animateColorAsState(
+                        targetValue = if (spoilerLockEnabled)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        label = "spoilerTextColor"
+                    )
+
+                    Surface(
+                        onClick = onToggleSpoilerLock, // <-- Now clickable!
+                        shape = CircleShape,
+                        color = backgroundColor
+                    ) {
+                        AnimatedContent(
+                            targetState = spoilerLockEnabled,
+                            transitionSpec = {
+                                (fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 2 }) togetherWith
+                                        (fadeOut(tween(100)) + slideOutVertically(tween(200)) { -it / 2 })
+                            },
+                            label = "spoilerTextAnimation"
+                        ) { isLocked ->
+                            Text(
+                                text = if (isLocked) "Spoiler lock active" else "Spoiler lock disabled",
+                                style = MaterialTheme.typography.labelMedium, // Upgraded from labelSmall
+                                fontWeight = FontWeight.SemiBold,
+                                color = textColor,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp) // Increased size
+                            )
+                        }
                     }
                 }
             }
