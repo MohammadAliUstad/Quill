@@ -1,7 +1,7 @@
-package com.yugentech.sessions.ui.config.editProfileScreen.components
+package com.yugentech.quill.ui.tabs.moreScreen.components
 
 import androidx.annotation.DrawableRes
-import com.yugentech.sessions.R
+import com.yugentech.quill.R
 
 data class Avatar(
     val id: Int,
