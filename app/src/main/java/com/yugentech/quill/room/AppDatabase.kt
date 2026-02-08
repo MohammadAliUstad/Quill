@@ -2,24 +2,31 @@ package com.yugentech.quill.room
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.yugentech.quill.room.daos.SessionsDao
-import com.yugentech.quill.room.daos.UserDao
-import com.yugentech.quill.room.entities.SessionsEntity
-import com.yugentech.quill.room.entities.UserEntity
+import androidx.room.TypeConverters
+import com.yugentech.quill.room.daos.BookDetailsDao
+import com.yugentech.quill.room.daos.CatalogDao
+import com.yugentech.quill.room.daos.CategoryDao
+import com.yugentech.quill.room.daos.LibraryBooksDao
+import com.yugentech.quill.room.entities.BookDetailsEntity
+import com.yugentech.quill.room.entities.CatalogCacheEntity
+import com.yugentech.quill.room.entities.LibraryBookEntity
+import com.yugentech.quill.room.entities.UserCategoryEntity
 
-// Core Room database configuration defining tables and version
 @Database(
     entities = [
-        UserEntity::class,
-        SessionsEntity::class
+        LibraryBookEntity::class,
+        CatalogCacheEntity::class,
+        UserCategoryEntity::class,
+        BookDetailsEntity::class
     ],
-    version = 3,
+    version = 1,
     exportSchema = false
 )
+@TypeConverters(BookTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
-    // Exposes the Data Access Object for user operations
-    abstract fun userDao(): UserDao
 
-    // Exposes the Data Access Object for session operations
-    abstract fun sessionDao(): SessionsDao
+    abstract fun libraryDao(): LibraryBooksDao
+    abstract fun catalogDao(): CatalogDao
+    abstract fun bookDetailsDao(): BookDetailsDao
+    abstract fun categoryDao(): CategoryDao
 }

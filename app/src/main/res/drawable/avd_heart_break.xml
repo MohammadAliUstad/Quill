@@ -1,0 +1,128 @@
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/vd_heart_break">
+
+    <target android:name="broken_heart_left_group">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="400"
+                android:interpolator="@android:interpolator/linear_out_slow_in"
+                android:propertyName="rotation"
+                android:valueFrom="0"
+                android:valueTo="-20"/>
+        </aapt:attr>
+    </target>
+
+    <target android:name="broken_heart_left">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+                <objectAnimator
+                    android:duration="0"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="1"
+                    android:valueTo="1"/>
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/linear_out_slow_in"
+                    android:propertyName="fillAlpha"
+                    android:startOffset="100"
+                    android:valueFrom="1"
+                    android:valueTo="0"/>
+            </set>
+        </aapt:attr>
+    </target>
+
+    <target android:name="broken_heart_right_group">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="400"
+                android:interpolator="@android:interpolator/linear_out_slow_in"
+                android:propertyName="rotation"
+                android:valueFrom="0"
+                android:valueTo="20"/>
+        </aapt:attr>
+    </target>
+
+    <target android:name="broken_heart_right">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+                <objectAnimator
+                    android:duration="0"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="1"
+                    android:valueTo="1"/>
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/linear_out_slow_in"
+                    android:propertyName="fillAlpha"
+                    android:startOffset="100"
+                    android:valueFrom="1"
+                    android:valueTo="0"/>
+            </set>
+        </aapt:attr>
+    </target>
+
+    <target android:name="heart_stroke_left_atrium">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="0"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0"/>
+                <objectAnimator
+                    android:duration="0"
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0.4"
+                    android:valueTo="0.4"/>
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="400"
+                    android:valueFrom="0"
+                    android:valueTo="1"/>
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="400"
+                    android:valueFrom="0.4"
+                    android:valueTo="1"/>
+            </set>
+        </aapt:attr>
+    </target>
+
+    <target android:name="heart_stroke_right_atrium">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="0"
+                    android:propertyName="trimPathEnd"
+                    android:valueFrom="0"
+                    android:valueTo="0"/>
+                <objectAnimator
+                    android:duration="0"
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0.4"
+                    android:valueTo="0.4"/>
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="400"
+                    android:valueFrom="0"
+                    android:valueTo="1"/>
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="400"
+                    android:valueFrom="0.4"
+                    android:valueTo="1"/>
+            </set>
+        </aapt:attr>
+    </target>
+
+</animated-vector>

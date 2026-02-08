@@ -1,0 +1,46 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
+
+    <group
+        android:pivotX="120"
+        android:pivotY="120"
+        android:scaleX="0.65"
+        android:scaleY="0.65">
+        <path
+            android:name="line_path"
+            android:pathData="M 50,190 c 0,0 47.659576416,0 70,0 c 22.340423584,0 70,0 70,0"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="20"
+            android:strokeLineCap="round" />
+    </group>
+
+    <group
+        android:pivotX="120"
+        android:pivotY="120"
+        android:scaleX="0.91"
+        android:scaleY="0.91">
+
+        <group
+            android:translateX="120"
+            android:translateY="120">
+
+            <group
+                android:translateX="-120"
+                android:translateY="-120">
+
+                <path
+                    android:name="check_mark_static"
+                    android:pathData="M 120,0 a 120,120 0 1,1 0,240 a 120,120 0 1,1 0,-240 C 224,30 162,83 162,83 L 106.5,138.5 L 80.45,112.45"
+                    android:strokeColor="#FF000000"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"
+                    android:strokeWidth="14.5"
+                    android:trimPathStart="0.88047672583"
+                    android:trimPathEnd="1" />
+            </group>
+        </group>
+    </group>
+</vector>

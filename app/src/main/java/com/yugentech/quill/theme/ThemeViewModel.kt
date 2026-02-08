@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class ThemeViewModel(
-    private val repository: ThemeRepository
+    private val themeRepository: ThemeRepository
 ) : ViewModel() {
 
     // Internal mutable state for the current theme configuration
@@ -44,7 +44,7 @@ class ThemeViewModel(
     init {
         // Automatically update local state whenever the repository data changes
         viewModelScope.launch {
-            repository.themeConfiguration.collect { config ->
+            themeRepository.themeConfiguration.collect { config ->
                 _themeConfiguration.value = config
             }
         }
@@ -55,7 +55,7 @@ class ThemeViewModel(
         _themeConfiguration.value = config
 
         viewModelScope.launch {
-            repository.setThemeConfig(config)
+            themeRepository.setThemeConfig(config)
         }
     }
 

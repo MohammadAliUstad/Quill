@@ -1,13 +1,15 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.util.Properties
 
-plugins {
+ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
     id("com.google.firebase.crashlytics")
     id("com.google.devtools.ksp")
+    kotlin("plugin.serialization")
 }
 
 val localProperties = Properties()
@@ -18,7 +20,7 @@ if (localPropertiesFile.exists()) {
 
 android {
     namespace = "com.yugentech.quill"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.yugentech.quill"
@@ -49,12 +51,15 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
     }
 
     buildFeatures {
@@ -64,6 +69,28 @@ android {
 }
 
 dependencies {
+
+    implementation(libs.reorderable)
+
+
+    implementation(libs.readium.shared)
+    implementation(libs.readium.streamer)
+    implementation(libs.readium.navigator)
+
+    // Required for Readium
+    implementation(libs.androidx.webkit)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.ui.text)
+
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
+    // Ktor
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.kotlinx.serialization.json)
 
     // Billing
     implementation(libs.billing)
@@ -116,6 +143,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.animation.graphics)
     ksp(libs.androidx.room.compiler)
 
     // DataStore
@@ -124,18 +152,19 @@ dependencies {
 
     // Work Manager
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.koin.androidx.workmanager)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
-    // Dependency Injection (Koin)
+    // Dependency Injection
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 
-    // Image Loading (Coil)
+    // Image Loading
     implementation(libs.coil.compose)
 
-    // Logging (Timber)
+    // Logging
     implementation(libs.timber)
 
     // Custom UI Components

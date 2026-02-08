@@ -1,204 +1,92 @@
-<div align="center">
+# Quill
 
-<img src="graphics/Feature%20Graphic.png" width="100%" alt="Sessions Feature Graphic"/>
+### Focus on the stories that matter.
 
-<br/>
-
-<table border="0" width="100%">
-    <tr>
-        <td width="30%" align="center" valign="middle">
-            <img src="graphics/Icon.png" width="180" alt="Sessions App Icon"/>
-        </td>
-        <td width="70%" valign="middle">
-            <h1>Sessions</h1>
-            <h3>Your Personal Focus Companion</h3>
-            <p><i>Precision-engineered productivity application designed to help you master your time and maintain flow state.</i></p>
-        </td>
-    </tr>
-</table>
-
-<p align="center">
-  <a href="https://play.google.com/store/apps/details?id=com.yugentech.quill"><img alt="Get it on Google Play" src="badges/playstore.png" width="200"/></a>
-  <a href="https://github.com/MohammadAliUstad/Sessions/releases"><img alt="Get it on Github" src="badges/github.png" width="200"/></a>
-</p>
-
-<br/>
-
-[Report Bug](https://github.com/MohammadAliUstad/Sessions/issues) · [Request Feature](https://github.com/MohammadAliUstad/Sessions/issues) · [Download Latest Release](https://github.com/MohammadAliUstad/Sessions/releases)
-
-</div>
+A minimalist, open-source book reader and tracker designed to strip away distractions and let you immerse yourself in the narrative.
 
 ---
 
 ## Overview
 
-Sessions transforms the concept of a simple timer into a comprehensive focus tool. Whether you're studying, coding, or writing, the application ensures your environment is optimized for concentration. It features a robust background service that prevents the operating system from killing the timer, ensuring your progress is tracked even when your phone is locked.
+Quill is an evolving digital sanctuary for readers. In a world of cluttered interfaces and subscription walls, Quill aims to get back to basics: just you and the text.
+
+Currently focused on delivering a robust ePub rendering engine and a distraction-free UI, the project is establishing the foundation for a modern, privacy-focused reading ecosystem. Whether you are catching up on a novel or organizing your digital library, Quill provides a clean, adaptive environment that grows with your reading habits.
 
 ---
 
-## ✨ Key Features
+## Core Essentials
 
-### Intelligent Focus Engine
-- **Customizable Cycles:** Define your exact Focus Duration, Break Duration, and Repetition count
-- **Smart Intervals:** Automatically calculates when to trigger a Long Break based on your completed sets
-- **Task History:** Assign names to specific sessions to recognize and review what you worked on later
+### Pure Reading Experience
+- **Distraction-Free UI:** Interface elements fade away while reading, maximizing screen real estate for text.
+- **Format Support:** Native handling of standard .epub files with fast parsing.
+- **Progress Tracking:** Automatically bookmarks your place and tracks completion percentages across your library.
 
-### Immersive Audio Environment
-- **Curated Ambience:** Includes 5 high-quality background sounds: Rain, Brown Noise, Fireplace, Library, and Riverside
-- **Adaptive Audio Ducking:** Background volume intelligently lowers during breaks and rises during focus sessions
-- **Sensory Feedback:** Integrated haptic feedback and sound effects confirm interactions without visual confirmation
+### Adaptive Appearance
+- **Aesthetic Themes:** Choose from 8 handcrafted palettes including Sakura, Canyon, Alpine, and Twilight.
+- **AMOLED Mode:** True black background support for late-night reading sessions on OLED screens.
+- **Typography Control:** Customize your experience with 6 curated font options and adjustable text sizing.
 
-### Reliability & System Integration
-- **Persistent Notification:** Live notification on the lock screen allows you to track progress without unlocking
-- **Background Stability:** Engineered to resist aggressive battery optimization
-
-### Analytics & Personalization
-- **Visual Insights:** Dedicated dashboard featuring heatmaps and metrics (Total Focus Time, Peak Productivity Hours)
-- **Deep Theming:** 8 Color Themes (including Dynamic Material You), OLED Black Mode, and 6 Font options
-- **Identity System:** Choose from a variety of avatars and set a custom display name
-
----
-
-## 📱 Screenshots
-
-<div align="center">
-
-<table width="100%">
-  <tr>
-    <td align="center" width="25%">
-      <img src="screenshots/Timer.png" alt="Timer" width="100%"/>
-      <br/><sub><b>Timer</b></sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="screenshots/Insights.png" alt="Insights" width="100%"/>
-      <br/><sub><b>Insights</b></sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="screenshots/Dashboard.png" alt="Dashboard" width="100%"/>
-      <br/><sub><b>Dashboard</b></sub>
-    </td>
-    <td align="center" width="25%">
-       <img src="screenshots/Appearance.png" alt="Appearance" width="100%"/>
-      <br/><sub><b>Tasks History</b></sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="25%">
-      <img src="screenshots/Settings.png" alt="Settings" width="100%"/>
-      <br/><sub><b>Settings</b></sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="screenshots/Credits.png" alt="Credits" width="100%"/>
-      <br/><sub><b>Appearance</b></sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="screenshots/Edit Profile.png" alt="Edit Profile" width="100%"/>
-      <br/><sub><b>Edit Profile</b></sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="screenshots/About.png" alt="About" width="100%"/>
-      <br/><sub><b>About</b></sub>
-    </td>
-  </tr>
-</table>
-
-</div>
+### Personalization & Privacy
+- **Reader Profiles:** Set your display name and choose from a library of avatars to make the space your own.
+- **Local First:** Your library and reading data remain on your device. No cloud accounts required to start reading.
+- **System Harmony:** Follows system dark/light mode preferences by default with options to override.
 
 ---
 
 ## Technical Architecture
 
-Sessions is built using modern Android development standards, ensuring a codebase that is scalable, testable, and maintainable.
+Quill is built on the same robust foundations as our previous tooling, utilizing modern Android standards for performance and stability.
 
-```text
-Language:             Kotlin
-UI Framework:         Jetpack Compose (Material 3)
-Architecture:         MVVM + Clean Architecture
-Dependency Injection: Koin
-Local Database:       Room
-Backend Services:     Firebase (Auth, Firestore)
-Concurrency:          Kotlin Coroutines & Flow
-```
-
-### Tech Stack
-
-* **Kotlin** - Modern, concise, and safe programming language
-* **Jetpack Compose** - Declarative UI toolkit for building native Android interfaces
-* **Material 3** - Latest Material Design system for beautiful, accessible UIs
-* **MVVM Architecture** - Separation of concerns for maintainable code
-* **Room Database** - Robust local data persistence
-* **Firebase** - Cloud services for authentication and data sync
-* **Coroutines & Flow** - Asynchronous programming made simple
+- **Language:** Kotlin
+- **UI Framework:** Jetpack Compose (Material 3)
+- **Architecture:** MVVM + Clean Architecture
+- **Dependency Injection:** Koin
+- **Local Database:** Room
+- **Concurrency:** Kotlin Coroutines & Flow
 
 ---
 
 ## Setup & Installation
 
 ### Prerequisites
-
-* Android Studio (latest version recommended)
-* JDK 11 or higher
-* Android SDK API 24+
+- Android Studio (latest version recommended)
+- JDK 11 or higher
+- Android SDK API 24+
 
 ### Steps
 
 1. **Clone the Repository**
-```bash
-git clone https://github.com/MohammadAliUstad/Sessions.git
-cd Sessions
-```
+   `git clone https://github.com/MohammadAliUstad/Quill.git`
+   `cd Quill`
 
-2. **Firebase Configuration**
-* Create a project in the [Firebase Console](https://console.firebase.google.com/)
-* Download the `google-services.json` file
-* Place the file in the `app/` directory of the project
-
-3. **Build & Run**
-* Open the project in Android Studio
-* Sync Gradle files
-* Select your target device/emulator
-* Click Run ▶️
+2. **Build & Run**
+   - Open the project in Android Studio.
+   - Sync Gradle files.
+   - Click Run.
 
 ---
 
-## 🤝 Contributing
+## Join the Journey
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Quill is active software. We are constantly refining the parsing engine and UI. If you are a developer or a passionate reader, your input is invaluable.
 
 1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
+2. Create your Feature Branch
+3. Commit your Changes
+4. Push to the Branch
 5. Open a Pull Request
 
 ---
 
-## 📄 License
+## License
 
-Distributed under the appropriate license. See `LICENSE` file for more information.
+Distributed under the appropriate license. See LICENSE file for more information.
 
 ---
 
-## Contact & Support
+## Contact
 
-If you encounter any issues or have suggestions for future updates, please open an issue on GitHub or contact the developer directly.
+Found a rendering glitch? Have an idea for a new theme? Reach out.
 
 **Developer:** Mohammad Ali Ustad
-
-**Email:** Mohammadaliustad@gmail.com
-
 **Company:** Yugen Tech
-
-<div align="center">
-
-### Show Your Support
-
-If you find this project helpful, please consider giving it a ⭐!
-
-</div>
-
----
-
-<div align="center">
-<sub>Built with ❤️ by Yugen Tech</sub>
-</div>
