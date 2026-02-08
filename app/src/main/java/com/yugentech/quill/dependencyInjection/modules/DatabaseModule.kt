@@ -24,6 +24,10 @@ val databaseModule = module {
     }
 
     single {
-        get<AppDatabase>().bookChapterDao()
+        get<AppDatabase>().bookDetailsDao()
+    }
+
+    single {
+        get<AppDatabase>().categoryDao()
     }
 }
