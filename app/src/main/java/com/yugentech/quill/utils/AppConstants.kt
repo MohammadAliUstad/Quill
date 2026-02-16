@@ -2,10 +2,10 @@ package com.yugentech.quill.utils
 
 object AppConstants {
     private const val APP_PACKAGE_NAME = "com.yugentech.quill"
-    const val EMPTY_STRING = ""
-    const val ACTION_START_SESSION = "START_SESSION"
-    const val ACTION_STOP_SESSION = "STOP_SESSION"
-    const val ACTION_UPDATE_SESSION = "UPDATE_SESSION"
+    const val EMPTY = ""
+    const val FIVE = 5000L
+    const val SHELF = "Shelf"
+    const val FAVOURITES = "Favourites"
     const val GITHUB_URL = "https://github.com/MohammadAliUstad/Sessions"
     const val PRIVACY_POLICY_URL = "https://sites.google.com/view/sessionsprivacypolicy/home"
     const val TERMS_OF_SERVICE_URL = "https://sites.google.com/view/sessionstermsofservice/home"
