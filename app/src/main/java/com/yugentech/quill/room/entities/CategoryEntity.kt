@@ -5,7 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "user_categories")
 data class UserCategoryEntity(
-    @PrimaryKey val name: String,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val name: String,
     val sortOrder: Int,
-    val isSystem: Boolean = false  // true for Favorites, Uncategorized (non-deletable)
+    val isSystem: Boolean = false
 )
