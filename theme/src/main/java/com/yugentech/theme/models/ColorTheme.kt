@@ -1,4 +1,4 @@
-package com.yugentech.quill.theme.models
+package com.yugentech.theme.models
 
 // Defines the base color palettes available in the app
 enum class ColorTheme {
