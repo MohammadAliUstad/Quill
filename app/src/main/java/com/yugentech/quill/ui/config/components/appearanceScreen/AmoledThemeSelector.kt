@@ -26,10 +26,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.theme.ThemeViewModel
-import com.yugentech.quill.theme.models.ThemeMode
-import com.yugentech.quill.theme.tokens.components
-import com.yugentech.quill.theme.tokens.corners
-import com.yugentech.quill.theme.tokens.spacing
+import com.yugentech.theme.models.ThemeMode
+import com.yugentech.theme.tokens.components
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.spacing
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
