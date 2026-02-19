@@ -12,8 +12,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.yugentech.quill.room.daos.CategoryDao.Companion.SHELF
-import com.yugentech.quill.utils.AppConstants.EMPTY
-import com.yugentech.quill.utils.AppConstants.FAVOURITES
+import com.yugentech.theme.tokens.AppConstants.EMPTY
+import com.yugentech.theme.tokens.AppConstants.FAVOURITES
 
 @Composable
 fun AddCategoryDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {

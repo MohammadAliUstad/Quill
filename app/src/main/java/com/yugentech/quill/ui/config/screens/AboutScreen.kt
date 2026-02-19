@@ -41,14 +41,14 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.core.net.toUri
-import com.yugentech.quill.theme.tokens.spacing
+import com.yugentech.theme.tokens.spacing
 import com.yugentech.quill.ui.config.components.aboutScreen.AppInfoCard
 import com.yugentech.quill.ui.config.components.aboutScreen.DonationDialog
 import com.yugentech.quill.ui.config.models.about.AboutContent
 import com.yugentech.quill.ui.dash.common.SectionHeader
 import com.yugentech.quill.ui.dash.common.ToastMessage
 import com.yugentech.quill.ui.dash.screens.settingsScreen.SettingsListItem
-import com.yugentech.quill.utils.AppConstants
+import com.yugentech.theme.tokens.AppConstants
 import com.yugentech.quill.utils.BillingManager
 import org.koin.compose.koinInject
 
