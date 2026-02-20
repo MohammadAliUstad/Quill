@@ -12,7 +12,7 @@ import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.StarRate
 import androidx.core.net.toUri
-import com.yugentech.quill.utils.AppConstants
+import com.yugentech.theme.tokens.AppConstants
 
 object AboutContent {
 
