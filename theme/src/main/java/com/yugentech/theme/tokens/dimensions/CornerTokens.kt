@@ -1,4 +1,4 @@
-package com.yugentech.quill.theme.tokens.dimensions
+package com.yugentech.theme.tokens.dimensions
 
 import androidx.compose.ui.unit.Dp
 
