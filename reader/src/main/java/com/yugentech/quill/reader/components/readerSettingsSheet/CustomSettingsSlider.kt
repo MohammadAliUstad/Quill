@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.reader.components.readerSettingsSheet
+package com.yugentech.quill.reader.components.readerSettingsSheet
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
