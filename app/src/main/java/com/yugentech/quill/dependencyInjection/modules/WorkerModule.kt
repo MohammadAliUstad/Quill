@@ -9,8 +9,7 @@ val workerModule = module {
         BookDownloadWorker(
             context = get(),
             params = get(),
-            libraryBooksDao = get(),
-            bookDetailsDao = get()
+            bookDao = get(),
         )
     }
 }
