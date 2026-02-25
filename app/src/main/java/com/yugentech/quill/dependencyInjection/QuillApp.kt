@@ -1,51 +1,45 @@
 package com.yugentech.quill.dependencyInjection
 
 import android.app.Application
-import com.google.firebase.FirebaseApp
-import com.yugentech.quill.dependencyInjection.modules.alertsModule
-import com.yugentech.quill.dependencyInjection.modules.authModule
+import androidx.work.Configuration
+import com.yugentech.quill.dependencyInjection.modules.booksModule
 import com.yugentech.quill.dependencyInjection.modules.dataStoreModule
 import com.yugentech.quill.dependencyInjection.modules.databaseModule
-import com.yugentech.quill.dependencyInjection.modules.notificationModule
-import com.yugentech.quill.dependencyInjection.modules.sessionModule
+import com.yugentech.quill.dependencyInjection.modules.networkModule
 import com.yugentech.quill.dependencyInjection.modules.themeModule
-import com.yugentech.quill.dependencyInjection.modules.timerModule
-import com.yugentech.quill.dependencyInjection.modules.userModule
-import com.yugentech.quill.dependencyInjection.modules.viewModelModule
+import com.yugentech.quill.dependencyInjection.modules.workerModule
 import com.yugentech.quill.utils.ReleaseTree
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.androidx.workmanager.factory.KoinWorkerFactory
+import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.startKoin
 import timber.log.Timber
 
-// Main Application class responsible for global initialization
-class QuillApp : Application() {
+class QuillApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-
-        // Configure logging: DebugTree for development, ReleaseTree for production
         Timber.plant(ReleaseTree())
 
-        // Initialize Firebase SDK
-        FirebaseApp.initializeApp(this)
-
-        // Start Koin dependency injection and load all modules
         startKoin {
             androidLogger()
             androidContext(this@QuillApp)
+            workManagerFactory()
+
             modules(
+                booksModule,
                 dataStoreModule,
-                authModule,
                 databaseModule,
-                sessionModule,
-                userModule,
                 themeModule,
-                viewModelModule,
-                alertsModule,
-                timerModule,
-                notificationModule
+                networkModule,
+                workerModule
             )
         }
     }
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(KoinWorkerFactory())
+            .build()
 }
