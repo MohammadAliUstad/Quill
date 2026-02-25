@@ -2,9 +2,11 @@ package com.yugentech.quill.category
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.room.entities.CategoryEntity
+import com.yugentech.quill.room.entities.toDomain
+import com.yugentech.theme.tokens.AppConstants.FIVE
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -12,10 +14,15 @@ class CategoryViewModel(
     private val repository: CategoryRepository
 ) : ViewModel() {
 
-    val userCategories: StateFlow<List<CategoryEntity>> = repository.getUserCategories()
+    val categories: StateFlow<List<CategoryModel>> = repository.getUserCategories()
+        .map { entities ->
+            entities.map { categoryEntity ->
+                categoryEntity.toDomain()
+            }
+        }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.WhileSubscribed(FIVE),
             initialValue = emptyList()
         )
 
@@ -25,21 +32,21 @@ class CategoryViewModel(
         }
     }
 
-    fun renameCategory(categoryModel: CategoryModel, newName: String) {
+    fun renameCategory(category: CategoryModel) {
         viewModelScope.launch {
-            repository.updateCategory(categoryModel.toEntity())
-        }
-    }
-
-    fun updateCategoryOrder(categories: List<CategoryEntity>) {
-        viewModelScope.launch {
-            repository.updateCategories(categories)
+            repository.updateCategory(category.toEntity())
         }
     }
 
     fun deleteCategory(name: String) {
         viewModelScope.launch {
             repository.deleteCategory(name)
+        }
+    }
+
+    fun updateOrder(reorderedList: List<CategoryModel>) {
+        viewModelScope.launch {
+            repository.updateCategories(reorderedList.map { it.toEntity() })
         }
     }
 }
