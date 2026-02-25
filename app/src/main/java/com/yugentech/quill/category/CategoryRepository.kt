@@ -1,13 +1,21 @@
 package com.yugentech.quill.category
 
-import com.yugentech.quill.room.entities.UserCategoryEntity
+import com.yugentech.quill.room.entities.CategoryEntity
 import kotlinx.coroutines.flow.Flow
 
 interface CategoryRepository {
-    fun getAllCategories(): Flow<List<UserCategoryEntity>>
-    fun getUserCategories(): Flow<List<UserCategoryEntity>>  // NEW: Excludes system categories
-    suspend fun createCategory(name: String): Result<Unit>  // UPDATED: Validation built-in
+
+    // Reads
+    fun getAllCategories(): Flow<List<CategoryEntity>>
+    fun getUserCategories(): Flow<List<CategoryEntity>>
+    suspend fun getCategoryCount(): Int
+
+    // Writes
+    suspend fun initializeDefaultCategories()
+    suspend fun insertCategory(name: String)
+    suspend fun updateCategory(category: CategoryEntity)
+    suspend fun updateCategories(categories: List<CategoryEntity>)
+
+    // Deletion
     suspend fun deleteCategory(name: String)
-    suspend fun updateCategories(categories: List<UserCategoryEntity>) // For reordering
-    suspend fun initializeDefaultCategories()  // UPDATED: Seeds Favorites & Uncategorized
 }
