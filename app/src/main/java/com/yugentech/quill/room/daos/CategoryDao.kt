@@ -6,59 +6,49 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import com.yugentech.quill.room.entities.UserCategoryEntity
+import com.yugentech.quill.room.entities.CategoryEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface CategoryDao {
+abstract class CategoryDao {
 
-    // --- 1. Get Categories ---
+    companion object {
+        const val SHELF = "Shelf"
+    }
+
+    // Reads
     @Query("SELECT * FROM user_categories ORDER BY sortOrder ASC")
-    fun getAllCategories(): Flow<List<UserCategoryEntity>>
+    abstract fun getAllCategories(): Flow<List<CategoryEntity>>
 
-    // Get only user-created categories (exclude system categories)
     @Query("SELECT * FROM user_categories WHERE isSystem = 0 ORDER BY sortOrder ASC")
-    fun getUserCategories(): Flow<List<UserCategoryEntity>>
+    abstract fun getUserCategories(): Flow<List<CategoryEntity>>
 
     @Query("SELECT COUNT(*) FROM user_categories")
-    suspend fun getCategoryCount(): Int
+    abstract suspend fun getCategoryCount(): Int
 
-    // --- 2. Manage Categories ---
+    // Writes
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertCategory(category: UserCategoryEntity)
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertCategories(categories: List<UserCategoryEntity>)
+    abstract suspend fun insertCategory(category: CategoryEntity)
 
     @Update
-    suspend fun updateCategory(category: UserCategoryEntity)
+    abstract suspend fun updateCategory(category: CategoryEntity)
 
-    // For Drag-and-Drop Reordering
     @Update
-    suspend fun updateCategories(categories: List<UserCategoryEntity>)
+    abstract suspend fun updateCategories(categories: List<CategoryEntity>)
 
-    // --- 3. Smart Delete ---
-    @Query("DELETE FROM user_categories WHERE name = :name AND isSystem = 0")
-    suspend fun deleteCategory(name: String)
-
-    // Helper: Move books back to Uncategorized when deleting custom category
-    @Query("UPDATE library_books SET userCategory = 'Uncategorized' WHERE userCategory = :oldCategory")
-    suspend fun resetBooksCategory(oldCategory: String)
-
+    // Deletion
     @Transaction
-    suspend fun deleteCategoryAndResetBooks(name: String) {
-        resetBooksCategory(name)     // Move books to "Uncategorized"
-        deleteCategory(name)          // Delete the custom category
+    open suspend fun deleteCategory(name: String) {
+        moveBooksToDefault(name)
+        removeCategory(name)
     }
 
-    // --- 4. Initialization Helper ---
-    // Initialize default system categories on first app launch
-    suspend fun initializeDefaultCategories() {
-        insertCategories(
-            listOf(
-                UserCategoryEntity(name = "Favorites", sortOrder = 1, isSystem = true),
-                UserCategoryEntity(name = "Uncategorized", sortOrder = 999, isSystem = true)
-            )
-        )
-    }
+    @Query("UPDATE books SET userCategory = :defaultCategory WHERE userCategory = :oldCategory")
+    protected abstract suspend fun moveBooksToDefault(
+        oldCategory: String,
+        defaultCategory: String = SHELF
+    )
+
+    @Query("DELETE FROM user_categories WHERE name = :name AND isSystem = 0")
+    protected abstract suspend fun removeCategory(name: String)
 }
