@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.util.Properties
 
- plugins {
+plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
@@ -26,6 +26,7 @@ android {
         applicationId = "com.yugentech.quill"
         minSdk = 26
         targetSdk = 36
+
         versionCode = 1
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -69,20 +70,14 @@ android {
 }
 
 dependencies {
+    // Added dependency on the new theme module
+    implementation(project(":theme"))
+    implementation(project(":reader"))
 
-    implementation(libs.reorderable)
-
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     implementation(libs.readium.shared)
     implementation(libs.readium.streamer)
-    implementation(libs.readium.navigator)
-
-    // Required for Readium
-    implementation(libs.androidx.webkit)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.compose.ui.text)
-
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     // Ktor
     implementation(libs.ktor.client.core)
@@ -128,7 +123,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.accompanist.navigation.animation)
 
-    // Firebase BOM (declare once)
+    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
@@ -139,7 +134,7 @@ dependencies {
     // Google Play Services
     implementation(libs.play.services.auth)
 
-    // Room Database
+    // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.compose.animation)
@@ -167,8 +162,8 @@ dependencies {
     // Logging
     implementation(libs.timber)
 
-    // Custom UI Components
-    implementation(libs.wavy.slider)
+    // Reorderable
+    implementation(libs.reorderable)
 
     // Unit Testing
     testImplementation(libs.junit)
@@ -181,7 +176,7 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
 
-    // Debug Dependencies
+    // Debug
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
