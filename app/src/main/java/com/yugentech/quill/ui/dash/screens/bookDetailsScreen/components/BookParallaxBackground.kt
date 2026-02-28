@@ -38,7 +38,7 @@ fun BookParallaxBackground(
                 val fadeStart = 0f
                 val fadeEnd = size.height
                 val currentAlpha = 1f - ((scrollState.value - fadeStart) / (fadeEnd - fadeStart))
-                
+
                 // Ensure alpha stays valid (0..1)
                 alpha = currentAlpha.coerceIn(0f, 1f)
             }
@@ -50,8 +50,8 @@ fun BookParallaxBackground(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
-                .blur(radius = 3.dp)
-                .alpha(0.7f)
+                .blur(radius = 10.dp)
+                .alpha(0.5f)
         )
 
         // Gradient Overlay
@@ -61,7 +61,8 @@ fun BookParallaxBackground(
                 .background(
                     Brush.verticalGradient(
                         0.0f to Color.Transparent,
-                        0.8f to Color.Transparent,
+                        0.5f to Color.Transparent,
+                        0.8f to MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
                         1.0f to MaterialTheme.colorScheme.background
                     )
                 )
