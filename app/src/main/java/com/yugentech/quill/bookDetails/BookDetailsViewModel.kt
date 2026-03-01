@@ -5,14 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.network.AppJson
 import com.yugentech.quill.network.domain.Book
+import com.yugentech.quill.network.domain.BookSource
+import com.yugentech.quill.room.BookMappers.toDomainModel
 import com.yugentech.quill.room.entities.Chapter
 import com.yugentech.quill.room.entities.DownloadStatus
-import com.yugentech.quill.room.entities.LibraryBookEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -22,9 +22,8 @@ import java.nio.charset.StandardCharsets
 data class BookDetailsUiState(
     val book: Book,
     val chapters: List<Chapter> = emptyList(),
-    val libraryBook: LibraryBookEntity? = null,
     val isLoading: Boolean = true,
-    val isDescriptionExpanded: Boolean = true // Default value (will be overwritten instantly on load)
+    val isDescriptionExpanded: Boolean = true
 )
 
 class BookDetailsViewModel(
@@ -32,13 +31,30 @@ class BookDetailsViewModel(
     private val repository: BookDetailsRepository
 ) : ViewModel() {
 
-    private val bookJson: String = checkNotNull(savedStateHandle["book_json"])
-    private val passedBook: Book by lazy {
-        val decodedJson = URLDecoder.decode(bookJson, StandardCharsets.UTF_8.toString())
-        AppJson.decodeFromString(decodedJson)
+    private val bookIdParam: String? = savedStateHandle["bookId"]
+    private val bookJsonParam: String? = savedStateHandle["bookJson"]
+
+    private val passedBook: Book? by lazy {
+        bookJsonParam?.let {
+            val decodedJson = URLDecoder.decode(it, StandardCharsets.UTF_8.toString())
+            AppJson.decodeFromString(decodedJson)
+        }
     }
 
-    private val _uiState = MutableStateFlow(BookDetailsUiState(book = passedBook))
+    private val targetBookId: String = passedBook?.id
+        ?: bookIdParam
+        ?: throw IllegalArgumentException("BookDetailsViewModel requires either bookId or bookJson")
+
+    private val initialLoadingState = passedBook == null || passedBook?.description.isNullOrBlank()
+
+    private val _uiState = MutableStateFlow(
+        BookDetailsUiState(
+            book = passedBook ?: createPlaceholderBook(targetBookId),
+            chapters = passedBook?.chapters ?: emptyList(),
+            isLoading = initialLoadingState,
+            isDescriptionExpanded = passedBook?.downloadStatus != DownloadStatus.DOWNLOADED
+        )
+    )
     val uiState = _uiState.asStateFlow()
 
     val categories = repository.getAllCategories()
@@ -50,59 +66,54 @@ class BookDetailsViewModel(
 
     private fun loadData() {
         viewModelScope.launch {
-            // 1. SNAPSHOT: Get initial data
-            val detailSnapshot = repository.getDetailsSnapshot(passedBook.id)
-            val libSnapshot = repository.getLibraryBookSnapshot(passedBook.id)
-
-            // LOGIC:
-            // - If Downloaded -> Start CLOSED
-            // - If Not Downloaded -> Start OPEN
-            val isDownloaded = libSnapshot?.downloadStatus == DownloadStatus.DOWNLOADED
-            val initialExpandedState = !isDownloaded
-
-            _uiState.update { state ->
-                state.copy(
-                    book = passedBook.copy(
-                        description = detailSnapshot?.description ?: passedBook.description,
-                        subjects = detailSnapshot?.subjects ?: passedBook.subjects
-                    ),
-                    chapters = detailSnapshot?.chapters ?: emptyList(),
-                    libraryBook = libSnapshot,
-                    isLoading = false,
-                    isDescriptionExpanded = initialExpandedState // Apply calculated state
-                )
-            }
-
-            // 2. STREAM: Watch for updates (e.g., Download Finishing)
-            combine(
-                repository.getDetails(passedBook.id),
-                repository.getLibraryBook(passedBook.id)
-            ) { details, libraryBook ->
+            repository.getBook(targetBookId).collectLatest { dbEntity ->
+                val richBook = dbEntity?.toDomainModel() ?: (
+                        passedBook?.copy(
+                            downloadStatus = DownloadStatus.NOT_DOWNLOADED,
+                            isFavorite = false,
+                            userCategory = null,
+                            progressPercent = 0f,
+                            localFilePath = null
+                        ) ?: createPlaceholderBook(targetBookId)
+                        )
 
                 _uiState.update { currentState ->
-                    // Check if we just transitioned from DOWNLOADING -> DOWNLOADED
-                    val wasDownloading = currentState.libraryBook?.downloadStatus == DownloadStatus.DOWNLOADING
-                    val isNowDownloaded = libraryBook?.downloadStatus == DownloadStatus.DOWNLOADED
+                    val wasDownloading =
+                        currentState.book.downloadStatus == DownloadStatus.DOWNLOADING
+                    val isNowDownloaded = richBook.downloadStatus == DownloadStatus.DOWNLOADED
 
-                    // If we just watched it finish downloading, auto-close the description
-                    val shouldCollapse = wasDownloading && isNowDownloaded
+                    val isFirstLoad = currentState.isLoading
+
+                    val nextExpandedState = when {
+                        wasDownloading && isNowDownloaded -> false
+                        isFirstLoad -> !isNowDownloaded
+                        else -> currentState.isDescriptionExpanded
+                    }
 
                     currentState.copy(
-                        book = passedBook.copy(
-                            description = details?.description ?: passedBook.description,
-                            subjects = details?.subjects ?: passedBook.subjects
-                        ),
-                        chapters = details?.chapters ?: emptyList(),
-                        libraryBook = libraryBook,
-                        // Preserve user's toggle state unless we force collapse
-                        isDescriptionExpanded = if (shouldCollapse) false else currentState.isDescriptionExpanded
+                        book = richBook,
+                        chapters = richBook.chapters,
+                        isLoading = false,
+                        isDescriptionExpanded = nextExpandedState
                     )
                 }
-            }.collect()
+            }
         }
     }
 
-    // --- Actions ---
+    private fun createPlaceholderBook(id: String): Book {
+        return Book(
+            id = id,
+            title = "",
+            author = "",
+            description = null,
+            coverUrl = null,
+            downloadUrl = "",
+            source = BookSource.STANDARD_EBOOKS,
+            subjects = emptyList(),
+            language = ""
+        )
+    }
 
     fun onToggleDescription() {
         _uiState.update { it.copy(isDescriptionExpanded = !it.isDescriptionExpanded) }
@@ -110,42 +121,40 @@ class BookDetailsViewModel(
 
     fun onDownloadClick() {
         viewModelScope.launch {
-            repository.startDownload(passedBook)
+            repository.startDownload(_uiState.value.book)
         }
     }
 
-    fun onRemoveDownloadClick() {
+    fun deleteBook() {
+        _uiState.update { it.copy(isDescriptionExpanded = true) }
         viewModelScope.launch {
-            repository.removeDownload(passedBook.id)
+            repository.removeDownload(targetBookId)
         }
     }
 
     fun onCategoryChange(newCategory: String) {
         viewModelScope.launch {
-            val currentLibraryBook = _uiState.value.libraryBook
-            if (currentLibraryBook != null) {
-                repository.updateCategory(passedBook.id, newCategory)
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        libraryBook = currentLibraryBook.copy(userCategory = newCategory)
-                    )
-                }
-            }
+            repository.updateCategory(_uiState.value.book, newCategory)
+        }
+    }
+
+    fun removeFromLibrary() {
+        viewModelScope.launch {
+            val currentBook = _uiState.value.book
+            repository.deleteBook(currentBook.id)
         }
     }
 
     fun onFavoriteToggle() {
         viewModelScope.launch {
-            val currentLibraryBook = _uiState.value.libraryBook
-            if (currentLibraryBook != null) {
-                val newFavoriteStatus = !currentLibraryBook.isFavorite
-                repository.toggleFavorite(passedBook.id, newFavoriteStatus)
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        libraryBook = currentLibraryBook.copy(isFavorite = newFavoriteStatus)
-                    )
-                }
-            }
+            val currentBook = _uiState.value.book
+            repository.updateFavorite(currentBook, !currentBook.isFavorite)
+        }
+    }
+
+    fun resetReadingProgress() {
+        viewModelScope.launch {
+            repository.resetReadingProgress(targetBookId)
         }
     }
 }
