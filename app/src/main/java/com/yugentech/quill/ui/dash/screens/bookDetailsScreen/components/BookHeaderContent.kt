@@ -1,6 +1,17 @@
 package com.yugentech.quill.ui.dash.screens.bookDetailsScreen.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,14 +25,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.LibraryAdd
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -40,32 +54,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.yugentech.quill.R
 import com.yugentech.quill.network.domain.Book
 import com.yugentech.quill.room.entities.DownloadStatus
-import com.yugentech.quill.room.entities.LibraryBookEntity
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookHeaderContent(
     book: Book,
     topPadding: Dp,
-    libraryBook: LibraryBookEntity?,
-    downloadStatus: DownloadStatus,
     onCategoryClick: () -> Unit,
     onDownloadClick: () -> Unit,
     onReadClick: () -> Unit
 ) {
-    // Track if we were previously downloading.
-    // This allows us to trigger the "Download Complete" animation only when
-    // transitioning from Downloading -> Downloaded, rather than every time we navigate here.
     var wasDownloading by remember { mutableStateOf(false) }
 
-    LaunchedEffect(downloadStatus) {
-        if (downloadStatus == DownloadStatus.DOWNLOADING) {
+    // NEW: State to track if the full-screen cover dialog is open
+    var showCoverDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(book.downloadStatus) {
+        if (book.downloadStatus == DownloadStatus.DOWNLOADING) {
             wasDownloading = true
         }
     }
+
+    val isSaved = book.userCategory != null
+    val isDownloaded = book.downloadStatus == DownloadStatus.DOWNLOADED
+    val isDownloadEnabled = book.downloadStatus != DownloadStatus.DOWNLOADING && !isDownloaded
 
     Row(
         modifier = Modifier
@@ -73,15 +91,14 @@ fun BookHeaderContent(
             .padding(top = topPadding + 16.dp, start = 24.dp, end = 24.dp, bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // --- LEFT: Book Cover ---
+        // --- BOOK COVER ---
         ElevatedCard(
+            onClick = { showCoverDialog = true }, // Open dialog on click
             modifier = Modifier
                 .width(160.dp)
                 .height(240.dp),
             shape = RoundedCornerShape(12.dp),
-            elevation = androidx.compose.material3.CardDefaults.elevatedCardElevation(
-                defaultElevation = 12.dp
-            )
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 12.dp)
         ) {
             AsyncImage(
                 model = book.coverUrl,
@@ -93,29 +110,20 @@ fun BookHeaderContent(
 
         Spacer(modifier = Modifier.width(20.dp))
 
-        // --- RIGHT: Info & Actions Column ---
+        // --- DETAILS & ACTIONS ---
         Column(
             modifier = Modifier
                 .weight(1f)
                 .height(240.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // A. Title and Author
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            // A. Metadata
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+
+                SmartMarqueeTitle(title = book.title)
+
                 Text(
-                    text = book.title,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        shadow = androidx.compose.ui.graphics.Shadow(
-                            color = Color.Black.copy(alpha = 0.25f),
-                            blurRadius = 4f
-                        )
-                    ),
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
+                    modifier = Modifier.basicMarquee(),
                     text = book.author,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
@@ -125,171 +133,301 @@ fun BookHeaderContent(
                 )
             }
 
-            // B. Action Buttons
+            // B. Actions Stack
             Column {
-                val isSaved = libraryBook != null
-                val categoryLabel = if (isSaved) libraryBook.userCategory else "Category"
-                val isDownloadEnabled = downloadStatus != DownloadStatus.DOWNLOADING &&
-                        downloadStatus != DownloadStatus.DOWNLOADED
+                val categoryLabel = book.userCategory ?: "Add to Library"
+                val categoryIcon =
+                    if (isSaved) Icons.Default.FolderOpen else Icons.Default.LibraryAdd
 
-                // 1. Category Button
                 ActionButton(
-                    icon = Icons.Default.FolderOpen,
+                    icon = categoryIcon,
                     label = categoryLabel,
-                    onClick = { if (isSaved) onCategoryClick() },
-                    enabled = isSaved,
-                    shape = RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 16.dp,
-                        bottomStart = 4.dp,
-                        bottomEnd = 4.dp
-                    )
+                    onClick = onCategoryClick,
+                    isTop = true
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
 
-                // 2. Download Button
                 ActionButton(
-                    icon = Icons.Default.Download, // Default icon when not downloading/downloaded
-                    label = when (downloadStatus) {
+                    icon = Icons.Default.Download,
+                    label = when (book.downloadStatus) {
                         DownloadStatus.DOWNLOADED -> "Downloaded"
-                        DownloadStatus.DOWNLOADING -> "Downloading..."
+                        DownloadStatus.DOWNLOADING -> "Downloading"
                         else -> "Download"
                     },
                     onClick = { if (isDownloadEnabled) onDownloadClick() },
-                    containerColor = if (downloadStatus == DownloadStatus.DOWNLOADED)
-                        MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = if (downloadStatus == DownloadStatus.DOWNLOADED)
-                        MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                    shape = RoundedCornerShape(
-                        topStart = 4.dp,
-                        topEnd = 4.dp,
-                        bottomStart = 16.dp,
-                        bottomEnd = 16.dp
-                    ),
+                    isTop = false,
                     customIcon = {
-                        when (downloadStatus) {
+                        when (book.downloadStatus) {
                             DownloadStatus.DOWNLOADING -> {
-                                // Always animate the spinner while downloading
                                 AnimatedDownloadIcon(
                                     drawableResId = R.drawable.downloading_start,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(32.dp)
                                 )
                             }
+
                             DownloadStatus.DOWNLOADED -> {
                                 if (wasDownloading) {
-                                    // If we just finished downloading, play the success animation
                                     AnimatedDownloadIcon(
                                         drawableResId = R.drawable.download_complete,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(32.dp)
                                     )
                                 } else {
-                                    // If we navigated here and it was already done, show YOUR static custom vector
                                     Icon(
                                         painter = painterResource(id = R.drawable.download_mark),
                                         contentDescription = "Downloaded",
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(32.dp)
                                     )
                                 }
                             }
-                            else -> null // Fallback to the default 'icon' param (Download Icon)
+
+                            else -> null
                         }
                     }
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                // READ BUTTON
+                AnimatedVisibility(
+                    visible = isDownloaded,
+                    enter = if (wasDownloading) {
+                        expandVertically(expandFrom = Alignment.Top) + fadeIn()
+                    } else {
+                        androidx.compose.animation.EnterTransition.None
+                    },
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    Column {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        DetachedReadButton(book = book, onClick = onReadClick)
+                    }
+                }
+            }
+        }
+    }
 
-                // 3. Read Button
-                PrimaryActionButton(
-                    label = "Read",
-                    onClick = onReadClick
+    // --- DIALOG FOR FULL RESOLUTION COVER ---
+    if (showCoverDialog) {
+        CoverImageDialog(
+            coverUrl = book.coverUrl,
+            onDismiss = { showCoverDialog = false }
+        )
+    }
+}
+
+@Composable
+fun CoverImageDialog(
+    coverUrl: String?,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false, // Allows full-screen usage
+            dismissOnBackPress = true,
+            decorFitsSystemWindows = false,  // <-- FIX: Makes the dialog draw behind status/nav bars
+            dismissOnClickOutside = true
+        )
+    ) {
+        // OUTER BOX: Handles the dark background and perfectly centers the content
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.6f))
+                .clickable( // Dismisses when clicking outside the image
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+
+            // High-Res Image
+            AsyncImage(
+                model = coverUrl,
+                contentDescription = "Full Book Cover",
+                contentScale = ContentScale.Fit, // Shows the entire image without cropping
+                modifier = Modifier
+                    .fillMaxWidth(0.70f) // Keeps it slightly smaller than the screen width
+                    .clip(RoundedCornerShape(16.dp)) // Corners now correctly hug the image
+                    .clickable( // Consumes clicks so tapping the image doesn't close the dialog
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {}
+                    )
+            )
+        }
+    }
+}
+
+/**
+ * Custom Component: Dynamically measures the text and applies a marquee
+ * ONLY to the second line if the text overflows.
+ */
+@Composable
+fun SmartMarqueeTitle(
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    var firstLine by remember(title) { mutableStateOf(title) }
+    var secondLine by remember(title) { mutableStateOf<String?>(null) }
+    var isMeasured by remember(title) { mutableStateOf(false) }
+
+    // 1. Visible Style: Includes the shadow for the final look
+    val visibleStyle = MaterialTheme.typography.titleLarge.copy(
+        fontWeight = FontWeight.Bold,
+        shadow = androidx.compose.ui.graphics.Shadow(
+            color = Color.Black.copy(alpha = 0.25f),
+            blurRadius = 4f
+        )
+    )
+
+    // 2. Layout Style: Removes shadow so the "invisible" measuring text is truly invisible
+    val layoutStyle = visibleStyle.copy(shadow = null)
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        // INVISIBLE LAYER: Used purely for calculation.
+        // using 'layoutStyle' prevents the "ghost shadow" bug.
+        Text(
+            text = title,
+            style = layoutStyle,
+            maxLines = 2,
+            color = Color.Transparent,
+            onTextLayout = { textLayoutResult ->
+                if (textLayoutResult.lineCount > 1) {
+                    // Find where the first line breaks
+                    val splitIndex = textLayoutResult.getLineEnd(0, visibleEnd = true)
+
+                    // Safely grab the substrings
+                    if (splitIndex < title.length) {
+                        firstLine = title.substring(0, splitIndex).trim()
+                        secondLine = title.substring(splitIndex).trim()
+                    } else {
+                        firstLine = title
+                        secondLine = null
+                    }
+                } else {
+                    firstLine = title
+                    secondLine = null
+                }
+                isMeasured = true
+            }
+        )
+
+        // VISIBLE LAYER: The actual UI user sees
+        if (isMeasured) {
+            Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                // Line 1: Static
+                Text(
+                    text = firstLine,
+                    style = visibleStyle,
+                    maxLines = 1,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    overflow = TextOverflow.Clip
                 )
+
+                // Line 2: Animated (only if needed)
+                if (secondLine != null) {
+                    Text(
+                        text = secondLine!!,
+                        style = visibleStyle,
+                        maxLines = 1,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.basicMarquee() // Animation happens here
+                    )
+                }
             }
         }
     }
 }
 
-// --- Component: Wide Standard Action Button ---
 @Composable
 fun ActionButton(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit,
-    enabled: Boolean = true,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
-    contentColor: Color = MaterialTheme.colorScheme.onSurface,
-    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(14.dp),
+    isTop: Boolean,
     customIcon: @Composable (() -> Unit)? = null
 ) {
-    FilledTonalIconButton(
+    val shape = if (isTop) {
+        RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
+    } else {
+        RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
+    }
+
+    val containerColor = if (isTop) {
+        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.45f)
+    } else {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+    }
+
+    Card(
         onClick = onClick,
-        enabled = enabled,
         shape = shape,
-        colors = IconButtonDefaults.filledTonalIconButtonColors(
-            containerColor = containerColor,
-            contentColor = contentColor,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f)
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor
         ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
     ) {
         Row(
+            modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
             if (customIcon != null) {
                 customIcon()
             } else {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(icon, null, Modifier.size(20.dp))
             }
+
             Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium)
         }
     }
 }
 
-// --- Component: Wide Primary Action Button ---
 @Composable
-fun PrimaryActionButton(
-    label: String,
+fun DetachedReadButton(
+    book: Book,
     onClick: () -> Unit
 ) {
-    FilledIconButton(
+    // Restored the simplified "Continue/Read" logic
+    val buttonText = remember(book.progressPercent) {
+        if (book.progressPercent > 0f) "Continue" else "Read"
+    }
+
+    Card(
         onClick = onClick,
         shape = CircleShape,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
         ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
     ) {
         Row(
+            modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(Icons.AutoMirrored.Filled.MenuBook, null, Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = buttonText,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Medium
             )
         }
     }
