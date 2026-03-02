@@ -4,65 +4,76 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.yugentech.quill.network.domain.Book
-import com.yugentech.quill.room.BookMappers
-import com.yugentech.quill.room.daos.BookDetailsDao
+import com.yugentech.quill.room.BookMappers.toEntity
+import com.yugentech.quill.room.daos.BookDao
 import com.yugentech.quill.room.daos.CategoryDao
-import com.yugentech.quill.room.daos.LibraryBooksDao
-import com.yugentech.quill.room.entities.BookDetailsEntity
+import com.yugentech.quill.room.entities.BookEntity
+import com.yugentech.quill.room.entities.CategoryEntity
 import com.yugentech.quill.room.entities.DownloadStatus
-import com.yugentech.quill.room.entities.LibraryBookEntity
-import com.yugentech.quill.room.entities.UserCategoryEntity
 import com.yugentech.quill.workmanager.BookDownloadWorker
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 
 class BookDetailsRepositoryImpl(
-    private val bookDetailsDao: BookDetailsDao,
-    private val libraryDao: LibraryBooksDao,
+    private val bookDao: BookDao,
     private val categoryDao: CategoryDao,
     private val workManager: WorkManager
 ) : BookDetailsRepository {
 
-    // --- Flow-based queries for real-time updates ---
-
-    override fun getDetails(bookId: String): Flow<BookDetailsEntity?> {
-        return bookDetailsDao.getDetailsFlow(bookId)
+    // Reads
+    override fun getBook(bookId: String): Flow<BookEntity?> {
+        return bookDao.getBookEntityFlow(bookId)
     }
 
-    override fun getLibraryBook(bookId: String): Flow<LibraryBookEntity?> {
-        return libraryDao.getBookByIdFlow(bookId)
-    }
-
-    override fun getAllCategories(): Flow<List<UserCategoryEntity>> {
+    override fun getAllCategories(): Flow<List<CategoryEntity>> {
         return categoryDao.getAllCategories()
     }
 
-    // --- Snapshot queries for immediate state ---
-
-    override suspend fun getDetailsSnapshot(bookId: String): BookDetailsEntity? {
-        return bookDetailsDao.getDetails(bookId)
+    override suspend fun isBookInLibrary(bookId: String): Boolean {
+        return bookDao.hasBook(bookId)
     }
 
-    override suspend fun getLibraryBookSnapshot(bookId: String): LibraryBookEntity? {
-        return libraryDao.getBookById(bookId)
+    override suspend fun getBookOnce(bookId: String): BookEntity? {
+        return bookDao.getBookEntity(bookId)
     }
 
-    // --- Download management ---
-
+    // Actions
     override suspend fun startDownload(book: Book) {
-        // 1. Save "Lite" entity (So it shows up in Library with Spinner)
-        val libraryBookEntity = BookMappers.toLibraryEntity(book).copy(
+        // 1. Check if we already have this book (to preserve Favorite/Category status & PROGRESS)
+        val existingBook = bookDao.getBookEntity(book.id)
+
+        // 2. Prepare the Entity
+        val newEntity = BookEntity(
+            id = book.id,
+            title = book.title,
+            author = book.author,
+            coverUrl = book.coverUrl,
+            downloadUrl = book.downloadUrl,
+            source = book.source,
+            description = book.description,
+            subjects = book.subjects,
+            language = book.language,
             downloadStatus = DownloadStatus.DOWNLOADING,
-            addedAt = System.currentTimeMillis()
+
+            // --- PRESERVED METADATA ---
+            isFavorite = existingBook?.isFavorite ?: false,
+            userCategory = existingBook?.userCategory ?: "Shelf",
+            addedAt = existingBook?.addedAt ?: System.currentTimeMillis(),
+
+            // --- FIX: PRESERVED PROGRESS DATA ---
+            progressPercent = existingBook?.progressPercent ?: 0f,
+            totalPages = existingBook?.totalPages ?: 0,
+            lastChapterTitle = existingBook?.lastChapterTitle,
+            lastReadTime = existingBook?.lastReadTime ?: 0,
+            lastChapterIndex = existingBook?.lastChapterIndex ?: 0,
+            lastScrollPosition = existingBook?.lastScrollPosition ?: 0,
+            lastLocatorJson = existingBook?.lastLocatorJson
         )
-        libraryDao.addToLibrary(libraryBookEntity)
 
-        // 2. Save "Heavy" entity (Description, Subjects)
-        // The Worker needs this to exist so it can find it and update the file path later
-        val heavyEntity = BookMappers.toBookDetailsEntity(book)
-        bookDetailsDao.insertDetails(heavyEntity)
+        // 3. Save to Database
+        bookDao.insertBook(newEntity)
 
-        // 3. Queue the Worker
+        // 4. Start the WorkManager Task
         val workRequest = OneTimeWorkRequestBuilder<BookDownloadWorker>()
             .setInputData(
                 workDataOf(
@@ -78,32 +89,70 @@ class BookDetailsRepositoryImpl(
     }
 
     override suspend fun removeDownload(bookId: String) {
-        val details = bookDetailsDao.getDetails(bookId)
-
-        // Delete the physical file if it exists
-        details?.localFilePath?.let { path ->
+        val book = bookDao.getBookEntity(bookId)
+        book?.localFilePath?.let { path ->
             val file = File(path)
             if (file.exists()) {
                 file.delete()
             }
         }
 
-        // Remove the file path from database (soft delete)
-        bookDetailsDao.removeLocalFile(bookId)
-
-        // Update download status
-        libraryDao.updateDownloadStatus(bookId, DownloadStatus.NOT_DOWNLOADED)
+        bookDao.removeDownload(bookId)
     }
 
-    // --- Category management ---
-
-    override suspend fun updateCategory(bookId: String, newCategory: String) {
-        libraryDao.moveBookToCategory(bookId, newCategory)
+    override suspend fun deleteBook(bookId: String) {
+        val book = bookDao.getBookEntity(bookId)
+        book?.localFilePath?.let { path ->
+            val file = File(path)
+            if (file.exists()) {
+                file.delete()
+            }
+        }
+        bookDao.deleteBook(bookId)
     }
 
-    // --- Favorite management ---
+    override suspend fun updateFavorite(book: Book, isFavorite: Boolean) {
+        val existingBook = bookDao.getBookEntity(book.id)
 
-    override suspend fun toggleFavorite(bookId: String, isFavorite: Boolean) {
-        libraryDao.updateFavoriteStatus(bookId, isFavorite)
+        if (existingBook != null) {
+            bookDao.updateFavorite(book.id, isFavorite)
+        } else {
+            val newEntity = book.toEntity(
+                isFavorite = isFavorite,
+                status = DownloadStatus.NOT_DOWNLOADED
+            )
+            bookDao.insertBook(newEntity)
+        }
+    }
+
+    override suspend fun updateCategory(book: Book, newCategory: String) {
+        val existingBook = bookDao.getBookEntity(book.id)
+
+        if (existingBook != null) {
+            bookDao.updateCategory(book.id, newCategory)
+        } else {
+            val newEntity = book.toEntity(
+                category = newCategory,
+                status = DownloadStatus.NOT_DOWNLOADED
+            )
+            bookDao.insertBook(newEntity)
+        }
+    }
+
+    override suspend fun updateProgress(bookId: String, progressPercent: Float, chapterIndex: Int) {
+        val existingBook = bookDao.getBookEntity(bookId)
+
+        if (existingBook != null) {
+            val updatedBook = existingBook.copy(
+                progressPercent = progressPercent,
+                lastChapterIndex = chapterIndex,
+                lastReadTime = System.currentTimeMillis()
+            )
+            bookDao.insertBook(updatedBook)
+        }
+    }
+
+    override suspend fun resetReadingProgress(bookId: String) {
+        bookDao.resetReadingProgress(bookId)
     }
 }
