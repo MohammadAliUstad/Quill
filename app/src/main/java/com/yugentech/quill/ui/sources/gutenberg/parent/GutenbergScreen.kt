@@ -1,0 +1,159 @@
+package com.yugentech.quill.ui.sources.gutenberg.parent
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.gutenberg.viewmodel.GutenbergNavigationEvent
+import com.yugentech.quill.gutenberg.viewmodel.GutenbergViewModel
+import com.yugentech.quill.ui.sources.common.AnimatedSearchIcon
+import com.yugentech.quill.ui.sources.common.BooksGridContent
+import com.yugentech.quill.ui.sources.standardScreen.components.GutenbergScreenHeader
+import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
+import kotlinx.coroutines.flow.collectLatest
+import org.koin.androidx.compose.koinViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GutenbergScreen(
+    onBackClick: () -> Unit,
+    onNavigateByContent: (Book) -> Unit,
+    viewModel: GutenbergViewModel = koinViewModel()
+) {
+    val books by viewModel.booksState.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val isPaginating by viewModel.isPaginating.collectAsState()
+    val selectedCategory by viewModel.selectedCategory.collectAsState()
+    val categories by viewModel.categories.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collectLatest { event ->
+            when (event) {
+                is GutenbergNavigationEvent.NavigateByContent -> onNavigateByContent(event.book)
+            }
+        }
+    }
+
+    var searchText by rememberSaveable { mutableStateOf("") }
+    var searchActive by rememberSaveable { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val dockedWidth = screenWidth - 32.dp
+
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val gridTopPadding = statusBarHeight + 56.dp + 64.dp
+    val gridBottomPadding = navBarHeight + 16.dp
+
+    BackHandler(enabled = searchActive) {
+        searchActive = false
+        if (searchText.isEmpty()) {
+            categories.firstOrNull()?.let { viewModel.onCategorySelected(it) }
+        }
+    }
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            // --- LAYER 1: SCROLLABLE GRID ---
+            AnimatedVisibility(
+                visible = books.isNotEmpty() || isLoading,
+                enter = fadeIn(animationSpec = tween(durationMillis = 300))
+            ) {
+                BooksGridContent(
+                    books = books,
+                    isLoading = isLoading,
+                    topPadding = gridTopPadding,
+                    bottomPadding = gridBottomPadding,
+                    onBookClick = { book -> viewModel.onBookClick(book) }
+                )
+            }
+
+            // --- LAYER 2: UNIFIED HEADER ---
+            GutenbergScreenHeader(
+                searchText = searchText,
+                searchActive = searchActive,
+                dockedWidth = dockedWidth,
+                onSearchTextChange = { searchText = it },
+                onSearchSubmit = { query ->
+                    viewModel.onSearchQuery(query)
+                    searchActive = false
+                    focusManager.clearFocus()
+                },
+                onSearchActiveChange = { searchActive = it },
+                onSearchClear = {
+                    searchText = ""
+                    viewModel.onSearchQuery("")
+                },
+                onBackOrClose = {
+                    if (searchActive) {
+                        searchActive = false
+                        if (searchText.isEmpty()) {
+                            categories.firstOrNull()?.let { viewModel.onCategorySelected(it) }
+                        }
+                    } else {
+                        onBackClick()
+                    }
+                },
+                leadingIcon = { AnimatedSearchIcon(isSearchActive = searchActive) },
+                searchContent = {
+                    SearchSuggestions(
+                        onSuggestionClick = { suggestion ->
+                            searchText = suggestion
+                            viewModel.onSearchQuery(suggestion)
+                            searchActive = false
+                            focusManager.clearFocus()
+                        }
+                    )
+                },
+                categories = categories,
+                selectedCategory = selectedCategory,
+                onCategorySelected = { category ->
+                    viewModel.onCategorySelected(category)
+                    if (searchText.isNotEmpty()) {
+                        searchText = ""
+                        viewModel.onSearchQuery("")
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .zIndex(1f)
+            )
+        }
+    }
+}
