@@ -16,7 +16,7 @@
         tools:ignore="ForegroundServicesPolicy" />
 
     <application
-        android:name=".dependencyInjection.QuillApp"
+        android:name=".di.QuillApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
