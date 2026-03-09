@@ -1,7 +1,8 @@
 package com.yugentech.quill.theme.themeRepository
 
 import com.yugentech.quill.theme.ThemeService
-import com.yugentech.quill.theme.models.ThemeConfiguration
+import com.yugentech.theme.ThemeRepository
+import com.yugentech.theme.models.ThemeConfiguration
 import timber.log.Timber
 
 class ThemeRepositoryImpl(
