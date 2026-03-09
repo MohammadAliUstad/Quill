@@ -2,11 +2,11 @@ package com.yugentech.quill.theme
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.theme.getters.AppFont
-import com.yugentech.quill.theme.models.ColorTheme
-import com.yugentech.quill.theme.models.ThemeConfiguration
-import com.yugentech.quill.theme.models.ThemeMode
-import com.yugentech.quill.theme.themeRepository.ThemeRepository
+import com.yugentech.theme.ThemeRepository
+import com.yugentech.theme.getters.AppFont
+import com.yugentech.theme.models.ColorTheme
+import com.yugentech.theme.models.ThemeConfiguration
+import com.yugentech.theme.models.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +32,7 @@ class ThemeViewModel(
     // Public read-only stream of theme configuration
     val themeConfiguration: StateFlow<ThemeConfiguration> = _themeConfiguration.asStateFlow()
 
-    // Derived stream specifically for the current font, helpful for UI logic
+    // Derived stream specifically for the current fonts, helpful for UI logic
     val currentFont: StateFlow<AppFont> = _themeConfiguration
         .map { it.appFont }
         .stateIn(
@@ -59,7 +59,7 @@ class ThemeViewModel(
         }
     }
 
-    // Helper method to update just the font while keeping other settings
+    // Helper method to update just the fonts while keeping other settings
     fun setFont(font: AppFont) {
         val current = _themeConfiguration.value
         val newConfig = current.copy(appFont = font)

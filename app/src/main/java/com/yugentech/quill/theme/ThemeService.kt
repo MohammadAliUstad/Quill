@@ -6,10 +6,10 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.yugentech.quill.theme.getters.AppFont
-import com.yugentech.quill.theme.models.ColorTheme
-import com.yugentech.quill.theme.models.ThemeConfiguration
-import com.yugentech.quill.theme.models.ThemeMode
+import com.yugentech.theme.getters.AppFont
+import com.yugentech.theme.models.ColorTheme
+import com.yugentech.theme.models.ThemeConfiguration
+import com.yugentech.theme.models.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -38,7 +38,7 @@ class ThemeService(
             val savedFontName = prefs[APP_FONT_KEY] ?: AppFont.Google.name
             val appFont = try {
                 AppFont.valueOf(savedFontName)
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 AppFont.Google
             }
 
