@@ -42,7 +42,7 @@ android {
 }
 
 dependencies {
-    // 👇 ADDED DEPENDENCY ON YOUR NEW THEME MODULE 👇
+    implementation(project(":aira"))
     implementation(project(":theme"))
 
     implementation(libs.readium.shared)
@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.koin.androidx.compose)
 
     implementation(libs.wavy.slider)
+    implementation(libs.androidx.animation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

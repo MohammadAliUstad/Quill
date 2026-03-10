@@ -13,7 +13,7 @@ plugins {
 }
 
 val localProperties = Properties()
-val localPropertiesFile = rootProject.file("local.properties")
+val localPropertiesFile: File = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
@@ -32,7 +32,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val webClientId = localProperties.getProperty("WEB_CLIENT_ID") ?: ""
-        resValue("string", "web_client_id", webClientId)
+        buildConfigField("String", "WEB_CLIENT_ID", "\"$webClientId\"")
+
+        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
     buildTypes {
@@ -70,9 +73,21 @@ android {
 }
 
 dependencies {
-    // Added dependency on the new theme module
+    implementation(project(":database"))
+    implementation(project(":aira"))
     implementation(project(":theme"))
     implementation(project(":reader"))
+
+    // MediaPipe TextEmbedder
+    implementation(libs.tasks.text)
+
+    implementation("dev.chrisbanes.haze:haze:1.7.2")
+
+    implementation(libs.onnxruntime.android)
+
+    // Gemini
+    implementation(libs.generativeai)
+    implementation(libs.androidx.material3)
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
@@ -86,6 +101,7 @@ dependencies {
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.ktor.client.okhttp)
 
     // Billing
     implementation(libs.billing)
