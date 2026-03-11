@@ -15,20 +15,28 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
-import com.yugentech.quill.navigation.AppNavHost
-import com.yugentech.quill.theme.QuillTheme
+import com.yugentech.quill.auth.viewmodel.AuthViewModel
+import com.yugentech.quill.navigation.host.AppNavHost
 import com.yugentech.quill.theme.ThemeViewModel
-import com.yugentech.quill.theme.models.ThemeMode
+import com.yugentech.theme.QuillTheme
+import com.yugentech.theme.models.ThemeMode
+import org.koin.android.ext.android.get
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 
 class MainActivity : FragmentActivity() {
-    override fun onCreate(
-        savedInstanceState: Bundle?
-    ) {
-        installSplashScreen()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+
         super.onCreate(savedInstanceState)
         Timber.v("MainActivity onCreate: App launching")
+
+        val authViewModel: AuthViewModel = get()
+
+        splashScreen.setKeepOnScreenCondition {
+            authViewModel.authState.value.isInitializing
+        }
 
         setContent {
             val navController = rememberNavController()
@@ -62,9 +70,14 @@ class MainActivity : FragmentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavHost(
-                        navController = navController
-                    )
+                    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+
+                    if (!authState.isInitializing) {
+                        AppNavHost(
+                            navController = navController,
+                            webClientId = BuildConfig.WEB_CLIENT_ID
+                        )
+                    }
                 }
             }
         }
