@@ -1,16 +1,25 @@
-package com.yugentech.quill.reader.reader
+package com.yugentech.quill.reader
 
-import com.yugentech.quill.room.daos.BookDao
-import com.yugentech.quill.room.entities.BookEntity
+import com.yugentech.quill.database.dao.BookDao
+import com.yugentech.quill.reader.repository.ReaderBookData
+import com.yugentech.quill.reader.repository.ReaderRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class ReaderRepositoryImpl(
     private val bookDao: BookDao
 ) : ReaderRepository {
 
-    override fun getBook(bookId: String): Flow<BookEntity?> {
-        return bookDao.getBookEntityFlow(bookId)
-    }
+    override fun getBook(bookId: String): Flow<ReaderBookData?> =
+        bookDao.getBookEntityFlow(bookId).map { entity ->
+            entity?.let {
+                ReaderBookData(
+                    localFilePath = it.localFilePath,
+                    totalPages = it.totalPages,
+                    lastLocatorJson = it.lastLocatorJson
+                )
+            }
+        }
 
     override suspend fun saveProgress(
         bookId: String,
