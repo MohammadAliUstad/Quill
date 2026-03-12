@@ -1,4 +1,4 @@
-package com.yugentech.quill.theme.getters
+package com.yugentech.theme.getters
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
