@@ -1,4 +1,4 @@
-package com.yugentech.quill.theme
+package com.yugentech.theme
 
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -6,11 +6,11 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
-import com.yugentech.quill.theme.getters.getColorScheme
-import com.yugentech.quill.theme.getters.getTypography
-import com.yugentech.quill.theme.models.ThemeConfiguration
-import com.yugentech.quill.theme.tokens.LocalDesignTokens
-import com.yugentech.quill.theme.tokens.TokensCompact
+import com.yugentech.theme.getters.getColorScheme
+import com.yugentech.theme.getters.getTypography
+import com.yugentech.theme.models.ThemeConfiguration
+import com.yugentech.theme.tokens.LocalDesignTokens
+import com.yugentech.theme.tokens.TokensCompact
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
