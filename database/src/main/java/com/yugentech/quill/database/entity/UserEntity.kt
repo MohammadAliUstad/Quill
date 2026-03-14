@@ -3,6 +3,7 @@ package com.yugentech.quill.database.entity
 import androidx.annotation.Keep
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.yugentech.quill.database.model.UserData
 
 // Database table definition for storing user profiles
 @Keep

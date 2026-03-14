@@ -1,12 +1,16 @@
-package com.yugentech.sessions.di.module
+package com.yugentech.quill.di.modules
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.yugentech.sessions.user.datastore.UserDataStore
-import com.yugentech.sessions.user.service.UserService
-import com.yugentech.sessions.user.repository.UserRepository
-import com.yugentech.sessions.user.repository.UserRepositoryImpl
+import com.yugentech.quill.user.datastore.UserDataStore
+import com.yugentech.quill.user.repository.UserRepository
+import com.yugentech.quill.user.repository.UserRepositoryImpl
+import com.yugentech.quill.user.service.SyncDataStore
+import com.yugentech.quill.user.service.UserService
+import com.yugentech.quill.user.viewmodel.UserViewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.koin.core.module.dsl.viewModel
+import timber.log.Timber
 
 // Koin module defining dependencies for user profile management
 val userModule = module {
@@ -21,6 +25,13 @@ val userModule = module {
         )
     }
 
+    single {
+        Timber.d("Initializing SyncPreferences")
+        SyncDataStore(
+            dataStore = get(named("sync"))
+        )
+    }
+
     // Manages local preferences specific to the user
     single {
         UserDataStore(get(named("user")))
@@ -32,6 +43,12 @@ val userModule = module {
             userDao = get(),
             userService = get(),
             syncDataStore = get()
+        )
+    }
+
+    viewModel {
+        UserViewModel(
+            userRepository = get()
         )
     }
 }
