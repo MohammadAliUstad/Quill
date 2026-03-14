@@ -1,4 +1,4 @@
-package com.yugentech.sessions.user.datastore
+package com.yugentech.quill.user.datastore
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences

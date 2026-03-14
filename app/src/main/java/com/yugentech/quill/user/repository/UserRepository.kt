@@ -1,7 +1,7 @@
-package com.yugentech.sessions.user.repository
+package com.yugentech.quill.user.repository
 
-import com.yugentech.sessions.user.model.UserData
-import com.yugentech.sessions.user.result.UserResult
+import com.yugentech.quill.database.model.UserData
+import com.yugentech.quill.user.result.UserResult
 import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
