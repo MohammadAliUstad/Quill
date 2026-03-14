@@ -1,9 +1,10 @@
-package com.yugentech.sessions.user.state
+package com.yugentech.quill.user.state
 
-import com.yugentech.sessions.user.model.UserData
+import com.yugentech.quill.database.model.UserData
 
-data class UserState(
+data class UserUiState(
     val user: UserData? = null,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val isSaving: Boolean = false,
+    val errorMessage: String? = null,
 )
