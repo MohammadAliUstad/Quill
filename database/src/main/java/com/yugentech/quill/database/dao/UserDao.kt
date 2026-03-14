@@ -1,7 +1,7 @@
 package com.yugentech.sessions.room.daos
 
 import androidx.room.*
-import com.yugentech.sessions.room.entities.UserEntity
+import com.yugentech.quill.database.entity.UserEntity
 import kotlinx.coroutines.flow.Flow
 
 // Interface defining database operations for user profile data
