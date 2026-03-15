@@ -27,7 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.R
-import com.yugentech.quill.theme.ThemeViewModel
+import com.yugentech.theme.ThemeViewModel
 import com.yugentech.quill.ui.mainScreen.components.SectionHeader
 import com.yugentech.quill.ui.mainScreen.components.itemShape
 import com.yugentech.theme.models.ThemeMode
@@ -44,7 +44,7 @@ fun ThemeModeSelector(
     Column(modifier = modifier.fillMaxWidth()) {
         SectionHeader(
             icon = Icons.Default.Brightness6,
-            title = stringResource(R.string.theme_mode)
+            title = "Theme Mode"
         )
 
         Column(
@@ -56,20 +56,20 @@ fun ThemeModeSelector(
                 val (icon, title, subtitle) = when (themeMode) {
                     ThemeMode.LIGHT -> Triple(
                         Icons.Default.LightMode,
-                        stringResource(R.string.light),
-                        stringResource(R.string.always_use_light_appearance)
+                        "Light",
+                        "Always use light appearance"
                     )
 
                     ThemeMode.DARK -> Triple(
                         Icons.Default.DarkMode,
-                        stringResource(R.string.dark),
-                        stringResource(R.string.always_use_dark_appearance)
+                        "Dark",
+                        "Always use dark appearance"
                     )
 
                     ThemeMode.SYSTEM -> Triple(
                         Icons.Default.AutoMode,
-                        stringResource(R.string.system),
-                        stringResource(R.string.match_system_appearance)
+                        "System",
+                        "Match system appearance"
                     )
                 }
 
