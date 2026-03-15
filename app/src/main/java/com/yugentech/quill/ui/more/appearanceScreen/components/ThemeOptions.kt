@@ -30,13 +30,13 @@ fun themeOptions(
 
     // Sakura (Pink/Red)
     ThemeOption(
-        colorTheme = ColorTheme.SAKURA,
-        displayName = "Sakura",
-        primaryColor = AppColorSchemes.SakuraLightColorScheme.primary,
+        colorTheme = ColorTheme.QUILL,
+        displayName = "Quill",
+        primaryColor = AppColorSchemes.QuillLightColorScheme.primary,
         gradientColors = listOf(
-            AppColorSchemes.SakuraLightColorScheme.primary,
-            AppColorSchemes.SakuraLightColorScheme.tertiary,
-            AppColorSchemes.SakuraLightColorScheme.primaryContainer
+            AppColorSchemes.QuillLightColorScheme.primary,
+            AppColorSchemes.QuillLightColorScheme.tertiary,
+            AppColorSchemes.QuillLightColorScheme.primaryContainer
         )
     ),
 

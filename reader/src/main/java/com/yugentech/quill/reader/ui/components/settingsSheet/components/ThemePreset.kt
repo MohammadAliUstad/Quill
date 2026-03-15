@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.settingsSheet.components
+package com.yugentech.quill.reader.ui.components.settingsSheet.components
 
 import androidx.compose.ui.graphics.Color
 import org.readium.r2.navigator.preferences.Theme
