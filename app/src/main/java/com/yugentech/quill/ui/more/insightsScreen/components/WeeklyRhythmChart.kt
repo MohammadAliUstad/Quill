@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.config.insightsScreen.components
+package com.yugentech.quill.ui.more.insightsScreen.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,8 +10,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.yugentech.sessions.theme.tokens.corners
-import com.yugentech.sessions.theme.tokens.spacing
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.spacing
 
 @Composable
 fun WeeklyRhythmChart(

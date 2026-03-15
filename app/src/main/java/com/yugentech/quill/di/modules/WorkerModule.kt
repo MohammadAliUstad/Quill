@@ -2,25 +2,12 @@ package com.yugentech.quill.di.modules
 
 import com.yugentech.quill.bookDetails.worker.BookDownloadWorker
 import com.yugentech.quill.aira.rag.BookIndexingWorker
-import org.koin.androidx.workmanager.dsl.worker
+import com.yugentech.quill.cloud.worker.SyncWorker
+import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.dsl.module
 
 val workerModule = module {
-    worker {
-        BookDownloadWorker(
-            context = get(),
-            params = get(),
-            bookDao = get(),
-        )
-    }
-
-    worker {
-        BookIndexingWorker(
-            context = get(),
-            params = get(),
-            bookDao = get(),
-            chunkDao = get(),
-            embeddingEngine = get()
-        )
-    }
+    workerOf(::BookDownloadWorker)
+    workerOf(::BookIndexingWorker)
+    workerOf(::SyncWorker)
 }

@@ -1,9 +1,8 @@
-package com.yugentech.quill.theme
+package com.yugentech.theme
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.theme.ThemeRepository
-import com.yugentech.theme.getters.AppFont
 import com.yugentech.theme.models.ColorTheme
 import com.yugentech.theme.models.ThemeConfiguration
 import com.yugentech.theme.models.ThemeMode
@@ -22,7 +21,8 @@ class ThemeViewModel(
     // Internal mutable state for the current theme configuration
     private val _themeConfiguration = MutableStateFlow(
         ThemeConfiguration(
-            ThemeMode.LIGHT, ColorTheme.DYNAMIC,
+            themeMode = ThemeMode.LIGHT,
+            colorTheme = ColorTheme.QUILL,
             useDynamicColors = true,
             isAmoledMode = false,
             appFont = AppFont.Google

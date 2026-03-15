@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.yugentech.theme.getters.AppFont
+import com.yugentech.theme.AppFont
 import com.yugentech.theme.models.ColorTheme
 import com.yugentech.theme.models.ThemeConfiguration
 import com.yugentech.theme.models.ThemeMode
@@ -44,7 +44,7 @@ class ThemeService(
 
             ThemeConfiguration(
                 themeMode = ThemeMode.valueOf(prefs[THEME_MODE_KEY] ?: ThemeMode.SYSTEM.name),
-                colorTheme = ColorTheme.valueOf(prefs[COLOR_THEME_KEY] ?: ColorTheme.CANYON.name),
+                colorTheme = ColorTheme.valueOf(prefs[COLOR_THEME_KEY] ?: ColorTheme.QUILL.name),
                 useDynamicColors = prefs[USE_DYNAMIC_COLORS_KEY] ?: false,
                 isAmoledMode = prefs[IS_AMOLED_MODE_KEY] ?: false,
                 appFont = appFont
