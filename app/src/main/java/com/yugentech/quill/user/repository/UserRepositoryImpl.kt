@@ -1,11 +1,11 @@
-package com.yugentech.sessions.user.repository
+package com.yugentech.quill.user.repository
 
-import com.yugentech.sessions.user.model.UserData
+import com.yugentech.quill.database.entity.UserEntity
+import com.yugentech.quill.database.model.UserData
+import com.yugentech.quill.user.service.SyncDataStore
 import com.yugentech.sessions.room.daos.UserDao
-import com.yugentech.sessions.room.entities.UserEntity
-import com.yugentech.sessions.sessions.datastore.SyncDataStore
-import com.yugentech.sessions.user.result.UserResult
-import com.yugentech.sessions.user.service.UserService
+import com.yugentech.quill.user.result.UserResult
+import com.yugentech.quill.user.service.UserService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -62,10 +62,12 @@ class UserRepositoryImpl(
                     syncDataStore.setUserFetchDone(true)
                     UserResult.Success(Unit)
                 }
+
                 is UserResult.Error -> {
                     Timber.w("Failed to fetch user from cloud: ${result.message}")
                     result
                 }
+
                 is UserResult.Loading -> {
                     UserResult.Loading
                 }
