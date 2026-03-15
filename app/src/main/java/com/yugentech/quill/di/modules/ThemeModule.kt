@@ -1,7 +1,7 @@
 package com.yugentech.quill.di.modules
 
 import com.yugentech.quill.theme.ThemeService
-import com.yugentech.quill.theme.ThemeViewModel
+import com.yugentech.theme.ThemeViewModel
 import com.yugentech.theme.ThemeRepository
 import com.yugentech.quill.theme.themeRepository.ThemeRepositoryImpl
 import org.koin.core.module.dsl.viewModel
