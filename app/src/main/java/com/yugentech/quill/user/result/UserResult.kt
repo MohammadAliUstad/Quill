@@ -1,4 +1,4 @@
-package com.yugentech.sessions.user.result
+package com.yugentech.quill.user.result
 
 sealed class UserResult<out T> {
     object Loading : UserResult<Nothing>()
