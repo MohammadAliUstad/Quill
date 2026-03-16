@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.aira.components
+package com.yugentech.quill.reader.ui.components.aira.components
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.StartOffset

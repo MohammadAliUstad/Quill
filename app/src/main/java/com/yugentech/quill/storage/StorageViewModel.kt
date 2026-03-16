@@ -1,0 +1,39 @@
+package com.yugentech.quill.storage
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+class StorageViewModel(
+    private val repository: StorageRepository
+) : ViewModel() {
+
+    val uiState: StateFlow<StorageUiState> = combine(
+        repository.getDownloadedBooksBySize(),
+        repository.getTotalAppStorageUsed(),
+        repository.getBookStorageBreakdowns()
+    ) { books, usedBytes, breakdowns ->
+        StorageUiState(
+            downloadedBooks = books,
+            bookStorageBreakdowns = breakdowns.associateBy { it.bookId },
+            appStorageUsedBytes = usedBytes,
+            deviceFreeSpaceBytes = repository.getDeviceFreeSpace(),
+            deviceTotalSpaceBytes = repository.getDeviceTotalSpace(),
+            isLoading = false
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = StorageUiState()
+    )
+
+    fun deleteBook(bookId: String) {
+        viewModelScope.launch {
+            repository.removeDownload(bookId)
+        }
+    }
+}
