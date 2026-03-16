@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.StatFs
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.entity.BookEntity
+import com.yugentech.quill.database.model.BookStorageBreakdown
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.io.File
@@ -14,7 +15,6 @@ class StorageRepositoryImpl(
 ) : StorageRepository {
 
     override fun getTotalAppStorageUsed(): Flow<Long> {
-        // Room returns Flow<Long?> if the table is empty, so we map null to 0L
         return bookDao.getTotalStorageUsed().map { it ?: 0L }
     }
 
@@ -44,5 +44,10 @@ class StorageRepositoryImpl(
     override fun getDeviceTotalSpace(): Long {
         val statFs = StatFs(context.filesDir.absolutePath)
         return statFs.blockCountLong * statFs.blockSizeLong
+    }
+
+    // StorageRepositoryImpl.kt
+    override fun getBookStorageBreakdowns(): Flow<List<BookStorageBreakdown>> {
+        return bookDao.getBookStorageBreakdown()
     }
 }
