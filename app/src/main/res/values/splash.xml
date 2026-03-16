@@ -5,9 +5,12 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_background</item>
-        <item name="windowSplashScreenIconBackgroundColor">@color/white</item>
-        <item name="android:windowBackground">@color/splash_background</item>
-        <item name="windowSplashScreenBackground">@color/splash_background</item>
+
+        <item name="windowSplashScreenAnimatedIcon">@drawable/avd_splash_icon</item>
+
+        <item name="windowSplashScreenAnimationDuration">2000</item>
+        <item name="android:windowBackground">@drawable/ic_launcher_background</item>
+        <item name="windowSplashScreenBackground">@drawable/ic_launcher_background</item>
     </style>
+
 </resources>
