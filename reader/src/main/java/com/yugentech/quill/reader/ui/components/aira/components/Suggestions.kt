@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.aira.components
+package com.yugentech.quill.reader.ui.components.aira.components
 
 val suggestions = listOf(
     "Summarize this chapter",

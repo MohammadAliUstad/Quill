@@ -1,6 +1,7 @@
 package com.yugentech.quill.storage
 
 import com.yugentech.quill.database.entity.BookEntity
+import com.yugentech.quill.database.model.BookStorageBreakdown
 import kotlinx.coroutines.flow.Flow
 
 interface StorageRepository {
@@ -14,4 +15,6 @@ interface StorageRepository {
     // Device Stats
     fun getDeviceFreeSpace(): Long
     fun getDeviceTotalSpace(): Long
+    // StorageRepository.kt
+    fun getBookStorageBreakdowns(): Flow<List<BookStorageBreakdown>>
 }
