@@ -44,6 +44,7 @@ android {
 dependencies {
     implementation(project(":aira"))
     implementation(project(":theme"))
+    implementation(project(":database"))
 
     implementation(libs.readium.shared)
     implementation(libs.readium.streamer)

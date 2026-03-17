@@ -27,7 +27,7 @@ android {
         minSdk = 26
         targetSdk = 36
 
-        versionCode = 1
+        versionCode = 4
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -77,17 +77,12 @@ dependencies {
     implementation(project(":aira"))
     implementation(project(":theme"))
     implementation(project(":reader"))
+    implementation(project(":domain"))
 
-    // MediaPipe TextEmbedder
-    implementation(libs.tasks.text)
-
-    implementation("dev.chrisbanes.haze:haze:1.7.2")
-
-    implementation(libs.onnxruntime.android)
-
-    // Gemini
-    implementation(libs.generativeai)
-    implementation(libs.androidx.material3)
+    implementation(libs.androidx.graphics.shapes)
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.billing.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
@@ -106,9 +101,6 @@ dependencies {
     // Billing
     implementation(libs.billing)
 
-    // Exoplayer
-    implementation(libs.androidx.media3.exoplayer)
-
     // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
@@ -120,6 +112,8 @@ dependencies {
 
     // Activity
     implementation(libs.androidx.activity.compose)
+
+    implementation(libs.lottie.compose)
 
     // Compose BOM and UI
     implementation(platform(libs.androidx.compose.bom))
