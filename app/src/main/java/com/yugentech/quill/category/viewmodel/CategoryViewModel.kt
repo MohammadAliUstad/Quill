@@ -2,10 +2,10 @@ package com.yugentech.quill.category.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.database.model.Category
 import com.yugentech.quill.category.repository.CategoryRepository
 import com.yugentech.quill.database.mapper.toDomainModel
 import com.yugentech.quill.database.mapper.toEntity
+import com.yugentech.quill.database.model.Category
 import com.yugentech.theme.tokens.AppConstants
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class CategoryViewModel(
-    private val repository: CategoryRepository
+    private val repository: CategoryRepository,
 ) : ViewModel() {
 
     val categories: StateFlow<List<Category>> = repository.getUserCategories()
@@ -41,9 +41,9 @@ class CategoryViewModel(
         }
     }
 
-    fun deleteCategory(name: String) {
+    fun deleteCategory(category: Category) {
         viewModelScope.launch {
-            repository.deleteCategory(name)
+            repository.deleteCategory(category.toEntity())
         }
     }
 

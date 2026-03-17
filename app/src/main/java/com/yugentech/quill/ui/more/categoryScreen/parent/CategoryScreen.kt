@@ -1,23 +1,36 @@
 package com.yugentech.quill.ui.more.categoryScreen.parent
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,16 +39,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import com.yugentech.quill.database.model.Category
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.yugentech.quill.R
 import com.yugentech.quill.category.viewmodel.CategoryViewModel
+import com.yugentech.quill.database.model.Category
 import com.yugentech.quill.ui.more.categoryScreen.components.AddCategoryDialog
+import com.yugentech.quill.ui.more.categoryScreen.components.CategoryDialogType
+import com.yugentech.quill.ui.more.categoryScreen.components.DeleteCategoryDialog
 import com.yugentech.quill.ui.more.categoryScreen.components.DragDropList
-
-enum class CategoryDialogType {
-    None, Add, Rename, Delete
-}
+import com.yugentech.quill.ui.more.categoryScreen.components.RenameCategoryDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,31 +100,102 @@ fun CategoryScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            FloatingActionButton(
                 onClick = { activeDialog = CategoryDialogType.Add },
-                expanded = isFabExpanded,
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("Add Category") },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier
+                    .height(64.dp)
+                    .widthIn(min = 64.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Category",
+                        modifier = Modifier.size(26.dp)
+                    )
+
+                    AnimatedVisibility(
+                        visible = isFabExpanded,
+                        enter = fadeIn(animationSpec = tween(200)) + expandHorizontally(
+                            animationSpec = tween(200),
+                            expandFrom = Alignment.Start
+                        ),
+                        exit = fadeOut(animationSpec = tween(200)) + shrinkHorizontally(
+                            animationSpec = tween(200),
+                            shrinkTowards = Alignment.Start
+                        )
+                    ) {
+                        Text(
+                            text = "Add Category",
+                            style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 12.dp)
+                        )
+                    }
+                }
+            }
         }
     ) { innerPadding ->
-        DragDropList(
-            modifier = Modifier.padding(innerPadding),
-            items = categories,
-            onReorderFinished = { newOrder ->
-                categoryViewModel.updateOrder(newOrder)
-            },
-            onRename = { category ->
-                selectedCategory = category
-                activeDialog = CategoryDialogType.Rename
-            },
-            onDelete = { category ->
-                selectedCategory = category
-                activeDialog = CategoryDialogType.Delete
+        if (categories.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.offset(y = (-50).dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.empty_categories),
+                        contentDescription = "No categories",
+                        modifier = Modifier.size(240.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "No collections yet",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Tap the button below to create\nyour first collection",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
-        )
+        } else {
+            DragDropList(
+                modifier = Modifier.padding(innerPadding),
+                items = categories,
+                onReorderFinished = { newOrder ->
+                    categoryViewModel.updateOrder(newOrder)
+                },
+                onRename = { category ->
+                    selectedCategory = category
+                    activeDialog = CategoryDialogType.Rename
+                },
+                onDelete = { category ->
+                    selectedCategory = category
+                    activeDialog = CategoryDialogType.Delete
+                }
+            )
+        }
     }
 
     when (activeDialog) {
@@ -138,7 +228,7 @@ fun CategoryScreen(
                     categoryName = category.name,
                     onDismiss = closeDialog,
                     onConfirm = {
-                        categoryViewModel.deleteCategory(category.name)
+                        categoryViewModel.deleteCategory(category)
                         closeDialog()
                     }
                 )
@@ -147,71 +237,4 @@ fun CategoryScreen(
 
         CategoryDialogType.None -> Unit
     }
-}
-
-@Composable
-fun DeleteCategoryDialog(
-    categoryName: String,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Delete Category") },
-        text = {
-            Text("Are you sure you want to delete \"$categoryName\"? All books in this category will be moved back to the default Shelf.")
-        },
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-            ) {
-                Text("Delete")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        }
-    )
-}
-
-@Composable
-fun RenameCategoryDialog(
-    initialName: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var text by remember { mutableStateOf(initialName) }
-    val isReserved = text.equals("Shelf", ignoreCase = true) ||
-            text.equals("Favorites", ignoreCase = true)
-    val isInvalid = text.isBlank() || isReserved
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Rename Category") },
-        text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text("New Name") },
-                isError = isReserved,
-                supportingText = {
-                    if (isReserved) Text("Name reserved for system")
-                },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(text.trim()) },
-                enabled = !isInvalid && text != initialName
-            ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        }
-    )
 }
