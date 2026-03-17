@@ -11,5 +11,6 @@ data class CategoryEntity(
     val id: Long = 0,
     val name: String,
     val sortOrder: Int,
-    val isSystem: Boolean = false
+    val isSystem: Boolean = false,
+    val isSynced: Boolean = true
 )
