@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.config.insightsScreen.components.heatMap
+package com.yugentech.quill.ui.more.insightsScreen.components.heatMap
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -29,9 +29,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import com.yugentech.sessions.theme.tokens.corners
-import com.yugentech.sessions.theme.tokens.icons
-import com.yugentech.sessions.theme.tokens.spacing
+import com.yugentech.sessions.ui.config.insightsScreen.components.heatMap.HeatmapWeekColumn
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.icons
+import com.yugentech.theme.tokens.spacing
 import java.time.LocalDate
 
 @OptIn(ExperimentalFoundationApi::class)
