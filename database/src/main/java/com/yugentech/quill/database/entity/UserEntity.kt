@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.yugentech.quill.database.model.UserData
 
-// Database table definition for storing user profiles
 @Keep
 @Entity(tableName = "users")
 data class UserEntity(
@@ -13,26 +12,27 @@ data class UserEntity(
     val userId: String,
     val name: String?,
     val email: String?,
-    val avatarId: Int?
+    val avatarId: Int?,
+    val isPro: Boolean
 ) {
-    // Maps the database entity back to the domain model
     fun toUserData(): UserData {
         return UserData(
             userId = userId,
             name = name,
             email = email,
-            avatarId = avatarId
+            avatarId = avatarId,
+            isPro = isPro
         )
     }
 
     companion object {
-        // Maps the domain model to a database entity
         fun fromUserData(userData: UserData): UserEntity {
             return UserEntity(
                 userId = userData.userId,
                 name = userData.name,
                 email = userData.email,
-                avatarId = userData.avatarId
+                avatarId = userData.avatarId,
+                isPro = userData.isPro
             )
         }
     }
