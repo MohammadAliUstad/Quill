@@ -10,4 +10,5 @@ interface UserRepository {
     suspend fun upsertUser(userData: UserData)
     suspend fun syncUser(userData: UserData): UserResult<Unit>
     suspend fun fetchUserOnce(userId: String): UserResult<Unit>
+    suspend fun updateProStatus(userId: String, isPro: Boolean)
 }

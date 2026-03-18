@@ -41,13 +41,25 @@ class UserService(
                 userId = document.getString("userId") ?: userId,
                 name = document.getString("name"),
                 email = document.getString("email"),
-                avatarId = document.getLong("avatarId")?.toInt() ?: 0
+                avatarId = document.getLong("avatarId")?.toInt() ?: 0,
+                isPro = document.getBoolean("isPro") ?: false // <-- ADD THIS
             )
 
             Timber.i("User profile fetched successfully")
             UserResult.Success(userData)
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch user profile")
+            UserResult.Error(AuthErrorMapper.mapFirebaseAuthError(e))
+        }
+    }
+
+    suspend fun updateProStatus(userId: String, isPro: Boolean): UserResult<Unit> {
+        return try {
+            Timber.d("Updating Pro status in Firestore for: $userId to $isPro")
+            profileDocRef(userId).update("isPro", isPro).await()
+            UserResult.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to update pro status in Firestore")
             UserResult.Error(AuthErrorMapper.mapFirebaseAuthError(e))
         }
     }

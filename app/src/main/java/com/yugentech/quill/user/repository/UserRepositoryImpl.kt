@@ -77,4 +77,16 @@ class UserRepositoryImpl(
             UserResult.Error(e.message ?: "Failed to fetch user")
         }
     }
+
+    override suspend fun updateProStatus(userId: String, isPro: Boolean) {
+        // 1. Update Remote Firestore
+        userService.updateProStatus(userId, isPro)
+
+        // 2. Update Local Room DB
+        val currentEntity = userDao.getUser(userId)
+        if (currentEntity != null) {
+            // Assuming UserEntity is a data class, copy the new state and save it
+            userDao.saveUser(currentEntity.copy(isPro = isPro))
+        }
+    }
 }
