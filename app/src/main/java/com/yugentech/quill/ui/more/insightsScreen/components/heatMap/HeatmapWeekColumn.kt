@@ -4,7 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import com.yugentech.sessions.ui.config.model.insights.HeatmapDay
+import com.yugentech.quill.ui.more.insightsScreen.components.heatMap.HeatmapCell
+import com.yugentech.quill.ui.more.insightsScreen.insights.HeatmapDay
 
 @Composable
 fun HeatmapWeekColumn(
