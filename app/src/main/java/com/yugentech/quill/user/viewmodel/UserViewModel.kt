@@ -3,6 +3,7 @@ package com.yugentech.quill.user.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.database.model.UserData
+import com.yugentech.quill.insghts.InsightsRepository
 import com.yugentech.quill.user.repository.UserRepository
 import com.yugentech.quill.user.state.UserUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ import timber.log.Timber
 
 class UserViewModel(
     private val userRepository: UserRepository,
+    private val insightsRepository: InsightsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UserUiState())
@@ -38,6 +40,15 @@ class UserViewModel(
             .catch { e ->
                 Timber.e(e, "Error loading user flow")
                 _uiState.update { it.copy(errorMessage = e.message, isLoading = false) }
+            }
+            .launchIn(viewModelScope)
+
+        insightsRepository.getStreakFlow()
+            .onEach { streak ->
+                _uiState.update { it.copy(streakCount = streak) }
+            }
+            .catch { e ->
+                Timber.e(e, "Error loading streak flow")
             }
             .launchIn(viewModelScope)
     }
