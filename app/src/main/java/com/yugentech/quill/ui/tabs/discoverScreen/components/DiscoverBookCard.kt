@@ -7,13 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +20,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,7 +31,12 @@ import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.Book
 
 @Composable
-fun DiscoverBookCard(book: Book, onClick: () -> Unit) {
+fun DiscoverBookCard(
+    book: Book,
+    onClick: () -> Unit,
+    // FIX: Added the modifier parameter so the parent can pass down animation instructions
+    modifier: Modifier = Modifier
+) {
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
     val imageAlpha by animateFloatAsState(
         targetValue = if (imageState is AsyncImagePainter.State.Success) 1f else 0f,
@@ -40,30 +44,32 @@ fun DiscoverBookCard(book: Book, onClick: () -> Unit) {
         label = "cardImageAlpha"
     )
 
+    // Slightly tighter corners for these smaller shelf cards
+    val coverShape = RoundedCornerShape(8.dp)
+
     Column(
-        modifier = Modifier
+        // FIX: Apply the passed-in modifier to the root element!
+        modifier = modifier
             .width(130.dp)
             .clickable(onClick = onClick)
     ) {
-        Card(
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(4.dp),
+        // Replaced the 'Card' container with a clean shadow/clip to match the Hero Carousel
+        AsyncImage(
+            model = book.coverUrl,
+            contentDescription = book.title,
+            contentScale = ContentScale.Crop,
+            onState = { imageState = it },
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f)
-        ) {
-            AsyncImage(
-                model = book.coverUrl,
-                contentDescription = book.title,
-                contentScale = ContentScale.Crop,
-                onState = { imageState = it },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .alpha(imageAlpha)
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
+                .shadow(elevation = 6.dp, shape = coverShape)
+                .clip(coverShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .alpha(imageAlpha)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         Text(
             text = book.title,
             style = MaterialTheme.typography.bodyMedium,
@@ -71,6 +77,7 @@ fun DiscoverBookCard(book: Book, onClick: () -> Unit) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
+
         Text(
             text = book.author,
             style = MaterialTheme.typography.bodySmall,
