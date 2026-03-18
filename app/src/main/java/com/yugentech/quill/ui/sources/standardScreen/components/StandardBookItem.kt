@@ -27,7 +27,8 @@ import com.yugentech.quill.database.model.Book
 @Composable
 fun StandardBookItem(
     book: Book,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
 
@@ -38,7 +39,7 @@ fun StandardBookItem(
     )
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .aspectRatio(0.65f)
             .clickable(onClick = onClick),

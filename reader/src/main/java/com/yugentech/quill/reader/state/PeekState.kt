@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.components
+package com.yugentech.quill.reader.state
 
 sealed interface PeekState {
     data object Idle : PeekState

@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.components.overlay.bottomBar
+package com.yugentech.quill.reader.ui.components.overlay.components.bottomBar
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -14,8 +14,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.yugentech.quill.reader.ui.components.overlay.bottomBar.components.button.AskAiraButton
-import com.yugentech.quill.reader.ui.components.overlay.bottomBar.components.sheet.ReaderProgressSheet
+import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.sheet.ReaderProgressSheet
 import com.yugentech.quill.reader.state.ReaderOverlayState
 
 @Composable
@@ -25,8 +24,7 @@ fun ReaderBottomControls(
     sliderPosition: Float,
     interactionSource: MutableInteractionSource,
     currentPage: Int,
-    onSeek: (Float) -> Unit,
-    onAskAiraClick: () -> Unit
+    onSeek: (Float) -> Unit
 ) {
     AnimatedVisibility(
         visible = isVisible,
@@ -45,8 +43,6 @@ fun ReaderBottomControls(
                 .wrapContentHeight(),
             horizontalAlignment = Alignment.End
         ) {
-            AskAiraButton(onClick = onAskAiraClick)
-
             ReaderProgressSheet(
                 readerOverlayState = readerOverlayState,
                 sliderPosition = sliderPosition,

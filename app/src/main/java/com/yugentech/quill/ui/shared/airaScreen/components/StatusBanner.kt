@@ -27,7 +27,7 @@ fun StatusBanner(
         isIndexing -> Triple(
             MaterialTheme.colorScheme.secondaryContainer,
             MaterialTheme.colorScheme.onSecondaryContainer,
-            "Aira is reading this book…"
+            "Aira is reading this book... (This may take 3-5 minutes)"
         )
 
         error != null -> Triple(

@@ -14,7 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -26,10 +26,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.airbnb.lottie.LottieProperty
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.airbnb.lottie.compose.rememberLottieDynamicProperties
+import com.airbnb.lottie.compose.rememberLottieDynamicProperty
 import com.yugentech.quill.R
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.ui.mainScreen.components.ToastMessage
@@ -46,6 +56,27 @@ fun SignUpScreen(
 ) {
     val authState by authViewModel.authState.collectAsState()
     val scrollState = rememberScrollState()
+
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.book_morph))
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = 1
+    )
+
+    val dynamicProperties = rememberLottieDynamicProperties(
+        // 1. Targets the Fills (The solid parts of the book)
+        rememberLottieDynamicProperty(
+            property = LottieProperty.COLOR,
+            value = MaterialTheme.colorScheme.primary.toArgb(),
+            keyPath = arrayOf("**")
+        ),
+        // 2. Targets the Strokes (The outlines/lines which morph animations often use)
+        rememberLottieDynamicProperty(
+            property = LottieProperty.STROKE_COLOR,
+            value = MaterialTheme.colorScheme.primary.toArgb(),
+            keyPath = arrayOf("**")
+        )
+    )
 
     Surface(
         modifier = Modifier.fillMaxSize()
@@ -65,25 +96,24 @@ fun SignUpScreen(
 
                 Box(
                     modifier = Modifier
-                        .size(MaterialTheme.components.imageSizeMedium)
+                        .padding(vertical = MaterialTheme.spacing.s)
+                        .size(100.dp)
                         .clip(CircleShape)
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh
-                        ),
+                        .background(color = MaterialTheme.colorScheme.surfaceContainerHigh),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Timer,
-                        contentDescription = null,
-                        modifier = Modifier.size(MaterialTheme.components.imageSizeSmall),
-                        tint = MaterialTheme.colorScheme.primary
+                    LottieAnimation(
+                        composition = composition,
+                        progress = { progress },
+                        dynamicProperties = dynamicProperties,
+                        modifier = Modifier.size(MaterialTheme.components.imageSizeSmall)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.l))
 
                 Text(
-                    text = stringResource(R.string.app_name),
+                    text = "Begin your story",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -93,7 +123,7 @@ fun SignUpScreen(
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
 
                 Text(
-                    text = stringResource(R.string.sign_up_message),
+                    text = "Experience the best of e-reading.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center

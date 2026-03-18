@@ -6,149 +6,187 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Stars // Added for Subscription
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.yugentech.quill.R
-import com.yugentech.theme.tokens.components
-import com.yugentech.theme.tokens.spacing
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.yugentech.quill.database.model.UserData
 import com.yugentech.quill.ui.mainScreen.components.SectionHeader
+import com.yugentech.quill.ui.tabs.moreScreen.components.ProfileCard
 import com.yugentech.quill.ui.tabs.moreScreen.components.SettingsListItem
-import com.yugentech.quill.ui.tabs.moreScreen.components.SettingsSwitchItem
+import com.yugentech.theme.tokens.spacing
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(
+fun MoreScreen(
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    userData: UserData,
+    streakCount: Int,
+    onSignOut: () -> Unit,
+    onEditProfile: () -> Unit,
+    onViewInsights: () -> Unit,
     onAbout: () -> Unit,
     onAppearance: () -> Unit,
     onManageCategories: () -> Unit,
-    onManageStorage: () -> Unit
+    onManageStorage: () -> Unit,
+    onAboutAira: () -> Unit,
+    onContributors: () -> Unit,
+    onSubscriptions: () -> Unit,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = MaterialTheme.spacing.m,
-            end = MaterialTheme.spacing.m,
-            bottom = MaterialTheme.components.bottomNavHeight
-        ),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs)
-    ) {
-        // --- NEW SECTION: LIBRARY ---
-        item {
-            SectionHeader(
-                icon = Icons.AutoMirrored.Filled.List,
-                title = "Library"
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "More",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                )
             )
-        }
-        item {
-            SettingsListItem(
-                title = "Manage Categories",
-                subtitle = "Add, remove, or reorder your bookshelves",
-                index = 0,
-                totalCount = 2, // UPDATED: Now 2 items in this section
-                onClick = onManageCategories
-            )
-        }
-        // --- NEW STORAGE OPTION ---
-        item {
-            SettingsListItem(
-                title = "Manage Storage",
-                subtitle = "View device storage and remove downloads",
-                index = 1,
-                totalCount = 2,
-                onClick = onManageStorage
-            )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = MaterialTheme.spacing.m,
+                end = MaterialTheme.spacing.m,
+                top = innerPadding.calculateTopPadding(),
+                bottom = contentPadding.calculateBottomPadding() + 8.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs),
+        ) {
+            item {
+                ProfileCard(
+                    userData = userData,
+                    streakCount = streakCount,
+                    onEditProfile = onEditProfile,
+                    onViewInsights = onViewInsights
+                )
+            }
 
-        // --- EXISTING SECTIONS ---
+            item {
+                SectionHeader(
+                    icon = Icons.Default.Stars,
+                    title = "Premium",
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "Subscriptions",
+                    subtitle = "Manage your plan and unlock pro features",
+                    index = 0,
+                    totalCount = 1,
+                    onClick = onSubscriptions,
+                )
+            }
 
-        item {
-            SectionHeader(
-                icon = Icons.Default.Notifications,
-                title = "Notifications"
-            )
-        }
-        item {
-            SettingsSwitchItem(
-                title = "Enable Notifications",
-                subtitle = "Allow Sessions to send you notifications",
-                checked = true,
-                index = 0,
-                totalCount = 2,
-                onCheckedChange = { }
-            )
-        }
+            item {
+                SectionHeader(
+                    icon = Icons.AutoMirrored.Filled.List,
+                    title = "Library",
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "Manage Categories",
+                    subtitle = "Add, remove, or reorder your bookshelves",
+                    index = 0,
+                    totalCount = 2,
+                    onClick = onManageCategories,
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "Manage Storage",
+                    subtitle = "View device storage and remove downloads",
+                    index = 1,
+                    totalCount = 2,
+                    onClick = onManageStorage,
+                )
+            }
 
-        item {
-            SectionHeader(
-                icon = Icons.AutoMirrored.Filled.VolumeUp,
-                title = "Audio & Haptics"
-            )
-        }
-        item {
-            SettingsSwitchItem(
-                title = "Sound Effects",
-                subtitle = "Play sounds for timer events",
-                checked = true,
-                index = 0,
-                totalCount = 2,
-                onCheckedChange = { }
-            )
-        }
-        item {
-            SettingsSwitchItem(
-                title = "Haptic Feedback",
-                subtitle = "Feel vibrations for timer events",
-                checked = true,
-                index = 1,
-                totalCount = 2,
-                onCheckedChange = { }
-            )
-        }
+            item {
+                SectionHeader(
+                    icon = Icons.Default.AutoAwesome,
+                    title = "Aira",
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "Meet Aira",
+                    subtitle = "Learn about your AI reading companion",
+                    index = 0,
+                    totalCount = 1,
+                    onClick = onAboutAira,
+                )
+            }
 
-        item {
-            SectionHeader(
-                icon = Icons.Default.Palette,
-                title = "Appearance"
-            )
-        }
-        item {
-            SettingsListItem(
-                title = "Theme & Colors",
-                subtitle = "Customize your app's look and feel",
-                index = 0,
-                totalCount = 1,
-                onClick = onAppearance
-            )
-        }
+            item {
+                SectionHeader(
+                    icon = Icons.Default.Palette,
+                    title = "Appearance",
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "Theme & Colors",
+                    subtitle = "Customize your app's look and feel",
+                    index = 0,
+                    totalCount = 1,
+                    onClick = onAppearance,
+                )
+            }
 
-        item {
-            SectionHeader(
-                icon = Icons.Default.Info,
-                title = "About"
-            )
-        }
-        item {
-            SettingsListItem(
-                title = "About Sessions",
-                subtitle = stringResource(R.string.version),
-                index = 0,
-                totalCount = 2,
-                onClick = onAbout
-            )
-        }
-        item {
-            SettingsListItem(
-                title = "Sign Out",
-                subtitle = "Log out of your current session",
-                index = 1,
-                totalCount = 2,
-                onClick = { }
-            )
+            item {
+                SectionHeader(
+                    icon = Icons.Default.Info,
+                    title = "About",
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "Contributors",
+                    subtitle = "The people who helped build Quill",
+                    index = 0,
+                    totalCount = 3,
+                    onClick = onContributors,
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "About Quill",
+                    subtitle = "Version 1.0.0",
+                    index = 1,
+                    totalCount = 3,
+                    onClick = onAbout,
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "Sign Out",
+                    subtitle = "Log out of your current account",
+                    index = 2,
+                    totalCount = 3,
+                    onClick = onSignOut,
+                )
+            }
         }
     }
 }
