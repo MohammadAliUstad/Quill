@@ -1,6 +1,9 @@
 package com.yugentech.quill.di.modules
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.yugentech.quill.insghts.InsightsRepository
+import com.yugentech.quill.insghts.InsightsRepositoryImpl
+import com.yugentech.quill.ui.more.insightsScreen.insights.InsightsViewModel
 import com.yugentech.quill.user.datastore.UserDataStore
 import com.yugentech.quill.user.repository.UserRepository
 import com.yugentech.quill.user.repository.UserRepositoryImpl
@@ -48,7 +51,22 @@ val userModule = module {
 
     viewModel {
         UserViewModel(
-            userRepository = get()
+            userRepository = get(),
+            insightsRepository = get()
+        )
+    }
+
+    single<InsightsRepository> {
+        InsightsRepositoryImpl(
+            bookDao = get(),
+            readingSessionDao = get(),
+            airaMessageDao = get()
+        )
+    }
+
+    viewModel {
+        InsightsViewModel(
+            insightsRepository = get()
         )
     }
 }
