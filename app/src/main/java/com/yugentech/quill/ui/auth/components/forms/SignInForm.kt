@@ -48,7 +48,6 @@ fun SignInForm(
 ) {
     var formState by remember { mutableStateOf(SignInFormState()) }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     LaunchedEffect(formState.email, formState.password) {
         onClearError()
@@ -66,7 +65,7 @@ fun SignInForm(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
         ) {
             Text(
-                text = stringResource(R.string.welcome_back),
+                text = "Sign In",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Bold
                 ),
@@ -82,7 +81,7 @@ fun SignInForm(
                             emailError = FormValidator.validateEmail(newEmail)
                         )
                     },
-                    label = stringResource(R.string.label_email),
+                    label = "Email",
                     leadingIcon = Icons.Default.Email,
                     error = formState.emailError
                 )
@@ -96,7 +95,7 @@ fun SignInForm(
                                 passwordError = FormValidator.validatePassword(newPassword)
                             )
                         },
-                        label = stringResource(R.string.label_password),
+                        label = "Password",
                         leadingIcon = Icons.Default.Lock,
                         error = formState.passwordError,
                         isPassword = true
@@ -110,7 +109,7 @@ fun SignInForm(
                             onClick = {
                                 if (formState.email.isBlank()) {
                                     formState = formState.copy(
-                                        emailError = context.getString(R.string.email_error)
+                                        emailError = "Please enter your email first"
                                     )
                                 } else {
                                     onForgotPassword(formState.email)
@@ -121,7 +120,7 @@ fun SignInForm(
                                 .height(MaterialTheme.components.buttonMedium)
                         ) {
                             Text(
-                                text = stringResource(R.string.forgot_password),
+                                text = "Forgot Password?",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -132,7 +131,7 @@ fun SignInForm(
 
             Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)) {
                 ActionButton(
-                    text = stringResource(R.string.sign_in),
+                    text = "Sign In",
                     isLoading = isLoading,
                     onClick = {
                         val isValid = FormValidator.validateSignInForm(

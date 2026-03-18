@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.components.overlay.topBar
+package com.yugentech.quill.reader.ui.components.overlay.components.topBar
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing

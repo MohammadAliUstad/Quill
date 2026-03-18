@@ -21,10 +21,10 @@ import com.yugentech.quill.aira.QuickActionViewModel
 import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
 import com.yugentech.quill.reader.state.ReaderUiState
 import com.yugentech.quill.reader.state.ReaderDefaults
-import com.yugentech.quill.reader.ui.engine.ReadiumEngine
-import com.yugentech.quill.reader.ui.overlay.parent.ReaderMenuOverlay
-import com.yugentech.quill.reader.ui.settingsSheet.SettingsSheet
-import com.yugentech.quill.reader.ui.tocSheet.TocSheet
+import com.yugentech.quill.reader.ui.components.engine.ReadiumEngine
+import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderMenuOverlay
+import com.yugentech.quill.reader.ui.components.settingsSheet.SettingsSheet
+import com.yugentech.quill.reader.ui.components.tocSheet.TocSheet
 import com.yugentech.quill.reader.state.ReaderOverlayState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
@@ -191,6 +191,7 @@ private fun ReaderSuccess(
         ReaderMenuOverlay(
             isVisible = isMenuVisible || showAiraPeek,
             showBottomControls = !showAiraPeek,
+            isAiraReady = airaUiState.isReady,
             showAiraPeek = showAiraPeek,
             readerOverlayState = overlayState,
             onBackClick = onBackClick,
@@ -212,7 +213,10 @@ private fun ReaderSuccess(
             airaUiState = airaUiState,
             quickActionUiState = quickActionUiState,
             onQuickAction = { intent -> quickActionViewModel.handle(intent) },
-            onAiraSend = { question -> airaViewModel.ask(question) }
+            onAiraSend = { question -> airaViewModel.ask(question) },
+            onStop = {
+                airaViewModel.stopGeneration()
+            }
         )
     }
 
