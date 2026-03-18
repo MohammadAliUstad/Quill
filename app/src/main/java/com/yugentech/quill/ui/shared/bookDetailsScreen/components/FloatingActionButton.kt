@@ -2,24 +2,29 @@ package com.yugentech.quill.ui.shared.bookDetailsScreen.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,102 +33,92 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.R
-import com.yugentech.theme.getters.AppFont
+import com.yugentech.theme.WindSongFont
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FloatingActionButton(
     currentTabHasFab: Boolean,
     isScrollingDown: Boolean,
     onClick: () -> Unit
 ) {
-    var isVisible by remember { mutableStateOf(currentTabHasFab) }
-    var isExpanded by remember { mutableStateOf(true) }
+    var isVisible by remember { mutableStateOf(false) }
 
-    // --- SEQUENCER LOGIC ---
-    LaunchedEffect(currentTabHasFab) {
-        if (currentTabHasFab) {
-            isExpanded = false
+    LaunchedEffect(currentTabHasFab, isScrollingDown) {
+        if (currentTabHasFab && !isScrollingDown) {
+            delay(150)
             isVisible = true
-            delay(200)
-            isExpanded = true
         } else {
-            isExpanded = false
-            delay(200)
             isVisible = false
         }
     }
 
-    // --- SCROLL OVERRIDE ---
-    LaunchedEffect(isScrollingDown) {
-        if (isVisible) {
-            isExpanded = !isScrollingDown
-        }
-    }
-
-    val windSongFont = remember { AppFont.WindSong.toFontFamily() }
-
     AnimatedVisibility(
         visible = isVisible,
-        enter = scaleIn(animationSpec = tween(200)),
-        exit = scaleOut(animationSpec = tween(200))
+        enter = slideInVertically(
+            initialOffsetY = { it },
+            animationSpec = tween(250)
+        ) + fadeIn(animationSpec = tween(250)),
+        exit = slideOutVertically(
+            targetOffsetY = { it },
+            animationSpec = tween(200)
+        ) + fadeOut(animationSpec = tween(200))
     ) {
-        Surface(
+        FloatingActionButton(
+            onClick = onClick,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            elevation = FloatingActionButtonDefaults.elevation(0.dp),
             shape = FloatingActionButtonDefaults.extendedFabShape,
-            color = Color.Transparent // Surface handles the border, FAB handles the fill
+            modifier = Modifier.height(76.dp)
         ) {
-            FloatingActionButton(
-                onClick = onClick,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                elevation = FloatingActionButtonDefaults.elevation(0.dp),
-                shape = FloatingActionButtonDefaults.extendedFabShape,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                // Avatar Box
+                Box(
+                    modifier = Modifier
+                        .width(84.dp)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.BottomCenter
                 ) {
-                    // ICON
+                    // --- THE SINGLE WATERMARK SHAPE ---
+                    // Drawn first so it stays behind the image
                     Box(
                         modifier = Modifier
-                            .padding(12.dp)
-                            .size(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.aira),
-                            contentDescription = "AI Reading Assistant",
-                            modifier = Modifier.requiredSize(52.dp),
-                            tint = Color.Unspecified
-                        )
-                    }
-
-                    // TEXT ANIMATION
-                    AnimatedVisibility(
-                        visible = isExpanded,
-                        enter = fadeIn() + expandHorizontally(),
-                        exit = fadeOut() + shrinkHorizontally()
-                    ) {
-                        Box(
-                            modifier = Modifier.padding(start = 6.dp, end = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Aira",
-                                fontFamily = windSongFont,
-                                fontSize = 30.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1
+                            .align(Alignment.Center) // Centers the shape beautifully in the available space
+                            .size(72.dp) // Slightly smaller than the FAB height to give it breathing room
+                            .background(
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f),
+                                shape = MaterialShapes.SoftBurst.toShape() // Try .Bun or .Clover4Leaf here too!
                             )
-                        }
-                    }
+                    )
+
+                    // The Avatar Image
+                    Image(
+                        painter = painterResource(id = R.drawable.psmile_calm),
+                        contentDescription = "Aira",
+                        modifier = Modifier
+                            .requiredSize(120.dp)
+                            .offset(y = 12.dp)
+                    )
                 }
+
+                Text(
+                    text = "Aira",
+                    fontFamily = WindSongFont,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(start = 0.dp, end = 24.dp)
+                )
             }
         }
     }

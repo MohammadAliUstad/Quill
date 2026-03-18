@@ -69,7 +69,8 @@ fun FilePickerBottomSheet(
             )
 
             Text(
-                text = "Select PDF or EPUB files from your device to add to your library",
+                // 1. Removed "PDF or" from the helper text
+                text = "Select EPUB files from your device to add to your library",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -79,7 +80,8 @@ fun FilePickerBottomSheet(
 
             Button(
                 onClick = {
-                    launcher.launch(arrayOf("application/pdf", "application/epub+zip"))
+                    // 2. Removed "application/pdf" from the MIME types array
+                    launcher.launch(arrayOf("application/epub+zip"))
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
