@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.config.insightsScreen.components.heatMap
+package com.yugentech.quill.ui.more.insightsScreen.components.heatMap
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

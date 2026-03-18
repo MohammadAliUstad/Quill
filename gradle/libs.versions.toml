@@ -4,6 +4,8 @@ agp = "8.13.2"
 billing = "7.1.1"
 desugar_jdk_libs = "2.1.5"
 generativeai = "0.9.0"
+graphicsShapes = "1.1.0"
+haze = "1.7.2"
 koinAndroidxWorkmanager = "4.1.1"
 kotlin = "2.3.0"
 
@@ -28,6 +30,7 @@ activityCompose = "1.10.1"
 
 # Compose
 composeBom = "2025.12.01"
+lottieCompose = "6.7.1"
 media3Exoplayer = "1.5.1"
 onnxruntimeAndroid = "1.24.3"
 readiumNavigator = "3.1.2"
@@ -96,6 +99,9 @@ uiText = "1.10.2"
 composeBomVersion = "2024.09.00"
 appcompat = "1.7.1"
 animationVersion = "1.10.3"
+lifecycleProcess = "2.10.0"
+billingKtx = "8.3.0"
+lifecycleViewmodelKtx = "2.10.0"
 
 [libraries]
 # Core Android
@@ -103,6 +109,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 
 # Lifecycle
+androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version.ref = "graphicsShapes" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
@@ -123,9 +130,10 @@ androidx-runtime = { module = "androidx.compose.runtime:runtime", version.ref = 
 
 # Material Design
 androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
-billing = { module = "com.android.billingclient:billing", version.ref = "billing" }
+billing = { group = "com.android.billingclient", name = "billing-ktx", version = "billing" }
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 generativeai = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "generativeai" }
+google-firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
 google-material = { group = "com.google.android.material", name = "material", version.ref = "googleMaterial" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -144,6 +152,7 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 
 # Google Play Services
+haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 koin-androidx-workmanager = { module = "io.insert-koin:koin-androidx-workmanager", version.ref = "koinAndroidxWorkmanager" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClientAndroid" }
@@ -152,6 +161,7 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorCli
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktorClientLogging" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorClientOkhttp" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorSerializationKotlinxJson" }
+lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 onnxruntime-android = { module = "com.microsoft.onnxruntime:onnxruntime-android", version.ref = "onnxruntimeAndroid" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 
@@ -205,6 +215,9 @@ androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", ve
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBomVersion" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animationVersion" }
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billingKtx" }
+androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,5 +1,6 @@
 package com.yugentech.quill.ui.shared.airaScreen.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -14,15 +15,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,8 +43,10 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -52,13 +55,15 @@ fun InputBar(
     inputText: String,
     onInputChange: (String) -> Unit,
     isEnabled: Boolean,
+    isStreaming: Boolean, // NEW: Know when Aira is typing
     onSend: () -> Unit,
-    onOptionsClick: () -> Unit
+    onStop: () -> Unit,   // NEW: Callback for stopping
 ) {
     val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
     val isImeVisible = WindowInsets.isImeVisible
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current // NEW: Native keyboard control
 
     var isFocused by remember { mutableStateOf(false) }
 
@@ -68,8 +73,8 @@ fun InputBar(
 
     val collapsedHPadding = 32.dp
     val expandedHPadding = 8.dp
-    val collapsedVPadding = 8.dp
-    val expandedVPadding = 12.dp
+    val collapsedVPadding = 0.dp
+    val expandedVPadding = 4.dp
 
     val kbFraction = (imeBottom / 300.dp).coerceIn(0f, 1f)
 
@@ -79,14 +84,22 @@ fun InputBar(
     val canSend = inputText.isNotBlank() && isEnabled
     val surfaceColor = MaterialTheme.colorScheme.surface
 
+    // Update button colors to handle the "Stop" state dynamically
     val buttonContainerColor by animateColorAsState(
-        targetValue = if (canSend) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
+        targetValue = when {
+            isStreaming -> MaterialTheme.colorScheme.errorContainer
+            canSend -> MaterialTheme.colorScheme.primary
+            else -> MaterialTheme.colorScheme.secondaryContainer
+        },
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "buttonContainerColor"
     )
     val buttonContentColor by animateColorAsState(
-        targetValue = if (canSend) MaterialTheme.colorScheme.onPrimary
-        else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f),
+        targetValue = when {
+            isStreaming -> MaterialTheme.colorScheme.onErrorContainer
+            canSend -> MaterialTheme.colorScheme.onPrimary
+            else -> MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
+        },
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "buttonContentColor"
     )
@@ -127,22 +140,31 @@ fun InputBar(
                     )
                 },
                 leadingIcon = {
-                    IconButton(
-                        onClick = onOptionsClick,
-                        modifier = Modifier.size(36.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .offset(y = (-2).dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Options",
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        Text(
+                            text = "✦",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     }
                 },
                 trailingIcon = {
                     FilledIconButton(
-                        onClick = onSend,
-                        enabled = canSend,
+                        onClick = {
+                            if (isStreaming) {
+                                onStop()
+                            } else {
+                                onSend()
+                                keyboardController?.hide() // Triggers the smooth native close animation
+                                focusManager.clearFocus()
+                            }
+                        },
+                        enabled = canSend || isStreaming, // Enabled if we can send OR stop
                         modifier = Modifier.size(36.dp),
                         shape = CircleShape,
                         colors = IconButtonDefaults.filledIconButtonColors(
@@ -152,11 +174,24 @@ fun InputBar(
                             disabledContentColor = buttonContentColor
                         )
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowUpward,
-                            contentDescription = "Send",
-                            modifier = Modifier.size(18.dp)
-                        )
+                        AnimatedContent(
+                            targetState = isStreaming,
+                            label = "SendStopIcon"
+                        ) { streaming ->
+                            if (streaming) {
+                                Icon(
+                                    imageVector = Icons.Default.Stop,
+                                    contentDescription = "Stop",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowUpward,
+                                    contentDescription = "Send",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                     }
                 },
                 modifier = Modifier

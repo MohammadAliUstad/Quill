@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.config.insightsScreen.components
+package com.yugentech.quill.ui.more.insightsScreen.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -7,7 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import com.yugentech.sessions.theme.tokens.spacing
+import com.yugentech.theme.tokens.spacing
 
 @Composable
 fun InsightSectionHeader(
