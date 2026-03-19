@@ -78,13 +78,9 @@ fun AppTextField(
                         onClick = { passwordVisible = !passwordVisible },
                         modifier = Modifier.size(MaterialTheme.components.buttonSmall)
                     ) {
-                        Icon(
-                            imageVector = if (passwordVisible)
-                                Icons.Default.Visibility
-                            else
-                                Icons.Default.VisibilityOff,
-                            contentDescription = "stringResource(R.string.toggle_password_visibility)",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        // REPLACED THE STATIC ICON WITH THE ANIMATED ONE
+                        AnimatedEyeIcon(
+                            isVisible = passwordVisible,
                             modifier = Modifier.size(MaterialTheme.icons.medium)
                         )
                     }

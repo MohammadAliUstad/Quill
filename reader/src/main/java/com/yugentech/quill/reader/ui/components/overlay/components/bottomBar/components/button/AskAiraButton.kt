@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.components.overlay.bottomBar.components.button
+package com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.button
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
