@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.components.overlay.brightnessSlider
+package com.yugentech.quill.reader.ui.components.overlay.components.brightnessSlider.icon
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size

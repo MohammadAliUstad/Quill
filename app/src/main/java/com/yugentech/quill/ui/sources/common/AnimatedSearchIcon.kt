@@ -24,20 +24,12 @@ fun AnimatedSearchIcon(
             ImageView(ctx).apply {
                 scaleType = ImageView.ScaleType.CENTER
                 setImageResource(R.drawable.asl_searchback)
-                
-                // Initial State
                 isActivated = isSearchActive
-                
-                // Apply Tint
                 setColorFilter(contentColor, PorterDuff.Mode.SRC_IN)
             }
         },
         update = { imageView ->
-            // Update tint if theme changes
             imageView.setColorFilter(contentColor, PorterDuff.Mode.SRC_IN)
-
-            // 2. Toggle the state. 
-            // This automatically triggers the AnimatedStateListDrawable transitions defined in XML.
             imageView.isActivated = isSearchActive
         }
     )

@@ -41,43 +41,41 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.core.net.toUri
+import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.ui.mainScreen.components.SectionHeader
 import com.yugentech.quill.ui.mainScreen.components.ToastMessage
 import com.yugentech.quill.ui.more.aboutScreen.components.AppInfoCard
 import com.yugentech.quill.ui.more.aboutScreen.components.DonationDialog
 import com.yugentech.quill.ui.more.aboutScreen.components.about.AboutContent
 import com.yugentech.quill.ui.tabs.moreScreen.components.SettingsListItem
-import com.yugentech.quill.utils.BillingManager
 import com.yugentech.theme.tokens.AppConstants
 import com.yugentech.theme.tokens.spacing
-import org.koin.compose.koinInject
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
     onNavigateBack: () -> Unit,
     onNavigateToLicenses: () -> Unit,
-    billingManager: BillingManager = koinInject()
+    viewModel: AboutViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
     val layoutDirection = LocalLayoutDirection.current
 
-    // STATE: For showing the custom toast
     var toastMessage by remember { mutableStateOf<String?>(null) }
-
     var showDonationDialog by remember { mutableStateOf(false) }
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
+    // Collect billing events and map them to toast messages
     LaunchedEffect(Unit) {
-        billingManager.startConnection()
-    }
-
-    // Collect purchase events (success or error) and show Custom Toast
-    LaunchedEffect(Unit) {
-        billingManager.purchaseEvent.collect { message ->
-            toastMessage = message
+        viewModel.events.collect { event ->
+            toastMessage = when (event) {
+                is BillingEvent.TipThankYou -> "Thank you for your support! ☕"
+                is BillingEvent.Error -> event.message
+                else -> null
+            }
         }
     }
 
@@ -131,7 +129,6 @@ fun AboutScreen(
     ) { scaffoldPadding ->
         val navBarPadding = WindowInsets.navigationBars.asPaddingValues()
 
-        // WRAPPER: Use Box to overlay the ToastMessage on top of the LazyColumn
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -141,7 +138,6 @@ fun AboutScreen(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs),
                 contentPadding = PaddingValues(
-                    // Top padding handled by Box, only bottom needs calculation
                     bottom = navBarPadding.calculateBottomPadding() + MaterialTheme.spacing.l,
                     start = MaterialTheme.spacing.m + scaffoldPadding.calculateStartPadding(
                         layoutDirection
@@ -193,8 +189,7 @@ fun AboutScreen(
             ToastMessage(
                 message = toastMessage,
                 onDismiss = { toastMessage = null },
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
+                modifier = Modifier.align(Alignment.TopCenter)
             )
         }
 
@@ -202,19 +197,14 @@ fun AboutScreen(
             DonationDialog(
                 onDismiss = { showDonationDialog = false },
                 onCoffeeClick = {
-                    if (activity != null) {
-                        billingManager.launchPurchaseFlow(activity, "donation_coffee")
-                    }
+                    activity?.let { viewModel.buyCoffee(it) }
                     showDonationDialog = false
                 },
                 onLunchClick = {
-                    if (activity != null) {
-                        billingManager.launchPurchaseFlow(activity, "donation_lunch")
-                    }
+                    activity?.let { viewModel.buyLunch(it) }
                     showDonationDialog = false
                 },
                 onWebClick = {
-                    // ERROR HANDLING: Try/Catch with Custom Toast
                     try {
                         val intent = Intent(Intent.ACTION_VIEW, AppConstants.KOFI_URL.toUri())
                         context.startActivity(intent)

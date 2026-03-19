@@ -4,9 +4,8 @@
     <application>
         <activity
             android:name="ReaderActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false"
-            android:theme="@style/Theme.Quill.Reader"
-            android:configChanges="orientation|screenSize|keyboardHidden" />
+            android:theme="@style/Theme.Quill.Reader" />
     </application>
-
 </manifest>
