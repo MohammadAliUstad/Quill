@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.components.overlay.brightnessSlider
+package com.yugentech.quill.reader.ui.components.overlay.components.brightnessSlider
 
 import android.app.Activity
 import androidx.compose.animation.AnimatedVisibility
@@ -31,8 +31,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.reader.ui.components.overlay.components.brightnessSlider.icon.AnimatedSunIcon
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalMaterial3Api::class
+)
 @Composable
 fun BrightnessSlider(
     modifier: Modifier = Modifier,

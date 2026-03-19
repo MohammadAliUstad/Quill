@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.config.editProfileScreen.components
+package com.yugentech.quill.ui.more.editProfileScreen.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -22,10 +22,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import com.yugentech.sessions.theme.tokens.components
-import com.yugentech.sessions.theme.tokens.dimensions.AppAnimations
-import com.yugentech.sessions.theme.tokens.spacing
-import com.yugentech.sessions.theme.tokens.strokes
+import com.yugentech.quill.ui.tabs.moreScreen.components.Avatar
+import com.yugentech.quill.ui.tabs.moreScreen.components.AvatarImage
+import com.yugentech.theme.tokens.components
+import com.yugentech.theme.tokens.dimensions.AppAnimations
+import com.yugentech.theme.tokens.spacing
+import com.yugentech.theme.tokens.strokes
 
 @Composable
 fun AvatarOption(
