@@ -83,6 +83,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.billing.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.material3)
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 

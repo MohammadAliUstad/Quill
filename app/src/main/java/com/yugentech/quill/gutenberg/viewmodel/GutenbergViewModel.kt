@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 sealed class GutenbergNavigationEvent {
@@ -30,7 +29,7 @@ class GutenbergViewModel(
     private val _isPaginating = MutableStateFlow(false)
     val isPaginating = _isPaginating.asStateFlow()
 
-    private val _displayTitle = MutableStateFlow("")
+    private val _displayTitle = MutableStateFlow("Popular Books")
     val displayTitle = _displayTitle.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
@@ -39,39 +38,22 @@ class GutenbergViewModel(
     private val _navigationEvent = MutableSharedFlow<GutenbergNavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
-    private val _selectedCategory = MutableStateFlow("")
-    val selectedCategory = _selectedCategory.asStateFlow()
-
-    private val _categories = MutableStateFlow<List<String>>(emptyList())
-    val categories = _categories.asStateFlow()
-
     // ── Internal State ────────────────────────────────────────────────────────
     private var nextPageUrl: String? = null
     private var contentJob: Job? = null
     private var paginationJob: Job? = null
-    private var initialCategorySelected = false
 
-    // CRITICAL FIX: Caches to prevent Flow-wipeouts and empty screens
+    // Caches to prevent Flow-wipeouts and empty screens during state transitions
     private var cachedPopularBooks = emptyList<Book>()
     private var paginatedMemoryCache = mutableListOf<Book>()
 
     init {
         viewModelScope.launch {
             repository.getPopularBooksFlow().collect { cachedBooks ->
-                cachedPopularBooks = cachedBooks // Save for search clearing
-                if (_selectedCategory.value.isBlank()) {
-                    // Combine DB Page 1 + Memory Pages 2..N
+                cachedPopularBooks = cachedBooks
+                // Only update booksState from the DB flow if we are NOT currently searching
+                if (_displayTitle.value == "Popular Books") {
                     _booksState.value = cachedBooks + paginatedMemoryCache
-                }
-            }
-        }
-
-        viewModelScope.launch {
-            repository.getCategoriesFlow().collect { cachedCategories ->
-                _categories.value = cachedCategories
-                if (!initialCategorySelected && cachedCategories.isNotEmpty()) {
-                    initialCategorySelected = true
-                    onCategorySelected(cachedCategories.first())
                 }
             }
         }
@@ -85,52 +67,19 @@ class GutenbergViewModel(
         }
     }
 
-    fun onCategorySelected(category: String) {
-        if (_selectedCategory.value == category) return
-
-        _selectedCategory.value = category
-        nextPageUrl = null
-        _error.value = null
-        paginatedMemoryCache.clear() // CRITICAL FIX: Clear old pagination
-
-        contentJob?.cancel()
-        paginationJob?.cancel()
-
-        contentJob = viewModelScope.launch {
-            val cached = repository.getTopicBooksFlow(category).firstOrNull()
-            if (cached.isNullOrEmpty()) {
-                _isLoading.value = true
-                _booksState.value = emptyList()
-            } else {
-                _booksState.value = cached
-            }
-
-            _displayTitle.value = category
-            repository.syncTopicBooks(category)
-
-            repository.getTopicBooksFlow(category).collect { books ->
-                if (_selectedCategory.value == category) {
-                    // Combine DB Page 1 + Memory Pages 2..N
-                    _booksState.value = books + paginatedMemoryCache
-                    _isLoading.value = false
-                }
-            }
-        }
-    }
-
     fun onSearchQuery(query: String) {
         if (query.isBlank()) {
+            // Revert back to the default popular feed
             paginatedMemoryCache.clear()
-            _selectedCategory.value = ""
-            _displayTitle.value = ""
-            // CRITICAL FIX: Restore popular books immediately (Flow won't re-emit if DB didn't change)
+            _displayTitle.value = "Popular Books"
             _booksState.value = cachedPopularBooks
+            nextPageUrl = null
             return
         }
 
-        _selectedCategory.value = "Search"
+        // Prepare for new search
         _booksState.value = emptyList()
-        paginatedMemoryCache.clear() // CRITICAL FIX: Clear before searching
+        paginatedMemoryCache.clear()
         nextPageUrl = null
         _error.value = null
         contentJob?.cancel()
@@ -154,10 +103,7 @@ class GutenbergViewModel(
 
     private fun syncPopularFeed() {
         viewModelScope.launch {
-            val cached = repository.getPopularBooksFlow().firstOrNull()
-            if (cached.isNullOrEmpty()) {
-                _isLoading.value = true
-            }
+            _isLoading.value = true
             repository.syncPopularFeed()
             _isLoading.value = false
         }
@@ -173,9 +119,8 @@ class GutenbergViewModel(
 
             repository.getNextPage(url)
                 .onSuccess { result ->
-                    // CRITICAL FIX: Save to memory cache so DB emissions don't overwrite it
                     paginatedMemoryCache.addAll(result.books)
-                    _booksState.value = _booksState.value + result.books
+                    _booksState.value += result.books
                     nextPageUrl = result.nextPageUrl
                 }
                 .onFailure { /* Keep existing list */ }
