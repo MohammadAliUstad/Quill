@@ -1,9 +1,8 @@
 package com.yugentech.quill.gutenberg.mapper
 
-import com.yugentech.quill.gutenberg.model.GutenbergCategory
-import com.yugentech.quill.gutenberg.model.GutenbergFeedResult
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.BookSource
+import com.yugentech.quill.gutenberg.model.GutenbergFeedResult
 import org.json.JSONObject
 
 object GutenbergMapper {
@@ -11,15 +10,13 @@ object GutenbergMapper {
     fun parseFeed(json: String): GutenbergFeedResult {
         val books = mutableListOf<Book>()
         var nextPageUrl: String? = null
-        var totalCount = 0
 
         try {
             val root = JSONObject(json)
-            totalCount = root.optInt("count", 0)
             nextPageUrl = root.optString("next").takeIf { it.isNotBlank() && it != "null" }
 
             val results = root.optJSONArray("results")
-                ?: return GutenbergFeedResult(emptyList(), null, 0)
+                ?: return GutenbergFeedResult(emptyList(), null)
 
             for (i in 0 until results.length()) {
                 val entry = results.optJSONObject(i) ?: continue
@@ -29,48 +26,7 @@ object GutenbergMapper {
             e.printStackTrace()
         }
 
-        return GutenbergFeedResult(books, nextPageUrl, totalCount)
-    }
-
-    fun parseSingleBook(json: String): Book? {
-        return try {
-            mapToBook(JSONObject(json))
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    fun parseCategoriesFromFeed(json: String): List<GutenbergCategory> {
-        val names = mutableSetOf<String>()
-        try {
-            val root = JSONObject(json)
-            val results = root.optJSONArray("results") ?: return emptyList()
-            for (i in 0 until results.length()) {
-                val entry = results.optJSONObject(i) ?: continue
-                val shelves = entry.optJSONArray("bookshelves") ?: continue
-                for (j in 0 until shelves.length()) {
-                    val raw = shelves.optString(j).trim()
-                    val cleaned = raw
-                        .removePrefix("Category: ")
-                        .removePrefix("category: ")
-                        .trim()
-                    if (cleaned.isValidCategory()) names.add(cleaned)
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return names.sorted().map { GutenbergCategory(it) }
-    }
-
-    private fun String.isValidCategory(): Boolean {
-        if (isBlank() || length > 30) return false
-        if (contains("list", ignoreCase = true)) return false
-        if (contains("'s")) return false
-        if (contains(" from ", ignoreCase = true)) return false
-        if (contains(" by ", ignoreCase = true)) return false
-        if (any { it.isDigit() }) return false
-        return true
+        return GutenbergFeedResult(books, nextPageUrl)
     }
 
     private fun mapToBook(entry: JSONObject): Book? {

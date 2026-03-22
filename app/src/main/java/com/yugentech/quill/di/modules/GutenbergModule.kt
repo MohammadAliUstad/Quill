@@ -18,8 +18,7 @@ val gutenbergModule = module {
     single<GutenbergRepository> {
         GutenbergRepositoryImpl(
             apiService = get(),
-            catalogDao = get(),
-            categoryCacheDao = get()
+            catalogDao = get()
         )
     }
 
