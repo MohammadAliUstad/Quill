@@ -7,16 +7,25 @@ import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.domain.QuotaRepository
 import com.yugentech.quill.quota.QuotaRepositoryImpl
 import com.yugentech.quill.quota.QuotaService
+import com.yugentech.quill.quota.GlobalSyncManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val billingModule = module {
     // Single BillingClientService — one BillingClient for the entire app lifetime
-    single { BillingClientService(androidContext()) }
+    single {
+        BillingClientService(
+            androidContext()
+        )
+    }
 
     // Single BillingRepository — shared across SubscriptionViewModel and AboutViewModel
-    single<BillingRepository> { BillingRepositoryImpl(get()) }
+    single<BillingRepository> {
+        BillingRepositoryImpl(
+            get()
+        )
+    }
 
     single {
         QuotaService(
@@ -26,9 +35,26 @@ val billingModule = module {
 
     single<QuotaRepository> {
         QuotaRepositoryImpl(
-            get()
+            authRepository = get(),
+            quotaService = get(),
+            quotaDao = get()
         )
     }
 
-    viewModel { SubscriptionViewModel(get()) }
+    single(createdAtStart = true) {
+        GlobalSyncManager(
+            authRepository = get(),
+            userRepository = get(),
+            quotaRepository = get(),
+            billingRepository = get()
+        )
+    }
+
+    viewModel {
+        SubscriptionViewModel(
+            billingRepository = get(),
+            authRepository = get(),
+            userRepository = get()
+        )
+    }
 }
