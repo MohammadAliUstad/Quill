@@ -11,23 +11,25 @@ class BillingRepositoryImpl(
     private val service: BillingClientService
 ) : BillingRepository {
 
-    // Delegate all flows directly from the service — no transformation needed
     override val isPro: StateFlow<Boolean> = service.isPro
     override val subProducts: StateFlow<List<ProductDetails>> = service.subProducts
     override val tipProducts: StateFlow<List<ProductDetails>> = service.tipProducts
     override val billingEvents: Flow<BillingEvent> = service.events
 
-    // Delegate connection to the service — called once from MainActivity
     override fun startConnection() = service.connect()
 
-    // Delegate subscription launch — basePlanId is "monthly-base" or "yearly-base"
-    override fun launchSubscriptionFlow(activity: Activity, basePlanId: String) =
-        service.launchSubscriptionFlow(activity, basePlanId)
+    override fun setUserId(userId: String?) {
+        service.setCurrentUser(userId)
+    }
 
-    // Delegate tip launch — productId is "tip_coffee" or "tip_lunch"
+    // 1. Accept userId and pass it to the service
+    override fun launchSubscriptionFlow(activity: Activity, basePlanId: String, userId: String) =
+        service.launchSubscriptionFlow(activity, basePlanId, userId)
+
     override fun launchTipFlow(activity: Activity, productId: String) =
         service.launchTipFlow(activity, productId)
 
-    // Delegate restore — called from the Restore Purchases button on SubscriptionScreen
-    override suspend fun restorePurchases() = service.restorePurchases()
+    // UPDATED: Explicitly return Boolean? to match the interface and service
+    override suspend fun restorePurchases(userId: String): Boolean? =
+        service.restorePurchases(userId)
 }

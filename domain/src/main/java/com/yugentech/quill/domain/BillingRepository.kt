@@ -22,12 +22,14 @@ interface BillingRepository {
     // Called once on app start to connect to Play Billing
     fun startConnection()
 
+    fun setUserId(userId: String?)
+
     // Opens the Play sheet for monthly-base or yearly-base
-    fun launchSubscriptionFlow(activity: Activity, basePlanId: String)
+    fun launchSubscriptionFlow(activity: Activity, basePlanId: String, userId: String)
 
     // Opens the Play sheet for tip_coffee or tip_lunch
     fun launchTipFlow(activity: Activity, productId: String)
 
-    // Checks Play for existing active subscriptions — call from Restore button
-    suspend fun restorePurchases()
+    // UPDATED: Now returns Boolean? to handle network/offline errors safely
+    suspend fun restorePurchases(userId: String): Boolean?
 }
