@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.engine
+package com.yugentech.quill.reader.ui.components.engine
 
 import android.content.Context
 import android.graphics.Rect
@@ -36,7 +36,7 @@ import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
 import androidx.core.view.size
 import androidx.core.view.get
-import com.yugentech.quill.reader.state.ReaderDefaults
+import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import kotlinx.coroutines.delay
 
 // --- Wrapper View to intercept Action Mode (Selection Menu) ---
@@ -241,7 +241,7 @@ private fun attachNavigator(
 
 @OptIn(ExperimentalReadiumApi::class)
 private fun buildNavigatorConfig() = EpubNavigatorFragment.Configuration().apply {
-    servedAssets = servedAssets + "fonts/.*"
+    servedAssets = servedAssets + "font/.*"
     shouldApplyInsetsPadding = false
     registerFonts(this)
 }
@@ -250,7 +250,7 @@ private fun buildNavigatorConfig() = EpubNavigatorFragment.Configuration().apply
 private fun registerFonts(config: EpubNavigatorFragment.Configuration) {
     fun addFont(family: FontFamily, file: String) {
         config.addFontFamilyDeclaration(family) {
-            addFontFace { addSource("fonts/$file", preload = true); setFontStyle(FontStyle.NORMAL) }
+            addFontFace { addSource("font/$file", preload = true); setFontStyle(FontStyle.NORMAL) }
         }
     }
 
