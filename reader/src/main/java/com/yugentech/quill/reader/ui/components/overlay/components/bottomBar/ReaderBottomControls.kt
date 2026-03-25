@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.sheet.ReaderProgressSheet
-import com.yugentech.quill.reader.state.ReaderOverlayState
+import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
 
 @Composable
 fun ReaderBottomControls(
