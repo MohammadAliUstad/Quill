@@ -1,16 +1,16 @@
 package com.yugentech.quill.reader.ui.components.aira.components
 
-import com.yugentech.quill.aira.aira.QuickIntent
+import com.yugentech.quill.reader.quickPrompt.state.QuickPrompt
 
 fun resolveChips(
     selectedText: String?,
     currentChapterIndex: Int
-): List<Pair<String, QuickIntent>> {
+): List<Pair<String, QuickPrompt>> {
     if (selectedText.isNullOrBlank()) {
         return listOf(
-            "Summarize chapter" to QuickIntent.SummarizeChapter(currentChapterIndex),
-            "Who are the characters?" to QuickIntent.WhoAreTheCharacters,
-            "What are the themes?" to QuickIntent.WhatAreTheThemes
+            "Summarize chapter" to QuickPrompt.SummarizeChapter(currentChapterIndex),
+            "Who are the characters?" to QuickPrompt.WhoAreTheCharacters,
+            "What are the themes?" to QuickPrompt.WhatAreTheThemes
         )
     }
 
@@ -19,28 +19,26 @@ fun resolveChips(
     val wordCount = words.size
     val looksLikeProperNoun = words.first().first().isUpperCase()
 
-    return when {
-        wordCount == 1 -> buildList {
+    return when (wordCount) {
+        1 -> buildList {
             val word = words.first()
-            add("Define" to QuickIntent.DefineWord(word))
-            add("What is this?" to QuickIntent.WhatIsThis(word))
+            add("Define" to QuickPrompt.DefineWord(word))
+            add("What is this?" to QuickPrompt.WhatIsThis(word))
             if (word.first().isUpperCase()) {
-                add("Who is this?" to QuickIntent.WhoIsThis(word, currentChapterIndex))
+                add("Who is this?" to QuickPrompt.WhoIsThis(word, currentChapterIndex))
             }
         }
-
-        wordCount in 2..3 -> buildList {
-            add("Explain this" to QuickIntent.ExplainThis(trimmed))
+        in 2..3 -> buildList {
+            add("Explain this" to QuickPrompt.ExplainThis(trimmed))
             if (looksLikeProperNoun) {
-                add("Who is this?" to QuickIntent.WhoIsThis(trimmed, currentChapterIndex))
+                add("Who is this?" to QuickPrompt.WhoIsThis(trimmed, currentChapterIndex))
             }
         }
-
         else -> listOf(
-            "Simplify this" to QuickIntent.SimplifyThis(trimmed),
-            "Explain this" to QuickIntent.ExplainThis(trimmed),
-            "What's the significance?" to QuickIntent.WhatIsTheSignificance(trimmed),
-            "Who's speaking?" to QuickIntent.WhoIsSpeaking(trimmed)
+            "Simplify this" to QuickPrompt.SimplifyThis(trimmed),
+            "Explain this" to QuickPrompt.ExplainThis(trimmed),
+            "What's the significance?" to QuickPrompt.WhatIsTheSignificance(trimmed),
+            "Who's speaking?" to QuickPrompt.WhoIsSpeaking(trimmed)
         )
     }
 }
