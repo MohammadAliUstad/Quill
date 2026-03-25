@@ -17,28 +17,46 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.reader.state.PeekState
+import com.yugentech.quill.reader.ui.components.aira.PeekState
+
+private val idleMessages = listOf(
+    "Need a quick recap of the this chapter? Just ask.",
+    "Highlight any text in the book, or just ask me a question right here!",
+    "Want me to translate a phrase or define a tricky word?",
+    "Lost in the plot? I can help you find your way.",
+    "Need a quick refresher on a character? Just tell me their name."
+)
 
 @Composable
 fun PeekResponseArea(
-    peekState: PeekState,
-    contentAlpha: Float
+    peekState: PeekState
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .animateContentSize(tween(350, easing = FastOutSlowInEasing))
-            .graphicsLayer { alpha = contentAlpha }
     ) {
         when (peekState) {
-            is PeekState.Idle -> {}
+            is PeekState.Idle -> {
+                val greeting = remember { idleMessages.random() }
+
+                Column {
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = greeting,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Spacer(Modifier.height(16.dp))
+                }
+            }
 
             is PeekState.Loading -> {
                 Column {
                     Spacer(Modifier.height(16.dp))
-                    ThinkingIndicator(modifier = Modifier.padding(horizontal = 16.dp))
+                    ThinkingIndicator(modifier = Modifier.padding(horizontal = 24.dp))
                     Spacer(Modifier.height(16.dp))
                 }
             }
@@ -46,14 +64,17 @@ fun PeekResponseArea(
             is PeekState.Response -> {
                 val fullText = peekState.text
 
-                // Keyed on the text itself — resets the counter whenever a new response arrives
-                val textLength = remember(fullText) {
+                // THE FIX: Removed `fullText` from the remember key.
+                // Now, if Aira is streaming text, the Animatable won't reset to 0f on every new word.
+                // It naturally resets to 0 only when the state switches from Loading -> Response.
+                val textLength = remember {
                     Animatable(0f)
                 }
 
+                // Triggers whenever new text is appended to fullText
                 LaunchedEffect(fullText) {
-                    val charsRemaining = fullText.length - textLength.value
-                    if (charsRemaining > 0) {
+                    if (textLength.value < fullText.length) {
+                        val charsRemaining = fullText.length - textLength.value
                         textLength.animateTo(
                             targetValue = fullText.length.toFloat(),
                             animationSpec = tween(
@@ -74,7 +95,7 @@ fun PeekResponseArea(
                         text = displayedText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(horizontal = 24.dp) // Aligned padding with Idle/Loading states
                     )
                     Spacer(Modifier.height(12.dp))
                 }

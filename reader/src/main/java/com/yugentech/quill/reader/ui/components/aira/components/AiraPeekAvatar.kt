@@ -19,21 +19,12 @@ import com.yugentech.quill.reader.R
 
 @Composable
 fun AiraPeekAvatar(
-    modifier: Modifier = Modifier,
-    isLoading: Boolean,
-    isStreaming: Boolean,
-    isVisuallyTyping: Boolean = false
+    modifier: Modifier = Modifier
 ) {
-    val avatarRes = when {
-        isStreaming || isVisuallyTyping -> R.drawable.pexplaining
-        isLoading -> R.drawable.psmile_calm
-        else -> R.drawable.pneutral
-    }
-
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(48.dp)
+            .size(40.dp)
             .clip(CircleShape)
     ) {
         Surface(
@@ -42,13 +33,13 @@ fun AiraPeekAvatar(
         ) {}
 
         Image(
-            painter = painterResource(id = avatarRes),
+            painter = painterResource(id = R.drawable.pneutral),
             contentDescription = "Aira",
             modifier = Modifier
-                .requiredSize(120.dp)
+                .requiredSize(60.dp)
                 .offset(
-                    x = (-3).dp,
-                    y = 26.dp
+                    x = (-1).dp,
+                    y = 4.dp
                 )
         )
     }
