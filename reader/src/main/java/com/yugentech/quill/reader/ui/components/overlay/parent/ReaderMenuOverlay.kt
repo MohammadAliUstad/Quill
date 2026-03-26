@@ -22,10 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.yugentech.quill.aira.QuickActionUiState
-import com.yugentech.quill.aira.aira.AiraUiState
-import com.yugentech.quill.aira.aira.QuickIntent
-import com.yugentech.quill.reader.state.ReaderOverlayState
+import com.yugentech.quill.reader.quickPrompt.viewmodel.QuickChatUiState
+import com.yugentech.quill.aira.aira.viewmodel.AiraUiState
+import com.yugentech.quill.reader.quickPrompt.state.QuickPrompt
+import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
 import com.yugentech.quill.reader.ui.components.aira.AiraPeekBar
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.ReaderBottomControls
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.button.AskAiraButton
@@ -51,10 +51,10 @@ fun ReaderMenuOverlay(
     onScrubStart: () -> Unit = {},
     onScrubEnd: () -> Unit = {},
     onBrightnessInteraction: (Boolean) -> Unit = {},
-    onQuickAction: (QuickIntent) -> Unit = {},
+    onQuickAction: (QuickPrompt) -> Unit = {},
     onAiraSend: (String) -> Unit = {},
     airaUiState: AiraUiState = AiraUiState(),
-    quickActionUiState: QuickActionUiState = QuickActionUiState()
+    quickChatUiState: QuickChatUiState = QuickChatUiState()
 ) {
     var sliderPosition by remember { mutableFloatStateOf(readerOverlayState.progress) }
 
@@ -101,7 +101,7 @@ fun ReaderMenuOverlay(
             isVisible = showAiraPeek,
             selectedText = readerOverlayState.selectedText,
             currentChapterIndex = readerOverlayState.currentChapterIndex,
-            quickActionUiState = quickActionUiState,
+            quickChatUiState = quickChatUiState,
             airaUiState = airaUiState,
             onQuickAction = onQuickAction,
             onSendMessage = onAiraSend,
