@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.components.overlay.bottomBar.components.sheet
+package com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.sheet
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -16,9 +16,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.reader.ui.components.overlay.bottomBar.components.sheet.components.BookProgressFooter
-import com.yugentech.quill.reader.ui.components.overlay.bottomBar.components.sheet.components.ChapterProgressHeader
-import com.yugentech.quill.reader.state.ReaderOverlayState
+import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.sheet.components.BookProgressFooter
+import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.sheet.components.ChapterProgressHeader
+import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

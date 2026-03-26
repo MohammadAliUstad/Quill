@@ -17,17 +17,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.yugentech.quill.aira.QuickActionViewModel
 import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
-import com.yugentech.quill.reader.state.ReaderUiState
-import com.yugentech.quill.reader.state.ReaderDefaults
+import com.yugentech.quill.reader.quickPrompt.viewmodel.QuickChatViewModel
+import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
+import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
 import com.yugentech.quill.reader.ui.components.engine.ReadiumEngine
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderMenuOverlay
 import com.yugentech.quill.reader.ui.components.settingsSheet.SettingsSheet
 import com.yugentech.quill.reader.ui.components.tocSheet.TocSheet
-import com.yugentech.quill.reader.state.ReaderOverlayState
+import com.yugentech.quill.reader.viewmodel.ReaderUiState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.publication.Locator
 
@@ -66,15 +67,16 @@ private fun ReaderSuccess(
     onLocatorChange: (Locator) -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit
 ) {
-    val airaViewModel: AiraViewModel = koinViewModel()
+    val airaViewModel: AiraViewModel = koinViewModel(
+        parameters = { parametersOf(state.bookId) }
+    )
     val airaUiState by airaViewModel.uiState.collectAsState()
 
-    val quickActionViewModel: QuickActionViewModel = koinViewModel()
-    val quickActionUiState by quickActionViewModel.uiState.collectAsState()
+    val quickChatViewModel: QuickChatViewModel = koinViewModel()
+    val quickActionUiState by quickChatViewModel.uiState.collectAsState()
 
     LaunchedEffect(state.bookId) {
-        airaViewModel.initForBook(state.bookId)
-        quickActionViewModel.initForBook(state.bookId)
+        quickChatViewModel.initForBook(state.bookId)
     }
 
     var isMenuVisible by rememberSaveable { mutableStateOf(false) }
@@ -93,7 +95,8 @@ private fun ReaderSuccess(
 
     val currentChapterIndex by remember(currentLocator) {
         derivedStateOf {
-            val currentHref = currentLocator?.href?.toString()?.substringBefore("#") ?: return@derivedStateOf 0
+            val currentHref =
+                currentLocator?.href?.toString()?.substringBefore("#") ?: return@derivedStateOf 0
             state.publication.readingOrder
                 .indexOfFirst { it.href.toString().substringBefore("#") == currentHref }
                 .coerceAtLeast(0)
@@ -208,11 +211,11 @@ private fun ReaderSuccess(
             onAiraDismiss = {
                 showAiraPeek = false
                 selectedText = null
-                quickActionViewModel.clearResponse()
+                quickChatViewModel.clearResponse()
             },
             airaUiState = airaUiState,
-            quickActionUiState = quickActionUiState,
-            onQuickAction = { intent -> quickActionViewModel.handle(intent) },
+            quickChatUiState = quickActionUiState,
+            onQuickAction = { intent -> quickChatViewModel.handle(intent) },
             onAiraSend = { question -> airaViewModel.ask(question) },
             onStop = {
                 airaViewModel.stopGeneration()
