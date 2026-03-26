@@ -9,4 +9,3 @@ interface ReadingSessionRepository {
     fun getSessionsForBookFlow(bookId: String): Flow<List<ReadingSessionEntity>>
     suspend fun deleteSessionsForBook(bookId: String)
 }
-

@@ -3,8 +3,10 @@ package com.yugentech.quill.reader.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.reader.ReaderUiState
 import com.yugentech.quill.reader.repository.ReaderRepository
+import com.yugentech.quill.reader.repository.ReadingSessionRepository
+import com.yugentech.quill.reader.viewmodel.ReaderUiState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,18 +30,19 @@ import java.io.File
 
 class ReaderViewModel(
     application: Application,
-    private val readerRepository: ReaderRepository
+    private val readerRepository: ReaderRepository,
+    private val sessionRepository: ReadingSessionRepository // 1. Injected Repo
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<ReaderUiState>(ReaderUiState.Idle)
     val uiState = _uiState.asStateFlow()
 
     private var publication: Publication? = null
-
-    // 1. Job to handle Debouncing (prevents database spamming)
     private var saveJob: Job? = null
-
     private var tocMap: Map<String, String> = emptyMap()
+
+    // 2. Track when the user started reading
+    private var sessionStartTime: Long = 0L
 
     fun loadBook(bookId: String, initialHref: String?) {
         viewModelScope.launch {
@@ -47,7 +50,6 @@ class ReaderViewModel(
 
             withContext(Dispatchers.IO) {
                 try {
-                    // --- SETUP PHASE ---
                     val bookEntity = readerRepository.getBook(bookId).firstOrNull()
                     val path = bookEntity?.localFilePath
                     val totalPages = bookEntity?.totalPages ?: 0
@@ -75,9 +77,6 @@ class ReaderViewModel(
                     val positions = pub.positions()
                     tocMap = flattenToc(pub.tableOfContents)
 
-                    // --- PROFESSIONAL RESUME LOGIC ---
-
-                    // 1. Explicit Navigation: Did the user click a specific chapter in the details screen?
                     val explicitLocator = initialHref?.let { href ->
                         Url.Companion(href)?.let { url ->
                             pub.linkWithHref(url)?.let { link ->
@@ -86,18 +85,18 @@ class ReaderViewModel(
                         }
                     }
 
-                    // 2. Saved Restoration: If no explicit chapter, try to load the exact saved paragraph.
                     val savedLocator = bookEntity.lastLocatorJson?.let { jsonStr ->
                         try {
-                            // Recover the Locator from the stored JSON string
                             Locator.Companion.fromJSON(JSONObject(jsonStr))
                         } catch (_: Exception) {
                             null
                         }
                     }
 
-                    // 3. Decision: Explicit takes priority. If null, use Saved. If both null, start at beginning.
                     val finalLocator = explicitLocator ?: savedLocator
+
+                    // 3. Start the session clock the moment the book is successfully loaded
+                    sessionStartTime = System.currentTimeMillis()
 
                     _uiState.value = ReaderUiState.Success(
                         bookId = bookId,
@@ -115,31 +114,23 @@ class ReaderViewModel(
     }
 
     fun saveProgress(bookId: String, locator: Locator) {
-        // --- HANDLING CURIOSITY / FAST SCROLLING ---
-
-        // 1. Cancel any previous save request that hasn't executed yet.
-        // If the user is scrolling fast, this keeps getting cancelled.
         saveJob?.cancel()
 
-        // 2. Start a new timer
         saveJob = viewModelScope.launch {
-            // 3. Wait for 1 second of inactivity
             delay(2000)
 
-            // 4. If we are still here (not cancelled), the user has stopped at this page.
             val pub = publication ?: return@launch
 
+            val currentHref = locator.href.toString().substringBefore("#")
             val chapterIndex = pub.readingOrder
-                .indexOfFirst { it.href == locator.href }
+                .indexOfFirst { it.href.toString().substringBefore("#") == currentHref }
                 .coerceAtLeast(0)
-
 
             val totalProgress = locator.locations.totalProgression?.toFloat() ?: 0f
 
             val chapterTitle = tocMap[locator.href.toString()]
                 ?: pub.readingOrder.getOrNull(chapterIndex)?.title
 
-            // 5. Convert Locator to JSON for exact precision
             val locatorJson = locator.toJSON().toString()
 
             readerRepository.saveProgress(
@@ -167,7 +158,28 @@ class ReaderViewModel(
     }
 
     override fun onCleared() {
+        saveReadingSession() // 4. Save the session before clearing resources
         super.onCleared()
         publication?.close()
+    }
+
+    private fun saveReadingSession() {
+        val currentState = _uiState.value
+        if (currentState is ReaderUiState.Success && sessionStartTime > 0L) {
+            val endTime = System.currentTimeMillis()
+            val duration = endTime - sessionStartTime
+
+            // Only save if they read for more than 10 seconds to prevent DB clutter
+            if (duration > 10_000L) {
+                // Use a detached scope because viewModelScope gets cancelled during onCleared
+                CoroutineScope(Dispatchers.IO).launch {
+                    sessionRepository.insertSession(
+                        bookId = currentState.bookId,
+                        startTime = sessionStartTime,
+                        endTime = endTime
+                    )
+                }
+            }
+        }
     }
 }
