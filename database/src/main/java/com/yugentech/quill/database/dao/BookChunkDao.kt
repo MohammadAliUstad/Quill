@@ -55,6 +55,13 @@ interface BookChunkDao {
         ORDER BY chapterIndex ASC, chunkIndex ASC
     """)
     suspend fun getCandidateVectors(bookId: String, maxChapterIndex: Int): List<ChunkVectorTuple>
+
+    @Query("""
+    SELECT * FROM book_chunks 
+    WHERE bookId = :bookId AND chapterIndex = :chapterIndex 
+    ORDER BY chunkIndex ASC
+""")
+    suspend fun getChunksForChapter(bookId: String, chapterIndex: Int): List<BookChunkEntity>
 }
 
 // Existing vector tuple
