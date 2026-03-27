@@ -5,11 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -26,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,6 +64,9 @@ fun SignInScreen(
     val forgotPasswordState by authViewModel.forgotPasswordState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
 
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.book_in))
     val progress by animateLottieCompositionAsState(
         composition = composition,
@@ -83,14 +90,16 @@ fun SignInScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    // THE FIX: safeDrawing automatically handles the keyboard and navigation bars perfectly
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
                     .verticalScroll(scrollState)
                     .padding(horizontal = MaterialTheme.spacing.m),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                // THE FIX: Removed Arrangement.Center so the layout doesn't jump unnecessarily
             ) {
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.xl))
+                // THE FIX: Use a fixed responsive spacer to push content down to the visual center
+                Spacer(modifier = Modifier.height(screenHeight * 0.12f))
 
-                // Replaced Carousel with a themed Reader Icon
                 Box(
                     modifier = Modifier
                         .padding(vertical = MaterialTheme.spacing.s)
