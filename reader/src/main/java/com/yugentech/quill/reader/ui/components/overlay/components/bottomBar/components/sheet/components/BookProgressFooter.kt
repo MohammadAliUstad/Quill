@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.components.overlay.bottomBar.components.sheet.components
+package com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.sheet.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

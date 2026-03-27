@@ -8,7 +8,7 @@ import com.yugentech.quill.allBooks.viewmodel.AllBooksViewModel
 import com.yugentech.quill.library.repository.LibraryRepository
 import com.yugentech.quill.library.repository.LibraryRepositoryImpl
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
-import com.yugentech.quill.ui.mainScreen.utils.DiscoverViewModel
+import com.yugentech.quill.discover.DiscoverViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -34,7 +34,8 @@ val booksModule = module {
 
     single<CategoryRepository> {
         CategoryRepositoryImpl(
-            categoryDao = get()
+            categoryDao = get(),
+            cloudSyncRepository = get()
         )
     }
 
@@ -51,8 +52,6 @@ val booksModule = module {
             repository = get()
         )
     }
-
-
 
     viewModel {
         AllBooksViewModel()
