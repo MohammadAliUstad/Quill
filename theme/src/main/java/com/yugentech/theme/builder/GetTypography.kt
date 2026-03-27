@@ -1,4 +1,4 @@
-package com.yugentech.theme.getters
+package com.yugentech.theme.builder
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

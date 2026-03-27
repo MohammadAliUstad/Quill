@@ -6,7 +6,7 @@ enum class ColorTheme {
     TWILIGHT,   // Indigo/Purple evening tones
     GROVE,      // Olive/Forest nature tones
     CANYON,     // Earthy Brown/Coffee tones
-    SAKURA,     // Mauve/Cherry Blossom tones
+    QUILL,     // Burgundy/Premium tones
     LAGOON,     // Teal/Deep water tones
     HARVEST,    // Gold/Olive wheat tones
     ALPINE      // Deep Pine/Cold Forest tones

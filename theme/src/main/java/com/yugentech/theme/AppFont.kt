@@ -1,7 +1,8 @@
-package com.yugentech.sessions.theme
+package com.yugentech.theme
 
 import androidx.annotation.FontRes
-import com.yugentech.sessions.R
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 
 enum class AppFont(
     val id: String,
@@ -32,10 +33,9 @@ enum class AppFont(
         id = "figtree",
         displayName = "Figtree",
         regularResId = R.font.figtree
-    ),
-    Garamond(
-        id = "garamond",
-        displayName = "Garamond",
-        regularResId = R.font.eb_garamond
     )
 }
+
+val WindSongFont = FontFamily(
+    Font(resId = R.font.windsong)
+)

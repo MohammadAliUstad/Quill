@@ -6,8 +6,9 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
-import com.yugentech.theme.getters.getColorScheme
-import com.yugentech.theme.getters.getTypography
+import com.yugentech.theme.builder.getColorScheme
+import com.yugentech.theme.builder.getFontFamily
+import com.yugentech.theme.builder.getTypography
 import com.yugentech.theme.models.ThemeConfiguration
 import com.yugentech.theme.tokens.LocalDesignTokens
 import com.yugentech.theme.tokens.TokensCompact
@@ -23,7 +24,7 @@ fun QuillTheme(
 
     // Reconstruct typography only when the selected fonts changes
     val currentTypography = remember(themeConfiguration.appFont) {
-        getTypography(themeConfiguration.appFont.toFontFamily())
+        getTypography(getFontFamily(themeConfiguration.appFont))
     }
 
     // Load the standard design tokens (spacing, sizing, etc.)
