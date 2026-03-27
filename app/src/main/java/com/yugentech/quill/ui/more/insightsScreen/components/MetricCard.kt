@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.config.insightsScreen.components
+package com.yugentech.quill.ui.more.insightsScreen.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,9 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import com.yugentech.sessions.theme.tokens.corners
-import com.yugentech.sessions.theme.tokens.icons
-import com.yugentech.sessions.theme.tokens.spacing
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.icons
+import com.yugentech.theme.tokens.spacing
 
 @Composable
 fun MetricCard(

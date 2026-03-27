@@ -1,6 +1,7 @@
 package com.yugentech.quill.ui.shared.airaScreen.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.layout.Arrangement
@@ -34,13 +35,12 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yugentech.quill.reader.ui.reader.airaInteraction.ThinkingIndicator
-import kotlinx.coroutines.delay
+import com.yugentech.quill.reader.ui.components.aira.components.ThinkingIndicator
 
 @Composable
 fun MessageItem(
     message: ChatMessage,
-    bodyFontFamily: FontFamily?
+    onTypingStateChange: (Boolean) -> Unit = {}
 ) {
     val isAira = message.isFromAira
     val containerWidth = LocalWindowInfo.current.containerSize.width
@@ -49,22 +49,26 @@ fun MessageItem(
     if (isAira) {
         val isThinking = message.isNew && message.text.isBlank()
 
-        // --- BULLETPROOF TYPEWRITER ---
-        // Animatable is a hardware-synced animation engine. It never drops frames or cancels awkwardly.
         val textLength = remember(message.stableKey) {
             androidx.compose.animation.core.Animatable(if (message.isNew) 0f else message.text.length.toFloat())
         }
 
         LaunchedEffect(message.text) {
             if (textLength.value < message.text.length) {
+                // 2. Tell the parent we are visually typing
+                onTypingStateChange(true)
+
                 val charsRemaining = message.text.length - textLength.value
                 textLength.animateTo(
                     targetValue = message.text.length.toFloat(),
                     animationSpec = tween(
                         durationMillis = (charsRemaining * 15f).toInt().coerceAtLeast(10),
-                        easing = androidx.compose.animation.core.LinearEasing
+                        easing = LinearEasing
                     )
                 )
+
+                // 3. Tell the parent the animation has finished!
+                onTypingStateChange(false)
             }
         }
 
@@ -105,7 +109,6 @@ fun MessageItem(
                 Text(
                     text = displayedText,
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        fontFamily = bodyFontFamily,
                         lineHeight = 24.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurface,
@@ -144,7 +147,6 @@ fun MessageItem(
                     Text(
                         text = message.text,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontFamily = bodyFontFamily,
                             lineHeight = 24.sp
                         ),
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
