@@ -20,7 +20,8 @@ data class BookChunkEntity(
     val chapterTitle: String = "",  // spine link title for debugging
     val chunkIndex: Int,
     val text: String,
-    val embedding: FloatArray
+    val embedding: FloatArray,
+    val embeddingSize: Int = embedding.size
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

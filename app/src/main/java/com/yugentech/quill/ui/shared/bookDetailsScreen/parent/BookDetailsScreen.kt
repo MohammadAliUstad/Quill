@@ -91,6 +91,7 @@ fun BookDetailsScreen(
     }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -112,12 +113,14 @@ fun BookDetailsScreen(
             )
         },
         floatingActionButton = {
-            Box(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
-                FloatingActionButton(
-                    currentTabHasFab = true,
-                    isScrollingDown = isScrollingDown,
-                    onClick = { onAiraClick(book.id) }
-                )
+            if (downloadStatus == DownloadStatus.DOWNLOADED) {
+                Box(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
+                    FloatingActionButton(
+                        currentTabHasFab = true,
+                        isScrollingDown = isScrollingDown,
+                        onClick = { onAiraClick(book.id) }
+                    )
+                }
             }
         }
     ) { innerPadding ->

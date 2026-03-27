@@ -12,15 +12,15 @@ import com.yugentech.quill.database.mapper.toEntity
 import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.quill.bookDetails.worker.BookDownloadWorker
 import com.yugentech.quill.aira.rag.BookIndexingWorker
+import com.yugentech.quill.cloud.repository.CloudSyncRepository // <-- NEW IMPORT
 import kotlinx.coroutines.flow.Flow
 import java.io.File
-
-//New Repo
 
 class BookDetailsRepositoryImpl(
     private val bookDao: BookDao,
     private val categoryDao: CategoryDao,
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val cloudSyncRepository: CloudSyncRepository // <-- INJECTED SCHEDULER
 ) : BookDetailsRepository {
 
     override fun getBook(bookId: String): Flow<BookEntity?> =
@@ -35,6 +35,7 @@ class BookDetailsRepositoryImpl(
     override suspend fun getBookOnce(bookId: String): BookEntity? =
         bookDao.getBookEntity(bookId)
 
+    // LOCAL ONLY: Downloading a file doesn't affect cloud sync status
     override suspend fun startDownload(book: Book) {
         val existingBook = bookDao.getBookEntity(book.id)
 
@@ -50,6 +51,7 @@ class BookDetailsRepositoryImpl(
             language = book.language,
             downloadStatus = DownloadStatus.DOWNLOADING,
             isFavorite = existingBook?.isFavorite ?: false,
+            isSynced = false,
             userCategory = existingBook?.userCategory ?: "Shelf",
             addedAt = existingBook?.addedAt ?: System.currentTimeMillis(),
             progressPercent = existingBook?.progressPercent ?: 0f,
@@ -85,20 +87,29 @@ class BookDetailsRepositoryImpl(
             .beginWith(downloadRequest)
             .then(indexRequest)
             .enqueue()
+
+        cloudSyncRepository.scheduleBackgroundSync()
     }
 
+    // LOCAL ONLY: Removing a file doesn't erase cloud reading progress
     override suspend fun removeDownload(bookId: String) {
         val book = bookDao.getBookEntity(bookId)
         book?.localFilePath?.let { File(it).takeIf { f -> f.exists() }?.delete() }
         bookDao.removeDownload(bookId)
     }
 
+    // CLOUD SYNC: Full deletion happens instantly (no timer)
     override suspend fun deleteBook(bookId: String) {
         val book = bookDao.getBookEntity(bookId)
         book?.localFilePath?.let { File(it).takeIf { f -> f.exists() }?.delete() }
+
+        // Delete locally
         bookDao.deleteBook(bookId)
+        // Delete from cloud immediately
+        cloudSyncRepository.deleteBookFromCloud(bookId)
     }
 
+    // CLOUD SYNC: Trigger 15s timer
     override suspend fun updateFavorite(book: Book, isFavorite: Boolean) {
         if (bookDao.getBookEntity(book.id) != null) {
             bookDao.updateFavorite(book.id, isFavorite)
@@ -107,11 +118,13 @@ class BookDetailsRepositoryImpl(
                 book.toEntity(
                     isFavorite = isFavorite,
                     status = DownloadStatus.NOT_DOWNLOADED
-                )
+                ).copy(isSynced = false) // Ensure new inserts are flagged
             )
         }
+        cloudSyncRepository.scheduleBackgroundSync()
     }
 
+    // CLOUD SYNC: Trigger 15s timer
     override suspend fun updateCategory(book: Book, newCategory: String) {
         if (bookDao.getBookEntity(book.id) != null) {
             bookDao.updateCategory(book.id, newCategory)
@@ -120,24 +133,33 @@ class BookDetailsRepositoryImpl(
                 book.toEntity(
                     category = newCategory,
                     status = DownloadStatus.NOT_DOWNLOADED
-                )
+                ).copy(isSynced = false) // Ensure new inserts are flagged
             )
         }
+        cloudSyncRepository.scheduleBackgroundSync()
     }
 
+    // CLOUD SYNC: Trigger 15s timer + Bug Fixed
     override suspend fun updateProgress(bookId: String, progressPercent: Float, chapterIndex: Int) {
-        bookDao.getBookEntity(bookId)?.let { existing ->
-            bookDao.insertBook(
-                existing.copy(
-                    progressPercent = progressPercent,
-                    lastChapterIndex = chapterIndex,
-                    lastReadTime = System.currentTimeMillis()
-                )
+        val existing = bookDao.getBookEntity(bookId)
+        if (existing != null) {
+            // BUG FIX: Use the targeted DAO method so 'isSynced = 0' gets applied
+            // and we don't accidentally wipe out lastChapterTitle or lastLocatorJson
+            bookDao.updateReadingProgress(
+                bookId = bookId,
+                progress = progressPercent,
+                chapterTitle = existing.lastChapterTitle,
+                chapterIndex = chapterIndex,
+                locatorJson = existing.lastLocatorJson,
+                readTime = System.currentTimeMillis()
             )
+            cloudSyncRepository.scheduleBackgroundSync()
         }
     }
 
+    // CLOUD SYNC: Trigger 15s timer
     override suspend fun resetReadingProgress(bookId: String) {
         bookDao.resetReadingProgress(bookId)
+        cloudSyncRepository.scheduleBackgroundSync()
     }
 }
