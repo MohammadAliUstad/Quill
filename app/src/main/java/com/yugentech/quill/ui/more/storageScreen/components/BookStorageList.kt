@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -35,17 +34,21 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.yugentech.quill.database.entity.BookEntity
-import com.yugentech.quill.ui.tabs.screens.storageScreen.components.formatBytes
+import com.yugentech.quill.database.model.BookStorageBreakdown
 
 @Composable
 fun BookStorageList(
     books: List<BookEntity>,
+    breakdowns: Map<String, BookStorageBreakdown>,
     onDeleteClick: (BookEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (books.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No books currently downloaded.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = "No books currently downloaded.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     } else {
         LazyColumn(
@@ -55,100 +58,16 @@ fun BookStorageList(
         ) {
             items(
                 items = books,
-                key = { it.id } // Requires a unique key for the animation to work perfectly
+                key = { it.id }
             ) { book ->
                 BookStorageItem(
                     book = book,
+                    breakdown = breakdowns[book.id],
                     onDeleteClick = { onDeleteClick(book) },
-                    modifier = Modifier.animateItem() // Gives it a smooth expressive slide out!
+                    modifier = Modifier.animateItem()
                 )
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun BookStorageItem(
-    book: BookEntity,
-    onDeleteClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // --- COVER ---
-        ElevatedCard(
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-                .width(64.dp)
-                .height(96.dp)
-        ) {
-            AsyncImage(
-                model = book.coverUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // --- TITLE & AUTHOR ---
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = book.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = book.author,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            
-            // File Size Chip
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = formatBytes(book.fileSizeBytes),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // --- DELETE BUTTON ---
-        IconButton(
-            onClick = onDeleteClick,
-            modifier = Modifier.size(48.dp),
-            colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.error,
-                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-            )
-        ) {
-            Icon(Icons.Outlined.Delete, contentDescription = "Delete File")
-        }
-    }
-}
