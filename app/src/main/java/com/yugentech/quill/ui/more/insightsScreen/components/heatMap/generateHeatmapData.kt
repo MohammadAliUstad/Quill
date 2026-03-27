@@ -1,7 +1,7 @@
-package com.yugentech.sessions.ui.config.insightsScreen.components.heatMap
+package com.yugentech.quill.ui.more.insightsScreen.components.heatMap
 
-import com.yugentech.sessions.ui.config.model.insights.HeatmapDay
-import com.yugentech.sessions.ui.config.model.insights.HeatmapWeek
+import com.yugentech.quill.ui.more.insightsScreen.insights.HeatmapDay
+import com.yugentech.quill.ui.more.insightsScreen.insights.HeatmapWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit

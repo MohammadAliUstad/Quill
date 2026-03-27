@@ -16,7 +16,10 @@ import com.yugentech.theme.tokens.AppConstants.FAVOURITES
 import com.yugentech.theme.tokens.AppConstants.SHELF
 
 @Composable
-fun AddCategoryDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+fun AddCategoryDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
     var text by remember { mutableStateOf(EMPTY) }
 
     val isReserved =

@@ -13,7 +13,6 @@ import org.koin.androidx.compose.koinViewModel
 fun NavGraphBuilder.sourceGraph(
     navController: NavHostController
 ) {
-    // Defines the Standard Ebooks source screen
     composable(AppScreen.StandardEbooks.route) {
         val standardViewModel: StandardViewModel = koinViewModel()
         StandardScreen(
@@ -32,7 +31,6 @@ fun NavGraphBuilder.sourceGraph(
         )
     }
 
-    // Defines the Gutenberg source screen
     composable(AppScreen.Gutenberg.route) {
         val gutenbergViewModel: GutenbergViewModel = koinViewModel()
         GutenbergScreen(

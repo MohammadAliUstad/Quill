@@ -16,16 +16,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -42,15 +41,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
-import com.yugentech.quill.ui.more.insightsScreen.components.ConsistencyCard
+import androidx.compose.ui.unit.dp
+import com.yugentech.quill.insghts.InsightsUiState
+import com.yugentech.quill.ui.more.insightsScreen.components.AiraEngagementCard
 import com.yugentech.quill.ui.more.insightsScreen.components.EmptyDistributionPlaceholder
+import com.yugentech.quill.ui.more.insightsScreen.components.GlanceStatCard
 import com.yugentech.quill.ui.more.insightsScreen.components.InsightSectionHeader
-import com.yugentech.quill.ui.more.insightsScreen.components.MetricCard
 import com.yugentech.quill.ui.more.insightsScreen.components.PeakHourCard
-import com.yugentech.quill.ui.more.insightsScreen.components.TaskDistributionList
-import com.yugentech.quill.ui.more.insightsScreen.components.WeeklyRhythmChart
-import com.yugentech.quill.ui.more.insightsScreen.insights.InsightsUiState
+import com.yugentech.quill.ui.more.insightsScreen.components.ProgressBracketsCard
+import com.yugentech.quill.ui.more.insightsScreen.components.TopAuthorsCard
 import com.yugentech.quill.ui.more.insightsScreen.components.heatMap.Heatmap
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.icons
@@ -64,7 +63,6 @@ fun InsightsScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    // Format Milliseconds into readable "Xh Ym" format
     val totalTimeFormatted = remember(uiState.totalReadingTimeMillis) {
         val totalMinutes = (uiState.totalReadingTimeMillis / (1000 * 60)).toInt()
         val hours = totalMinutes / 60
@@ -72,25 +70,20 @@ fun InsightsScreen(
         if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
     }
 
-    // Convert ms Longs to minute Ints so your existing WeeklyRhythmChart doesn't break
-    val dailyVolumeInMinutes = remember(uiState.dailyVolume) {
-        uiState.dailyVolume.mapValues { (it.value / (1000 * 60)).toInt() }
-    }
-
-    val topCategory = uiState.categoryDistribution.maxByOrNull { it.value }?.key ?: "No data yet"
-
     val layoutDirection = LocalLayoutDirection.current
-    val navBarPadding = WindowInsets.navigationBars.asPaddingValues()
+    val sectionShape = RoundedCornerShape(MaterialTheme.corners.large)
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        // Ensure the Scaffold doesn't force insets on the content itself
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Reading Insights")
+                        Text("Insights")
                         Text(
-                            "Your reading patterns & habits",
+                            "Your reading habits",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -117,160 +110,162 @@ fun InsightsScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
-                        bottom = navBarPadding.calculateBottomPadding(),
-                        start = MaterialTheme.spacing.m + paddingValues.calculateStartPadding(
-                            layoutDirection
-                        ),
-                        end = MaterialTheme.spacing.m + paddingValues.calculateEndPadding(
-                            layoutDirection
-                        )
+                        top = MaterialTheme.spacing.s,
+                        bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                        start = MaterialTheme.spacing.m + paddingValues.calculateStartPadding(layoutDirection),
+                        end = MaterialTheme.spacing.m + paddingValues.calculateEndPadding(layoutDirection)
                     ),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
                 ) {
-                    item {
-                        MetricCard(
-                            title = "Total Reading Time",
-                            value = totalTimeFormatted,
-                            subtitle = "Cumulative time spent reading",
-                            icon = Icons.Default.Timer
-                        )
-                    }
 
-                    if (uiState.categoryDistribution.isNotEmpty()) {
-                        item {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(MaterialTheme.corners.large),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(MaterialTheme.spacing.m),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+                        ) {
+                            GlanceStatCard(
+                                icon = {
                                     Icon(
-                                        Icons.Default.MenuBook, // Swapped to a book icon
-                                        contentDescription = null,
+                                        Icons.Outlined.Timer,
+                                        null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(MaterialTheme.icons.medium)
+                                    )
+                                },
+                                value = totalTimeFormatted,
+                                label = "Time read",
+                                modifier = Modifier.weight(1f)
+                            )
+                            GlanceStatCard(
+                                icon = {
+                                    Icon(
+                                        Icons.Outlined.AutoStories,
+                                        null,
                                         tint = MaterialTheme.colorScheme.secondary,
                                         modifier = Modifier.size(MaterialTheme.icons.medium)
                                     )
-
-                                    Spacer(Modifier.width(MaterialTheme.spacing.m))
-
-                                    Column {
-                                        Text(
-                                            "Top Genre",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
-                                                alpha = 0.7f
-                                            )
-                                        )
-
-                                        Text(
-                                            topCategory,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            }
+                                },
+                                value = "${uiState.streakCount}",
+                                label = "Day streak",
+                                modifier = Modifier.weight(1f)
+                            )
+                            GlanceStatCard(
+                                icon = {
+                                    Icon(
+                                        Icons.Outlined.CheckCircle,
+                                        null,
+                                        tint = MaterialTheme.colorScheme.tertiary,
+                                        modifier = Modifier.size(MaterialTheme.icons.medium)
+                                    )
+                                },
+                                value = "${uiState.finishedBooksCount}",
+                                label = "Finished",
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
 
-                    item {
-                        PeakHourCard(peakHour = uiState.peakHour)
-                    }
-
-                    item {
-                        Heatmap(data = uiState.heatmapHistory)
-                    }
-
+                    // ── PEAK READING TIME ────────────────────────────────────
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(MaterialTheme.corners.large),
+                            shape = sectionShape,
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
-                            Column(
-                                Modifier.padding(MaterialTheme.spacing.m)
-                            ) {
-                                InsightSectionHeader(
-                                    title = "Momentum",
-                                    subtitle = "Your daily reading streak"
-                                )
-
-                                Spacer(Modifier.height(MaterialTheme.spacing.s))
-
-                                ConsistencyCard(
-                                    streakCount = uiState.streakCount
-                                )
-                            }
+                            PeakHourCard(
+                                peakHour = uiState.peakHour,
+                                modifier = Modifier.padding(MaterialTheme.spacing.m)
+                            )
                         }
                     }
 
+
+                    // ── LIBRARY ──────────────────────────────────────────────
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(MaterialTheme.corners.large),
+                            shape = sectionShape,
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
-                            Column(
-                                Modifier.padding(MaterialTheme.spacing.m)
-                            ) {
+                            Column(Modifier.padding(MaterialTheme.spacing.m)) {
                                 InsightSectionHeader(
-                                    title = "Weekly Rhythm",
-                                    subtitle = "Reading volume by day of week"
+                                    title = "Your Library",
+                                    subtitle = "Progress across your books"
                                 )
-
                                 Spacer(Modifier.height(MaterialTheme.spacing.m))
-
-                                if (uiState.categoryDistribution.isEmpty()) {
-                                    EmptyDistributionPlaceholder(
-                                        "Read a book to see your volume"
-                                    )
+                                val totalBooks = uiState.progressBrackets.notStarted +
+                                        uiState.progressBrackets.inProgress +
+                                        uiState.progressBrackets.finished
+                                if (totalBooks == 0) {
+                                    EmptyDistributionPlaceholder("Add books to see your library breakdown")
                                 } else {
-                                    WeeklyRhythmChart(
-                                        dailyVolume = dailyVolumeInMinutes
-                                    )
+                                    ProgressBracketsCard(progressBrackets = uiState.progressBrackets)
                                 }
                             }
                         }
                     }
 
+                    // ── TOP AUTHORS ──────────────────────────────────────────
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(MaterialTheme.corners.large),
+                            shape = sectionShape,
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
-                            Column(
-                                Modifier.padding(MaterialTheme.spacing.m)
-                            ) {
+                            Column(Modifier.padding(MaterialTheme.spacing.m)) {
                                 InsightSectionHeader(
-                                    title = "Library Distribution",
-                                    subtitle = "Genres and categories you read"
+                                    title = "Authors You Read",
+                                    subtitle = "Writers you keep coming back to"
                                 )
-
-                                Spacer(Modifier.height(MaterialTheme.spacing.s))
-
-                                if (uiState.categoryDistribution.isEmpty()) {
-                                    EmptyDistributionPlaceholder(
-                                        "Add books to see your library distribution"
-                                    )
+                                Spacer(Modifier.height(MaterialTheme.spacing.m))
+                                if (uiState.topAuthors.isEmpty()) {
+                                    EmptyDistributionPlaceholder("Add books to see your top authors")
                                 } else {
-                                    TaskDistributionList(
-                                        taskDistribution = uiState.categoryDistribution
-                                    )
+                                    TopAuthorsCard(topAuthors = uiState.topAuthors)
                                 }
                             }
+                        }
+                    }
+
+                    // ── AIRA ─────────────────────────────────────────────────
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = sectionShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            )
+                        ) {
+                            Column(Modifier.padding(MaterialTheme.spacing.m)) {
+                                InsightSectionHeader(
+                                    title = "With Aira",
+                                    subtitle = "Your AI reading companion activity"
+                                )
+                                Spacer(Modifier.height(MaterialTheme.spacing.m))
+                                AiraEngagementCard(
+                                    totalQuestionsAsked = uiState.totalQuestionsAsked,
+                                    mostExploredBookId = uiState.mostExploredBookName
+                                )
+                            }
+                        }
+                    }
+
+                    // ── READING HEATMAP ──────────────────────────────────────
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = sectionShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            )
+                        ) {
+                            Heatmap(data = uiState.heatmapHistory)
                         }
                     }
                 }

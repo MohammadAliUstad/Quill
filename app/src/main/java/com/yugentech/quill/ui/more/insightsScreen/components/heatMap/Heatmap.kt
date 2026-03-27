@@ -29,9 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import com.yugentech.sessions.ui.config.insightsScreen.components.heatMap.HeatmapWeekColumn
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yugentech.theme.tokens.corners
-import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
 import java.time.LocalDate
 
@@ -43,6 +43,10 @@ fun Heatmap(
 ) {
     val heatmapWeeks = remember(data) { generateHeatmapData(data) }
     val listState = rememberLazyListState()
+
+    // NEW: Define a consistent size for cells and labels
+    val cellSize = 24.dp
+    val cellSpacing = MaterialTheme.spacing.xs
 
     LaunchedEffect(Unit) {
         listState.scrollToItem(heatmapWeeks.size)
@@ -63,9 +67,7 @@ fun Heatmap(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "History",
                         style = MaterialTheme.typography.titleLarge,
@@ -85,19 +87,19 @@ fun Heatmap(
 
                 Spacer(Modifier.width(MaterialTheme.spacing.s))
 
-                // Legend
+                // Legend - Ensure these also use the new cellSize
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(cellSpacing)
                 ) {
                     Text(
                         text = "Less",
                         style = MaterialTheme.typography.labelSmall
                     )
 
-                    HeatmapCell(1)
-                    HeatmapCell(3)
-                    HeatmapCell(5)
+                    HeatmapCell(intensity = 1, size = cellSize) // Pass size if supported
+                    HeatmapCell(intensity = 3, size = cellSize)
+                    HeatmapCell(intensity = 5, size = cellSize)
 
                     Text(
                         text = "More",
@@ -109,23 +111,25 @@ fun Heatmap(
             Spacer(Modifier.height(MaterialTheme.spacing.m))
 
             Row {
+                // Weekday Column
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs),
-                    modifier = Modifier.padding(top = MaterialTheme.spacing.l)
+                    verticalArrangement = Arrangement.spacedBy(cellSpacing),
+                    // Align labels with the top of the grid (offset by month label height)
+                    modifier = Modifier.padding(top = 24.dp)
                 ) {
                     listOf("M", "T", "W", "T", "F", "S", "S").forEach { day ->
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(MaterialTheme.icons.medium)
+                                .size(cellSize) // MATCHES CELL SIZE
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
                         ) {
                             Text(
                                 text = day,
-                                style = MaterialTheme.typography.labelSmall,
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -135,11 +139,12 @@ fun Heatmap(
 
                 LazyRow(
                     state = listState,
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs),
+                    horizontalArrangement = Arrangement.spacedBy(cellSpacing),
                 ) {
                     items(heatmapWeeks) { week ->
                         Column {
-                            Box(modifier = Modifier.height(MaterialTheme.icons.mediumSmall)) {
+                            // Month Labels Area
+                            Box(modifier = Modifier.height(18.dp)) {
                                 if (week.firstDayOfMonth != null) {
                                     Text(
                                         text = week.firstDayOfMonth,
@@ -151,9 +156,10 @@ fun Heatmap(
                                 }
                             }
 
-                            Spacer(Modifier.height(MaterialTheme.spacing.xs))
+                            Spacer(Modifier.height(6.dp))
 
-                            HeatmapWeekColumn(week.days)
+                            // Pass the cellSize down to the column renderer
+                            HeatmapWeekColumn(days = week.days, cellSize = cellSize)
                         }
                     }
                 }

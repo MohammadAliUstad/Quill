@@ -1,6 +1,6 @@
 package com.yugentech.quill.reader.ui.components.aira.components
 
-import com.yugentech.quill.reader.quickPrompt.state.QuickPrompt
+import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
 
 fun resolveChips(
     selectedText: String?,

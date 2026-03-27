@@ -12,12 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun HeatmapCell(
     intensity: Int,
+    size: Dp, // THE FIX: Added dynamic size parameter
     dayOfMonth: Int? = null
 ) {
     val backgroundColor = when {
@@ -38,8 +40,8 @@ fun HeatmapCell(
 
     Box(
         modifier = Modifier
-            .size(24.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .size(size) // Updated to use dynamic size
+            .clip(RoundedCornerShape(size * 0.25f)) // Keeps corners proportional (approx 6dp for 24dp size)
             .background(backgroundColor),
         contentAlignment = Alignment.Center
     ) {
@@ -47,9 +49,10 @@ fun HeatmapCell(
             Text(
                 text = dayOfMonth.toString(),
                 style = MaterialTheme.typography.labelSmall,
+                // Scales font size slightly based on cell size to maintain readability
                 fontSize = 10.sp,
                 color = textColor,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
