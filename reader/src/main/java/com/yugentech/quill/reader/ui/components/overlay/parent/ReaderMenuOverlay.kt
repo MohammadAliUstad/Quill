@@ -22,15 +22,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.yugentech.quill.reader.quickPrompt.viewmodel.QuickChatUiState
-import com.yugentech.quill.aira.aira.viewmodel.AiraUiState
-import com.yugentech.quill.reader.quickPrompt.state.QuickPrompt
-import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
+import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
 import com.yugentech.quill.reader.ui.components.aira.AiraPeekBar
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.ReaderBottomControls
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.button.AskAiraButton
 import com.yugentech.quill.reader.ui.components.overlay.components.brightnessSlider.BrightnessSlider
 import com.yugentech.quill.reader.ui.components.overlay.components.topBar.ReaderTopBar
+import com.yugentech.quill.reader.viewmodel.ReaderAiraUiState
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,7 +36,6 @@ import kotlin.math.roundToInt
 fun ReaderMenuOverlay(
     isVisible: Boolean,
     showBottomControls: Boolean = true,
-    isAiraReady: Boolean = false,
     showAiraPeek: Boolean = false,
     readerOverlayState: ReaderOverlayState,
     onBackClick: () -> Unit,
@@ -53,8 +50,7 @@ fun ReaderMenuOverlay(
     onBrightnessInteraction: (Boolean) -> Unit = {},
     onQuickAction: (QuickPrompt) -> Unit = {},
     onAiraSend: (String) -> Unit = {},
-    airaUiState: AiraUiState = AiraUiState(),
-    quickChatUiState: QuickChatUiState = QuickChatUiState()
+    airaUiState: ReaderAiraUiState = ReaderAiraUiState()
 ) {
     var sliderPosition by remember { mutableFloatStateOf(readerOverlayState.progress) }
 
@@ -101,8 +97,7 @@ fun ReaderMenuOverlay(
             isVisible = showAiraPeek,
             selectedText = readerOverlayState.selectedText,
             currentChapterIndex = readerOverlayState.currentChapterIndex,
-            quickChatUiState = quickChatUiState,
-            airaUiState = airaUiState,
+            airaUiState = airaUiState, // Passing unified state directly!
             onQuickAction = onQuickAction,
             onSendMessage = onAiraSend,
             onDismiss = onAiraDismiss,
@@ -116,7 +111,7 @@ fun ReaderMenuOverlay(
             horizontalAlignment = Alignment.End
         ) {
             AnimatedVisibility(
-                visible = isVisible && showBottomControls && isAiraReady,
+                visible = isVisible && showBottomControls && airaUiState.isIndexed,
                 enter = slideInVertically(
                     initialOffsetY = { it },
                     animationSpec = tween(300, easing = FastOutSlowInEasing)

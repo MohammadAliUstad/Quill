@@ -17,18 +17,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
-import com.yugentech.quill.reader.quickPrompt.viewmodel.QuickChatViewModel
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
-import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
 import com.yugentech.quill.reader.ui.components.engine.ReadiumEngine
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderMenuOverlay
+import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
 import com.yugentech.quill.reader.ui.components.settingsSheet.SettingsSheet
 import com.yugentech.quill.reader.ui.components.tocSheet.TocSheet
+import com.yugentech.quill.reader.viewmodel.ReaderAiraViewModel
 import com.yugentech.quill.reader.viewmodel.ReaderUiState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
-import org.koin.core.parameter.parametersOf
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.publication.Locator
 
@@ -67,16 +65,12 @@ private fun ReaderSuccess(
     onLocatorChange: (Locator) -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit
 ) {
-    val airaViewModel: AiraViewModel = koinViewModel(
-        parameters = { parametersOf(state.bookId) }
-    )
-    val airaUiState by airaViewModel.uiState.collectAsState()
-
-    val quickChatViewModel: QuickChatViewModel = koinViewModel()
-    val quickActionUiState by quickChatViewModel.uiState.collectAsState()
+    // THE FIX: Clean koinViewModel injection without parameters
+    val readerAiraViewModel: ReaderAiraViewModel = koinViewModel()
+    val airaUiState by readerAiraViewModel.uiState.collectAsState()
 
     LaunchedEffect(state.bookId) {
-        quickChatViewModel.initForBook(state.bookId)
+        readerAiraViewModel.checkIndexingStatus(state.bookId)
     }
 
     var isMenuVisible by rememberSaveable { mutableStateOf(false) }
@@ -194,7 +188,6 @@ private fun ReaderSuccess(
         ReaderMenuOverlay(
             isVisible = isMenuVisible || showAiraPeek,
             showBottomControls = !showAiraPeek,
-            isAiraReady = airaUiState.isReady,
             showAiraPeek = showAiraPeek,
             readerOverlayState = overlayState,
             onBackClick = onBackClick,
@@ -211,14 +204,13 @@ private fun ReaderSuccess(
             onAiraDismiss = {
                 showAiraPeek = false
                 selectedText = null
-                quickChatViewModel.clearResponse()
+                readerAiraViewModel.clearResponse()
             },
             airaUiState = airaUiState,
-            quickChatUiState = quickActionUiState,
-            onQuickAction = { intent -> quickChatViewModel.handle(intent) },
-            onAiraSend = { question -> airaViewModel.ask(question) },
+            onQuickAction = { intent -> readerAiraViewModel.handleQuickPrompt(state.bookId, intent) },
+            onAiraSend = { question -> readerAiraViewModel.ask(state.bookId, question) },
             onStop = {
-                airaViewModel.stopGeneration()
+                readerAiraViewModel.stopGeneration()
             }
         )
     }

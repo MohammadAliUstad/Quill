@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.settingsSheet
+package com.yugentech.quill.reader.ui.components.settingsSheet
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -54,12 +54,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yugentech.quill.reader.state.ReaderDefaults
-import com.yugentech.quill.reader.ui.settingsSheet.components.CustomSettingsSlider
-import com.yugentech.quill.reader.ui.settingsSheet.components.FontChip
-import com.yugentech.quill.reader.ui.settingsSheet.components.SectionLabel
-import com.yugentech.quill.reader.ui.settingsSheet.components.ThemeOption
-import com.yugentech.quill.reader.ui.settingsSheet.components.ThemePreset
+import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
+import com.yugentech.quill.reader.ui.components.settingsSheet.components.CustomSettingsSlider
+import com.yugentech.quill.reader.ui.components.settingsSheet.components.FontChip
+import com.yugentech.quill.reader.ui.components.settingsSheet.components.SectionLabel
+import com.yugentech.quill.reader.ui.components.settingsSheet.components.ThemeOption
+import com.yugentech.quill.reader.ui.components.settingsSheet.components.ThemePreset
 import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.navigator.preferences.Theme
 import org.readium.r2.shared.ExperimentalReadiumApi
@@ -84,7 +84,8 @@ fun SettingsSheet(
             "Literata" to ReaderDefaults.FONT_LITERATA,
             "Goudy" to ReaderDefaults.FONT_GOUDY,
             "Garamond" to ReaderDefaults.FONT_GARAMOND,
-            "Google Sans" to ReaderDefaults.FONT_GOOGLE_SANS
+            "Google Sans" to ReaderDefaults.FONT_GOOGLE_SANS,
+            "Serif" to ReaderDefaults.FONT_SERIF
         )
     }
 
