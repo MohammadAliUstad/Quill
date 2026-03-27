@@ -28,6 +28,7 @@ data class BookEntity(
     val lastLocatorJson: String? = null,
     val spoilerLockEnabled: Boolean = true,
     val fileSizeBytes: Long = 0L,
+    val isSynced: Boolean = false,
     val description: String? = null,
     val subjects: List<String> = emptyList(),
     val language: String? = null,

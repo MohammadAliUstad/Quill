@@ -14,7 +14,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.net.URLEncoder
 
 class BookDownloadWorker(
     context: Context,
@@ -27,14 +26,21 @@ class BookDownloadWorker(
         val downloadUrl = inputData.getString("DOWNLOAD_URL") ?: return@withContext Result.failure()
         val bookTitle = inputData.getString("BOOK_TITLE") ?: "Unknown"
 
-        val safeFileName = "${URLEncoder.encode(bookId, "UTF-8")}.epub"
+        // 1. Clean file name matching the Sync logic exactly
+        val fileName = "$bookId.epub"
+
+        // 2. Setup internal private directory
+        val booksDir = File(applicationContext.filesDir, "books")
+        if (!booksDir.exists()) {
+            booksDir.mkdirs()
+        }
 
         try {
             // 1. Set Status to Downloading
             bookDao.updateDownloadStatus(bookId, DownloadStatus.DOWNLOADING)
 
-            // 2. Setup the Connection
-            val file = File(applicationContext.filesDir, safeFileName)
+            // 2. Setup the Connection pointing to the hidden folder
+            val file = File(booksDir, fileName)
             if (file.exists()) file.delete()
 
             val url = URL(downloadUrl)
@@ -104,7 +110,7 @@ class BookDownloadWorker(
                     localFilePath = file.absolutePath,
                     downloadStatus = DownloadStatus.DOWNLOADED,
 
-                    // --- NEW: Save final disk size for the Storage Screen ---
+                    // Save final disk size for the Storage Screen
                     fileSizeBytes = file.length(),
 
                     chapters = parsedData.chapters,
@@ -121,7 +127,8 @@ class BookDownloadWorker(
         } catch (e: Exception) {
             Timber.Forest.e(e, "Download failed")
 
-            val file = File(applicationContext.filesDir, safeFileName)
+            // Ensure we delete from the correct internal folder on failure
+            val file = File(booksDir, fileName)
             if (file.exists()) file.delete()
 
             bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED)
