@@ -23,8 +23,8 @@ fun BookShelfRow(
     books: List<Book>,
     onBookClick: (Book) -> Unit
 ) {
-    Column(modifier = Modifier.padding(vertical = 16.dp)) {
-        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+    Column(modifier = Modifier.padding(vertical = 12.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
@@ -43,8 +43,15 @@ fun BookShelfRow(
             contentPadding = PaddingValues(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(books) { book ->
-                DiscoverBookCard(book = book, onClick = { onBookClick(book) })
+            // FIX: Added the 'key' so Compose knows exactly how to track insertions/deletions
+            items(
+                items = books,
+                key = { book -> book.id }
+            ) { book ->
+                DiscoverBookCard(
+                    book = book,
+                    onClick = { onBookClick(book) }
+                )
             }
         }
     }
