@@ -4,6 +4,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.entity.CategoryEntity
+import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.domain.AuthRepository
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -27,6 +28,12 @@ class CloudSyncService(
      */
     // Inside CloudSyncService.kt
     suspend fun syncBookToCloud(book: BookEntity): Result<Unit> {
+        // GUARD: Prevent uploading user-imported books
+        if (book.source == BookSource.USER_IMPORTED) {
+            Timber.d("Skipping cloud sync for user-imported book: ${book.title}")
+            return Result.success(Unit)
+        }
+
         return try {
             val userId = authRepository.currentUser ?: throw Exception("User not logged in")
             Timber.d("Syncing book progress to cloud: ${book.title}")

@@ -158,20 +158,25 @@ class CloudSyncRepositoryImpl(
             // 1. Ask the DAO for the dirty books
             val unsyncedBooks = bookDao.getUnsyncedBooks()
 
-            if (unsyncedBooks.isEmpty()) {
+            // FILTER: Exclude any book that is user imported
+            val booksToSync = unsyncedBooks.filter { it.source != BookSource.USER_IMPORTED }
+
+            if (booksToSync.isEmpty()) {
                 Timber.d("No unsynced books to upload")
+                // Still mark as synced so the DAO doesn't keep querying the local-only books
+                bookDao.markAllBooksAsSynced()
                 return@withContext Result.success(Unit)
             }
 
             // 2. Upload them one by one
-            unsyncedBooks.forEach { book ->
+            booksToSync.forEach { book ->
                 cloudSyncService.syncBookToCloud(book)
             }
 
             // 3. Mark them all as clean!
             bookDao.markAllBooksAsSynced()
 
-            Timber.i("Successfully uploaded ${unsyncedBooks.size} books to cloud")
+            Timber.i("Successfully uploaded ${booksToSync.size} books to cloud")
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to upload books to cloud")
