@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.tabs.screens.storageScreen.components
+package com.yugentech.quill.ui.more.storageScreen.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween

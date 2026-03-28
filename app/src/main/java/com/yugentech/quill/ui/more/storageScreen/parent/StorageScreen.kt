@@ -8,12 +8,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -41,17 +41,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.R
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.storage.StorageViewModel
-import com.yugentech.quill.ui.tabs.screens.storageScreen.components.StorageHeader
+import com.yugentech.quill.ui.more.storageScreen.components.StorageHeader
 import com.yugentech.quill.ui.more.storageScreen.components.BookStorageList
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun StorageScreen(
     onBackClick: () -> Unit,
-    viewModel: StorageViewModel = koinViewModel()
+    storageViewModel: StorageViewModel
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by storageViewModel.uiState.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     var bookToDelete by remember { mutableStateOf<BookEntity?>(null) }
@@ -62,7 +61,17 @@ fun StorageScreen(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("Manage Storage", fontWeight = FontWeight.Bold) },
+                title = {
+                    // THE FIX: Added Column with title and subtitle to match CategoryScreen
+                    Column {
+                        Text("Manage Storage", fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "Optimize your device space",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -96,7 +105,8 @@ fun StorageScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.padding(horizontal = 32.dp)
+                        // THE FIX: Added the exact -50.dp offset for perfect visual centering
+                        modifier = Modifier.offset(y = (-50).dp)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.empty_storage),
@@ -127,7 +137,6 @@ fun StorageScreen(
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                    // Visual breakdown of device vs app storage
                     StorageHeader(
                         appUsedBytes = uiState.appStorageUsedBytes,
                         freeBytes = uiState.deviceFreeSpaceBytes,
@@ -137,7 +146,6 @@ fun StorageScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // List of downloaded books with deletion options
                     BookStorageList(
                         books = uiState.downloadedBooks,
                         breakdowns = uiState.bookStorageBreakdowns,
@@ -159,7 +167,7 @@ fun StorageScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        bookToDelete?.id?.let { viewModel.deleteBook(it) }
+                        bookToDelete?.id?.let { storageViewModel.deleteBook(it) }
                         bookToDelete = null
                     }
                 ) {
