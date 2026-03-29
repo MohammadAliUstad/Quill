@@ -9,6 +9,9 @@ import com.yugentech.quill.database.entity.BookChunkEntity
 @Dao
 interface BookChunkDao {
 
+    @Query("SELECT DISTINCT chapterIndex FROM book_chunks WHERE bookId = :bookId")
+    suspend fun getIndexedChapterIndices(bookId: String): List<Int>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChunks(chunks: List<BookChunkEntity>)
 

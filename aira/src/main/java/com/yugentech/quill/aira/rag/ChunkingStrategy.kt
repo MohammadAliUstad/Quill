@@ -9,17 +9,10 @@ object ChunkingStrategy {
         val text: String
     )
 
-    // 1500 chars ≈ 250–350 tokens — large enough to contain a complete narrative
-    // beat, character introduction, or plot event as a coherent self-contained passage.
-    // Change from 1500 to ~250-300 characters
-    private const val DEFAULT_CHUNK_SIZE = 300
-    // Reduce overlap since chunks are smaller, just enough to catch split words
-    private const val DEFAULT_OVERLAP = 50
-
-    // Period, exclamation, question mark, ellipsis only.
-    // Quotes removed — they appear mid-dialogue and cause bad splits in Victorian prose.
+    private const val DEFAULT_CHUNK_SIZE = 1500
+    private const val DEFAULT_OVERLAP = 250
     private val SENTENCE_ENDINGS = setOf('.', '!', '?', '…')
-    private const val MAX_SNAP_BACK = 150
+    private const val MAX_SNAP_BACK = 300
 
     fun chunk(
         chapter: ChapterText,
@@ -62,8 +55,6 @@ object ChunkingStrategy {
 
             if (end >= text.length) break
 
-            // Start next chunk at end minus overlap — no snap on start,
-            // let end-snap handle boundary alignment.
             start = (end - overlap).coerceAtLeast(0)
         }
 
