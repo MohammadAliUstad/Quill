@@ -4,12 +4,24 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -20,7 +32,7 @@ import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.gutenberg.viewmodel.GutenbergNavigationEvent
 import com.yugentech.quill.gutenberg.viewmodel.GutenbergViewModel
 import com.yugentech.quill.ui.sources.common.AnimatedSearchIcon
-import com.yugentech.quill.ui.sources.common.BooksGridContent
+import com.yugentech.quill.ui.sources.common.BooksGrid
 import com.yugentech.quill.ui.sources.gutenberg.components.GutenbergScreenHeader
 import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
 import kotlinx.coroutines.flow.collectLatest
@@ -81,9 +93,8 @@ fun GutenbergScreen(
                 visible = books.isNotEmpty() || isLoading,
                 enter = fadeIn(animationSpec = tween(durationMillis = 300))
             ) {
-                BooksGridContent(
+                BooksGrid(
                     books = books,
-                    isLoading = isLoading,
                     isPaginating = isPaginating,
                     onLoadMore = { viewModel.loadNextPage() },
                     topPadding = gridTopPadding,

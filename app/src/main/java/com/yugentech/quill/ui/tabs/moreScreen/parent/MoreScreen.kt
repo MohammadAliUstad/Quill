@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Stars // Added for Subscription
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,6 +33,7 @@ fun MoreScreen(
     userData: UserData,
     streakCount: Int,
     onSignOut: () -> Unit,
+    onExit: () -> Unit,
     onEditProfile: () -> Unit,
     onViewInsights: () -> Unit,
     onAbout: () -> Unit,
@@ -40,7 +41,6 @@ fun MoreScreen(
     onManageCategories: () -> Unit,
     onManageStorage: () -> Unit,
     onAboutAira: () -> Unit,
-    onContributors: () -> Unit,
     onSubscriptions: () -> Unit,
 ) {
     Scaffold(
@@ -81,22 +81,33 @@ fun MoreScreen(
                 )
             }
 
+            // --- AI SECTION ---
             item {
                 SectionHeader(
-                    icon = Icons.Default.Stars,
-                    title = "Premium",
+                    icon = Icons.Default.AutoAwesome,
+                    title = "AI",
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "Meet Aira",
+                    subtitle = "Learn about your AI reading companion",
+                    index = 0,
+                    totalCount = 2,
+                    onClick = onAboutAira,
                 )
             }
             item {
                 SettingsListItem(
                     title = "Subscriptions",
                     subtitle = "Manage your plan and unlock pro features",
-                    index = 0,
-                    totalCount = 1,
+                    index = 1,
+                    totalCount = 2,
                     onClick = onSubscriptions,
                 )
             }
 
+            // --- LIBRARY SECTION ---
             item {
                 SectionHeader(
                     icon = Icons.AutoMirrored.Filled.List,
@@ -122,22 +133,7 @@ fun MoreScreen(
                 )
             }
 
-            item {
-                SectionHeader(
-                    icon = Icons.Default.AutoAwesome,
-                    title = "Aira",
-                )
-            }
-            item {
-                SettingsListItem(
-                    title = "Meet Aira",
-                    subtitle = "Learn about your AI reading companion",
-                    index = 0,
-                    totalCount = 1,
-                    onClick = onAboutAira,
-                )
-            }
-
+            // --- APPEARANCE SECTION ---
             item {
                 SectionHeader(
                     icon = Icons.Default.Palette,
@@ -154,6 +150,7 @@ fun MoreScreen(
                 )
             }
 
+            // --- ABOUT SECTION ---
             item {
                 SectionHeader(
                     icon = Icons.Default.Info,
@@ -162,28 +159,36 @@ fun MoreScreen(
             }
             item {
                 SettingsListItem(
-                    title = "Contributors",
-                    subtitle = "The people who helped build Quill",
+                    title = "About Quill",
+                    subtitle = "Version 2.0.0",
                     index = 0,
-                    totalCount = 3,
-                    onClick = onContributors,
+                    totalCount = 1,
+                    onClick = onAbout,
+                )
+            }
+
+            // --- SESSION / DESTRUCTIVE SECTION ---
+            item {
+                SectionHeader(
+                    icon = Icons.AutoMirrored.Filled.ExitToApp,
+                    title = "Session",
                 )
             }
             item {
                 SettingsListItem(
-                    title = "About Quill",
-                    subtitle = "Version 1.0.0",
-                    index = 1,
-                    totalCount = 3,
-                    onClick = onAbout,
+                    title = "Exit",
+                    subtitle = "Close the Quill app",
+                    index = 0,
+                    totalCount = 2,
+                    onClick = onExit,
                 )
             }
             item {
                 SettingsListItem(
                     title = "Sign Out",
                     subtitle = "Log out of your current account",
-                    index = 2,
-                    totalCount = 3,
+                    index = 1,
+                    totalCount = 2,
                     onClick = onSignOut,
                 )
             }

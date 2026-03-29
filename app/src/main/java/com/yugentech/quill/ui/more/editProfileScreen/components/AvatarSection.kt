@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.config.editProfileScreen.components
+package com.yugentech.quill.ui.more.editProfileScreen.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -23,8 +23,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import com.yugentech.sessions.theme.tokens.corners
-import com.yugentech.sessions.theme.tokens.spacing
+import com.yugentech.quill.ui.tabs.moreScreen.components.AvatarCategory
+import com.yugentech.quill.ui.tabs.moreScreen.components.AvatarRepository
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -37,7 +39,8 @@ fun AvatarSection(
     val scope = rememberCoroutineScope()
 
     val initialPage = remember(selectedAvatarId) {
-        val category = AvatarRepository.getAvatarById(selectedAvatarId)?.category ?: categories.first()
+        val category =
+            AvatarRepository.getAvatarById(selectedAvatarId)?.category ?: categories.first()
         categories.indexOf(category)
     }
 

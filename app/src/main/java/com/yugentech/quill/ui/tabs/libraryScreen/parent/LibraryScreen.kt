@@ -26,7 +26,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -65,6 +67,30 @@ fun LibraryScreen(
     val bookShelf by viewModel.bookShelf.collectAsState()
     val userCategories by viewModel.userCategories.collectAsState()
 
+    val scrollState = rememberScrollState()
+
+    // THE FIX: Coercion Protection Strategy.
+    // Compose resets scrollState to 0 if the layout briefly shrinks during asynchronous DB loads.
+    // We actively save the last valid scroll and manually restore it once the layout expands again.
+    var savedScroll by rememberSaveable { mutableIntStateOf(0) }
+
+    LaunchedEffect(scrollState) {
+        var wasInProgress = false
+        snapshotFlow { scrollState.isScrollInProgress }.collect { inProgress ->
+            if (wasInProgress && !inProgress) {
+                savedScroll = scrollState.value // Save value the moment the user stops scrolling
+            }
+            wasInProgress = inProgress
+        }
+    }
+
+    LaunchedEffect(scrollState.maxValue) {
+        // Wait until the layout has fully rendered its height before aggressively restoring
+        if (savedScroll > 0 && scrollState.maxValue >= savedScroll) {
+            scrollState.scrollTo(savedScroll)
+        }
+    }
+
     LaunchedEffect(Unit) { viewModel.initializeDefaultCategories() }
 
     val allCategoryBooks = userCategories.map { category ->
@@ -78,7 +104,6 @@ fun LibraryScreen(
             bookShelf.isEmpty() &&
             allCategoryBooks.all { it.isEmpty() }
 
-    // Set up scroll behavior to track the scroll offset for the gradient
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     Scaffold(
@@ -87,13 +112,13 @@ fun LibraryScreen(
             val surfaceColor = MaterialTheme.colorScheme.surface
 
             Box(modifier = Modifier.fillMaxWidth()) {
-                // Background Gradient layer that fades in on scroll
                 Box(
                     modifier = Modifier
                         .matchParentSize()
                         .graphicsLayer {
-                            // Calculate alpha based on scroll offset, matching BookDetails TopBar
-                            alpha = (-scrollBehavior.state.contentOffset / 100f).coerceIn(0f, 1f)
+                            // THE FIX: Use scrollState.value instead of scrollBehavior.state.contentOffset
+                            // so the gradient syncs perfectly when programmatic jumps/restorations occur!
+                            alpha = (scrollState.value / 100f).coerceIn(0f, 1f)
                         }
                         .background(
                             Brush.verticalGradient(
@@ -160,14 +185,13 @@ fun LibraryScreen(
             return@Scaffold
         }
 
-        val scrollState = rememberScrollState()
         val headerHeight = 550.dp
 
         var currentBackgroundIndex by remember { mutableIntStateOf(0) }
         LaunchedEffect(allHistoryBooks) {
             if (allHistoryBooks.isNotEmpty()) {
                 while (true) {
-                    delay(8000)
+                    delay(6000)
                     currentBackgroundIndex = (currentBackgroundIndex + 1) % allHistoryBooks.size
                 }
             }
@@ -232,7 +256,7 @@ fun LibraryScreen(
                     val booksFlow = remember(category.name) {
                         viewModel.getBooksForCategory(category.name)
                     }
-                    val categoryBooks by booksFlow.collectAsState()
+                    val categoryBooks by booksFlow.collectAsState(initial = emptyList())
 
                     if (categoryBooks.isNotEmpty()) {
                         BookRow(

@@ -1,17 +1,21 @@
 package com.yugentech.quill.ui.mainScreen.parent
 
-import androidx.compose.animation.Crossfade
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -19,19 +23,31 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.firebase.auth.FirebaseAuth
 import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.BookSource
+import com.yugentech.quill.database.model.UserData
 import com.yugentech.quill.database.view.LibraryBookView
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
 import com.yugentech.quill.ui.mainScreen.components.BottomBar
+import com.yugentech.quill.ui.mainScreen.components.ExitConfirmationDialog
+import com.yugentech.quill.ui.mainScreen.components.LogoutConfirmationDialog
 import com.yugentech.quill.ui.mainScreen.components.QuillTab
 import com.yugentech.quill.ui.mainScreen.components.ResumeFab
-import com.yugentech.quill.ui.mainScreen.components.TopBar
 import com.yugentech.quill.ui.tabs.discoverScreen.parent.DiscoverScreen
 import com.yugentech.quill.ui.tabs.libraryScreen.parent.LibraryScreen
-import com.yugentech.quill.ui.tabs.moreScreen.parent.SettingsScreen
+import com.yugentech.quill.ui.tabs.moreScreen.parent.MoreScreen
 import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesScreen
+import com.yugentech.quill.user.viewmodel.UserViewModel
+import org.koin.androidx.compose.koinViewModel
+
+private val quillTabs = listOf(
+    QuillTab.Library,
+    QuillTab.Discover,
+    QuillTab.Sources,
+    QuillTab.Settings,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,23 +61,37 @@ fun MainScreen(
     onAppearanceClick: () -> Unit = {},
     onManageCategories: () -> Unit = {},
     onManageStorage: () -> Unit = {},
+    onAiraSettings: () -> Unit = {},
+    onEditProfile: () -> Unit = {},
+    onViewInsights: () -> Unit = {},
+    onExitApp: () -> Unit = {},
+    onSignOut: () -> Unit = {},
     libraryViewModel: LibraryViewModel,
+    userViewModel: UserViewModel = koinViewModel(),
+    onSubscriptions: () -> Unit,
 ) {
+    val userId = remember { FirebaseAuth.getInstance().currentUser?.uid.orEmpty() }
+
+    LaunchedEffect(userId) {
+        if (userId.isNotEmpty()) userViewModel.loadUser(userId)
+    }
+
+    val userUiState by userViewModel.uiState.collectAsStateWithLifecycle()
+    val userData = userUiState.user ?: UserData()
+
     var currentTab by rememberSaveable { mutableStateOf(QuillTab.Library) }
     var isScrollingDown by remember { mutableStateOf(false) }
+    var showExitDialog by remember { mutableStateOf(false) }
+    var showSignOutDialog by remember { mutableStateOf(false) }
 
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    // THE FIX 1: Add SaveableStateHolder to preserve states when switching tabs
+    val saveableStateHolder = rememberSaveableStateHolder()
 
-    // Track scroll direction for the FAB's expand/collapse animation
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                // A small threshold (-5 and 5) prevents jittery animations on tiny accidental scrolls
-                if (available.y < -5) {
-                    isScrollingDown = true
-                } else if (available.y > 5) {
-                    isScrollingDown = false
-                }
+                if (available.y < -5) isScrollingDown = true
+                else if (available.y > 5) isScrollingDown = false
                 return Offset.Zero
             }
         }
@@ -69,77 +99,107 @@ fun MainScreen(
 
     val lastReadBook by libraryViewModel.lastReadBook.collectAsStateWithLifecycle()
 
+    BackHandler(enabled = currentTab != QuillTab.Library) {
+        currentTab = QuillTab.Library
+    }
+
+    BackHandler(enabled = currentTab == QuillTab.Library) {
+        showExitDialog = true
+    }
+
     Scaffold(
-        modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .nestedScroll(nestedScrollConnection),
-        topBar = {
-            if (currentTab != QuillTab.Discover) {
-                TopBar(
-                    title = currentTab.title,
-                    scrollBehavior = scrollBehavior
-                )
-            }
-        },
+        modifier = Modifier.nestedScroll(nestedScrollConnection),
         bottomBar = {
             BottomBar(
                 currentTab = currentTab,
-                onTabSelected = { currentTab = it }
+                onTabSelected = { tab -> currentTab = tab },
             )
         },
         floatingActionButton = {
             ResumeFab(
                 visible = currentTab == QuillTab.Library && lastReadBook != null,
                 isScrollingDown = isScrollingDown,
-                onClick = { lastReadBook?.let { onResumeClick(it.toBook()) } }
+                onClick = { lastReadBook?.let { onResumeClick(it.toBook()) } },
             )
-        }
+        },
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
-            Crossfade(targetState = currentTab, label = "TabSwitch") { tab ->
-                when (tab) {
-                    QuillTab.Library -> LibraryScreen(
-                        onLibraryBookClick = onLibraryBookClick,
-                        viewModel = libraryViewModel,
-                        contentPadding = innerPadding,
-                        onResumeClick = onResumeClick,
-                        onSeeAllClick = onSeeAllClick
-                    )
+            AnimatedContent(
+                targetState = currentTab,
+                transitionSpec = {
+                    val targetIndex = quillTabs.indexOf(targetState)
+                    val initialIndex = quillTabs.indexOf(initialState)
+                    val navigatingRight = targetIndex > initialIndex
 
-                    QuillTab.Discover -> Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(bottom = innerPadding.calculateBottomPadding())
-                    ) {
-                        DiscoverScreen(
-                            onBookClick = { book ->
-                                onDiscoverBookClick(book) // 2. FIX: Route through the new callback
-                            }
+                    if (navigatingRight) {
+                        slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                    } else {
+                        slideInHorizontally { -it } togetherWith slideOutHorizontally { it }
+                    }
+                },
+                label = "TabSwitch",
+            ) { tab ->
+                // THE FIX 2: Wrap the content in the provider so states aren't destroyed!
+                saveableStateHolder.SaveableStateProvider(tab) {
+                    when (tab) {
+                        QuillTab.Library -> LibraryScreen(
+                            contentPadding = innerPadding,
+                            onLibraryBookClick = onLibraryBookClick,
+                            viewModel = libraryViewModel,
+                            onResumeClick = onResumeClick,
+                            onSeeAllClick = onSeeAllClick,
                         )
-                    }
 
-                    QuillTab.Sources -> Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    ) {
-                        SourcesScreen(onSourceClick = onSourceClick, onLocalFilesClick = {})
-                    }
+                        QuillTab.Discover -> DiscoverScreen(
+                            contentPadding = innerPadding,
+                            onBookClick = { book -> onDiscoverBookClick(book) },
+                        )
 
-                    QuillTab.Settings -> Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    ) {
-                        SettingsScreen(
+                        QuillTab.Sources -> SourcesScreen(
+                            contentPadding = innerPadding,
+                            onSourceClick = onSourceClick,
+                            onLocalFilesClick = {},
+                        )
+
+                        QuillTab.Settings -> MoreScreen(
+                            contentPadding = innerPadding,
+                            userData = userData,
+                            streakCount = userUiState.streakCount,
+                            onEditProfile = onEditProfile,
+                            onViewInsights = onViewInsights,
                             onAbout = onAboutClick,
                             onAppearance = onAppearanceClick,
                             onManageCategories = onManageCategories,
-                            onManageStorage = onManageStorage
+                            onManageStorage = onManageStorage,
+                            onAboutAira = onAiraSettings,
+                            onSignOut = { showSignOutDialog = true },
+                            onSubscriptions = onSubscriptions,
+                            onExit = { showExitDialog = true },
                         )
                     }
                 }
             }
         }
+    }
+
+    // Dialogs...
+    if (showExitDialog) {
+        ExitConfirmationDialog(
+            onConfirm = {
+                showExitDialog = false
+                onExitApp()
+            },
+            onDismiss = { showExitDialog = false },
+        )
+    }
+
+    if (showSignOutDialog) {
+        LogoutConfirmationDialog(
+            onConfirm = {
+                showSignOutDialog = false
+                onSignOut()
+            },
+            onDismiss = { showSignOutDialog = false },
+        )
     }
 }

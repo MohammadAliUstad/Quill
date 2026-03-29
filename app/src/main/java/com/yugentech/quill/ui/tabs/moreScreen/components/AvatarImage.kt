@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.config.editProfileScreen.components
+package com.yugentech.quill.ui.tabs.moreScreen.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
-import com.yugentech.sessions.theme.tokens.components
+import com.yugentech.theme.tokens.components
 
 @Composable
 fun AvatarImage(

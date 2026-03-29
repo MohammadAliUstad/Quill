@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.config.editProfileScreen
+package com.yugentech.quill.ui.more.editProfileScreen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -33,41 +34,41 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.yugentech.sessions.R
-import com.yugentech.sessions.theme.tokens.components
-import com.yugentech.sessions.theme.tokens.corners
-import com.yugentech.sessions.theme.tokens.spacing
-import com.yugentech.sessions.ui.config.editProfileScreen.components.AvatarSection
-import com.yugentech.sessions.ui.config.editProfileScreen.components.DisplayNameSection
-import com.yugentech.sessions.ui.dash.mainScreen.components.SectionHeader
-import com.yugentech.sessions.viewModels.ProfileViewModel
+import com.yugentech.quill.R
+import com.yugentech.quill.ui.mainScreen.components.SectionHeader
+import com.yugentech.quill.ui.more.editProfileScreen.components.AvatarSection
+import com.yugentech.quill.ui.more.editProfileScreen.components.DisplayNameSection
+import com.yugentech.quill.user.viewmodel.UserViewModel
+import com.yugentech.theme.tokens.components
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.spacing
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
-    profileViewModel: ProfileViewModel,
+    userViewModel: UserViewModel,
     userId: String,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {}
 ) {
-    val uiState by profileViewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val view = LocalView.current
+    val uiState by userViewModel.uiState.collectAsStateWithLifecycle()
     val user = uiState.user
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scrollState = rememberScrollState()
 
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(userId) {
-        profileViewModel.loadUser(userId)
+        userViewModel.loadUser(userId)
     }
 
     if (user != null) {
@@ -86,13 +87,10 @@ fun EditProfileScreen(
 
         LaunchedEffect(displayName) {
             validationError = when {
-                displayName.isBlank() -> context.getString(R.string.display_name_is_required)
-                displayName.length < 2 -> context.getString(R.string.at_least_2_characters_please)
-                displayName.length > 20 -> context.getString(R.string.keep_it_under_20_characters)
-                !displayName.matches(Regex(context.getString(R.string.a_za_z0_9_s))) -> context.getString(
-                    R.string.letters_numbers_and_basic_symbols_only
-                )
-
+                displayName.isBlank() -> "Display name is required"
+                displayName.length < 2 -> "At least 2 characters please"
+                displayName.length > 20 -> "Keep it under 20 characters"
+                !displayName.matches(Regex("^[a-zA-Z0-9\\\\s._-]+\$")) -> "Letters, numbers, and basic symbols only"
                 else -> null
             }
         }
@@ -104,9 +102,11 @@ fun EditProfileScreen(
                     avatarId = selectedAvatarId
                 )
 
-                profileViewModel.upsertUser(updatedUser)
-                profileViewModel.performHaptic(view)
+                coroutineScope.launch {
+                    userViewModel.upsertUser(updatedUser)
+                }
                 onNavigateBack()
+
             }
         }
 
@@ -150,6 +150,7 @@ fun EditProfileScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(horizontal = MaterialTheme.spacing.m)
+                    .imePadding() // <-- THE FIX: Added imePadding here so the scroll area shrinks when the keyboard appears
                     .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

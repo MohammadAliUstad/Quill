@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.dash.profileScreen.components
+package com.yugentech.quill.ui.tabs.moreScreen.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,13 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.yugentech.sessions.user.model.UserData
-import com.yugentech.sessions.theme.tokens.components
-import com.yugentech.sessions.theme.tokens.corners
-import com.yugentech.sessions.theme.tokens.icons
-import com.yugentech.sessions.theme.tokens.spacing
-import com.yugentech.sessions.ui.config.editProfileScreen.components.AvatarImage
-import com.yugentech.sessions.ui.config.editProfileScreen.components.AvatarRepository
+import com.yugentech.quill.database.model.UserData
+import com.yugentech.theme.tokens.components
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.icons
+import com.yugentech.theme.tokens.spacing
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -71,8 +69,7 @@ fun ProfileCard(
 
                 IconButton(
                     onClick = onEditProfile,
-                    modifier = Modifier
-                        .size(MaterialTheme.components.buttonMedium)
+                    modifier = Modifier.size(MaterialTheme.components.buttonMedium)
                         .align(Alignment.CenterEnd),
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,

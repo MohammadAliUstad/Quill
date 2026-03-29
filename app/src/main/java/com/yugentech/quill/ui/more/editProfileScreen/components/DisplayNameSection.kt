@@ -47,7 +47,7 @@ fun DisplayNameSection(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
         ) {
             Text(
-                text = "Pick a name that motivates your sessions",
+                text = "Pick a name that motivates your reads",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
