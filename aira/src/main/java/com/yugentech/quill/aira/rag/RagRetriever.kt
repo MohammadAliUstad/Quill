@@ -28,10 +28,10 @@ class RagRetriever(
         private const val TAG = "QuillRAG"
         const val DEFAULT_TOP_PASSAGES = 3
 
-        private const val PASSAGE_WINDOW_BEFORE = 6
-        private const val PASSAGE_WINDOW_AFTER = 3
+        private const val PASSAGE_WINDOW_BEFORE = 1
+        private const val PASSAGE_WINDOW_AFTER = 1
 
-        private const val ANCHOR_MIN_SCORE = 0.25f
+        private const val ANCHOR_MIN_SCORE = 0.20f
         private const val RRF_MIN_SCORE = 0.015f
 
         // 🚨 FIX 2: Thread-safe RAM Cache to prevent repeated Room/Cursor allocations
@@ -241,7 +241,7 @@ class RagRetriever(
         if (progressCeiling == 0f) return null
 
         val totalChapters = allChunks.maxOf { it.chapterIndex } + 1
-        val maxChapterIndex = totalChapters.coerceAtLeast(0)
+        val maxChapterIndex = ((progressCeiling / 100f) * totalChapters).toInt()
 
         val filtered = allChunks.filter { it.chapterIndex <= maxChapterIndex }
         return filtered.ifEmpty { null }
