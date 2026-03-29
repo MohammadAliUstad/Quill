@@ -37,8 +37,6 @@ class StandardRepositoryImpl(
             val books = result.books
 
             if (books.isNotEmpty()) {
-                // Insert first with REPLACE strategy, then clear stale entries
-                // This prevents the Flow from emitting an empty list between clear and insert
                 val newEntities = books.map { it.toCatalogEntity("new-releases") }
                 val newIds = newEntities.map { it.id }.toSet()
                 catalogDao.insertBooks(newEntities)
@@ -51,7 +49,7 @@ class StandardRepositoryImpl(
         }
     }
 
-    // ── Categories ────────────────────────────────────────────────────────────
+    // ── Categories & Topics ───────────────────────────────────────────────────
 
     override fun getCategoriesFlow(): Flow<List<String>> {
         return categoryCacheDao.getCategoriesBySource(SOURCE_KEY)
@@ -71,6 +69,34 @@ class StandardRepositoryImpl(
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.w(e, "Category sync failed. UI will show cached categories.")
+            Result.failure(e)
+        }
+    }
+
+    override fun getTopicBooksFlow(topic: String): Flow<List<Book>> {
+        val feedKey = "standard-topic-$topic"
+        return catalogDao.getBooksByCategory(feedKey).map { entities ->
+            entities.map { it.toDomainModel() }
+        }
+    }
+
+    override suspend fun syncTopicBooks(topic: String): Result<Unit> {
+        return try {
+            // Standard Ebooks OPDS allows searching by subject
+            val xml = standardApi.searchBooks("subject:\"$topic\"")
+            val result = StandardEbooksMapper.parseOpdsToBooks(xml)
+
+            if (result.books.isNotEmpty()) {
+                val feedKey = "standard-topic-$topic"
+                val newEntities = result.books.map { it.toCatalogEntity(feedKey) }
+                val newIds = newEntities.map { it.id }.toSet()
+
+                catalogDao.insertBooks(newEntities)
+                catalogDao.deleteStaleBooks(feedKey, newIds.toList())
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.w(e, "Topic sync failed for: $topic")
             Result.failure(e)
         }
     }

@@ -1,6 +1,9 @@
 package com.yugentech.quill.ui.sources.standardScreen.parent
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -13,9 +16,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,7 +32,7 @@ import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.standardEBooks.viewmodel.StandardNavigationEvent
 import com.yugentech.quill.standardEBooks.viewmodel.StandardViewModel
 import com.yugentech.quill.ui.sources.common.AnimatedSearchIcon
-import com.yugentech.quill.ui.sources.common.BooksGridContent
+import com.yugentech.quill.ui.sources.common.BooksGrid
 import com.yugentech.quill.ui.sources.standardScreen.components.CollectionsGridContent
 import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
 import com.yugentech.quill.ui.sources.standardScreen.components.StandardScreenHeader
@@ -114,9 +114,8 @@ fun StandardScreen(
                     visible = books.isNotEmpty() || isLoading,
                     enter = fadeIn(animationSpec = tween(durationMillis = 300))
                 ) {
-                    BooksGridContent(
+                    BooksGrid(
                         books = books,
-                        isLoading = isLoading,
                         topPadding = gridTopPadding,
                         bottomPadding = gridBottomPadding,
                         onBookClick = { book -> standardViewModel.onBookClick(book) }

@@ -61,8 +61,11 @@ class StandardViewModel(
     private var contentJob: Job? = null
     private var paginationJob: Job? = null
 
+    // --- THE NEW SESSION CACHE ---
+    // Maps a visited category/author/series to its fully loaded list and exact scroll page
+    private val sessionCache = mutableMapOf<String, Pair<List<Book>, String?>>()
+
     init {
-        // Stream cached books to UI whenever New Arrivals is active
         viewModelScope.launch {
             standardRepository.getNewReleasesFlow().collect { cachedBooks ->
                 if (_selectedCategory.value == "New Arrivals") {
@@ -71,7 +74,6 @@ class StandardViewModel(
             }
         }
 
-        // Stream cached categories instantly, prepending base chips
         viewModelScope.launch {
             standardRepository.getCategoriesFlow().collect { cachedCategories ->
                 _categories.value = BASE_CATEGORIES + cachedCategories
@@ -101,7 +103,6 @@ class StandardViewModel(
         if (_selectedCategory.value == category) return
 
         _selectedCategory.value = category
-        _booksState.value = emptyList()
         nextPageUrl = null
         _error.value = null
         contentJob?.cancel()
@@ -109,8 +110,49 @@ class StandardViewModel(
 
         when (category) {
             "New Arrivals" -> refreshNewReleases()
-            "Collections" -> fetchCollectionsList()
-            else -> performSearch(query = category, isCategorySearch = true)
+            "Collections" -> {
+                _booksState.value = emptyList()
+                fetchCollectionsList()
+            }
+            else -> loadCategory(category)
+        }
+    }
+
+    private fun loadCategory(category: String) {
+        // 1. Check Session Cache FIRST. If we've been here, restore instantly!
+        sessionCache[category]?.let { (cachedBooks, nextUrl) ->
+            _booksState.value = cachedBooks
+            nextPageUrl = nextUrl
+            _displayTitle.value = category
+            return
+        }
+
+        // 2. Not in memory cache. Fallback to Hybrid DB + Network
+        contentJob = viewModelScope.launch {
+            _error.value = null
+
+            val cached = standardRepository.getTopicBooksFlow(category).firstOrNull() ?: emptyList()
+            _booksState.value = cached
+
+            if (cached.isEmpty()) {
+                _isLoading.value = true
+                _displayTitle.value = "Browsing $category..."
+            } else {
+                _displayTitle.value = category
+            }
+
+            standardRepository.searchBooks("subject:\"$category\"")
+                .onSuccess { result ->
+                    _booksState.value = result.books
+                    nextPageUrl = result.nextPageUrl
+                    _displayTitle.value = if (result.books.isEmpty()) "No books found" else category
+
+                    // SAVE TO SESSION CACHE for next time!
+                    sessionCache[category] = Pair(result.books, result.nextPageUrl)
+                }
+                .onFailure { handleError(it) }
+
+            _isLoading.value = false
         }
     }
 
@@ -137,16 +179,35 @@ class StandardViewModel(
 
     fun onSearchQuery(query: String) {
         if (query.isBlank()) return
-        _selectedCategory.value = "Search"
+        val cacheKey = "Search: $query"
+        _selectedCategory.value = cacheKey
         nextPageUrl = null
-        performSearch(query = query, isCategorySearch = false)
+
+        sessionCache[cacheKey]?.let { (cachedBooks, nextUrl) ->
+            _booksState.value = cachedBooks
+            nextPageUrl = nextUrl
+            _displayTitle.value = "Results for '$query'"
+            return
+        }
+
+        _booksState.value = emptyList()
+        performSearch(query = query, cacheKey = cacheKey)
     }
 
     fun onAuthorSelected(authorName: String) {
-        _selectedCategory.value = "Author: $authorName"
-        _booksState.value = emptyList()
+        val cacheKey = "Author: $authorName"
+        _selectedCategory.value = cacheKey
         nextPageUrl = null
         contentJob?.cancel()
+
+        sessionCache[cacheKey]?.let { (cachedBooks, nextUrl) ->
+            _booksState.value = cachedBooks
+            nextPageUrl = nextUrl
+            _displayTitle.value = "Books by $authorName"
+            return
+        }
+
+        _booksState.value = emptyList()
 
         contentJob = viewModelScope.launch {
             _isLoading.value = true
@@ -157,8 +218,8 @@ class StandardViewModel(
                 .onSuccess { result ->
                     _booksState.value = result.books
                     nextPageUrl = result.nextPageUrl
-                    _displayTitle.value =
-                        if (result.books.isEmpty()) "No books found" else "Books by $authorName"
+                    _displayTitle.value = if (result.books.isEmpty()) "No books found" else "Books by $authorName"
+                    sessionCache[cacheKey] = Pair(result.books, result.nextPageUrl)
                 }
                 .onFailure { handleError(it) }
 
@@ -167,10 +228,19 @@ class StandardViewModel(
     }
 
     fun onCollectionSelected(collectionTitle: String, collectionUrl: String) {
-        _selectedCategory.value = "Series: $collectionTitle"
-        _booksState.value = emptyList()
+        val cacheKey = "Series: $collectionTitle"
+        _selectedCategory.value = cacheKey
         nextPageUrl = null
         contentJob?.cancel()
+
+        sessionCache[cacheKey]?.let { (cachedBooks, nextUrl) ->
+            _booksState.value = cachedBooks
+            nextPageUrl = nextUrl
+            _displayTitle.value = collectionTitle
+            return
+        }
+
+        _booksState.value = emptyList()
 
         contentJob = viewModelScope.launch {
             _isLoading.value = true
@@ -182,6 +252,7 @@ class StandardViewModel(
                     _booksState.value = result.books
                     nextPageUrl = result.nextPageUrl
                     _displayTitle.value = collectionTitle
+                    sessionCache[cacheKey] = Pair(result.books, result.nextPageUrl)
                 }
                 .onFailure { handleError(it) }
 
@@ -196,14 +267,18 @@ class StandardViewModel(
         contentJob = viewModelScope.launch {
             _error.value = null
 
-            val cached = standardRepository.getNewReleasesFlow().firstOrNull()
-            if (cached.isNullOrEmpty()) {
+            val cached = standardRepository.getNewReleasesFlow().firstOrNull() ?: emptyList()
+            _booksState.value = cached
+
+            if (cached.isEmpty()) {
                 _isLoading.value = true
             }
+
             _displayTitle.value = "Fetching new releases..."
 
             val result = standardRepository.syncNewReleases()
             _displayTitle.value = if (result.isSuccess) "Latest additions" else "Showing offline cache"
+
             _isLoading.value = false
         }
     }
@@ -211,27 +286,22 @@ class StandardViewModel(
     private fun syncCategories() {
         viewModelScope.launch {
             standardRepository.syncCategories()
-            // Flow collector above handles UI update automatically
         }
     }
 
-    private fun performSearch(query: String, isCategorySearch: Boolean) {
+    private fun performSearch(query: String, cacheKey: String) {
         contentJob?.cancel()
         contentJob = viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            _displayTitle.value =
-                if (isCategorySearch) "Browsing $query..." else "Searching for '$query'..."
+            _displayTitle.value = "Searching for '$query'..."
 
             standardRepository.searchBooks(query)
                 .onSuccess { result ->
                     _booksState.value = result.books
                     nextPageUrl = result.nextPageUrl
-                    _displayTitle.value = when {
-                        result.books.isEmpty() -> "No books found for '$query'"
-                        isCategorySearch -> query
-                        else -> "Results for '$query'"
-                    }
+                    _displayTitle.value = if (result.books.isEmpty()) "No books found for '$query'" else "Results for '$query'"
+                    sessionCache[cacheKey] = Pair(result.books, result.nextPageUrl)
                 }
                 .onFailure { handleError(it) }
 
@@ -249,8 +319,15 @@ class StandardViewModel(
 
             standardRepository.getNextPage(url)
                 .onSuccess { result ->
-                    _booksState.value += result.books
+                    val updatedList = _booksState.value + result.books
+                    _booksState.value = updatedList
                     nextPageUrl = result.nextPageUrl
+
+                    // NEW: Keep the session cache updated with the new paginated items!
+                    val currentCat = _selectedCategory.value
+                    if (currentCat != "New Arrivals" && currentCat != "Collections") {
+                        sessionCache[currentCat] = Pair(updatedList, result.nextPageUrl)
+                    }
                 }
                 .onFailure {
                     // Keep existing list, just stop paginating
