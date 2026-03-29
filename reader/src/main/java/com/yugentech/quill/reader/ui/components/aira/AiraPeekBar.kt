@@ -1,13 +1,17 @@
 package com.yugentech.quill.reader.ui.components.aira
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,14 +49,13 @@ import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.zIndex
-import com.yugentech.quill.aira.aira.viewmodel.AiraUiState
-import com.yugentech.quill.reader.quickPrompt.state.QuickPrompt
-import com.yugentech.quill.reader.quickPrompt.viewmodel.QuickChatUiState
-import com.yugentech.quill.reader.ui.components.aira.PeekState
+import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
 import com.yugentech.quill.reader.ui.components.aira.components.AiraPeekHeader
 import com.yugentech.quill.reader.ui.components.aira.components.InputBar
 import com.yugentech.quill.reader.ui.components.aira.components.PeekResponseArea
+import com.yugentech.quill.reader.ui.components.aira.components.QuotaLimitBar
 import com.yugentech.quill.reader.ui.components.aira.components.resolveChips
+import com.yugentech.quill.reader.viewmodel.ReaderAiraUiState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -60,12 +63,12 @@ fun AiraPeekBar(
     isVisible: Boolean,
     selectedText: String? = null,
     currentChapterIndex: Int = 0,
-    quickChatUiState: QuickChatUiState,
-    airaUiState: AiraUiState,
+    airaUiState: ReaderAiraUiState,
     onQuickAction: (QuickPrompt) -> Unit,
     onSendMessage: (String) -> Unit,
     onDismiss: () -> Unit,
-    onStop: () -> Unit
+    onStop: () -> Unit,
+    onUpgradeClick: () -> Unit = {}
 ) {
     var inputText by remember { mutableStateOf("") }
 
@@ -81,16 +84,6 @@ fun AiraPeekBar(
     LaunchedEffect(selectedText) { inputText = selectedText ?: "" }
     LaunchedEffect(isVisible) { inputText = if (isVisible) selectedText ?: "" else "" }
     LaunchedEffect(isImeVisible) { if (!isImeVisible) focusManager.clearFocus() }
-
-    val error = quickChatUiState.error
-    val response = quickChatUiState.response
-
-    val peekState: PeekState = when {
-        quickChatUiState.isLoading -> PeekState.Loading
-        error != null -> PeekState.Response(error)
-        response != null -> PeekState.Response(response)
-        else -> PeekState.Idle
-    }
 
     val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -140,36 +133,39 @@ fun AiraPeekBar(
                     .padding(bottom = liftDp),
                 verticalArrangement = Arrangement.Bottom
             ) {
-                LazyRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
-                        .offset(y = 4.dp)
-                        .zIndex(1f),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(
-                        items = activeChips,
-                        key = { (label, _) -> label }
-                    ) { (label, intent) ->
-                        SuggestionChip(
-                            onClick = {
-                                onQuickAction(intent)
-                                inputText = ""
-                                focusManager.clearFocus()
-                            },
-                            label = {
-                                Text(
-                                    text = label,
-                                    style = MaterialTheme.typography.labelMedium
+                // Only show chips if they have quota
+                AnimatedVisibility(visible = airaUiState.canSendQuery) {
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp)
+                            .offset(y = 4.dp)
+                            .zIndex(1f),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(
+                            items = activeChips,
+                            key = { (label, _) -> label }
+                        ) { (label, intent) ->
+                            SuggestionChip(
+                                onClick = {
+                                    onQuickAction(intent)
+                                    inputText = ""
+                                    focusManager.clearFocus()
+                                },
+                                label = {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                },
+                                shape = CircleShape,
+                                colors = SuggestionChipDefaults.suggestionChipColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    labelColor = MaterialTheme.colorScheme.onSurface
                                 )
-                            },
-                            shape = CircleShape,
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                labelColor = MaterialTheme.colorScheme.onSurface
                             )
-                        )
+                        }
                     }
                 }
 
@@ -186,28 +182,40 @@ fun AiraPeekBar(
                             .padding(top = 12.dp, bottom = 4.dp)
                     ) {
                         AiraPeekHeader(
-                            isLoading = peekState is PeekState.Loading || airaUiState.isLoading,
+                            isLoading = airaUiState.isLoading,
                             onDismiss = onDismiss
                         )
 
                         PeekResponseArea(
-                            peekState = peekState
+                            airaUiState = airaUiState
                         )
 
-                        InputBar(
-                            inputText = inputText,
-                            onInputChange = { inputText = it },
-                            airaUiState = airaUiState,
-                            quickChatUiState = quickChatUiState,
-                            canSend = canSend,
-                            buttonContainerColor = buttonContainerColor,
-                            buttonContentColor = buttonContentColor,
-                            horizontalPadding = horizontalPadding,
-                            focusRequester = focusRequester,
-                            onFocusChanged = { isFocused = it },
-                            onSend = ::send,
-                            onStop = onStop
-                        )
+                        // Smoothly animate between the InputBar and QuotaLimitBar
+                        AnimatedContent(
+                            targetState = airaUiState.canSendQuery,
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                            },
+                            label = "InputBarSwap"
+                        ) { hasQuota ->
+                            if (hasQuota) {
+                                InputBar(
+                                    inputText = inputText,
+                                    onInputChange = { inputText = it },
+                                    airaUiState = airaUiState,
+                                    canSend = canSend,
+                                    buttonContainerColor = buttonContainerColor,
+                                    buttonContentColor = buttonContentColor,
+                                    horizontalPadding = horizontalPadding,
+                                    focusRequester = focusRequester,
+                                    onFocusChanged = { isFocused = it },
+                                    onSend = ::send,
+                                    onStop = onStop
+                                )
+                            } else {
+                                QuotaLimitBar(onUpgradeClick = onUpgradeClick)
+                            }
+                        }
                     }
                 }
             }

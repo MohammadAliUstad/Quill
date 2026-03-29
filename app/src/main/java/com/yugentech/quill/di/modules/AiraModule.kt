@@ -8,6 +8,7 @@ import com.yugentech.quill.aira.book.BookRepository
 import com.yugentech.quill.aira.book.BookRepositoryImpl
 import com.yugentech.quill.aira.rag.EmbeddingEngine
 import com.yugentech.quill.aira.rag.RagRetriever
+import com.yugentech.quill.reader.viewmodel.ReaderAiraViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -36,7 +37,6 @@ val airaModule = module {
         )
     }
 
-    // 2. Provide the new AiraChatRepository (Handles Gemini AI & Messages)
     single<AiraChatRepository> {
         AiraChatRepositoryImpl(
             geminiApiKey = BuildConfig.GEMINI_API_KEY,
@@ -47,15 +47,23 @@ val airaModule = module {
         )
     }
 
-    // 3. Inject both into the decoupled ViewModel
-    // 3. Inject both into the decoupled ViewModel
-    viewModel { params -> // <-- Add 'params' here
+    viewModel { params ->
         AiraViewModel(
             bookId = params.get(),
             airaChatRepository = get(),
             bookRepository = get(),
             quotaRepository = get(),
             authRepository = get()
+        )
+    }
+
+    viewModel {
+        ReaderAiraViewModel(
+            airaChatRepository = get(),
+            quickPromptRepository = get(),
+            quotaRepository = get(),
+            authRepository = get(),
+            bookRepository = get()
         )
     }
 }

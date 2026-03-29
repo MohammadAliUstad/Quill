@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.quickPrompt.response
+package com.yugentech.quill.aira.quickPrompt.response
 
 sealed class AiraResponse {
     data class Success(val text: String) : AiraResponse()
