@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.quickPrompt.viewmodel
+package com.yugentech.quill.aira.quickPrompt.viewmodel
 
 data class QuickChatUiState(
     val isLoading: Boolean = false,

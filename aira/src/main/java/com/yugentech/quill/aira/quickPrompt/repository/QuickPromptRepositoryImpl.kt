@@ -1,14 +1,15 @@
-package com.yugentech.quill.reader.quickPrompt.repository
+package com.yugentech.quill.aira.quickPrompt.repository
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.generationConfig
 import com.yugentech.quill.aira.response.AiraResponse
-import com.yugentech.quill.reader.quickPrompt.util.QuickPromptHandler
-import com.yugentech.quill.reader.quickPrompt.state.QuickPrompt
+import com.yugentech.quill.aira.quickPrompt.util.QuickPromptHandler
+import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
 import kotlinx.coroutines.flow.Flow
+import kotlin.getValue
 
 class QuickPromptRepositoryImpl(
     private val geminiApiKey: String,

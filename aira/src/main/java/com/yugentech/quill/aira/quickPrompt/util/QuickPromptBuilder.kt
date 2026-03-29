@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.quickPrompt.util
+package com.yugentech.quill.aira.quickPrompt.util
 
 object QuickPromptBuilder {
 

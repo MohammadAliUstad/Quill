@@ -1,8 +1,8 @@
-package com.yugentech.quill.reader.quickPrompt.util
+package com.yugentech.quill.aira.quickPrompt.util
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.yugentech.quill.aira.response.AiraResponse
-import com.yugentech.quill.reader.quickPrompt.state.QuickPrompt
+import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao

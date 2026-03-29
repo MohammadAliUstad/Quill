@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.quickPrompt.state
+package com.yugentech.quill.aira.quickPrompt.state
 
 sealed class QuickPrompt {
 
