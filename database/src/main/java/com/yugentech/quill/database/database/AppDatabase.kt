@@ -10,6 +10,8 @@ import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.dao.CatalogDao
 import com.yugentech.quill.database.dao.CategoryCacheDao
 import com.yugentech.quill.database.dao.CategoryDao
+import com.yugentech.quill.database.dao.QuotaDao // <-- Import this
+import com.yugentech.quill.database.dao.ReadingSessionDao
 import com.yugentech.quill.database.entity.AiraMessageEntity
 import com.yugentech.quill.database.entity.BookChunkEntity
 import com.yugentech.quill.database.entity.BookChunkFtsEntity
@@ -17,31 +19,40 @@ import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.entity.CatalogCacheEntity
 import com.yugentech.quill.database.entity.CategoryCacheEntity
 import com.yugentech.quill.database.entity.CategoryEntity
+import com.yugentech.quill.database.entity.QuotaEntity // <-- Import this
+import com.yugentech.quill.database.entity.ReadingSessionEntity
+import com.yugentech.quill.database.entity.UserEntity
 import com.yugentech.quill.database.view.LibraryBookView
+import com.yugentech.sessions.room.daos.UserDao
 
 @Database(
     entities = [
+        UserEntity::class,
         BookEntity::class,
         CategoryEntity::class,
         CatalogCacheEntity::class,
         BookChunkEntity::class,
         BookChunkFtsEntity::class,
         AiraMessageEntity::class,
-        CategoryCacheEntity::class
+        CategoryCacheEntity::class,
+        ReadingSessionEntity::class,
+        QuotaEntity::class
     ],
     views = [
         LibraryBookView::class
     ],
-    version = 3,
+    version = 1, // <-- Incremented version
     exportSchema = false
 )
 @TypeConverters(RoomConverters::class)
 abstract class AppDatabase : RoomDatabase() {
-
+    abstract fun userDao(): UserDao
     abstract fun bookDao(): BookDao
     abstract fun categoryDao(): CategoryDao
     abstract fun catalogDao(): CatalogDao
     abstract fun bookChunkDao(): BookChunkDao
     abstract fun airaMessageDao(): AiraMessageDao
     abstract fun categoryCacheDao(): CategoryCacheDao
+    abstract fun readingSessionDao(): ReadingSessionDao
+    abstract fun quotaDao(): QuotaDao
 }
