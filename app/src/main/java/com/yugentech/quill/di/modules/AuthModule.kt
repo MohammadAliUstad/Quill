@@ -3,9 +3,9 @@ package com.yugentech.quill.di.modules
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.yugentech.quill.auth.repository.AuthRepository
 import com.yugentech.quill.auth.repository.AuthRepositoryImpl
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
+import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.sessions.auth.service.AuthService
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -48,7 +48,10 @@ val authModule = module {
     viewModel {
         Timber.v("Initializing LoginViewModel")
         AuthViewModel(
-            authRepository = get()
+            authRepository = get(),
+            cloudSyncRepository = get(),
+            userRepository = get(),
+            syncDataStore = get()
         )
     }
 }

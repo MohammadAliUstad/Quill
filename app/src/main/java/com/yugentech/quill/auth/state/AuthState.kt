@@ -1,7 +1,7 @@
 package com.yugentech.quill.auth.state
 
 import android.app.PendingIntent
-import com.yugentech.quill.auth.UserData
+import com.yugentech.quill.database.model.UserData
 
 // Data class holding the current state of the authentication UI
 data class AuthState(

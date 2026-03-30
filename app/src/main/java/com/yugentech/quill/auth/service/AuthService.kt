@@ -9,7 +9,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.yugentech.quill.auth.mapper.AuthErrorMapper
-import com.yugentech.sessions.auth.result.AuthResult
+import com.yugentech.quill.domain.AuthResult
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -120,7 +120,8 @@ class AuthService(
 
             val credential = oneTapClient.getSignInCredentialFromIntent(data)
             val idToken = credential.googleIdToken
-                ?: return AuthResult.Error("Google ID token is missing").also { Timber.e("Missing Google ID Token") }
+                ?: return AuthResult.Error("Google ID token is missing")
+                    .also { Timber.e("Missing Google ID Token") }
 
             Timber.d("Google ID Token retrieved, exchanging for Firebase Credential")
             val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
