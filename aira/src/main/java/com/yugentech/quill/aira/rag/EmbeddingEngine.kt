@@ -28,7 +28,7 @@ class EmbeddingEngine(private val context: Context) {
         }
     }
 
-    private fun init() {
+    fun init() {
         if (ortSession != null) return
         try {
             ortEnv = OrtEnvironment.getEnvironment()

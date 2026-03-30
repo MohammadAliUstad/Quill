@@ -8,11 +8,9 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-private val Context.themeDataStore:
-        DataStore<Preferences> by preferencesDataStore(name = "theme")
-
-private val Context.userDataStore:
-        DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
+private val Context.themeDataStore: DataStore<Preferences> by preferencesDataStore(name = "theme")
+private val Context.userDataStore: DataStore<Preferences> by preferencesDataStore(name = "user")
+private val Context.syncDataStore: DataStore<Preferences> by preferencesDataStore(name = "sync")
 
 val dataStoreModule = module {
 
@@ -22,5 +20,9 @@ val dataStoreModule = module {
 
     single<DataStore<Preferences>>(named("user")) {
         androidContext().userDataStore
+    }
+
+    single<DataStore<Preferences>>(named("sync")) {
+        androidContext().syncDataStore
     }
 }
