@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +32,7 @@ import com.yugentech.quill.R
 import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
+import kotlin.times
 
 @Composable
 fun AppInfoCard() {
@@ -54,7 +56,7 @@ fun AppInfoCard() {
         ) {
             Card(
                 modifier = Modifier
-                    .size(MaterialTheme.components.imageSizeLarge)
+                    .size(MaterialTheme.components.imageSizeMedium)
                     .clip(CircleShape),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -68,8 +70,7 @@ fun AppInfoCard() {
                         painter = painterResource(R.drawable.ic_launcher_monochrome),
                         contentDescription = null,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .scale(1.6f),
+                            .requiredSize(MaterialTheme.components.imageSizeMedium * 1.6f),
                         contentScale = ContentScale.Fit,
                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
                     )
@@ -79,7 +80,7 @@ fun AppInfoCard() {
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.l))
 
             Text(
-                text = stringResource(R.string.app_name),
+                text = "Quill",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -88,7 +89,7 @@ fun AppInfoCard() {
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
 
             Text(
-                text = stringResource(R.string.version),
+                text = "Version 2.0.0",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -96,7 +97,7 @@ fun AppInfoCard() {
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.m))
 
             Text(
-                text = stringResource(R.string.app_description),
+                text = "Quill makes every read feel special. Pick up a light novel or a timeless classic, settle in, and let every page take you somewhere new.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
