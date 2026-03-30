@@ -260,12 +260,15 @@ fun AiraChatScreen(
                     .align(Alignment.TopCenter)
             ) {
                 AnimatedVisibility(
-                    visible = uiState.isIndexing || uiState.error != null,
+                    visible = uiState.isIndexing || uiState.isIndexingInBackground || uiState.error != null,
                     enter = fadeIn() + slideInVertically { -it },
                     exit = fadeOut() + slideOutVertically { -it }
                 ) {
                     StatusBanner(
                         isIndexing = uiState.isIndexing,
+                        isIndexingInBackground = uiState.isIndexingInBackground,
+                        indexingProgress = uiState.indexingProgress,
+                        indexingPhase = uiState.indexingPhase,
                         error = uiState.error,
                         onDismiss = { viewModel.clearError() }
                     )

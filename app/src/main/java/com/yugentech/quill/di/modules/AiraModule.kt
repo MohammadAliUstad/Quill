@@ -6,6 +6,7 @@ import com.yugentech.quill.aira.aira.repository.AiraChatRepositoryImpl
 import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
 import com.yugentech.quill.aira.book.BookRepository
 import com.yugentech.quill.aira.book.BookRepositoryImpl
+import com.yugentech.quill.aira.book.IndexingRepository
 import com.yugentech.quill.aira.rag.EmbeddingEngine
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.reader.viewmodel.ReaderAiraViewModel
@@ -47,13 +48,16 @@ val airaModule = module {
         )
     }
 
+    single { IndexingRepository(get(), get()) }
+
     viewModel { params ->
         AiraViewModel(
             bookId = params.get(),
             airaChatRepository = get(),
             bookRepository = get(),
             quotaRepository = get(),
-            authRepository = get()
+            authRepository = get(),
+            indexingRepository = get()
         )
     }
 

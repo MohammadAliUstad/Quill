@@ -9,6 +9,9 @@ data class AiraUiState(
     // Chat State
     val isReady: Boolean = false,
     val isIndexing: Boolean = false,
+    val isIndexingInBackground: Boolean = false,
+    val indexingProgress: Int = 0,
+    val indexingPhase: String? = null,
     val hasStartedReading: Boolean = false,
     val messages: List<AiraMessage> = emptyList(),
     val isLoading: Boolean = false,
