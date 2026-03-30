@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
+import com.yugentech.quill.billing.SubscriptionViewModel
 import com.yugentech.quill.navigation.navgraph.authGraph
 import com.yugentech.quill.navigation.navgraph.detailGraph
 import com.yugentech.quill.navigation.navgraph.mainGraph
@@ -34,6 +35,7 @@ fun AppNavHost(
 ) {
     val context = LocalContext.current
     val authViewModel: AuthViewModel = koinViewModel()
+    val subscriptionViewModel: SubscriptionViewModel = koinViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
     val startDestination = remember {
@@ -115,7 +117,9 @@ fun AppNavHost(
         )
         detailGraph(
             navController = navController,
-            context = context
+            context = context,
+            authViewModel = authViewModel,
+            subscriptionViewModel = subscriptionViewModel
         )
     }
 }
