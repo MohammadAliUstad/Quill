@@ -18,7 +18,6 @@ interface StandardRepository {
 
     // ── Network-Only ──
     suspend fun searchBooks(query: String): Result<OpdsFeedResult>
-    suspend fun getNextPage(nextUrl: String): Result<OpdsFeedResult>
     suspend fun getCollections(): Result<List<OpdsCollection>>
     suspend fun getBooksByAuthor(authorName: String): Result<OpdsFeedResult>
 }

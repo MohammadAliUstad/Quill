@@ -42,6 +42,7 @@ class StandardRepositoryImpl(
                 catalogDao.insertBooks(newEntities)
                 catalogDao.deleteStaleBooks("new-releases", newIds.toList())
             }
+            // Reverted back to returning Unit instead of the URL
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.w(e, "Background sync failed. UI will just continue showing cached data.")
@@ -82,7 +83,6 @@ class StandardRepositoryImpl(
 
     override suspend fun syncTopicBooks(topic: String): Result<Unit> {
         return try {
-            // Standard Ebooks OPDS allows searching by subject
             val xml = standardApi.searchBooks("subject:\"$topic\"")
             val result = StandardEbooksMapper.parseOpdsToBooks(xml)
 
@@ -106,14 +106,6 @@ class StandardRepositoryImpl(
     override suspend fun searchBooks(query: String): Result<OpdsFeedResult> {
         return try {
             Result.success(StandardEbooksMapper.parseOpdsToBooks(standardApi.searchBooks(query)))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun getNextPage(nextUrl: String): Result<OpdsFeedResult> {
-        return try {
-            Result.success(StandardEbooksMapper.parseOpdsToBooks(standardApi.getNextPage(nextUrl)))
         } catch (e: Exception) {
             Result.failure(e)
         }

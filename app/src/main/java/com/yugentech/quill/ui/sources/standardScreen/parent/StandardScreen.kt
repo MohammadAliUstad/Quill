@@ -33,7 +33,6 @@ import com.yugentech.quill.standardEBooks.viewmodel.StandardNavigationEvent
 import com.yugentech.quill.standardEBooks.viewmodel.StandardViewModel
 import com.yugentech.quill.ui.sources.common.AnimatedSearchIcon
 import com.yugentech.quill.ui.sources.common.BooksGrid
-import com.yugentech.quill.ui.sources.standardScreen.components.CollectionsGridContent
 import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
 import com.yugentech.quill.ui.sources.standardScreen.components.StandardScreenHeader
 import kotlinx.coroutines.flow.collectLatest
@@ -48,9 +47,7 @@ fun StandardScreen(
     standardViewModel: StandardViewModel = koinViewModel()
 ) {
     val books by standardViewModel.booksState.collectAsState()
-    val collections by standardViewModel.collectionsState.collectAsState()
     val isLoading by standardViewModel.isLoading.collectAsState()
-    val isPaginating by standardViewModel.isPaginating.collectAsState()
     val selectedCategory by standardViewModel.selectedCategory.collectAsState()
     val categories by standardViewModel.categories.collectAsState()
 
@@ -71,10 +68,8 @@ fun StandardScreen(
     val screenWidth = configuration.screenWidthDp.dp
     val dockedWidth = screenWidth - 32.dp
 
-    // Header height = status bar + search bar (56dp) + filter row (48dp) + small padding
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    // statusBar + searchBar + filterRow (including its 8dp top + 8dp bottom padding = 64dp total)
     val gridTopPadding = statusBarHeight + 56.dp + 64.dp
     val gridBottomPadding = navBarHeight + 16.dp
 
@@ -93,37 +88,19 @@ fun StandardScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // --- LAYER 1: SCROLLABLE GRID ---
-            if (selectedCategory == "Collections") {
-                AnimatedVisibility(
-                    visible = collections.isNotEmpty() || isLoading,
-                    enter = fadeIn(animationSpec = tween(durationMillis = 300))
-                ) {
-                    CollectionsGridContent(
-                        collections = collections,
-                        isLoading = isLoading,
-                        topPadding = gridTopPadding,
-                        bottomPadding = gridBottomPadding,
-                        onCollectionClick = { title, url ->
-                            standardViewModel.onCollectionSelected(title, url)
-                        }
-                    )
-                }
-            } else {
-                AnimatedVisibility(
-                    visible = books.isNotEmpty() || isLoading,
-                    enter = fadeIn(animationSpec = tween(durationMillis = 300))
-                ) {
-                    BooksGrid(
-                        books = books,
-                        topPadding = gridTopPadding,
-                        bottomPadding = gridBottomPadding,
-                        onBookClick = { book -> standardViewModel.onBookClick(book) }
-                    )
-                }
+
+            AnimatedVisibility(
+                visible = books.isNotEmpty() || isLoading,
+                enter = fadeIn(animationSpec = tween(durationMillis = 300))
+            ) {
+                BooksGrid(
+                    books = books,
+                    topPadding = gridTopPadding,
+                    bottomPadding = gridBottomPadding,
+                    onBookClick = { book -> standardViewModel.onBookClick(book) }
+                )
             }
 
-            // --- LAYER 2: UNIFIED HEADER (search bar + filter row, solid background) ---
             StandardScreenHeader(
                 searchText = searchText,
                 searchActive = searchActive,

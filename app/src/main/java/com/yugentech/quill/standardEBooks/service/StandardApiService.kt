@@ -40,8 +40,12 @@ class StandardApiService(
     // --- NEW DISCOVERY FEATURES ---
 
     suspend fun getNextPage(nextUrl: String): String {
-        // Ensures the URL is fully formatted just in case the OPDS feed sends a relative path
-        val url = if (nextUrl.startsWith("http")) nextUrl else "$BASE_URL$nextUrl"
+        // FIX: Bulletproof URL formatting
+        val url = when {
+            nextUrl.startsWith("http") -> nextUrl
+            nextUrl.startsWith("/") -> "$BASE_URL$nextUrl"
+            else -> "$BASE_URL/$nextUrl"
+        }
         return httpClient.get(url) {
             header(HttpHeaders.UserAgent, USER_AGENT)
             header(HttpHeaders.Accept, "application/atom+xml")

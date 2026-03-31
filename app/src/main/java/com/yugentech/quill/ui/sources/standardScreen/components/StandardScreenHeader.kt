@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StandardScreenHeader(
-    // Search
     searchText: String,
     searchActive: Boolean,
     dockedWidth: Dp,
@@ -41,7 +40,6 @@ fun StandardScreenHeader(
     onBackOrClose: () -> Unit,
     leadingIcon: @Composable () -> Unit,
     searchContent: @Composable () -> Unit,
-    // Filter
     categories: List<String>,
     selectedCategory: String,
     onCategorySelected: (String) -> Unit,
