@@ -2,11 +2,8 @@ package com.yugentech.quill.aira.aira.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkInfo
 import com.yugentech.quill.aira.aira.repository.AiraChatRepository
 import com.yugentech.quill.aira.book.BookRepository
-import com.yugentech.quill.aira.book.IndexingRepository
-import com.yugentech.quill.aira.rag.BookIndexingWorker
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.QuotaRepository
@@ -22,8 +19,7 @@ class AiraViewModel(
     private val airaChatRepository: AiraChatRepository,
     private val bookRepository: BookRepository,
     private val quotaRepository: QuotaRepository,
-    private val authRepository: AuthRepository,
-    private val indexingRepository: IndexingRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AiraUiState())
@@ -38,12 +34,11 @@ class AiraViewModel(
         observeQuota()
         fetchInitialBookData()
         observeChatHistory()
-        observeIndexing()
     }
 
     private fun fetchInitialBookData() {
         viewModelScope.launch {
-            val ready = indexingRepository.isBookReady(bookId)
+            val ready = bookRepository.isReady(bookId)
             val book = bookRepository.getBookDetails(bookId)
 
             _uiState.update {
@@ -56,64 +51,6 @@ class AiraViewModel(
                     hasStartedReading = book?.lastChapterTitle != null,
                     spoilerLockEnabled = book?.spoilerLockEnabled ?: true
                 )
-            }
-        }
-    }
-
-    private fun observeIndexing() {
-        viewModelScope.launch {
-            indexingRepository.observeIndexing(bookId).collectLatest { workInfo ->
-                when (workInfo?.state) {
-                    WorkInfo.State.RUNNING, WorkInfo.State.BLOCKED -> {
-                        val progress = workInfo.progress.getInt(BookIndexingWorker.KEY_PROGRESS, 0)
-                        val phase = workInfo.progress.getString(BookIndexingWorker.KEY_PHASE)
-                        val isReady = indexingRepository.isBookReady(bookId)
-
-                        _uiState.update {
-                            it.copy(
-                                isReady = isReady,
-                                isIndexing = !isReady,
-                                isIndexingInBackground = isReady,
-                                indexingProgress = progress,
-                                indexingPhase = phase
-                            )
-                        }
-                    }
-
-                    WorkInfo.State.SUCCEEDED -> {
-                        _uiState.update {
-                            it.copy(
-                                isReady = true,
-                                isIndexing = false,
-                                isIndexingInBackground = false,
-                                indexingProgress = 100,
-                                indexingPhase = null
-                            )
-                        }
-                    }
-
-                    WorkInfo.State.FAILED -> {
-                        _uiState.update {
-                            it.copy(
-                                isIndexing = false,
-                                isIndexingInBackground = false,
-                                indexingPhase = null
-                            )
-                        }
-                    }
-
-                    WorkInfo.State.CANCELLED, null -> {
-                        _uiState.update {
-                            it.copy(
-                                isIndexing = false,
-                                isIndexingInBackground = false,
-                                indexingPhase = null
-                            )
-                        }
-                    }
-
-                    else -> Unit
-                }
             }
         }
     }
@@ -154,12 +91,14 @@ class AiraViewModel(
 
             try {
                 airaChatRepository.ask(bookId = bookId, question = question).collect { response ->
+
                     if (!hasConsumedQuota && response is AiraResponse.Success) {
                         hasConsumedQuota = true
                         currentUserId?.let { uid ->
                             viewModelScope.launch { quotaRepository.consumeQuery(uid) }
                         }
                     }
+
                     handleStreamResponse(response)
                 }
             } finally {
@@ -184,6 +123,7 @@ class AiraViewModel(
 
     fun toggleSpoilerLock() {
         val newValue = !_uiState.value.spoilerLockEnabled
+
         _uiState.update { it.copy(spoilerLockEnabled = newValue) }
         viewModelScope.launch {
             bookRepository.setSpoilerLock(bookId, newValue)

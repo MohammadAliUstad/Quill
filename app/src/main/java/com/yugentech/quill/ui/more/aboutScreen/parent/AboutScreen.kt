@@ -72,7 +72,7 @@ fun AboutScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             toastMessage = when (event) {
-                is BillingEvent.TipThankYou -> "Thank you for your support! ☕"
+                is BillingEvent.TipThankYou -> "Thank you for your support!"
                 is BillingEvent.Error -> event.message
                 else -> null
             }

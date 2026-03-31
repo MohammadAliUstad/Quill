@@ -1,5 +1,6 @@
 package com.yugentech.quill.ui.shared.airaScreen.parent
 
+import StatusBanner
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -64,8 +65,6 @@ import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
 import com.yugentech.quill.ui.shared.airaScreen.components.AiraChatHistory
 import com.yugentech.quill.ui.shared.airaScreen.components.AiraEmptyState
 import com.yugentech.quill.ui.shared.airaScreen.components.InputBar
-import com.yugentech.quill.ui.shared.airaScreen.components.StatusBanner
-import com.yugentech.theme.tokens.spacing
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -260,15 +259,12 @@ fun AiraChatScreen(
                     .align(Alignment.TopCenter)
             ) {
                 AnimatedVisibility(
-                    visible = uiState.isIndexing || uiState.isIndexingInBackground || uiState.error != null,
+                    visible = uiState.isIndexing || uiState.error != null,
                     enter = fadeIn() + slideInVertically { -it },
                     exit = fadeOut() + slideOutVertically { -it }
                 ) {
                     StatusBanner(
                         isIndexing = uiState.isIndexing,
-                        isIndexingInBackground = uiState.isIndexingInBackground,
-                        indexingProgress = uiState.indexingProgress,
-                        indexingPhase = uiState.indexingPhase,
                         error = uiState.error,
                         onDismiss = { viewModel.clearError() }
                     )

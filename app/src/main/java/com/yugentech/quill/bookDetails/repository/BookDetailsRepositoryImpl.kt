@@ -1,6 +1,5 @@
 package com.yugentech.quill.bookDetails.repository
 
-import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -85,11 +84,7 @@ class BookDetailsRepositoryImpl(
             .build()
 
         workManager
-            .beginUniqueWork(
-                "book_pipeline_${book.id}",
-                ExistingWorkPolicy.KEEP,
-                downloadRequest
-            )
+            .beginWith(downloadRequest)
             .then(indexRequest)
             .enqueue()
 
