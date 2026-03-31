@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -29,37 +31,44 @@ import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.ui.mainScreen.components.itemShape
 
-@Composable
-fun ChaptersListSection(
+// 1. Refactored into a LazyListScope extension
+fun LazyListScope.chaptersListSection(
     chapters: List<Chapter>,
     onChapterClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    if (chapters.isEmpty()) return
+
+    item {
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = "Chapters",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
         )
-
         Spacer(modifier = Modifier.height(8.dp))
+    }
 
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            chapters.forEachIndexed { index, chapter ->
-                ChapterItem(
-                    chapter = chapter,
-                    index = index,
-                    chapters = chapters,
-                    onClick = onChapterClick
-                )
-            }
+    // 2. We use itemsIndexed directly in the lazy scope
+    itemsIndexed(
+        items = chapters,
+        key = { _, chapter -> chapter.index }
+    ) { index, chapter ->
+        Box(modifier = modifier) {
+            ChapterItem(
+                chapter = chapter,
+                index = index,
+                chapters = chapters,
+                onClick = onChapterClick
+            )
         }
     }
+
+    item { Spacer(modifier = Modifier.height(24.dp)) }
 }
 
 @Composable
@@ -73,14 +82,19 @@ private fun ChapterItem(
     val topPadding = calculateTopPadding(depth, index, chapters)
     val styling = getChapterStyling(depth)
 
-    if (topPadding > 0.dp) {
-        Spacer(modifier = Modifier.height(topPadding))
-    }
+    Column {
+        if (topPadding > 0.dp) {
+            Spacer(modifier = Modifier.height(topPadding))
+        }
 
-    if (depth >= 2) {
-        RegularChapterItem(chapter, index, chapters, styling, onClick)
-    } else {
-        HeaderChapterItem(chapter, styling, onClick)
+        if (depth >= 2) {
+            RegularChapterItem(chapter, index, chapters, styling, onClick)
+        } else {
+            HeaderChapterItem(chapter, styling, onClick)
+        }
+
+        // 3. Replaces the Arrangement.spacedBy(2.dp) from the original Column
+        Spacer(modifier = Modifier.height(2.dp))
     }
 }
 

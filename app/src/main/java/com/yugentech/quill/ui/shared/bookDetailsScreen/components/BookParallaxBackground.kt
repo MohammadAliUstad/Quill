@@ -23,7 +23,7 @@ import com.yugentech.quill.database.model.Book
 @Composable
 fun BookParallaxBackground(
     book: Book,
-    scrollState: ScrollState,
+    scrollState: Int,
     headerHeight: Dp
 ) {
     Box(
@@ -32,12 +32,12 @@ fun BookParallaxBackground(
             .height(headerHeight)
             .graphicsLayer {
                 // 1. Parallax: Move up at 50% speed of the actual scroll
-                translationY = -scrollState.value * 0.5f
+                translationY = -scrollState * 0.5f
 
                 // 2. Fade: Fade out as user scrolls past the header height
                 val fadeStart = 0f
                 val fadeEnd = size.height
-                val currentAlpha = 1f - ((scrollState.value - fadeStart) / (fadeEnd - fadeStart))
+                val currentAlpha = 1f - ((scrollState - fadeStart) / (fadeEnd - fadeStart))
 
                 // Ensure alpha stays valid (0..1)
                 alpha = currentAlpha.coerceIn(0f, 1f)

@@ -11,6 +11,7 @@ import org.koin.dsl.module
 private val Context.themeDataStore: DataStore<Preferences> by preferencesDataStore(name = "theme")
 private val Context.userDataStore: DataStore<Preferences> by preferencesDataStore(name = "user")
 private val Context.syncDataStore: DataStore<Preferences> by preferencesDataStore(name = "sync")
+private val Context.readerDataStore by preferencesDataStore(name = "reader")
 
 val dataStoreModule = module {
 
@@ -23,6 +24,10 @@ val dataStoreModule = module {
     }
 
     single<DataStore<Preferences>>(named("sync")) {
+        androidContext().syncDataStore
+    }
+
+    single<DataStore<Preferences>>(named("reader")) {
         androidContext().syncDataStore
     }
 }

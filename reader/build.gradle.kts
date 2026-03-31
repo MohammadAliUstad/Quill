@@ -47,9 +47,13 @@ dependencies {
     implementation(project(":database"))
     implementation(project(":domain"))
 
+    implementation(libs.androidx.datastore.preferences)
+
     implementation(libs.readium.shared)
     implementation(libs.readium.streamer)
     implementation(libs.readium.navigator)
+
+    implementation(libs.timber)
 
     implementation(libs.androidx.webkit)
     implementation(libs.androidx.core.ktx)
