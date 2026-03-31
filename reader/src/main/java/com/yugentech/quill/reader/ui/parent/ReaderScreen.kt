@@ -27,6 +27,7 @@ import com.yugentech.quill.reader.viewmodel.ReaderAiraViewModel
 import com.yugentech.quill.reader.viewmodel.ReaderUiState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
+import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.publication.Locator
 
@@ -37,6 +38,8 @@ private const val MENU_AUTO_HIDE_MS = 4000L
 fun ReaderScreen(
     uiState: ReaderUiState,
     onBackClick: () -> Unit,
+    preferences: EpubPreferences, // NEW
+    onPreferencesChange: (EpubPreferences) -> Unit, //
     onLocatorChange: (Locator) -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit = {}
 ) {
@@ -51,6 +54,8 @@ fun ReaderScreen(
         is ReaderUiState.Success -> ReaderSuccess(
             state = uiState,
             onBackClick = onBackClick,
+            preferences = preferences, // Pass down
+            onPreferencesChange = onPreferencesChange,
             onLocatorChange = onLocatorChange,
             onMenuVisibilityChange = onMenuVisibilityChange
         )
@@ -62,6 +67,8 @@ fun ReaderScreen(
 private fun ReaderSuccess(
     state: ReaderUiState.Success,
     onBackClick: () -> Unit,
+    preferences: EpubPreferences, // NEW
+    onPreferencesChange: (EpubPreferences) -> Unit,
     onLocatorChange: (Locator) -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit
 ) {
@@ -128,7 +135,7 @@ private fun ReaderSuccess(
 
     val animatedBgColor by animateColorAsState(
         targetValue = Color(
-            currentPreferences.backgroundColor?.int
+            preferences.backgroundColor?.int
                 ?: ReaderDefaults.getPreferences().backgroundColor!!.int
         ),
         label = "ReaderBg"
@@ -166,7 +173,7 @@ private fun ReaderSuccess(
             targetJumpHref = targetJumpHref,
             targetSeekProgress = pendingSeekProgress,
             allPositions = state.allPositions,
-            preferences = currentPreferences,
+            preferences = preferences,
             onTap = {
                 if (showAiraPeek) {
                     showAiraPeek = false
@@ -226,8 +233,11 @@ private fun ReaderSuccess(
 
     if (showSettingsSheet) {
         SettingsSheet(
-            preferences = currentPreferences,
-            onPreferencesChange = { currentPreferences = it.copy(publisherStyles = false) },
+            preferences = preferences, // 6. Use passed preferences
+            onPreferencesChange = {
+                // 7. Fire the callback to the ViewModel/DataStore
+                onPreferencesChange(it.copy(publisherStyles = false))
+            },
             onDismiss = { showSettingsSheet = false }
         )
     }

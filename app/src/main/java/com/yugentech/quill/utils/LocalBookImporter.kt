@@ -4,6 +4,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.yugentech.quill.aira.rag.BookIndexingWorker
 import com.yugentech.quill.bookDetails.EpubParser
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.dao.BookDao
@@ -22,7 +26,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 object LocalBookImporter {
-    
+
     suspend fun importFiles(
         context: Context,
         bookDao: BookDao,
@@ -107,6 +111,16 @@ object LocalBookImporter {
                 fileSizeBytes = destFile.length()
             )
             bookDao.insertBook(updatedEntity)
+
+            // ── Step 6: Trigger Aira Indexing ─────────────────────────────
+            val indexRequest = OneTimeWorkRequestBuilder<BookIndexingWorker>()
+                .setInputData(
+                    workDataOf(BookIndexingWorker.KEY_BOOK_ID to bookId)
+                )
+                .addTag("index_$bookId")
+                .build()
+
+            WorkManager.getInstance(context).enqueue(indexRequest)
 
             ImportResult.Success(bookId, title)
 

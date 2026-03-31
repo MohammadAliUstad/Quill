@@ -95,8 +95,6 @@ fun GutenbergScreen(
             ) {
                 BooksGrid(
                     books = books,
-                    isPaginating = isPaginating,
-                    onLoadMore = { viewModel.loadNextPage() },
                     topPadding = gridTopPadding,
                     bottomPadding = gridBottomPadding,
                     onBookClick = { book -> viewModel.onBookClick(book) }
