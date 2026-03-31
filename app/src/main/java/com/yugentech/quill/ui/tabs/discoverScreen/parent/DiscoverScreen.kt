@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -118,34 +117,35 @@ fun DiscoverScreen(
             // --- HERO SECTION ---
             // Fix: Adding a static key prevents the layout from shifting when the state changes
             item(key = "hero_section") {
-                if (uiState.heroBooks.isNotEmpty()) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
-                        ) {
-                            Text(
-                                text = "New Releases",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Freshly curated classics for your reading pleasure",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        HeroCarousel(
-                            books = uiState.heroBooks,
-                            onBookClick = onBookClick,
+                if (uiState.isFeedLoading) {
+                    HeroCarouselSkeleton(
+                        title = "New Releases",
+                        subtitle = "Freshly curated classics for your reading pleasure"
+                    )
+                } else {
+                    (uiState.heroBooks.isNotEmpty())
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+                    ) {
+                        Text(
+                            text = "New Releases",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Freshly curated classics for your reading pleasure",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                } else if (uiState.isFeedLoading) {
-                    // Show Skeleton while Hero books are loading
-                    HeroCarouselSkeleton()
+
+                    HeroCarousel(
+                        books = uiState.heroBooks,
+                        onBookClick = onBookClick,
+                    )
                 }
             }
 

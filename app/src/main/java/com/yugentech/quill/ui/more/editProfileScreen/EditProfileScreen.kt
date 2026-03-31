@@ -5,21 +5,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,8 +42,6 @@ import com.yugentech.quill.ui.mainScreen.components.SectionHeader
 import com.yugentech.quill.ui.more.editProfileScreen.components.AvatarSection
 import com.yugentech.quill.ui.more.editProfileScreen.components.DisplayNameSection
 import com.yugentech.quill.user.viewmodel.UserViewModel
-import com.yugentech.theme.tokens.components
-import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.launch
 
@@ -180,29 +174,9 @@ fun EditProfileScreen(
                             }
                         },
                         validationError = validationError,
-                        isSaving = uiState.isSaving
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.m))
-
-                Button(
-                    onClick = { saveProfile() },
-                    enabled = canSave && !uiState.isSaving,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .height(MaterialTheme.components.buttonMedium),
-                    shape = RoundedCornerShape(MaterialTheme.corners.extraLarge),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                ) {
-                    Text(
-                        text = "Save Changes",
-                        style = MaterialTheme.typography.labelLarge
+                        isSaving = uiState.isSaving,
+                        canSave = canSave,
+                        onSaveClick = { saveProfile() }
                     )
                 }
 
