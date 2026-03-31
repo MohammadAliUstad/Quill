@@ -1,19 +1,22 @@
 package com.yugentech.quill.aira.rag
 
 import android.content.Context
-import android.util.Log
+import androidx.core.text.HtmlCompat
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import org.readium.r2.shared.util.asset.AssetRetriever
 import org.readium.r2.shared.util.getOrElse
 import org.readium.r2.shared.util.http.DefaultHttpClient
 import org.readium.r2.streamer.PublicationOpener
 import org.readium.r2.streamer.parser.DefaultPublicationParser
+import timber.log.Timber
 import java.io.File
 
 data class ChapterText(
-    val chapterIndex: Int,    // spine index (raw, as-is from readingOrder)
-    val chapterTitle: String, // title from spine link, or fallback
+    val chapterIndex: Int,
+    val chapterTitle: String,
     val text: String
 )
 
@@ -22,13 +25,17 @@ class EpubTextExtractor(private val context: Context) {
     companion object {
         private const val TAG = "QuillExtractor"
         private const val MIN_CHAPTER_LENGTH = 50
+        private val SCRIPT_REGEX = Regex("<script[^>]*>[\\s\\S]*?</script>", RegexOption.IGNORE_CASE)
+        private val STYLE_REGEX = Regex("<style[^>]*>[\\s\\S]*?</style>", RegexOption.IGNORE_CASE)
+        private val WHITESPACE_REGEX = Regex("[ \\t]+")
+        private val NEWLINE_REGEX = Regex("\\n{3,}")
     }
 
-    suspend fun extract(filePath: String): List<ChapterText> = withContext(Dispatchers.IO) {
+    fun extractStream(filePath: String): Flow<ChapterText> = flow {
         val file = File(filePath)
         if (!file.exists()) {
-            Log.w(TAG, "File not found at $filePath")
-            return@withContext emptyList()
+            Timber.tag(TAG).e("✗ File not found at path: $filePath")
+            return@flow
         }
 
         try {
@@ -38,89 +45,55 @@ class EpubTextExtractor(private val context: Context) {
             val publicationOpener = PublicationOpener(parser, emptyList(), onCreatePublication = {})
 
             val asset = assetRetriever.retrieve(file).getOrElse { err ->
-                Log.e(TAG, "Failed to retrieve asset — $err")
-                return@withContext emptyList()
+                Timber.tag(TAG).e("✗ Failed to retrieve asset: $err")
+                return@flow
             }
 
             val publication = publicationOpener.open(asset, allowUserInteraction = false)
                 .getOrElse { err ->
-                    Log.e(TAG, "Failed to open publication — $err")
-                    return@withContext emptyList()
+                    Timber.tag(TAG).e("✗ Failed to open publication: $err")
+                    return@flow
                 }
-
-            Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            Log.d(TAG, "EPUB spine — ${publication.readingOrder.size} total spine items:")
-
-            val chapters = mutableListOf<ChapterText>()
 
             publication.readingOrder.forEachIndexed { index, link ->
                 val title = link.title ?: "spine[$index]"
-                val href = link.url().toString()
-
                 try {
-                    val resource = publication.get(link)
-                    if (resource == null) {
-                        Log.w(TAG, "  [$index] \"$title\" ($href) → SKIPPED (null resource)")
+                    val resource = publication.get(link) ?: return@forEachIndexed
+
+                    val bytes = resource.read().getOrElse {
                         return@forEachIndexed
                     }
 
-                    val bytes = resource.read().getOrElse { err ->
-                        Log.w(TAG, "  [$index] \"$title\" ($href) → SKIPPED (read error: $err)")
-                        return@forEachIndexed
-                    }
-
-                    val html = String(bytes, Charsets.UTF_8)
-                    val plainText = stripHtml(html).trim()
+                    val plainText = stripHtml(String(bytes, Charsets.UTF_8))
 
                     if (plainText.length >= MIN_CHAPTER_LENGTH) {
-                        chapters.add(
+                        emit(
                             ChapterText(
                                 chapterIndex = index,
                                 chapterTitle = title,
                                 text = plainText
                             )
                         )
-                        Log.d(TAG, "  [$index] \"$title\" → INDEXED (${plainText.length} chars) — \"${plainText.take(60).replace('\n', ' ')}...\"")
-                    } else {
-                        Log.d(TAG, "  [$index] \"$title\" → SKIPPED (${plainText.length} chars < $MIN_CHAPTER_LENGTH, likely front/backmatter)")
                     }
                 } catch (e: Exception) {
-                    Log.w(TAG, "  [$index] \"$title\" → ERROR: ${e.message}")
+                    Timber.tag(TAG).w(e, "Error parsing chapter $index ('$title')")
                 }
             }
 
             publication.close()
 
-            Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            Log.d(TAG, "Extraction summary: ${chapters.size} spine items indexed out of ${publication.readingOrder.size} total")
-            Log.d(TAG, "Indexed chapter indices: ${chapters.map { it.chapterIndex }}")
-            Log.d(TAG, "Indexed chapter titles : ${chapters.map { "\"${it.chapterTitle}\"" }}")
-            Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
-            chapters
-
         } catch (e: Exception) {
-            Log.e(TAG, "Fatal error during extraction: ${e.message}", e)
-            emptyList()
+            Timber.tag(TAG).e(e, "✗ Fatal error during EPUB extraction stream")
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    private fun stripHtml(html: String): String {
-        return html
-            .replace(Regex("<script[^>]*>[\\s\\S]*?</script>", RegexOption.IGNORE_CASE), " ")
-            .replace(Regex("<style[^>]*>[\\s\\S]*?</style>", RegexOption.IGNORE_CASE), " ")
-            .replace(Regex("</(p|div|h[1-6]|li|br|tr|blockquote)[^>]*>", RegexOption.IGNORE_CASE), "\n")
-            .replace(Regex("<[^>]+>"), "")
-            .replace("\u00AD", "")
-            .replace("&nbsp;", " ")
-            .replace("&amp;", "&")
-            .replace("&lt;", "<")
-            .replace("&gt;", ">")
-            .replace("&quot;", "\"")
-            .replace("&#39;", "'")
-            .replace("&apos;", "'")
-            .replace(Regex("[ \\t]+"), " ")
-            .replace(Regex("\\n{3,}"), "\n\n")
+    private fun stripHtml(html: String): String =
+        HtmlCompat.fromHtml(
+            html.replace(SCRIPT_REGEX, " ").replace(STYLE_REGEX, " "),
+            HtmlCompat.FROM_HTML_MODE_COMPACT
+        ).toString()
+            .replace('\u00A0', ' ')
+            .replace(WHITESPACE_REGEX, " ")
+            .replace(NEWLINE_REGEX, "\n\n")
             .trim()
-    }
 }

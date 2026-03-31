@@ -1,7 +1,6 @@
 package com.yugentech.quill.aira.rag
 
 import android.content.Context
-import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
@@ -9,7 +8,13 @@ import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.entity.BookChunkEntity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class BookIndexingWorker(
     context: Context,
@@ -19,167 +24,120 @@ class BookIndexingWorker(
     private val embeddingEngine: EmbeddingEngine
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+    override suspend fun doWork(): Result = withContext(Dispatchers.Default) {
         val bookId = inputData.getString(KEY_BOOK_ID)
-            ?: return@withContext Result.failure(
-                workDataOf(KEY_ERROR to "Missing BOOK_ID input")
-            )
+            ?: return@withContext Result.failure(workDataOf(KEY_ERROR to "Missing BOOK_ID input"))
 
-        Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        Log.d(TAG, "▶ INDEXING STARTED — bookId=$bookId")
-        Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        Timber.tag(TAG).d("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        Timber.tag(TAG).d("▶ END-TO-END STREAMING INDEX STARTED")
+        Timber.tag(TAG).d("▶ Book ID: $bookId")
+        Timber.tag(TAG).d("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         val startTime = System.currentTimeMillis()
 
-        // ── EAGER INIT ────────────────────────────────────────────────
-        embeddingEngine.init()
-
         try {
-            // ── PHASE 1: Resolve file path ────────────────────────────────
-            Log.d(TAG, "[1/5] Resolving file path from Room...")
             val bookEntity = bookDao.getBookEntity(bookId)
-            Log.d(TAG, "      Book title   : ${bookEntity?.title ?: "NOT FOUND"}")
-            Log.d(TAG, "      Book author  : ${bookEntity?.author ?: "N/A"}")
-            Log.d(TAG, "      localFilePath: ${bookEntity?.localFilePath ?: "NULL"}")
-
             val filePath = bookEntity?.localFilePath
+
             if (filePath == null) {
-                Log.e(TAG, "✗ FAILED: No local file path for bookId=$bookId")
-                return@withContext Result.failure(
-                    workDataOf(KEY_ERROR to "No local file path found")
-                )
+                Timber.tag(TAG).e("✗ No local file path found for bookId=$bookId")
+                return@withContext Result.failure(workDataOf(KEY_ERROR to "No local file path found"))
             }
 
-            // ── PHASE 2: Check already indexed chapters ───────────────────
-            Log.d(TAG, "[2/5] Checking previously indexed chapters...")
-            val alreadyIndexed = chunkDao.getIndexedChapterIndices(bookId).toSet()
-            Log.d(TAG, "      Already indexed: ${alreadyIndexed.size} chapters — $alreadyIndexed")
+            chunkDao.deleteChunksForBook(bookId)
+            setProgress(workDataOf(KEY_PHASE to PHASE_PROCESSING, KEY_PROGRESS to 5))
 
-            // ── PHASE 3: Extract text ─────────────────────────────────────
-            Log.d(TAG, "[3/5] Extracting text from EPUB: $filePath")
-            setProgress(workDataOf(KEY_PHASE to PHASE_EXTRACTING, KEY_PROGRESS to 0))
-            val extractStart = System.currentTimeMillis()
-            val extractor = EpubTextExtractor(applicationContext)
-            val chapters = extractor.extract(filePath)
-            val extractMs = System.currentTimeMillis() - extractStart
+            val chunkChannel = Channel<ChunkingStrategy.TextChunk>(capacity = 100)
+            val entityChannel = Channel<BookChunkEntity>(capacity = 100)
 
-            if (chapters.isEmpty()) {
-                Log.e(TAG, "✗ FAILED: No text extracted from $filePath")
-                return@withContext Result.failure(
-                    workDataOf(KEY_ERROR to "No text could be extracted from EPUB")
-                )
+            var totalChunksGenerated = 0
+            var embeddedCount = 0
+            val batchToSave = mutableListOf<BookChunkEntity>()
+
+            // 1. PRODUCER
+            val extractorJob = launch(Dispatchers.IO) {
+                val extractor = EpubTextExtractor(applicationContext)
+                extractor.extractStream(filePath)
+                    .onEach { chapter ->
+                        val chunks = ChunkingStrategy.chunk(chapter)
+                        totalChunksGenerated += chunks.size
+                        chunks.forEach { chunkChannel.send(it) }
+                    }
+                    .collect()
+
+                chunkChannel.close()
             }
 
-            val remainingChapters = chapters.filter { it.chapterIndex !in alreadyIndexed }
-            Log.d(TAG, "      Extracted ${chapters.size} chapters in ${extractMs}ms")
-            Log.d(TAG, "      Remaining to index: ${remainingChapters.size} chapters")
+            // 2. TRANSFORMERS
+            val concurrencyLevel = Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
 
-            if (remainingChapters.isEmpty()) {
-                Log.d(TAG, "✓ Already fully indexed — nothing to do")
-                return@withContext Result.success(
-                    workDataOf(KEY_PHASE to PHASE_DONE, KEY_CHUNK_COUNT to 0)
-                )
-            }
-
-            // ── PHASE 4: Chunk ────────────────────────────────────────────
-            Log.d(TAG, "[4/5] Chunking ${remainingChapters.size} remaining chapters...")
-            setProgress(workDataOf(KEY_PHASE to PHASE_CHUNKING, KEY_PROGRESS to 20))
-            val chunkStart = System.currentTimeMillis()
-            val allChunks = ChunkingStrategy.chunkAll(remainingChapters)
-            val totalChunks = allChunks.size
-            val chunkMs = System.currentTimeMillis() - chunkStart
-
-            if (totalChunks == 0) {
-                Log.e(TAG, "✗ FAILED: Chunking produced no output")
-                return@withContext Result.failure(
-                    workDataOf(KEY_ERROR to "Chunking produced no output")
-                )
-            }
-
-            Log.d(TAG, "      Produced $totalChunks chunks in ${chunkMs}ms")
-            Log.d(TAG, "      Avg chunk size: ${allChunks.sumOf { it.text.length } / totalChunks} chars")
-            Log.d(TAG, "      Min chunk size: ${allChunks.minOf { it.text.length }} chars")
-            Log.d(TAG, "      Max chunk size: ${allChunks.maxOf { it.text.length }} chars")
-
-            // ── PHASE 5: Embed + Save per chapter ────────────────────────
-            Log.d(TAG, "[5/5] Embedding $totalChunks chunks across ${remainingChapters.size} chapters...")
-            setProgress(workDataOf(KEY_PHASE to PHASE_EMBEDDING, KEY_PROGRESS to 30))
-            val embedStart = System.currentTimeMillis()
-
-            val chunksByChapter = allChunks.groupBy { it.chapterIndex }
-            val totalChapters = remainingChapters.size
-            var chaptersProcessed = 0
-            var embedded = 0
-            var failed = 0
-
-            for ((chapterIndex, chunks) in chunksByChapter) {
-                Log.d(TAG, "      Chapter[$chapterIndex]: embedding ${chunks.size} chunks...")
-                val chapterStart = System.currentTimeMillis()
-                val chapterEntities = mutableListOf<BookChunkEntity>()
-
-                chunks.forEach { chunk ->
-                    val vector = embeddingEngine.embed(chunk.text)
-                    if (vector != null) {
-                        chapterEntities.add(
-                            BookChunkEntity(
-                                bookId = bookId,
-                                chapterIndex = chunk.chapterIndex,
-                                chapterTitle = chunk.chapterTitle,
-                                chunkIndex = chunk.chunkIndex,
-                                text = chunk.text,
-                                embedding = vector
+            val embedders = (1..concurrencyLevel).map { workerId ->
+                launch(Dispatchers.Default) {
+                    for (chunk in chunkChannel) {
+                        val vector = embeddingEngine.embed(chunk.text)
+                        if (vector != null) {
+                            entityChannel.send(
+                                BookChunkEntity(
+                                    bookId = bookId,
+                                    chapterIndex = chunk.chapterIndex,
+                                    chapterTitle = chunk.chapterTitle,
+                                    chunkIndex = chunk.chunkIndex,
+                                    text = chunk.text,
+                                    embedding = vector
+                                )
                             )
-                        )
-                        embedded++
-                    } else {
-                        failed++
-                        Log.w(TAG, "      ✗ Embed FAILED for chunk ${chunk.chapterIndex}:${chunk.chunkIndex} (${chunk.text.length} chars)")
+                        } else {
+                            Timber.tag(TAG).w("✗ Embedding failed for chunk ${chunk.chapterIndex}:${chunk.chunkIndex}")
+                        }
                     }
                 }
+            }
 
-                chunkDao.insertChunks(chapterEntities)
-                chaptersProcessed++
-                val chapterMs = System.currentTimeMillis() - chapterStart
-                Log.d(TAG, "      Chapter[$chapterIndex] done in ${chapterMs}ms — ${chapterEntities.size} chunks saved")
+            // Wait for transformers, then close entity channel
+            launch(Dispatchers.Default) {
+                embedders.joinAll()
+                entityChannel.close()
+            }
 
-                val embeddingProgress = 30 + ((chaptersProcessed.toFloat() / totalChapters) * 65).toInt()
-                setProgress(
-                    workDataOf(
-                        KEY_PHASE to PHASE_EMBEDDING,
-                        KEY_PROGRESS to embeddingProgress,
-                        KEY_EMBEDDED_COUNT to embedded,
-                        KEY_TOTAL_COUNT to totalChunks
+            // 3. CONSUMER
+            for (entity in entityChannel) {
+                batchToSave.add(entity)
+                embeddedCount++
+
+                if (batchToSave.size >= EMBEDDING_BATCH_SIZE) {
+                    chunkDao.insertChunks(batchToSave)
+                    batchToSave.clear()
+
+                    val progress = (20 + (embeddedCount * 0.5f)).coerceAtMost(95f).toInt()
+                    setProgress(
+                        workDataOf(
+                            KEY_PHASE to PHASE_PROCESSING,
+                            KEY_PROGRESS to progress,
+                            KEY_EMBEDDED_COUNT to embeddedCount
+                        )
                     )
-                )
+                }
             }
 
-            val embedMs = System.currentTimeMillis() - embedStart
-            Log.d(TAG, "      Embedding complete in ${embedMs}ms")
-            Log.d(TAG, "      Succeeded: $embedded / $totalChunks")
-            Log.d(TAG, "      Failed   : $failed / $totalChunks")
-            if (embedded > 0) {
-                Log.d(TAG, "      Avg ms/chunk: ${embedMs / embedded}ms")
+            // Flush remainder
+            if (batchToSave.isNotEmpty()) {
+                chunkDao.insertChunks(batchToSave)
             }
+
+            extractorJob.join()
 
             setProgress(workDataOf(KEY_PHASE to PHASE_DONE, KEY_PROGRESS to 100))
 
             val totalMs = System.currentTimeMillis() - startTime
-            Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            Log.d(TAG, "✓ INDEXING COMPLETE — bookId=$bookId")
-            Log.d(TAG, "  Chapters : ${remainingChapters.size} indexed this run")
-            Log.d(TAG, "  Chunks   : $totalChunks total → $embedded indexed, $failed failed")
-            Log.d(TAG, "  Timings  : extract=${extractMs}ms, chunk=${chunkMs}ms, embed=${embedMs}ms")
-            Log.d(TAG, "  Total    : ${totalMs}ms (${totalMs / 1000}s)")
-            Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.tag(TAG).d("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.tag(TAG).d("✓ INDEXING COMPLETE")
+            Timber.tag(TAG).d("▶ Success   : $embeddedCount / $totalChunksGenerated chunks indexed")
+            Timber.tag(TAG).d("▶ Total Time: ${totalMs}ms (${totalMs / 1000}s)")
+            Timber.tag(TAG).d("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-            Result.success(
-                workDataOf(
-                    KEY_CHUNK_COUNT to embedded,
-                    KEY_PHASE to PHASE_DONE
-                )
-            )
+            Result.success(workDataOf(KEY_CHUNK_COUNT to embeddedCount, KEY_PHASE to PHASE_DONE))
 
         } catch (e: Exception) {
-            Log.e(TAG, "✗ FATAL ERROR for bookId=$bookId: ${e.message}", e)
+            Timber.tag(TAG).e(e, "✗ FATAL ERROR during indexing")
             Result.failure(workDataOf(KEY_ERROR to (e.message ?: "Unknown error")))
         }
     }
@@ -191,14 +149,12 @@ class BookIndexingWorker(
         const val KEY_PHASE = "PHASE"
         const val KEY_PROGRESS = "PROGRESS"
         const val KEY_EMBEDDED_COUNT = "EMBEDDED_COUNT"
-        const val KEY_TOTAL_COUNT = "TOTAL_COUNT"
         const val KEY_CHUNK_COUNT = "CHUNK_COUNT"
         const val KEY_ERROR = "ERROR"
 
-        const val PHASE_EXTRACTING = "extracting"
-        const val PHASE_CHUNKING = "chunking"
-        const val PHASE_EMBEDDING = "embedding"
-        const val PHASE_SAVING = "saving"
+        const val PHASE_PROCESSING = "processing"
         const val PHASE_DONE = "done"
+
+        private const val EMBEDDING_BATCH_SIZE = 50
     }
 }
