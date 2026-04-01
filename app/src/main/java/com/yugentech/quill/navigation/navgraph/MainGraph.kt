@@ -24,8 +24,8 @@ fun NavGraphBuilder.mainGraph(
         MainScreen(
             libraryViewModel = libraryViewModel,
             onLibraryBookClick = { book ->
-                // Local books only need ID
-                navController.navigate(AppScreen.BookDetailsScreen.createRoute(bookId = book.id)) {
+                // FIX: Pass the full book JSON instead of just the ID
+                navController.navigate(AppScreen.BookDetailsScreen.createRoute(book = book)) {
                     launchSingleTop = true
                 }
             },
@@ -95,7 +95,7 @@ fun NavGraphBuilder.mainGraph(
         AllBooksScreen(
             onBackClick = { navController.popBackStack() },
             onBookClick = { book ->
-                navController.navigate(AppScreen.BookDetailsScreen.createRoute(bookId = book.id)) {
+                navController.navigate(AppScreen.BookDetailsScreen.createRoute(book = book)) {
                     launchSingleTop = true
                 }
             }

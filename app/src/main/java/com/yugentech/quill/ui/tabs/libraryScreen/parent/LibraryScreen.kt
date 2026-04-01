@@ -70,22 +70,19 @@ fun LibraryScreen(
     val scrollState = rememberScrollState()
 
     // THE FIX: Coercion Protection Strategy.
-    // Compose resets scrollState to 0 if the layout briefly shrinks during asynchronous DB loads.
-    // We actively save the last valid scroll and manually restore it once the layout expands again.
     var savedScroll by rememberSaveable { mutableIntStateOf(0) }
 
     LaunchedEffect(scrollState) {
         var wasInProgress = false
         snapshotFlow { scrollState.isScrollInProgress }.collect { inProgress ->
             if (wasInProgress && !inProgress) {
-                savedScroll = scrollState.value // Save value the moment the user stops scrolling
+                savedScroll = scrollState.value
             }
             wasInProgress = inProgress
         }
     }
 
     LaunchedEffect(scrollState.maxValue) {
-        // Wait until the layout has fully rendered its height before aggressively restoring
         if (savedScroll > 0 && scrollState.maxValue >= savedScroll) {
             scrollState.scrollTo(savedScroll)
         }
@@ -116,8 +113,6 @@ fun LibraryScreen(
                     modifier = Modifier
                         .matchParentSize()
                         .graphicsLayer {
-                            // THE FIX: Use scrollState.value instead of scrollBehavior.state.contentOffset
-                            // so the gradient syncs perfectly when programmatic jumps/restorations occur!
                             alpha = (scrollState.value / 100f).coerceIn(0f, 1f)
                         }
                         .background(
@@ -154,8 +149,10 @@ fun LibraryScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(bottom = contentPadding.calculateBottomPadding()),
+                    .padding(
+                        top = innerPadding.calculateTopPadding(),
+                        bottom = contentPadding.calculateBottomPadding() + 8.dp
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -213,9 +210,10 @@ fun LibraryScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(innerPadding)
+                    // Take the top padding from Scaffold, and add the parent's bottom nav padding + 8.dp
                     .padding(
-                        bottom = contentPadding.calculateBottomPadding()
+                        top = innerPadding.calculateTopPadding(),
+                        bottom = contentPadding.calculateBottomPadding() + 8.dp
                     ),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {

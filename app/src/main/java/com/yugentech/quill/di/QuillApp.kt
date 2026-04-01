@@ -36,8 +36,6 @@ class QuillApp : Application(), Configuration.Provider {
             Timber.plant(Timber.DebugTree())
         }
 
-        WebView.setWebContentsDebuggingEnabled(true)
-
         startKoin {
             androidLogger()
             androidContext(this@QuillApp)

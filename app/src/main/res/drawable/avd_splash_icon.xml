@@ -8,6 +8,10 @@
             android:viewportWidth="360"
             android:viewportHeight="360">
 
+            <path
+                android:pathData="M0,0h360v360h-360z"
+                android:fillColor="#8D806A" />
+
             <group
                 android:translateY="30"
                 android:scaleX="1.15"
@@ -16,44 +20,42 @@
 
                 <path
                     android:pathData="M137,60L233,60A12,12 0,0 1,245 72L245,218A12,12 0,0 1,233 230L137,230A12,12 0,0 1,125 218L125,72A12,12 0,0 1,137 60z"
-                    android:fillColor="#7A1E3A"/>
+                    android:fillColor="#333333"/>
                 <path
                     android:pathData="M125,60h18v170h-18z"
-                    android:fillColor="#5A162B"/>
+                    android:fillColor="#1A1A1A"/>
                 <path
                     android:pathData="M224,60h10v170h-10z"
-                    android:fillColor="#D8C3A5"/>
+                    android:fillColor="#C6A85A"/>
 
                 <group
                     android:name="quill_group"
+                    android:translateY="-5"
                     android:pivotX="117"
                     android:pivotY="231">
                     <path
                         android:pathData="M179.99,70.44C140.93,87.02 143.6,120.45 123.09,144.52C110.96,161.19 120.14,191.86 121.92,214.15C138.69,199.36 164.74,182.92 169.45,163.25C166.78,129.82 196.56,109.49 179.99,70.44Z"
-                        android:fillColor="#F5E9DA"/>
-                    <path
-                        android:pathData="M179.99,70.44C160.31,121.81 137.85,172.06 122.67,212.3"
-                        android:strokeWidth="3.2"
-                        android:fillColor="#00000000"
-                        android:strokeColor="#9C7A5A"
-                        android:strokeLineCap="round"/>
+                        android:fillColor="#E6D3A3"/>
+
                     <path
                         android:pathData="M122.67,212.3L117.03,231.59"
-                        android:strokeWidth="3.8"
+                        android:strokeWidth="5.0"
                         android:fillColor="#00000000"
-                        android:strokeColor="#5A3E2C"
+                        android:strokeColor="#A88B4A"
                         android:strokeLineCap="round"/>
+
                     <path
                         android:pathData="M179.99,70.44C140.93,87.02 143.6,120.45 123.09,144.52C110.96,161.19 120.14,191.86 121.92,214.15"
-                        android:strokeWidth="4.5"
+                        android:strokeWidth="6.0"
                         android:fillColor="#00000000"
-                        android:strokeColor="#C7AF8F"
+                        android:strokeColor="#A88B4A"
                         android:strokeLineCap="round"/>
+
                     <path
                         android:pathData="M179.99,70.44C196.56,109.49 164.91,134.45 169.45,163.25C164.74,182.92 138.69,199.36 121.92,214.15"
-                        android:strokeWidth="4.5"
+                        android:strokeWidth="6.0"
                         android:fillColor="#00000000"
-                        android:strokeColor="#C7AF8F"
+                        android:strokeColor="#A88B4A"
                         android:strokeLineCap="round"/>
                 </group>
 
@@ -64,30 +66,12 @@
     <target android:name="quill_group">
         <aapt:attr name="android:animation">
             <set android:ordering="together">
-
                 <objectAnimator
                     android:propertyName="translateX"
                     android:valueFrom="0"
                     android:valueTo="70"
                     android:duration="800"
                     android:interpolator="@android:interpolator/fast_out_slow_in" />
-
-                <objectAnimator
-                    android:propertyName="rotation"
-                    android:valueFrom="0"
-                    android:valueTo="-3"
-                    android:duration="100"
-                    android:repeatCount="7"
-                    android:repeatMode="reverse" />
-
-                <objectAnimator
-                    android:propertyName="translateY"
-                    android:valueFrom="0"
-                    android:valueTo="-1"
-                    android:duration="100"
-                    android:repeatCount="7"
-                    android:repeatMode="reverse" />
-
             </set>
         </aapt:attr>
     </target>

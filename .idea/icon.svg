@@ -1,14 +1,9 @@
-<svg viewBox="110 50 150 200" xmlns="http://www.w3.org/2000/svg">
-  <g>
-    <rect x="125" y="60" width="120" height="170" rx="12" fill="#7A1E3A"/>
-    <rect x="125" y="60" width="18" height="170" fill="#5A162B"/>
-    <rect x="224" y="60" width="10" height="170" fill="#D8C3A5"/>
-  </g>
-  <g transform="rotate(22 150 150) translate(-2 0)">
-    <path d="M150 65 C120 95,135 125,125 155 C120 175,140 200,150 220 C160 200,178 175,175 155 C160 125,180 95,150 65 Z" fill="#F5E9DA"/>
-    <path d="M150 65 C151 120,149 175,150 218" stroke="#9C7A5A" stroke-width="3.2" stroke-linecap="round" fill="none"/>
-    <path d="M150 218 L152 238" stroke="#5A3E2C" stroke-width="3.8" stroke-linecap="round" fill="none"/>
-    <path d="M150 65 C120 95,135 125,125 155 C120 175,140 200,150 220" stroke="#C7AF8F" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-    <path d="M150 65 C180 95,160 130,175 155 C178 175,160 200,150 220" stroke="#C7AF8F" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-  </g>
+<svg width="216" height="278" viewBox="157 122 216 278" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M352.841 122.333H177.629C166.675 122.333 157.794 131.109 157.794 141.933V380.4C157.794 391.225 166.675 400 177.629 400H352.841C363.796 400 372.676 391.225 372.676 380.4V141.933C372.676 131.109 363.796 122.333 352.841 122.333Z" fill="#333333"/>
+<path d="M187.547 122.333H157.794V400H187.547V122.333Z" fill="#1A1A1A"/>
+<path d="M354.494 122.333H337.965V400H354.494V122.333Z" fill="#C6A85A"/>
+<path d="M307.521 130.844C243.116 158.1 247.344 212.687 213.443 252.091C193.385 279.372 208.347 329.416 211.166 365.807C238.851 341.563 281.845 314.597 289.702 282.458C285.474 227.871 334.627 194.541 307.521 130.844Z" fill="#E6D3A3"/>
+<path d="M212.405 362L203.044 393.512" stroke="#A88B4A" stroke-width="10" stroke-linecap="round"/>
+<path d="M307.333 130.836C243.016 158.081 247.24 212.643 213.385 252.028C193.354 279.297 208.297 329.318 211.113 365.692" stroke="#A88B4A" stroke-width="10" stroke-linecap="round"/>
+<path d="M307.574 130.96C334.644 194.627 282.456 235.518 289.783 282.503C281.937 314.628 239.003 341.581 211.357 365.815" stroke="#A88B4A" stroke-width="10" stroke-linecap="round"/>
 </svg>

@@ -3,19 +3,24 @@ package com.yugentech.quill.reader.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.yugentech.quill.reader.repository.ReaderPreferencesRepository
 import com.yugentech.quill.reader.repository.ReaderRepository
 import com.yugentech.quill.reader.repository.ReadingSessionRepository
+import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.viewmodel.ReaderUiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.shared.publication.Link
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
@@ -31,11 +36,18 @@ import java.io.File
 class ReaderViewModel(
     application: Application,
     private val readerRepository: ReaderRepository,
-    private val sessionRepository: ReadingSessionRepository // 1. Injected Repo
+    private val sessionRepository: ReadingSessionRepository,
+    private val preferencesRepository: ReaderPreferencesRepository
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<ReaderUiState>(ReaderUiState.Idle)
     val uiState = _uiState.asStateFlow()
+
+    val readerPreferences = preferencesRepository.readerPreferences.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ReaderDefaults.getPreferences()
+    )
 
     private var publication: Publication? = null
     private var saveJob: Job? = null
@@ -140,6 +152,12 @@ class ReaderViewModel(
                 chapterIndex = chapterIndex,
                 locatorJson = locatorJson
             )
+        }
+    }
+
+    fun updatePreferences(newPreferences: EpubPreferences) {
+        viewModelScope.launch {
+            preferencesRepository.savePreferences(newPreferences)
         }
     }
 

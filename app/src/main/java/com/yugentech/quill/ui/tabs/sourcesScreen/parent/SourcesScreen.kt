@@ -69,8 +69,8 @@ fun SourcesScreen(
             shape = MaterialShapes.SoftBurst.toShape(),
             containerColor = { MaterialTheme.colorScheme.primaryContainer },
             contentColor = { MaterialTheme.colorScheme.onPrimaryContainer },
-            buttonContainerColor = { MaterialTheme.colorScheme.onPrimaryContainer },
-            buttonContentColor = { MaterialTheme.colorScheme.primaryContainer },
+            buttonContainerColor = { MaterialTheme.colorScheme.primary },
+            buttonContentColor = { MaterialTheme.colorScheme.onPrimary },
             buttonText = "Browse Catalog",
         ),
         CatalogInfo(
@@ -82,8 +82,8 @@ fun SourcesScreen(
             shape = MaterialShapes.Cookie9Sided.toShape(),
             containerColor = { MaterialTheme.colorScheme.secondaryContainer },
             contentColor = { MaterialTheme.colorScheme.onSecondaryContainer },
-            buttonContainerColor = { MaterialTheme.colorScheme.onSecondaryContainer },
-            buttonContentColor = { MaterialTheme.colorScheme.secondaryContainer },
+            buttonContainerColor = { MaterialTheme.colorScheme.secondary },
+            buttonContentColor = { MaterialTheme.colorScheme.onSecondary },
             buttonText = "Explore Collection",
         ),
     )
@@ -95,10 +95,10 @@ fun SourcesScreen(
         description = "Import and read your own book collection. Select EPUB files stored anywhere on your device.",
         icon = Icons.Default.FolderOpen,
         shape = MaterialShapes.Bun.toShape(),
-        containerColor = { MaterialTheme.colorScheme.surfaceContainerHigh },
-        contentColor = { MaterialTheme.colorScheme.onSurface },
-        buttonContainerColor = { MaterialTheme.colorScheme.secondaryContainer },
-        buttonContentColor = { MaterialTheme.colorScheme.onSecondaryContainer },
+        containerColor = { MaterialTheme.colorScheme.tertiaryContainer },
+        contentColor = { MaterialTheme.colorScheme.onTertiaryContainer },
+        buttonContainerColor = { MaterialTheme.colorScheme.tertiary },
+        buttonContentColor = { MaterialTheme.colorScheme.onTertiary },
         buttonText = if (isImporting) "Importing..." else "Browse Device",
     )
 

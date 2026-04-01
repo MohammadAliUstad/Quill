@@ -3,6 +3,7 @@ package com.yugentech.quill.ui.tabs.discoverScreen.components
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -46,23 +47,41 @@ fun Modifier.shimmerEffect(): Modifier = composed {
 
 // 2. The Hero Carousel Skeleton
 @Composable
-fun HeroCarouselSkeleton() {
+fun HeroCarouselSkeleton(title: String, subtitle: String) {
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
         Column(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
-            // Title Skeleton
-            Box(modifier = Modifier.height(28.dp).width(150.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
-            Spacer(modifier = Modifier.height(8.dp))
-            // Subtitle Skeleton
-            Box(modifier = Modifier.height(16.dp).width(250.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
+            // Display the real title/subtitle while the carousel loads
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        
+
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Two Book Skeletons (Aspect Ratio 2:3)
-            Box(modifier = Modifier.weight(1f).aspectRatio(2f / 3f).clip(RoundedCornerShape(12.dp)).shimmerEffect())
-            Box(modifier = Modifier.weight(1f).aspectRatio(2f / 3f).clip(RoundedCornerShape(12.dp)).shimmerEffect())
+            // Two Book Skeletons for the Carousel (Aspect Ratio 2:3)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(2f / 3f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .shimmerEffect()
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(2f / 3f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .shimmerEffect()
+            )
         }
     }
 }
@@ -72,7 +91,6 @@ fun HeroCarouselSkeleton() {
 fun BookShelfSkeleton(title: String, subtitle: String) {
     Column(modifier = Modifier.padding(vertical = 12.dp)) {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            // We can actually display the real title/subtitle while the books load!
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
@@ -85,15 +103,14 @@ fun BookShelfSkeleton(title: String, subtitle: String) {
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 3 Small Book Skeletons
-            repeat(3) {
+            items(4) {
                 Box(
                     modifier = Modifier
-                        .width(130.dp)
+                        .width(120.dp)
                         .aspectRatio(2f / 3f)
                         .clip(RoundedCornerShape(8.dp))
                         .shimmerEffect()

@@ -1,7 +1,5 @@
 package com.yugentech.quill.ui.more.insightsScreen.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,11 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,28 +35,6 @@ fun ProgressBracketsCard(
     val inProgressFraction = progressBrackets.inProgress / total
     val notStartedFraction = progressBrackets.notStarted / total
 
-    var targetFinished by remember { mutableFloatStateOf(0f) }
-    var targetInProgress by remember { mutableFloatStateOf(0f) }
-    var targetNotStarted by remember { mutableFloatStateOf(0f) }
-
-    val animFinished by animateFloatAsState(targetFinished, tween(600), label = "finished")
-    val animInProgress by animateFloatAsState(
-        targetInProgress,
-        tween(600, delayMillis = 100),
-        label = "inProgress"
-    )
-    val animNotStarted by animateFloatAsState(
-        targetNotStarted,
-        tween(600, delayMillis = 200),
-        label = "notStarted"
-    )
-
-    LaunchedEffect(progressBrackets) {
-        targetFinished = finishedFraction
-        targetInProgress = inProgressFraction
-        targetNotStarted = notStartedFraction
-    }
-
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
@@ -75,26 +46,26 @@ fun ProgressBracketsCard(
                 .height(12.dp)
                 .clip(RoundedCornerShape(MaterialTheme.corners.extraLarge)),
         ) {
-            if (animFinished > 0f) {
+            if (finishedFraction > 0f) {
                 Box(
                     modifier = Modifier
-                        .weight(animFinished)
+                        .weight(finishedFraction)
                         .height(12.dp)
                         .background(MaterialTheme.colorScheme.primary)
                 )
             }
-            if (animInProgress > 0f) {
+            if (inProgressFraction > 0f) {
                 Box(
                     modifier = Modifier
-                        .weight(animInProgress)
+                        .weight(inProgressFraction)
                         .height(12.dp)
                         .background(MaterialTheme.colorScheme.secondary)
                 )
             }
-            if (animNotStarted > 0f) {
+            if (notStartedFraction > 0f) {
                 Box(
                     modifier = Modifier
-                        .weight(animNotStarted)
+                        .weight(notStartedFraction)
                         .height(12.dp)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
