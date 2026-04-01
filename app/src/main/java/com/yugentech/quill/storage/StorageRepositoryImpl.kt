@@ -14,16 +14,11 @@ class StorageRepositoryImpl(
     private val bookDao: BookDao
 ) : StorageRepository {
 
-    override fun getTotalAppStorageUsed(): Flow<Long> {
-        return bookDao.getTotalStorageUsed().map { it ?: 0L }
-    }
-
     override fun getDownloadedBooksBySize(): Flow<List<BookEntity>> {
         return bookDao.getDownloadedBooksBySize()
     }
 
     override suspend fun removeDownload(bookId: String) {
-        // 1. Delete the physical file from internal storage to free up space
         val book = bookDao.getBookEntity(bookId)
         book?.localFilePath?.let { path ->
             val file = File(path)
@@ -32,7 +27,6 @@ class StorageRepositoryImpl(
             }
         }
         
-        // 2. Update the database (This will automatically trigger the UI to update!)
         bookDao.removeDownload(bookId)
     }
 
@@ -46,7 +40,6 @@ class StorageRepositoryImpl(
         return statFs.blockCountLong * statFs.blockSizeLong
     }
 
-    // StorageRepositoryImpl.kt
     override fun getBookStorageBreakdowns(): Flow<List<BookStorageBreakdown>> {
         return bookDao.getBookStorageBreakdown()
     }

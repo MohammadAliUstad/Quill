@@ -31,8 +31,8 @@ import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.standardEBooks.viewmodel.StandardNavigationEvent
 import com.yugentech.quill.standardEBooks.viewmodel.StandardViewModel
-import com.yugentech.quill.ui.sources.common.AnimatedSearchIcon
-import com.yugentech.quill.ui.sources.common.BooksGrid
+import com.yugentech.quill.ui.sources.standardScreen.components.AnimatedSearchIcon
+import com.yugentech.quill.ui.sources.standardScreen.components.BooksGrid
 import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
 import com.yugentech.quill.ui.sources.standardScreen.components.StandardScreenHeader
 import kotlinx.coroutines.flow.collectLatest

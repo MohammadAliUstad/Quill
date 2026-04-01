@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,6 +16,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -29,12 +31,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.billing.SubscriptionViewModel
 import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.ui.more.subscriptions.components.SubscribeBottomBar
 import com.yugentech.quill.ui.more.subscriptions.components.SubscribedContent
 import com.yugentech.quill.ui.more.subscriptions.components.UnsubscribedContent
+import kotlinx.coroutines.delay
 
 data class PlanOption(
     val basePlanId: String,
@@ -62,7 +66,7 @@ fun SubscriptionsScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    var selectedPlanIndex by remember { mutableIntStateOf(1) }
+    var selectedPlanIndex by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         subscriptionViewModel.events.collect { event ->
@@ -72,13 +76,30 @@ fun SubscriptionsScreen(
                 is BillingEvent.Error -> event.message
                 else -> null
             }
+
+            if (event is BillingEvent.SubscriptionActivated) {
+                delay(2000)
+            }
             message?.let { snackbarHostState.showSnackbar(it) }
         }
     }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                // Custom Snackbar Implementation
+                Snackbar(
+                    modifier = Modifier.padding(12.dp),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = MaterialTheme.shapes.medium,
+                    actionColor = MaterialTheme.colorScheme.primary,
+                    dismissActionContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    snackbarData = data
+                )
+            }
+        },
         topBar = {
             if (isPro) {
                 TopAppBar(

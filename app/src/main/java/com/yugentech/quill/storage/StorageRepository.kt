@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface StorageRepository {
     // Database Flows
-    fun getTotalAppStorageUsed(): Flow<Long>
     fun getDownloadedBooksBySize(): Flow<List<BookEntity>>
     
     // Actions

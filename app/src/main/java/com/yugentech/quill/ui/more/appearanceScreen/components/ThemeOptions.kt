@@ -32,11 +32,11 @@ fun themeOptions(
     ThemeOption(
         colorTheme = ColorTheme.QUILL,
         displayName = "Quill",
-        primaryColor = AppColorSchemes.QuillLightColorScheme.primary,
+        primaryColor = AppColorSchemes.SakuraLightColorScheme.primary,
         gradientColors = listOf(
-            AppColorSchemes.QuillLightColorScheme.primary,
-            AppColorSchemes.QuillLightColorScheme.tertiary,
-            AppColorSchemes.QuillLightColorScheme.primaryContainer
+            AppColorSchemes.SakuraLightColorScheme.primary,
+            AppColorSchemes.SakuraLightColorScheme.tertiary,
+            AppColorSchemes.SakuraLightColorScheme.primaryContainer
         )
     ),
 
@@ -76,6 +76,18 @@ fun themeOptions(
         )
     ),
 
+    // Sakura
+    ThemeOption(
+        colorTheme = ColorTheme.SAKURA,
+        displayName = "Sakura",
+        primaryColor = AppColorSchemes.SakuraLightColorScheme.primary,
+        gradientColors = listOf(
+            AppColorSchemes.SakuraLightColorScheme.primary,
+            AppColorSchemes.SakuraLightColorScheme.tertiary,
+            AppColorSchemes.SakuraLightColorScheme.primaryContainer
+        )
+    ),
+
     // Alpine (Deep Green/Forest)
     ThemeOption(
         colorTheme = ColorTheme.ALPINE,
@@ -85,18 +97,6 @@ fun themeOptions(
             AppColorSchemes.AlpineLightColorScheme.primary,
             AppColorSchemes.AlpineLightColorScheme.tertiary,
             AppColorSchemes.AlpineLightColorScheme.primaryContainer
-        )
-    ),
-
-    // Lagoon (Cyan/Teal)
-    ThemeOption(
-        colorTheme = ColorTheme.LAGOON,
-        displayName = "Lagoon",
-        primaryColor = AppColorSchemes.LagoonLightColorScheme.primary,
-        gradientColors = listOf(
-            AppColorSchemes.LagoonLightColorScheme.primary,
-            AppColorSchemes.LagoonLightColorScheme.tertiary,
-            AppColorSchemes.LagoonLightColorScheme.primaryContainer
         )
     ),
 

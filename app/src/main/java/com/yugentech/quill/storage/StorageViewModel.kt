@@ -14,13 +14,19 @@ class StorageViewModel(
 
     val uiState: StateFlow<StorageUiState> = combine(
         repository.getDownloadedBooksBySize(),
-        repository.getTotalAppStorageUsed(),
+        // 1. Remove repository.getTotalAppStorageUsed() from here
         repository.getBookStorageBreakdowns()
-    ) { books, usedBytes, breakdowns ->
+    ) { books, breakdowns ->
+
+        // 2. Calculate the TRUE total by summing all the parts from your breakdown!
+        val trueTotalBytes = breakdowns.sumOf { breakdown ->
+            breakdown.fileSizeBytes + breakdown.chunksBytes + breakdown.messagesBytes
+        }
+
         StorageUiState(
             downloadedBooks = books,
             bookStorageBreakdowns = breakdowns.associateBy { it.bookId },
-            appStorageUsedBytes = usedBytes,
+            appStorageUsedBytes = trueTotalBytes, // 3. Pass the true total here
             deviceFreeSpaceBytes = repository.getDeviceFreeSpace(),
             deviceTotalSpaceBytes = repository.getDeviceTotalSpace(),
             isLoading = false

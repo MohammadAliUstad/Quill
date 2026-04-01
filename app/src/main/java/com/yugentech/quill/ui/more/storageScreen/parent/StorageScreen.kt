@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -23,7 +22,6 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,8 +39,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.R
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.storage.StorageViewModel
-import com.yugentech.quill.ui.more.storageScreen.components.StorageHeader
 import com.yugentech.quill.ui.more.storageScreen.components.BookStorageList
+import com.yugentech.quill.ui.more.storageScreen.components.DeleteBookDialog
+import com.yugentech.quill.ui.more.storageScreen.components.StorageHeader
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -62,7 +61,6 @@ fun StorageScreen(
         topBar = {
             LargeTopAppBar(
                 title = {
-                    // THE FIX: Added Column with title and subtitle to match CategoryScreen
                     Column {
                         Text("Manage Storage", fontWeight = FontWeight.Bold)
                         Text(
@@ -94,7 +92,6 @@ fun StorageScreen(
                 }
             }
 
-            // --- EMPTY STATE ---
             uiState.downloadedBooks.isEmpty() -> {
                 Box(
                     modifier = Modifier
@@ -105,7 +102,6 @@ fun StorageScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
-                        // THE FIX: Added the exact -50.dp offset for perfect visual centering
                         modifier = Modifier.offset(y = (-50).dp)
                     ) {
                         Image(
@@ -113,13 +109,17 @@ fun StorageScreen(
                             contentDescription = "No downloads",
                             modifier = Modifier.size(240.dp)
                         )
+
                         Spacer(modifier = Modifier.height(24.dp))
+
                         Text(
                             text = "Your storage is empty",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
+
                         Spacer(modifier = Modifier.height(8.dp))
+
                         Text(
                             text = "Books you download for offline\nreading will appear here",
                             style = MaterialTheme.typography.bodyMedium,
@@ -130,12 +130,14 @@ fun StorageScreen(
                 }
             }
 
-            // --- SUCCESS STATE ---
             else -> {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding)
+                        .padding(
+                            top = innerPadding.calculateTopPadding(),
+                            bottom = innerPadding.calculateBottomPadding()
+                        )
                 ) {
                     StorageHeader(
                         appUsedBytes = uiState.appStorageUsedBytes,
@@ -157,27 +159,15 @@ fun StorageScreen(
         }
     }
 
-    // Deletion confirmation dialog
-    if (bookToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { bookToDelete = null },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = { Text("Delete Download?") },
-            text = { Text("Are you sure you want to remove '${bookToDelete?.title}' from your device? Your reading progress will be saved.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        bookToDelete?.id?.let { storageViewModel.deleteBook(it) }
-                        bookToDelete = null
-                    }
-                ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
+    bookToDelete?.let { book ->
+        DeleteBookDialog(
+            bookTitle = book.title,
+            onConfirm = {
+                storageViewModel.deleteBook(book.id)
+                bookToDelete = null
             },
-            dismissButton = {
-                TextButton(onClick = { bookToDelete = null }) {
-                    Text("Cancel")
-                }
+            onDismiss = {
+                bookToDelete = null
             }
         )
     }

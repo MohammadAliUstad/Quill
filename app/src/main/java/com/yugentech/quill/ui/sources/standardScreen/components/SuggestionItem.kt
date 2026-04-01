@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.sources.common
+package com.yugentech.quill.ui.sources.standardScreen.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
