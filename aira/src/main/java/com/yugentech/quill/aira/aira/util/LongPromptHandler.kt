@@ -2,8 +2,8 @@ package com.yugentech.quill.aira.aira.util
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
-import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.aira.rag.RagRetriever
+import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.database.dao.AiraMessageDao
 import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao

@@ -1,15 +1,16 @@
 package com.yugentech.quill.aira.rag
 
-import android.util.Log
 import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
-import com.yugentech.quill.database.dao.ChunkLocationTuple
 import com.yugentech.quill.database.dao.ChunkVectorTuple
+import com.yugentech.quill.database.entity.BookEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import timber.log.Timber
+import java.text.Normalizer
 
 class RagRetriever(
     private val chunkDao: BookChunkDao,
@@ -17,28 +18,16 @@ class RagRetriever(
     private val embeddingEngine: EmbeddingEngine
 ) {
 
+    private var cachedBookId: String? = null
+    private var cachedVectors: List<ChunkVectorTuple> = emptyList()
+    private val cacheMutex = Mutex()
+
     data class RetrievedChunk(
         val text: String,
         val chapterIndex: Int,
         val chunkIndex: Int,
         val score: Float
     )
-
-    companion object {
-        private const val TAG = "QuillRAG"
-        const val DEFAULT_TOP_PASSAGES = 3
-
-        private const val PASSAGE_WINDOW_BEFORE = 1
-        private const val PASSAGE_WINDOW_AFTER = 1
-
-        private const val ANCHOR_MIN_SCORE = 0.20f
-        private const val RRF_MIN_SCORE = 0.015f
-
-        // 🚨 FIX 2: Thread-safe RAM Cache to prevent repeated Room/Cursor allocations
-        private var cachedBookId: String? = null
-        private var cachedVectors: List<ChunkVectorTuple> = emptyList()
-        private val cacheMutex = Mutex()
-    }
 
     suspend fun retrieve(
         bookId: String,
@@ -54,7 +43,7 @@ class RagRetriever(
             val scored = scoreCandidatesHybrid(bookId, query, candidates, queryEmbedding)
             retrieveAsPassages(bookId, scored, topPassages)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in retrieve: ${e.message}", e)
+            Timber.e(e, "Error during retrieval for bookId: $bookId")
             emptyList()
         }
     }
@@ -69,26 +58,24 @@ class RagRetriever(
         return try {
             val book = bookDao.getBookEntity(bookId)
             val candidates = getCandidates(bookId, book, spoilerLockEnabled) ?: return emptyList()
-
             val mergedMap = mutableMapOf<Pair<Int, Int>, Float>()
 
             for (query in queries) {
                 val queryEmbedding = embedQuery(query) ?: continue
                 val scored = scoreCandidatesHybrid(bookId, query, candidates, queryEmbedding)
 
-                scored.take(candidatesPerQuery)
-                    .forEach { (pos, score) ->
-                        val existing = mergedMap[pos]
-                        if (existing == null || score > existing) {
-                            mergedMap[pos] = score
-                        }
+                scored.take(candidatesPerQuery).forEach { (pos, score) ->
+                    val existing = mergedMap[pos]
+                    if (existing == null || score > existing) {
+                        mergedMap[pos] = score
                     }
+                }
             }
 
             if (mergedMap.isEmpty()) return emptyList()
             retrieveAsPassages(bookId, mergedMap.toList(), topPassages)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in retrieveWithExpansion: ${e.message}", e)
+            Timber.e(e, "Error during expanded retrieval for bookId: $bookId")
             emptyList()
         }
     }
@@ -109,30 +96,22 @@ class RagRetriever(
         }
 
         val keywordSearchDeferred = async(Dispatchers.IO) {
-            val unaccentedQuery = query
-                .let { java.text.Normalizer.normalize(it, java.text.Normalizer.Form.NFD) }
+            val cleanStr = Normalizer.normalize(query, Normalizer.Form.NFD)
                 .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
-
-            // 2. NOW we can safely strip out the remaining punctuation
-            val cleanStr = unaccentedQuery.replace("[^a-zA-Z0-9 ]".toRegex(), " ")
-            val stopWords = setOf(
-                "the", "and", "for", "that", "this", "with", "you", "not", "are", "from",
-                "your", "all", "have", "more", "was", "its", "out", "who", "what", "where",
-                "when", "why", "how", "has", "but", "into", "his", "her", "she", "him",
-                "they", "them", "their", "will", "would", "could", "should", "can", "did", "some"
-            )
+                .replace("[^a-zA-Z0-9 ]".toRegex(), " ")
 
             val words = cleanStr.split("\\s+".toRegex())
                 .map { it.lowercase() }
-                .filter { it.length > 2 && it !in stopWords }
+                .filter { it.length > 2 && it !in STOP_WORDS }
 
             if (words.isEmpty()) {
-                emptyList<ChunkLocationTuple>() // Explicitly cast to the new Tuple
+                emptyList()
             } else {
                 val ftsQuery = words.joinToString(" ") { "$it*" }
                 try {
-                    chunkDao.searchFts(bookId, ftsQuery) // Now safely returns the lightweight Tuple
-                } catch (_: Exception) {
+                    chunkDao.searchFts(bookId, ftsQuery)
+                } catch (e: Exception) {
+                    Timber.e(e, "FTS search failed for bookId: $bookId")
                     emptyList()
                 }
             }
@@ -140,7 +119,6 @@ class RagRetriever(
 
         val vectorRanked = vectorSearchDeferred.await()
         val keywordRanked = keywordSearchDeferred.await()
-
         val rrfScores = mutableMapOf<Pair<Int, Int>, Float>()
         val k = 60f
 
@@ -187,24 +165,28 @@ class RagRetriever(
         val expanded = mutableListOf<RetrievedChunk>()
 
         for ((pos, score) in anchors) {
-            val neighbors = chunkDao.getNeighborChunks(
-                bookId = bookId,
-                chapterIndex = pos.first,
-                fromChunkIndex = pos.second - PASSAGE_WINDOW_BEFORE,
-                toChunkIndex = pos.second + PASSAGE_WINDOW_AFTER
-            )
-            for (chunk in neighbors) {
-                val key = chunk.chapterIndex to chunk.chunkIndex
-                if (seen.add(key)) {
-                    expanded.add(
-                        RetrievedChunk(
-                            text = chunk.text,
-                            chapterIndex = chunk.chapterIndex,
-                            chunkIndex = chunk.chunkIndex,
-                            score = score
+            try {
+                val neighbors = chunkDao.getNeighborChunks(
+                    bookId = bookId,
+                    chapterIndex = pos.first,
+                    fromChunkIndex = pos.second - PASSAGE_WINDOW_BEFORE,
+                    toChunkIndex = pos.second + PASSAGE_WINDOW_AFTER
+                )
+                for (chunk in neighbors) {
+                    val key = chunk.chapterIndex to chunk.chunkIndex
+                    if (seen.add(key)) {
+                        expanded.add(
+                            RetrievedChunk(
+                                text = chunk.text,
+                                chapterIndex = chunk.chapterIndex,
+                                chunkIndex = chunk.chunkIndex,
+                                score = score
+                            )
                         )
-                    )
+                    }
                 }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to retrieve neighbor chunks at $pos")
             }
         }
 
@@ -213,50 +195,66 @@ class RagRetriever(
 
     private suspend fun getCandidates(
         bookId: String,
-        book: com.yugentech.quill.database.entity.BookEntity?,
+        book: BookEntity?,
         spoilerLockEnabled: Boolean
     ): List<ChunkVectorTuple>? {
-
-        // 🚨 FETCHING FROM CACHE: The heavy Room parsing is only done ONCE per book
-        val allChunks = cacheMutex.withLock {
-            if (cachedBookId == bookId && cachedVectors.isNotEmpty()) {
-                Log.d(TAG, "  ⚡ Using RAM cached vectors for bookId=$bookId")
-                cachedVectors
-            } else {
-                Log.d(TAG, "  ⏳ Fetching vectors from DB into RAM cache...")
-                val fromDb = chunkDao.getCandidateVectors(bookId, Int.MAX_VALUE)
-                cachedBookId = bookId
-                cachedVectors = fromDb
-                fromDb
+        return try {
+            val allChunks = cacheMutex.withLock {
+                if (cachedBookId == bookId && cachedVectors.isNotEmpty()) {
+                    cachedVectors
+                } else {
+                    val fromDb = chunkDao.getCandidateVectors(bookId, Int.MAX_VALUE)
+                    cachedBookId = bookId
+                    cachedVectors = fromDb
+                    fromDb
+                }
             }
+
+            if (allChunks.isEmpty()) return null
+            if (!spoilerLockEnabled) return allChunks
+
+            val progressCeiling = book?.progressPercent ?: 0f
+            if (progressCeiling == 0f) return null
+
+            val totalChapters = (allChunks.maxOfOrNull { it.chapterIndex } ?: 0) + 1
+            val maxChapterIndex = ((progressCeiling / 100f) * totalChapters).toInt()
+
+            allChunks.filter { it.chapterIndex <= maxChapterIndex }.ifEmpty { null }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting candidates for bookId: $bookId")
+            null
         }
-
-        if (allChunks.isEmpty()) return null
-
-        if (!spoilerLockEnabled) {
-            return allChunks
-        }
-
-        val progressCeiling = book?.progressPercent ?: 0f
-        if (progressCeiling == 0f) return null
-
-        val totalChapters = allChunks.maxOf { it.chapterIndex } + 1
-        val maxChapterIndex = ((progressCeiling / 100f) * totalChapters).toInt()
-
-        val filtered = allChunks.filter { it.chapterIndex <= maxChapterIndex }
-        return filtered.ifEmpty { null }
     }
 
     private suspend fun embedQuery(query: String): FloatArray? {
-        val cleanQuery = query
-            .replace("\u00AD", "")
-            .replace("\u2014", " ")
-            .replace("\u2013", " ")
-            .let { java.text.Normalizer.normalize(it, java.text.Normalizer.Form.NFD) }
-            .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
-            .trim()
+        return try {
+            val cleanQuery = Normalizer.normalize(query, Normalizer.Form.NFD)
+                .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
+                .replace("\u00AD", "")
+                .replace("\u2014", " ")
+                .replace("\u2013", " ")
+                .trim()
 
-        val queryWithPrefix = "${EmbeddingEngine.BGE_QUERY_PREFIX}$cleanQuery"
-        return embeddingEngine.embed(queryWithPrefix)
+            val queryWithPrefix = "${EmbeddingEngine.BGE_QUERY_PREFIX}$cleanQuery"
+            embeddingEngine.embed(queryWithPrefix)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to embed query: $query")
+            null
+        }
+    }
+
+    companion object {
+        const val DEFAULT_TOP_PASSAGES = 3
+        private const val PASSAGE_WINDOW_BEFORE = 1
+        private const val PASSAGE_WINDOW_AFTER = 1
+        private const val ANCHOR_MIN_SCORE = 0.20f
+        private const val RRF_MIN_SCORE = 0.015f
+
+        private val STOP_WORDS = setOf(
+            "the", "and", "for", "that", "this", "with", "you", "not", "are", "from",
+            "your", "all", "have", "more", "was", "its", "out", "who", "what", "where",
+            "when", "why", "how", "has", "but", "into", "his", "her", "she", "him",
+            "they", "them", "their", "will", "would", "could", "should", "can", "did", "some"
+        )
     }
 }

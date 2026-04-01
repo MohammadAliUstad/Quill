@@ -201,7 +201,7 @@ fun LibraryScreen(
             if (parallaxCoverUrl != null) {
                 LibraryParallaxBackground(
                     coverUrl = parallaxCoverUrl,
-                    scrollState = scrollState,
+                    scrollOffset = scrollState.value,
                     headerHeight = headerHeight
                 )
             }

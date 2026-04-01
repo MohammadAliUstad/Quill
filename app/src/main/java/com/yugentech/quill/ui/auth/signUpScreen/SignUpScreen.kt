@@ -16,9 +16,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoStories
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,7 +35,6 @@ import androidx.compose.ui.zIndex
 import com.airbnb.lottie.LottieProperty
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.rememberLottieDynamicProperties
@@ -60,9 +55,6 @@ fun SignUpScreen(
 ) {
     val authState by authViewModel.authState.collectAsState()
     val scrollState = rememberScrollState()
-
-    val configuration = LocalConfiguration.current
-    val screenHeight = configuration.screenHeightDp.dp
 
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.book_morph))
     val progress by animateLottieCompositionAsState(
@@ -91,16 +83,13 @@ fun SignUpScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxSize() // Fill max size to allow Arrangement.Center to function
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .verticalScroll(scrollState)
                     .padding(horizontal = MaterialTheme.spacing.m),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                // Removed Arrangement.Center
+                verticalArrangement = Arrangement.Center // Centers content naturally without adding artificial scroll height
             ) {
-                // Responsive top spacer
-                Spacer(modifier = Modifier.height(screenHeight * 0.08f))
-
                 Box(
                     modifier = Modifier
                         .padding(vertical = MaterialTheme.spacing.s)

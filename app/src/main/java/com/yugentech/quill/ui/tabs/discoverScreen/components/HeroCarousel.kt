@@ -25,29 +25,34 @@ import kotlinx.coroutines.delay
 @Composable
 fun HeroCarousel(
     books: List<Book>,
-    onBookClick: (Book) -> Unit
+    onBookClick: (Book) -> Unit,
+    // FIX: Replaced LazyListState with a callback
+    onVisibleBooksChanged: (List<Book>) -> Unit = {}
 ) {
     if (books.isEmpty()) return
 
-    // --- NEW: Group books into pairs ---
     val pairedBooks = remember(books) { books.chunked(2) }
-
-    // 1. Set pageCount to a very large number for infinite looping
     val pageCount = Int.MAX_VALUE
-
-    // 2. Start in the middle of the large number, but force it to perfectly align with Index 0
     val startPage = (pageCount / 2) - ((pageCount / 2) % pairedBooks.size)
+
     val pagerState = rememberPagerState(
         initialPage = startPage,
         pageCount = { pageCount }
     )
 
-    // Auto-scroll logic: always moves index forward
+    // FIX: Notify the parent screen whenever the page changes
+    LaunchedEffect(pagerState.currentPage, pairedBooks) {
+        if (pairedBooks.isNotEmpty()) {
+            val actualIndex = pagerState.currentPage % pairedBooks.size
+            onVisibleBooksChanged(pairedBooks[actualIndex])
+        }
+    }
+
+    // Auto-scroll logic
     LaunchedEffect(pairedBooks.size) {
         if (pairedBooks.size > 1) {
             while (true) {
                 delay(5000)
-                // Simply increment the page; HorizontalPager handles the animation forward
                 pagerState.animateScrollToPage(
                     page = pagerState.currentPage + 1,
                     animationSpec = tween(800)
@@ -62,48 +67,40 @@ fun HeroCarousel(
     ) {
         HorizontalPager(
             state = pagerState,
-            // Slightly reduced padding to give the two books more room to breathe
             contentPadding = PaddingValues(horizontal = 24.dp),
             pageSpacing = 16.dp,
             modifier = Modifier.fillMaxWidth()
         ) { index ->
-            // 3. Map the large 'index' back to your paired list
             val actualIndex = index % pairedBooks.size
             val pair = pairedBooks[actualIndex]
 
-            // --- NEW: Display the pair in a Row ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Book 1
                 HeroCarouselCard(
                     book = pair[0],
                     onBookClick = onBookClick,
-                    modifier = Modifier.weight(1f) // Takes up half the row
+                    modifier = Modifier.weight(1f)
                 )
 
-                // Book 2 (Check if it exists to handle odd-numbered lists)
                 if (pair.size > 1) {
                     HeroCarouselCard(
                         book = pair[1],
                         onBookClick = onBookClick,
-                        modifier = Modifier.weight(1f) // Takes up half the row
+                        modifier = Modifier.weight(1f)
                     )
                 } else {
-                    // Empty space if there's an odd number of books
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }
 
-        // --- Centered Pagination Dots ---
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Iterate over the pairs, not individual books
             pairedBooks.forEachIndexed { index, _ ->
                 val isSelected = (pagerState.currentPage % pairedBooks.size) == index
 
@@ -113,10 +110,7 @@ fun HeroCarousel(
                     label = "dot_width"
                 )
                 val animatedColor by animateColorAsState(
-                    targetValue = if (isSelected)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.outlineVariant,
+                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                     label = "dot_color"
                 )
 

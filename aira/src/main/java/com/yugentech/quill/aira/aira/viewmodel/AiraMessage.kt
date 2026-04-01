@@ -5,5 +5,8 @@ data class AiraMessage(
     val content: String,
     val timestamp: Long = System.currentTimeMillis()
 ) {
-    enum class Role { USER, AIRA }
+    enum class Role {
+        USER,
+        AIRA
+    }
 }

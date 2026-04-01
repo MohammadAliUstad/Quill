@@ -2,7 +2,6 @@ package com.yugentech.quill.aira.quickPrompt.util
 
 object QuickPromptBuilder {
 
-    // RAG
     fun whoAreTheCharacters(title: String, author: String, passages: String): String = assemble(
         system = "You are Aira, a reading companion for \"$title\" by $author.\nBased only on the passages provided, list the key characters the reader has encountered so far.\nFor each, give their name and one brief sentence describing who they are.\nUse plain text only. No markdown, no bold.",
         contextLabel = "PASSAGES",
@@ -49,7 +48,6 @@ object QuickPromptBuilder {
     )
 
 
-    // NO-RAG
     fun summarizeChapter(title: String, author: String, chapterText: String): String = assemble(
         system = "You are Aira, a reading companion for \"$title\" by $author.\nSummarize the following chapter text in 3-4 sentences.\nFocus on the key events, character actions, and any important revelations.\nUse plain text only. No markdown, no bold, no headers.",
         contextLabel = "CHAPTER TEXT",
@@ -86,7 +84,6 @@ object QuickPromptBuilder {
     )
 
 
-    // HELPER
     fun buildContextBlock(texts: List<String>): String =
         if (texts.isEmpty()) "(No relevant passages found.)"
         else texts.joinToString(separator = "\n\n---\n\n")

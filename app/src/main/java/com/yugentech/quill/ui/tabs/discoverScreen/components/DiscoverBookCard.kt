@@ -57,13 +57,13 @@ fun DiscoverBookCard(
     Column(
         modifier = modifier
             .width(130.dp)
-            .clickable(onClick = onClick)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f)
                 .clip(coverShape)
+                .clickable(onClick = onClick)
         ) {
             Box(
                 modifier = Modifier

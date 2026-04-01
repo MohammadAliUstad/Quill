@@ -61,12 +61,6 @@ object ChunkingStrategy {
         return chunks
     }
 
-    fun chunkAll(
-        chapters: List<ChapterText>,
-        chunkSize: Int = DEFAULT_CHUNK_SIZE,
-        overlap: Int = DEFAULT_OVERLAP
-    ): List<TextChunk> = chapters.flatMap { chunk(it, chunkSize, overlap) }
-
     private fun snapToSentenceBoundary(text: String, position: Int): Int {
         val searchStart = (position - MAX_SNAP_BACK).coerceAtLeast(0)
         for (i in position downTo searchStart + 1) {

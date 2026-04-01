@@ -28,6 +28,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -53,7 +54,9 @@ import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfRow
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfSkeleton
 import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarousel
 import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarouselSkeleton
+import com.yugentech.quill.ui.tabs.libraryScreen.components.LibraryParallaxBackground
 import getSubtitleForCategory
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(
@@ -69,15 +72,13 @@ fun DiscoverScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // --- STATE MOVED TO TOP SO ALL COMPONENTS CAN SEE IT ---
     var searchText by rememberSaveable { mutableStateOf("") }
-    var searchExpanded by rememberSaveable { mutableStateOf(false) } // The UI expansion state
+    var searchExpanded by rememberSaveable { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    // --- WIDTH CALCULATION FOR SEARCH BAR ---
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val dockedWidth = screenWidth - 32.dp // Leaves 16dp of padding on each side when closed
+    val dockedWidth = screenWidth - 32.dp
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
@@ -92,6 +93,34 @@ fun DiscoverScreen(
         }
     }
 
+    // --- PARALLAX LOGIC START ---
+    val parallaxScrollOffset by remember {
+        derivedStateOf {
+            if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset else 10000
+        }
+    }
+
+    var visibleHeroBooks by remember { mutableStateOf<List<Book>>(emptyList()) }
+
+    var parallaxCoverUrl by remember { mutableStateOf<String?>(null) }
+
+    // 3. Whenever the user scrolls (changing the visible books), or every 6 seconds, pick a new background
+    LaunchedEffect(visibleHeroBooks) {
+        if (visibleHeroBooks.isNotEmpty()) {
+            // Instantly change to a random visible book when they scroll to it
+            parallaxCoverUrl = visibleHeroBooks.random().coverUrl
+
+            // Continue to rotate randomly between the visible ones if they stop scrolling
+            while (true) {
+                delay(6000)
+                parallaxCoverUrl = visibleHeroBooks.random().coverUrl
+            }
+        } else {
+            parallaxCoverUrl = uiState.heroBooks.firstOrNull()?.coverUrl
+        }
+    }
+    // --- PARALLAX LOGIC END ---
+
     BackHandler(enabled = searchExpanded) {
         searchExpanded = false
         searchText = ""
@@ -104,12 +133,22 @@ fun DiscoverScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        // --- THE PARALLAX LAYER ---
+        if (parallaxCoverUrl != null) {
+            LibraryParallaxBackground(
+                coverUrl = parallaxCoverUrl,
+                scrollOffset = parallaxScrollOffset,
+                headerHeight = 550.dp
+            )
+        }
+
+        // --- THE SCROLLING CONTENT ---
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = statusBarHeight + 80.dp,
-                bottom = contentPadding.calculateBottomPadding()+ 8.dp
+                bottom = contentPadding.calculateBottomPadding()
             )
         ) {
             item(key = "hero_section") {
@@ -118,8 +157,7 @@ fun DiscoverScreen(
                         title = "New Releases",
                         subtitle = "Freshly curated classics for your reading pleasure"
                     )
-                } else {
-                    (uiState.heroBooks.isNotEmpty())
+                } else if (uiState.heroBooks.isNotEmpty()) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -141,6 +179,7 @@ fun DiscoverScreen(
                     HeroCarousel(
                         books = uiState.heroBooks,
                         onBookClick = onBookClick,
+                        onVisibleBooksChanged = { visibleHeroBooks = it }
                     )
                 }
             }
@@ -156,7 +195,6 @@ fun DiscoverScreen(
                             onBookClick = onBookClick
                         )
                     } else {
-                        // Fix: Keep the space reserved by showing a skeleton with the real title
                         BookShelfSkeleton(
                             title = categoryName,
                             subtitle = getSubtitleForCategory(categoryName)
@@ -166,14 +204,13 @@ fun DiscoverScreen(
             }
         }
 
-        // --- 2. THE SEARCH BAR AREA ---
+        // --- THE SEARCH BAR AREA ---
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .zIndex(1f),
             contentAlignment = Alignment.TopCenter
         ) {
-            // Gradient background fade on scroll
             val surfaceColor = MaterialTheme.colorScheme.surface
             Box(
                 modifier = Modifier
@@ -242,14 +279,13 @@ fun DiscoverScreen(
                         focusManager.clearFocus()
                     }
                 },
-                modifier = Modifier.widthIn(min = dockedWidth), // Limits width when closed
+                modifier = Modifier.widthIn(min = dockedWidth),
                 colors = SearchBarDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     dividerColor = MaterialTheme.colorScheme.outlineVariant
                 ),
                 windowInsets = SearchBarDefaults.windowInsets
             ) {
-                // --- 3. THE EXPANDED SEARCH CONTENT ---
                 if (searchText.isEmpty()) {
                     SearchSuggestions(
                         onSuggestionClick = { suggestion ->
@@ -270,7 +306,6 @@ fun DiscoverScreen(
                             BooksGrid(
                                 books = uiState.searchResults,
                                 onBookClick = { book ->
-                                    // Optional: Automatically close search when they click a book
                                     searchExpanded = false
                                     searchText = ""
                                     viewModel.clearSearch()

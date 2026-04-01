@@ -2,11 +2,11 @@ package com.yugentech.quill.aira.quickPrompt.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yugentech.quill.aira.quickPrompt.repository.QuickPromptRepository
+import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.QuotaRepository
-import com.yugentech.quill.aira.quickPrompt.repository.QuickPromptRepository
-import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,18 +27,14 @@ class QuickChatViewModel(
     private var currentBookId: String? = null
     private val currentUserId: String? get() = authRepository.currentUser
 
-    fun initForBook(bookId: String) {
-        currentBookId = bookId
-    }
 
     fun handle(intent: QuickPrompt) {
-        val bookId = currentBookId ?: return // Safety check
+        val bookId = currentBookId ?: return
         if (_uiState.value.isLoading) return
 
         activeJob?.cancel()
 
         activeJob = viewModelScope.launch {
-            // 1. Check Quota Before Starting
             val canSend = quotaRepository.canSendQuery.first()
             if (!canSend) {
                 _uiState.update { it.copy(showPaywall = true) }
@@ -48,11 +44,9 @@ class QuickChatViewModel(
             _uiState.update { QuickChatUiState(isLoading = true) }
             var hasConsumedQuota = false
 
-            // 2. Process the Request
             quickPromptRepository.handle(bookId, intent).collect { response ->
                 when (response) {
                     is AiraResponse.Success -> {
-                        // 3. Deduct Quota on First Success
                         if (!hasConsumedQuota) {
                             hasConsumedQuota = true
                             currentUserId?.let { uid ->
@@ -82,18 +76,7 @@ class QuickChatViewModel(
                 }
             }
 
-            // 4. Finished Streaming
             _uiState.update { it.copy(isStreaming = false) }
         }
-    }
-
-    // Call this from the UI when the Peek Bar is dismissed, or when a new manual query is typed
-    fun clearResponse() {
-        activeJob?.cancel()
-        _uiState.update { QuickChatUiState() }
-    }
-
-    fun dismissPaywall() {
-        _uiState.update { it.copy(showPaywall = false) }
     }
 }

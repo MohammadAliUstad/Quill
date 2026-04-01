@@ -26,8 +26,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
@@ -63,8 +64,9 @@ fun GutenbergScreen(
     var searchActive by rememberSaveable { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+    val density = LocalDensity.current
+    val windowInfo = LocalWindowInfo.current
+    val screenWidth = with(density) { windowInfo.containerSize.width.toDp() }
     val dockedWidth = screenWidth - 32.dp
 
     // Only needed for the grid offset
@@ -72,7 +74,6 @@ fun GutenbergScreen(
     val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     val gridTopPadding = statusBarHeight + 80.dp
-    val gridBottomPadding = navBarHeight + 16.dp
 
     BackHandler(enabled = searchActive) {
         searchActive = false
@@ -98,7 +99,7 @@ fun GutenbergScreen(
                 BooksGrid(
                     books = books,
                     topPadding = gridTopPadding,
-                    bottomPadding = gridBottomPadding,
+                    bottomPadding = navBarHeight,
                     onBookClick = { book -> viewModel.onBookClick(book) },
                     onLoadMore = { viewModel.loadNextPage() }
                 )

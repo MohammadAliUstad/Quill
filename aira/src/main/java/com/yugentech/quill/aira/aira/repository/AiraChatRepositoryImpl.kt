@@ -2,8 +2,8 @@ package com.yugentech.quill.aira.aira.repository
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.generationConfig
-import com.yugentech.quill.aira.aira.viewmodel.AiraMessage
 import com.yugentech.quill.aira.aira.util.LongPromptHandler
+import com.yugentech.quill.aira.aira.viewmodel.AiraMessage
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.database.dao.AiraMessageDao

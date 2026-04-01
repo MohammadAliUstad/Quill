@@ -1,9 +1,9 @@
 package com.yugentech.quill.aira.quickPrompt.util
 
 import com.google.ai.client.generativeai.GenerativeModel
-import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
 import com.yugentech.quill.aira.rag.RagRetriever
+import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
 import kotlinx.coroutines.flow.Flow
@@ -132,7 +132,10 @@ class QuickPromptHandler(
         streamResponse(prompt, quickPrompt)
     }
 
-    private suspend fun FlowCollector<AiraResponse>.streamResponse(prompt: String, intent: QuickPrompt) {
+    private suspend fun FlowCollector<AiraResponse>.streamResponse(
+        prompt: String,
+        intent: QuickPrompt
+    ) {
         try {
             val fullResponseBuilder = StringBuilder()
             model.generateContentStream(prompt).collect { chunk ->
@@ -145,7 +148,8 @@ class QuickPromptHandler(
                 )
             }
 
-            val finalAnswer = fullResponseBuilder.toString().replace("**", "").replace("*", "").trim()
+            val finalAnswer =
+                fullResponseBuilder.toString().replace("**", "").replace("*", "").trim()
             if (finalAnswer.isBlank()) {
                 emit(AiraResponse.Error("Aira didn't have a response."))
             }

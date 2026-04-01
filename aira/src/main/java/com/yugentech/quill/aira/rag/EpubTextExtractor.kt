@@ -23,7 +23,6 @@ data class ChapterText(
 class EpubTextExtractor(private val context: Context) {
 
     companion object {
-        private const val TAG = "QuillExtractor"
         private const val MIN_CHAPTER_LENGTH = 50
         private val SCRIPT_REGEX = Regex("<script[^>]*>[\\s\\S]*?</script>", RegexOption.IGNORE_CASE)
         private val STYLE_REGEX = Regex("<style[^>]*>[\\s\\S]*?</style>", RegexOption.IGNORE_CASE)
@@ -34,7 +33,7 @@ class EpubTextExtractor(private val context: Context) {
     fun extractStream(filePath: String): Flow<ChapterText> = flow {
         val file = File(filePath)
         if (!file.exists()) {
-            Timber.tag(TAG).e("✗ File not found at path: $filePath")
+            Timber.e("✗ File not found at path: $filePath")
             return@flow
         }
 
@@ -45,13 +44,13 @@ class EpubTextExtractor(private val context: Context) {
             val publicationOpener = PublicationOpener(parser, emptyList(), onCreatePublication = {})
 
             val asset = assetRetriever.retrieve(file).getOrElse { err ->
-                Timber.tag(TAG).e("✗ Failed to retrieve asset: $err")
+                Timber.e("✗ Failed to retrieve asset: $err")
                 return@flow
             }
 
             val publication = publicationOpener.open(asset, allowUserInteraction = false)
                 .getOrElse { err ->
-                    Timber.tag(TAG).e("✗ Failed to open publication: $err")
+                    Timber.e("✗ Failed to open publication: $err")
                     return@flow
                 }
 
@@ -76,14 +75,14 @@ class EpubTextExtractor(private val context: Context) {
                         )
                     }
                 } catch (e: Exception) {
-                    Timber.tag(TAG).w(e, "Error parsing chapter $index ('$title')")
+                    Timber.w(e, "Error parsing chapter $index ('$title')")
                 }
             }
 
             publication.close()
 
         } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "✗ Fatal error during EPUB extraction stream")
+            Timber.e(e, "✗ Fatal error during EPUB extraction stream")
         }
     }.flowOn(Dispatchers.IO)
 
