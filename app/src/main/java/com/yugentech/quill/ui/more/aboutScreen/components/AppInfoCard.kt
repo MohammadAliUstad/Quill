@@ -70,7 +70,7 @@ fun AppInfoCard() {
                         painter = painterResource(R.drawable.ic_launcher_monochrome),
                         contentDescription = null,
                         modifier = Modifier
-                            .requiredSize(MaterialTheme.components.imageSizeMedium * 1.6f),
+                            .requiredSize(MaterialTheme.components.imageSizeMedium * 1.3f),
                         contentScale = ContentScale.Fit,
                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
                     )

@@ -381,7 +381,7 @@ object AppColorSchemes {
         surfaceContainerHighest = Color(0xFF34352D)
     )
 
-    val QuillLightColorScheme = lightColorScheme(
+    val SakuraLightColorScheme = lightColorScheme(
         primary = Color(0xFF8F4952),
         onPrimary = Color(0xFFFFFFFF),
         primaryContainer = Color(0xFFFFDADC),
@@ -418,7 +418,7 @@ object AppColorSchemes {
         surfaceContainerHigh = Color(0xFFF6E4E4),
         surfaceContainerHighest = Color(0xFFF0DEDF)
     )
-    val QuillDarkColorScheme = darkColorScheme(
+    val SakuraDarkColorScheme = darkColorScheme(
         primary = Color(0xFFFFB2B9),
         onPrimary = Color(0xFF561D26),
         primaryContainer = Color(0xFF72333B),
@@ -529,5 +529,81 @@ object AppColorSchemes {
         surfaceContainer = Color(0xFF1B2122),
         surfaceContainerHigh = Color(0xFF252B2C),
         surfaceContainerHighest = Color(0xFF303637)
+    )
+
+    val QuillLightColorScheme = lightColorScheme(
+        primary = Color(0xFF745B0C),
+        onPrimary = Color(0xFFFFFFFF),
+        primaryContainer = Color(0xFFFFDF92),
+        onPrimaryContainer = Color(0xFF594400),
+        secondary = Color(0xFF6A5D3F),
+        onSecondary = Color(0xFFFFFFFF),
+        secondaryContainer = Color(0xFFF3E1BB),
+        onSecondaryContainer = Color(0xFF51462A),
+        tertiary = Color(0xFF486549),
+        onTertiary = Color(0xFFFFFFFF),
+        tertiaryContainer = Color(0xFFC9EBC7),
+        onTertiaryContainer = Color(0xFF304D33),
+        error = Color(0xFFBA1A1A),
+        onError = Color(0xFFFFFFFF),
+        errorContainer = Color(0xFFFFDAD6),
+        onErrorContainer = Color(0xFF93000A),
+        background = Color(0xFFFFF8F1),
+        onBackground = Color(0xFF1F1B13),
+        surface = Color(0xFFFFF8F1),
+        onSurface = Color(0xFF1F1B13),
+        surfaceVariant = Color(0xFFECE1CF),
+        onSurfaceVariant = Color(0xFF4C4639),
+        outline = Color(0xFF7E7667),
+        outlineVariant = Color(0xFFCFC5B4),
+        scrim = Color(0xFF000000),
+        inverseSurface = Color(0xFF343027),
+        inverseOnSurface = Color(0xFFF9F0E2),
+        inversePrimary = Color(0xFFE5C36C),
+        surfaceDim = Color(0xFFE1D9CC),
+        surfaceBright = Color(0xFFFFF8F1),
+        surfaceContainerLowest = Color(0xFFFFFFFF),
+        surfaceContainerLow = Color(0xFFFCF2E5),
+        surfaceContainer = Color(0xFFF6EDDF),
+        surfaceContainerHigh = Color(0xFFF0E7D9),
+        surfaceContainerHighest = Color(0xFFEAE1D4)
+    )
+
+    val QuillDarkColorScheme = darkColorScheme(
+        primary = Color(0xFFE5C36C),
+        onPrimary = Color(0xFF3E2E00),
+        primaryContainer = Color(0xFF594400),
+        onPrimaryContainer = Color(0xFFFFDF92),
+        secondary = Color(0xFFD6C5A0),
+        onSecondary = Color(0xFF392F15),
+        secondaryContainer = Color(0xFF51462A),
+        onSecondaryContainer = Color(0xFFF3E1BB),
+        tertiary = Color(0xFFAECFAD),
+        onTertiary = Color(0xFF1A361E),
+        tertiaryContainer = Color(0xFF304D33),
+        onTertiaryContainer = Color(0xFFC9EBC7),
+        error = Color(0xFFFFB4AB),
+        onError = Color(0xFF690005),
+        errorContainer = Color(0xFF93000A),
+        onErrorContainer = Color(0xFFFFDAD6),
+        background = Color(0xFF16130B),
+        onBackground = Color(0xFFEAE1D4),
+        surface = Color(0xFF16130B),
+        onSurface = Color(0xFFEAE1D4),
+        surfaceVariant = Color(0xFF4C4639),
+        onSurfaceVariant = Color(0xFFCFC5B4),
+        outline = Color(0xFF989080),
+        outlineVariant = Color(0xFF4C4639),
+        scrim = Color(0xFF000000),
+        inverseSurface = Color(0xFFEAE1D4),
+        inverseOnSurface = Color(0xFF343027),
+        inversePrimary = Color(0xFF745B0C),
+        surfaceDim = Color(0xFF16130B),
+        surfaceBright = Color(0xFF3D392F),
+        surfaceContainerLowest = Color(0xFF110E07),
+        surfaceContainerLow = Color(0xFF1F1B13),
+        surfaceContainer = Color(0xFF231F17),
+        surfaceContainerHigh = Color(0xFF2E2A21),
+        surfaceContainerHighest = Color(0xFF39342B)
     )
 }

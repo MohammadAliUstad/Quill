@@ -7,7 +7,7 @@ enum class ColorTheme {
     GROVE,      // Olive/Forest nature tones
     CANYON,     // Earthy Brown/Coffee tones
     QUILL,     // Burgundy/Premium tones
-    LAGOON,     // Teal/Deep water tones
+    SAKURA,     // Teal/Deep water tones
     HARVEST,    // Gold/Olive wheat tones
     ALPINE      // Deep Pine/Cold Forest tones
 }

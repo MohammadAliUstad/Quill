@@ -13,7 +13,6 @@ class AboutViewModel(
     private val billingRepository: BillingRepository
 ) : ViewModel() {
 
-    // Re-emits billing events to the screen for toast display
     private val _events = MutableSharedFlow<BillingEvent>()
     val events = _events.asSharedFlow()
 
@@ -29,7 +28,6 @@ class AboutViewModel(
         billingRepository.launchTipFlow(activity, "donation_coffee")
     }
 
-    // Called when user taps "Buy me Lunch"
     fun buyLunch(activity: Activity) {
         billingRepository.launchTipFlow(activity, "donation_lunch")
     }

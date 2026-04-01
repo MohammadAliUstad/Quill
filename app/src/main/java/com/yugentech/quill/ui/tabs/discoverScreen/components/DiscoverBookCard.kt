@@ -4,9 +4,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -22,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,39 +37,56 @@ import com.yugentech.quill.database.model.Book
 fun DiscoverBookCard(
     book: Book,
     onClick: () -> Unit,
-    // FIX: Added the modifier parameter so the parent can pass down animation instructions
     modifier: Modifier = Modifier
 ) {
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
+    val isLoaded = imageState is AsyncImagePainter.State.Success
     val imageAlpha by animateFloatAsState(
-        targetValue = if (imageState is AsyncImagePainter.State.Success) 1f else 0f,
+        targetValue = if (isLoaded) 1f else 0f,
         animationSpec = tween(400),
         label = "cardImageAlpha"
     )
+    val shimmerAlpha by animateFloatAsState(
+        targetValue = if (isLoaded) 0f else 1f,
+        animationSpec = tween(400),
+        label = "cardShimmerAlpha"
+    )
 
-    // Slightly tighter corners for these smaller shelf cards
     val coverShape = RoundedCornerShape(8.dp)
 
     Column(
-        // FIX: Apply the passed-in modifier to the root element!
         modifier = modifier
             .width(130.dp)
             .clickable(onClick = onClick)
     ) {
-        // Replaced the 'Card' container with a clean shadow/clip to match the Hero Carousel
-        AsyncImage(
-            model = book.coverUrl,
-            contentDescription = book.title,
-            contentScale = ContentScale.Crop,
-            onState = { imageState = it },
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f)
-                .shadow(elevation = 6.dp, shape = coverShape)
                 .clip(coverShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .alpha(imageAlpha)
-        )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(shimmerAlpha)
+                    .shimmerEffect()
+            )
+
+            AsyncImage(
+                model = book.coverUrl,
+                contentDescription = book.title,
+                contentScale = ContentScale.Crop,
+                onState = { imageState = it },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        alpha = imageAlpha
+                        shadowElevation = 6.dp.toPx()
+                        shape = coverShape
+                        clip = true
+                    }
+            )
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 

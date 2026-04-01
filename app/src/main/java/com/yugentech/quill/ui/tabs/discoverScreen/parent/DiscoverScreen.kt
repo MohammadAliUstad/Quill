@@ -46,8 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.discover.DiscoverViewModel
-import com.yugentech.quill.ui.sources.common.AnimatedSearchIcon
-import com.yugentech.quill.ui.sources.common.BooksGrid
+import com.yugentech.quill.ui.sources.standardScreen.components.AnimatedSearchIcon
+import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
 import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfRow
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfSkeleton
@@ -92,8 +92,6 @@ fun DiscoverScreen(
         }
     }
 
-    // --- THE FIXED BACK HANDLER ---
-    // If the user hits the physical back button while the search bar is open, close it.
     BackHandler(enabled = searchExpanded) {
         searchExpanded = false
         searchText = ""
@@ -111,11 +109,9 @@ fun DiscoverScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = statusBarHeight + 80.dp,
-                bottom = contentPadding.calculateBottomPadding() + 24.dp
+                bottom = contentPadding.calculateBottomPadding()+ 8.dp
             )
         ) {
-            // --- HERO SECTION ---
-            // Fix: Adding a static key prevents the layout from shifting when the state changes
             item(key = "hero_section") {
                 if (uiState.isFeedLoading) {
                     HeroCarouselSkeleton(

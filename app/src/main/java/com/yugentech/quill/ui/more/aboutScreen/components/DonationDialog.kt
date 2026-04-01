@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Coffee
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.ButtonDefaults
@@ -83,7 +84,7 @@ fun DonationDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Coffee,
+                                imageVector = Icons.Default.LocalFireDepartment,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(MaterialTheme.components.imageSizeSmall)

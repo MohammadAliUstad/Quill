@@ -3,6 +3,7 @@ package com.yugentech.quill.navigation.screen
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.yugentech.quill.database.converter.AppJson
 import com.yugentech.quill.database.model.Book
 import kotlinx.serialization.json.Json
 import java.net.URLEncoder
@@ -51,7 +52,7 @@ sealed class AppScreen(val route: String) {
         }
 
         fun createRoute(book: Book): String {
-            val json = Json.encodeToString(book)
+            val json = AppJson.encodeToString(book)
             val encodedJson = URLEncoder.encode(json, StandardCharsets.UTF_8.toString())
             return "bookDetailsScreen?bookJson=$encodedJson"
         }

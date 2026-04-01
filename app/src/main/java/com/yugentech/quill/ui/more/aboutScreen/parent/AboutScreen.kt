@@ -1,6 +1,8 @@
 package com.yugentech.quill.ui.more.aboutScreen.parent
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.ui.mainScreen.components.SectionHeader
@@ -60,15 +63,12 @@ fun AboutScreen(
     viewModel: AboutViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
-    val activity = context as? Activity
-    val layoutDirection = LocalLayoutDirection.current
 
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var showDonationDialog by remember { mutableStateOf(false) }
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    // Collect billing events and map them to toast messages
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             toastMessage = when (event) {
@@ -126,30 +126,32 @@ fun AboutScreen(
             )
         },
         containerColor = MaterialTheme.colorScheme.background
-    ) { scaffoldPadding ->
-        val navBarPadding = WindowInsets.navigationBars.asPaddingValues()
+    ) { innerpadding ->
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = scaffoldPadding.calculateTopPadding())
+                .padding(top = innerpadding.calculateTopPadding())
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs),
                 contentPadding = PaddingValues(
-                    bottom = navBarPadding.calculateBottomPadding() + MaterialTheme.spacing.l,
-                    start = MaterialTheme.spacing.m + scaffoldPadding.calculateStartPadding(
-                        layoutDirection
-                    ),
-                    end = MaterialTheme.spacing.m + scaffoldPadding.calculateEndPadding(
-                        layoutDirection
-                    )
+                    bottom = innerpadding.calculateBottomPadding(),
+                    start = 16.dp,
+                    end = 16.dp
                 )
             ) {
-                item { AppInfoCard() }
+                item {
+                    AppInfoCard()
+                }
 
-                item { SectionHeader(Icons.Filled.Favorite, "Connect & Support") }
+                item {
+                    SectionHeader(
+                        icon = Icons.Filled.Favorite,
+                        title = "Connect & Support"
+                    )
+                }
                 itemsIndexed(supportItems) { index, item ->
                     SettingsListItem(
                         title = item.title,
@@ -161,7 +163,13 @@ fun AboutScreen(
                     )
                 }
 
-                item { SectionHeader(Icons.Filled.ThumbUp, "Spread the Word") }
+                item {
+                    SectionHeader(
+                        icon = Icons.Filled.ThumbUp,
+                        title = "Spread the Word"
+                    )
+                }
+
                 itemsIndexed(communityItems) { index, item ->
                     SettingsListItem(
                         title = item.title,
@@ -173,7 +181,13 @@ fun AboutScreen(
                     )
                 }
 
-                item { SectionHeader(Icons.Filled.Info, "Legal") }
+                item {
+                    SectionHeader(
+                        icon = Icons.Filled.Info,
+                        title = "Legal"
+                    )
+                }
+
                 itemsIndexed(legalItems) { index, item ->
                     SettingsListItem(
                         title = item.title,
@@ -197,11 +211,13 @@ fun AboutScreen(
             DonationDialog(
                 onDismiss = { showDonationDialog = false },
                 onCoffeeClick = {
-                    activity?.let { viewModel.buyCoffee(it) }
+                    val activity = context.findActivity()
+                    viewModel.buyCoffee(activity)
                     showDonationDialog = false
                 },
                 onLunchClick = {
-                    activity?.let { viewModel.buyLunch(it) }
+                    val activity = context.findActivity()
+                    viewModel.buyLunch(activity)
                     showDonationDialog = false
                 },
                 onWebClick = {
@@ -216,4 +232,13 @@ fun AboutScreen(
             )
         }
     }
+}
+
+fun Context.findActivity(): Activity {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx
+        ctx = ctx.baseContext
+    }
+    error("No Activity found in context chain")
 }

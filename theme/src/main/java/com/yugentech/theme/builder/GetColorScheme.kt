@@ -54,8 +54,8 @@ fun getColorScheme(
         ColorTheme.ALPINE ->
             if (isDarkMode) AppColorSchemes.AlpineDarkColorScheme else AppColorSchemes.AlpineLightColorScheme
 
-        ColorTheme.LAGOON ->
-            if (isDarkMode) AppColorSchemes.LagoonDarkColorScheme else AppColorSchemes.LagoonLightColorScheme
+        ColorTheme.SAKURA ->
+            if (isDarkMode) AppColorSchemes.SakuraDarkColorScheme else AppColorSchemes.SakuraLightColorScheme
     }
 
     if (isDarkMode && themeConfiguration.colorTheme != ColorTheme.DYNAMIC) {

@@ -7,6 +7,7 @@ object AppConstants {
     const val FIVE = 5000L
     const val SHELF = "Shelf"
     const val FAVOURITES = "Favourites"
+    const val PABLO_STANLEY_URL = "https://www.pablostanley.com/"
     const val GITHUB_URL = "https://github.com/MohammadAliUstad/Quill"
     const val PRIVACY_POLICY_URL = "https://sites.google.com/view/quillprivacypolicy/home"
     const val TERMS_OF_SERVICE_URL = "https://sites.google.com/view/quilltermsofservice/home"
