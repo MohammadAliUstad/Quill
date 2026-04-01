@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,13 +43,11 @@ fun BookStorageItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .padding(8.dp),
+            .padding(bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // --- COVER ---
-        ElevatedCard(
+        Card(
             shape = RoundedCornerShape(4.dp),
             modifier = Modifier
                 .width(64.dp)
@@ -68,8 +67,8 @@ fun BookStorageItem(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .height(96.dp) // THE FIX: Forcing column to exact height of the cover
-                .padding(vertical = 2.dp) // Slight padding so text doesn't touch the absolute visual edge
+                .height(96.dp)
+                .padding(vertical = 2.dp)
         ) {
             Text(
                 text = book.title,

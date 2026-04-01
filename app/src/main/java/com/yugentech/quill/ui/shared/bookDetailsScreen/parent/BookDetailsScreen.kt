@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.bookDetails.viewmodel.BookDetailsViewModel
+import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.quill.ui.shared.bookDetailsScreen.components.FloatingActionButton
 import com.yugentech.quill.ui.shared.bookDetailsScreen.components.BookDescriptionSection
@@ -67,6 +68,7 @@ fun BookDetailsScreen(
     val categories by bookDetailsViewModel.categories.collectAsStateWithLifecycle()
 
     val book = uiState.book ?: return
+    val isGutenberg = book.source == BookSource.GUTENBERG
     val chapters = uiState.chapters
     val isDescriptionExpanded = uiState.isDescriptionExpanded
     val downloadStatus = book.downloadStatus
@@ -146,7 +148,11 @@ fun BookDetailsScreen(
         }
     ) { innerPadding ->
 
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = innerPadding.calculateBottomPadding())
+        ) {
 
             // Note: We pass the extracted integer offset here now
             BookParallaxBackground(
@@ -196,7 +202,8 @@ fun BookDetailsScreen(
                             subjects = book.subjects,
                             modifier = Modifier.padding(horizontal = 24.dp),
                             isExpanded = isDescriptionExpanded,
-                            onExpandedChange = { bookDetailsViewModel.onToggleDescription() }
+                            onExpandedChange = { bookDetailsViewModel.onToggleDescription() },
+                            isGutenberg = isGutenberg
                         )
                     }
                 }

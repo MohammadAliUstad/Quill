@@ -5,16 +5,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.database.converter.AppJson
-import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.mapper.toDomainModel
+import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.database.model.DownloadStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -31,6 +30,7 @@ class BookDetailsViewModel(
     private val repository: BookDetailsRepository
 ) : ViewModel() {
 
+    // 1. Extract Navigation Arguments
     private val bookIdParam: String? = savedStateHandle["bookId"]
     private val bookJsonParam: String? = savedStateHandle["bookJson"]
 
@@ -45,80 +45,71 @@ class BookDetailsViewModel(
         ?: bookIdParam
         ?: throw IllegalArgumentException("BookDetailsViewModel requires either bookId or bookJson")
 
-    private val _uiState = MutableStateFlow(
-        if (passedBook != null) {
-            // Full book data available immediately — only show loading if description is missing
-            BookDetailsUiState(
-                book = passedBook,
-                chapters = passedBook!!.chapters,
-                isLoading = passedBook!!.description.isNullOrBlank(),
-                isDescriptionExpanded = passedBook!!.downloadStatus != DownloadStatus.DOWNLOADED
-            )
-        } else {
-            // Navigated by bookId only (library / allBooks) — Room will emit immediately
-            BookDetailsUiState(
-                book = null,
-                chapters = emptyList(),
-                isLoading = true,
-                isDescriptionExpanded = true
-            )
+    // 2. Track Manual User Interactions
+    // Null means "let the database dictate if the description is open or closed"
+    // True/False means "the user clicked the expand/collapse button, respect their choice"
+    private val userExpandedOverride = MutableStateFlow<Boolean?>(null)
+
+    // 3. The Pure Reactive State Flow
+    val uiState: StateFlow<BookDetailsUiState> = combine(
+        repository.getBook(targetBookId),
+        userExpandedOverride
+    ) { dbEntity, userExpanded ->
+
+        // Prefer the fresh DB data. If it doesn't exist yet, use the JSON fallback to prevent a blank screen.
+        val richBook = dbEntity?.toDomainModel() ?: passedBook
+
+        if (richBook == null) {
+            return@combine BookDetailsUiState(isLoading = true)
         }
+
+        val isDownloaded = richBook.downloadStatus == DownloadStatus.DOWNLOADED
+
+        // If the user manually toggled the description, use their choice.
+        // Otherwise, automatically collapse it if the book is downloaded, and expand if it is not.
+        val shouldExpand = userExpanded ?: !isDownloaded
+
+        BookDetailsUiState(
+            book = richBook,
+            chapters = richBook.chapters,
+            isLoading = false,
+            isDescriptionExpanded = shouldExpand
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = BookDetailsUiState(
+            book = passedBook,
+            chapters = passedBook?.chapters ?: emptyList(),
+
+            // FIX 1: Change this from (passedBook == null) to strictly true!
+            // This hides the description section for 5 milliseconds until the DB
+            // confirms the absolute true download status, eliminating the flicker.
+            isLoading = true,
+
+            isDescriptionExpanded = passedBook?.downloadStatus != DownloadStatus.DOWNLOADED
+        )
     )
-    val uiState = _uiState.asStateFlow()
 
     val categories = repository.getAllCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    init {
-        loadData()
-    }
-
-    private fun loadData() {
-        viewModelScope.launch {
-            repository.getBook(targetBookId).collectLatest { dbEntity ->
-                val richBook = dbEntity?.toDomainModel()
-                    ?: passedBook?.copy(
-                        downloadStatus = DownloadStatus.NOT_DOWNLOADED,
-                        isFavorite = false,
-                        userCategory = null,
-                        progressPercent = 0f,
-                        localFilePath = null
-                    )
-                    ?: return@collectLatest // Room returned null and no passedBook — nothing to show
-
-                _uiState.update { current ->
-                    val wasDownloading = current.book?.downloadStatus == DownloadStatus.DOWNLOADING
-                    val isNowDownloaded = richBook.downloadStatus == DownloadStatus.DOWNLOADED
-
-                    val nextExpandedState = when {
-                        wasDownloading && isNowDownloaded -> false
-                        current.isLoading -> !isNowDownloaded
-                        else -> current.isDescriptionExpanded
-                    }
-
-                    current.copy(
-                        book = richBook,
-                        chapters = richBook.chapters.ifEmpty { current.chapters },
-                        isLoading = false,
-                        isDescriptionExpanded = nextExpandedState
-                    )
-                }
-            }
-        }
-    }
+    // --- ACTIONS ---
 
     fun onToggleDescription() {
-        _uiState.update { it.copy(isDescriptionExpanded = !it.isDescriptionExpanded) }
+        // Record the user's manual override
+        userExpandedOverride.value = !uiState.value.isDescriptionExpanded
     }
 
     fun onDownloadClick() {
         viewModelScope.launch {
-            _uiState.value.book?.let { repository.startDownload(it) }
+            uiState.value.book?.let { repository.startDownload(it) }
         }
     }
 
     fun deleteBook() {
-        _uiState.update { it.copy(isDescriptionExpanded = true) }
+        // Auto-expand description when file is removed
+        userExpandedOverride.value = true
         viewModelScope.launch {
             repository.removeDownload(targetBookId)
         }
@@ -126,7 +117,7 @@ class BookDetailsViewModel(
 
     fun onCategoryChange(newCategory: String) {
         viewModelScope.launch {
-            _uiState.value.book?.let { repository.updateCategory(it, newCategory) }
+            uiState.value.book?.let { repository.updateCategory(it, newCategory) }
         }
     }
 
@@ -138,7 +129,7 @@ class BookDetailsViewModel(
 
     fun onFavoriteToggle() {
         viewModelScope.launch {
-            _uiState.value.book?.let { repository.updateFavorite(it, !it.isFavorite) }
+            uiState.value.book?.let { repository.updateFavorite(it, !it.isFavorite) }
         }
     }
 

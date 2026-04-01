@@ -184,7 +184,7 @@ class BillingClientService(context: Context) {
                     // The device already owns it! Abort the launch and show our custom error.
                     _events.emit(
                         BillingEvent.Error(
-                            "This Google Play account is already subscribed. To subscribe on this Sessions profile, please switch to a different Google account in the Play Store app."
+                            "This Google Play account is already subscribed. To subscribe on this Quill profile, please switch to a different Google account in the Play Store app."
                         )
                     )
                     return@launch // Stop execution here
@@ -227,13 +227,25 @@ class BillingClientService(context: Context) {
     }
 
     fun launchTipFlow(activity: Activity, productId: String) {
-        val product = _tipProducts.value.find { it.productId == productId } ?: return
-        val params = BillingFlowParams.newBuilder()
-            .setProductDetailsParamsList(
-                listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(product).build())
-            )
-            .build()
-        billingClient.launchBillingFlow(activity, params)
+        scope.launch {
+            val product = _tipProducts.value.find { it.productId == productId }
+            if (product == null) {
+                _events.emit(BillingEvent.Error("Product not available. Please try again."))
+                return@launch
+            }
+            val params = BillingFlowParams.newBuilder()
+                .setProductDetailsParamsList(
+                    listOf(
+                        BillingFlowParams.ProductDetailsParams.newBuilder()
+                            .setProductDetails(product)
+                            .build()
+                    )
+                )
+                .build()
+            kotlinx.coroutines.withContext(Dispatchers.Main) {
+                billingClient.launchBillingFlow(activity, params)
+            }
+        }
     }
 
     // ── 4. restorePurchases ───────────────────────────────────────────────────

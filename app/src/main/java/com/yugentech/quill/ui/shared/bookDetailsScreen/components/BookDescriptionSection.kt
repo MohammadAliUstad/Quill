@@ -2,6 +2,7 @@ package com.yugentech.quill.ui.shared.bookDetailsScreen.components
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,9 +28,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,18 +45,32 @@ fun BookDescriptionSection(
     description: String?,
     subjects: List<String> = emptyList(),
     isExpanded: Boolean,
+    isGutenberg: Boolean = false,
     onExpandedChange: (Boolean) -> Unit
 ) {
     val cleanedSubjects = remember(subjects) {
-        subjects.flatMap { it.split("--") }
+        subjects.asSequence().flatMap { it.split("--") }
             .map { it.trim() }
             .filter { it.isNotBlank() }
             .distinct()
-            .sortedBy { it.length }
+            .sortedBy { it.length }.toList()
     }
 
-    // Track the full text line count
-    var fullLineCount by remember { mutableStateOf(0) }
+    val processedDescription = remember(description) {
+        description?.replace(
+            oldValue = "(This is an automatically generated summary.)",
+            newValue = "",
+            ignoreCase = true
+        )?.replace(
+            regex = Regex("(<br\\s*/?>|\\s|<p>\\s*</p>)+$"),
+            replacement = ""
+        )?.trim()
+    }
+
+    var fullLineCount by remember { mutableIntStateOf(0) }
+
+    // THE FIX: Track if a human actually clicked the button
+    var isUserInitiated by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier.fillMaxWidth()
@@ -73,15 +89,21 @@ fun BookDescriptionSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .animateContentSize(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessMediumLow
-                    )
+                    // If the user hasn't clicked yet (DB is loading/overriding), SNAP instantly to prevent visual glitching.
+                    // Once they tap the button, switch to SPRING for a beautiful, smooth expansion.
+                    animationSpec = if (isUserInitiated) {
+                        spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        )
+                    } else {
+                        snap()
+                    }
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             HtmlText(
-                html = cleanDescription(description),
+                html = cleanDescription(processedDescription),
                 maxLines = if (isExpanded) Int.MAX_VALUE else 3,
                 textColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                 modifier = Modifier
@@ -91,6 +113,7 @@ fun BookDescriptionSection(
                         indication = null
                     ) {
                         if (fullLineCount > 3) {
+                            isUserInitiated = true // User touched it! Enable animations.
                             onExpandedChange(!isExpanded)
                         }
                     },
@@ -99,13 +122,21 @@ fun BookDescriptionSection(
                 }
             )
 
-            // Only show expand/collapse button if text actually overflows (more than 3 lines)
             if (fullLineCount > 3) {
+                if (isGutenberg) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                val yOffset = if (!isGutenberg && isExpanded) (-16).dp else 0.dp
+
                 Box(
                     modifier = Modifier
-                        .offset(y = if (isExpanded) (-16).dp else 0.dp)
+                        .offset(y = yOffset)
                         .clip(CircleShape)
-                        .clickable { onExpandedChange(!isExpanded) }
+                        .clickable {
+                            isUserInitiated = true // User touched it! Enable animations.
+                            onExpandedChange(!isExpanded)
+                        }
                         .size(40.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -119,7 +150,6 @@ fun BookDescriptionSection(
             }
         }
 
-        // Tags / Subjects Row
         if (cleanedSubjects.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             LazyRow(

@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.tabs.libraryScreen.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -17,57 +19,89 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.yugentech.quill.database.view.LibraryBookView
+import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.quill.database.view.LibraryBookView
+import com.yugentech.quill.ui.tabs.discoverScreen.components.shimmerEffect
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BookItem(
     modifier: Modifier = Modifier,
     book: LibraryBookView,
-    onClick: () -> Unit,
-    needsTwoLines: Boolean = false
+    needsTwoLines: Boolean = false,
+    onClick: () -> Unit
 ) {
+
+    var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
+    val isLoaded = imageState is AsyncImagePainter.State.Success
+    val imageAlpha by animateFloatAsState(
+        targetValue = if (isLoaded) 1f else 0f,
+        animationSpec = tween(500),
+        label = "bookItemImageAlpha"
+    )
+    val shimmerAlpha by animateFloatAsState(
+        targetValue = if (isLoaded) 0f else 1f,
+        animationSpec = tween(500),
+        label = "bookItemShimmerAlpha"
+    )
+
     Column(
         modifier = modifier
             .width(115.dp)
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
+            .padding(2.dp)
     ) {
-        // Book Cover Card
-        ElevatedCard(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(0.66f),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+            shape = RoundedCornerShape(8.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .alpha(shimmerAlpha)
+                        .shimmerEffect()
+                )
+
+                // Image fades in
                 AsyncImage(
                     model = book.coverUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    onState = { imageState = it },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .alpha(imageAlpha)
                 )
 
-                // Status Icons Overlay
                 Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Favorite Icon - Top Left
                     if (book.isFavorite) {
                         Icon(
                             imageVector = Icons.Default.Favorite,
@@ -80,7 +114,6 @@ fun BookItem(
                         )
                     }
 
-                    // Progress Text - Top Right
                     if (book.progressPercent in 0.0f..1.0f && book.progressPercent > 0) {
                         Box(
                             modifier = Modifier
@@ -88,7 +121,7 @@ fun BookItem(
                                 .padding(4.dp)
                                 .background(
                                     color = MaterialTheme.colorScheme.primaryContainer,
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(8.dp)
                                 )
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
@@ -102,7 +135,6 @@ fun BookItem(
                         }
                     }
 
-                    // Completed Icon - Bottom Center
                     if (book.progressPercent >= 1.0f) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
@@ -115,16 +147,14 @@ fun BookItem(
                     }
                 }
 
-                // Download Progress / Error Overlay
                 if (book.downloadStatus == DownloadStatus.DOWNLOADING) {
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceDim.copy(alpha = 0.7f),
                         modifier = Modifier.fillMaxSize()
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(28.dp),
-                                strokeWidth = 2.dp
+                            CircularWavyProgressIndicator(
+                                modifier = Modifier.size(28.dp)
                             )
                         }
                     }
@@ -148,7 +178,6 @@ fun BookItem(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Title
         Text(
             text = book.title,
             style = MaterialTheme.typography.bodySmall,

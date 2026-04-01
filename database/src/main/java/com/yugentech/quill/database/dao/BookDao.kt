@@ -118,9 +118,6 @@ interface BookDao {
     @Query("DELETE FROM books WHERE id = :bookId")
     suspend fun deleteBook(bookId: String)
 
-    @Query("SELECT SUM(fileSizeBytes) FROM books WHERE downloadStatus = 'DOWNLOADED'")
-    fun getTotalStorageUsed(): Flow<Long?>
-
     @Query("SELECT * FROM books WHERE downloadStatus = 'DOWNLOADED' ORDER BY fileSizeBytes DESC")
     fun getDownloadedBooksBySize(): Flow<List<BookEntity>>
 
