@@ -8,5 +8,5 @@ interface GutenbergRepository {
     fun getPopularBooksFlow(): Flow<List<Book>>
     suspend fun searchBooks(query: String, page: Int = 1): Result<GutenbergFeedResult>
     suspend fun getNextPage(nextUrl: String): Result<GutenbergFeedResult>
-    suspend fun syncPopularFeed(): Result<Unit>
+    suspend fun syncPopularFeed(): Result<String?>
 }

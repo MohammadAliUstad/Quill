@@ -24,21 +24,41 @@ class GutenbergRepositoryImpl(
         }
     }
 
-    override suspend fun syncPopularFeed(): Result<Unit> = runCatching {
+    override suspend fun syncPopularFeed(): Result<String?> = runCatching {
         val json = apiService.getPopularBooks(page = 1)
+        Timber.d("syncPopularFeed raw JSON length=${json.length}")
+
+        // Log the raw next field directly from JSON before mapper touches it
+        val rawNext = try {
+            val idx = json.indexOf("\"next\"")
+            if (idx != -1) json.substring(idx, minOf(idx + 80, json.length)) else "\"next\" field NOT FOUND in JSON"
+        } catch (e: Exception) { "failed to extract next field" }
+        Timber.d("syncPopularFeed raw next field: $rawNext")
+
         val result = GutenbergMapper.parseFeed(json)
+        Timber.d("syncPopularFeed parsed — books=${result.books.size}, nextPageUrl=${result.nextPageUrl}")
 
         if (result.books.isNotEmpty()) {
             val newEntities = result.books.map { it.toCatalogEntity(FEED_KEY) }
             val newIds = newEntities.map { it.id }.toSet()
             catalogDao.insertBooks(newEntities)
             catalogDao.deleteStaleBooks(FEED_KEY, newIds.toList())
+            Timber.d("syncPopularFeed DB write done — inserted ${newEntities.size} entities")
+        } else {
+            Timber.w("syncPopularFeed — parsed 0 books, nothing written to DB")
         }
-    }.also { if (it.isFailure) Timber.w(it.exceptionOrNull(), "Gutenberg feed sync failed") }
+
+        result.nextPageUrl
+    }.also { if (it.isFailure) Timber.e(it.exceptionOrNull(), "Gutenberg feed sync failed") }
+
+    override suspend fun getNextPage(nextUrl: String): Result<GutenbergFeedResult> =
+        runCatching {
+            Timber.d("getNextPage() fetching: $nextUrl")
+            GutenbergMapper.parseFeed(apiService.getNextPage(nextUrl)).also {
+                Timber.d("getNextPage() parsed — ${it.books.size} books, nextUrl=${it.nextPageUrl}")
+            }
+        }
 
     override suspend fun searchBooks(query: String, page: Int): Result<GutenbergFeedResult> =
         runCatching { GutenbergMapper.parseFeed(apiService.searchBooks(query, page)) }
-
-    override suspend fun getNextPage(nextUrl: String): Result<GutenbergFeedResult> =
-        runCatching { GutenbergMapper.parseFeed(apiService.getNextPage(nextUrl)) }
 }

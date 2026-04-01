@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -24,31 +25,50 @@ fun HeroCarouselCard(
     modifier: Modifier = Modifier
 ) {
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
+    val isLoaded = imageState is AsyncImagePainter.State.Success
+
     val imageAlpha by animateFloatAsState(
-        targetValue = if (imageState is AsyncImagePainter.State.Success) 1f else 0f,
+        targetValue = if (isLoaded) 1f else 0f,
         animationSpec = tween(600),
         label = "heroImageAlpha"
+    )
+    val shimmerAlpha by animateFloatAsState(
+        targetValue = if (isLoaded) 0f else 1f,
+        animationSpec = tween(600),
+        label = "heroShimmerAlpha"
     )
 
     val coverShape = RoundedCornerShape(12.dp)
 
     Box(
-        // We completely removed the fixed height. It responds to the Row's constraints now.
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(2f / 3f)
+            .clip(coverShape)
     ) {
+        // Shimmer placeholder — visible until image loads
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(shimmerAlpha)
+                .shimmerEffect()
+        )
+
+        // Actual image — fades in on top
         AsyncImage(
             model = book.coverUrl,
             contentDescription = book.title,
             contentScale = ContentScale.Crop,
             onState = { imageState = it },
             modifier = Modifier
-                .fillMaxWidth() // Fill the half-width provided by the Carousel Row
-                .aspectRatio(2f / 3f) // Classic book cover proportions dynamically sets height
-                .shadow(elevation = 16.dp, shape = coverShape)
-                .clip(coverShape)
+                .fillMaxSize()
                 .clickable { onBookClick(book) }
-                .alpha(imageAlpha)
+                .graphicsLayer {
+                    alpha = imageAlpha
+                    shadowElevation = 16.dp.toPx()
+                    shape = coverShape
+                    clip = true
+                }
         )
     }
 }

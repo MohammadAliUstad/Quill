@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -31,14 +33,14 @@ import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.gutenberg.viewmodel.GutenbergNavigationEvent
 import com.yugentech.quill.gutenberg.viewmodel.GutenbergViewModel
-import com.yugentech.quill.ui.sources.common.AnimatedSearchIcon
-import com.yugentech.quill.ui.sources.common.BooksGrid
+import com.yugentech.quill.ui.sources.standardScreen.components.AnimatedSearchIcon
+import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
 import com.yugentech.quill.ui.sources.gutenberg.components.GutenbergScreenHeader
 import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun GutenbergScreen(
     onBackClick: () -> Unit,
@@ -97,11 +99,17 @@ fun GutenbergScreen(
                     books = books,
                     topPadding = gridTopPadding,
                     bottomPadding = gridBottomPadding,
-                    onBookClick = { book -> viewModel.onBookClick(book) }
+                    onBookClick = { book -> viewModel.onBookClick(book) },
+                    onLoadMore = { viewModel.loadNextPage() }
                 )
             }
 
-            // LAYER 2: HEADER (No manual statusBarsPadding here, handled inside)
+            if (isLoading && books.isEmpty()) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
             GutenbergScreenHeader(
                 searchText = searchText,
                 searchActive = searchActive,

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 sealed class GutenbergNavigationEvent {
     data class NavigateByContent(val book: Book) : GutenbergNavigationEvent()
@@ -50,14 +51,14 @@ class GutenbergViewModel(
     init {
         viewModelScope.launch {
             repository.getPopularBooksFlow().collect { cachedBooks ->
+                Timber.d("DB flow emitted — ${cachedBooks.size} cached books, displayTitle=${_displayTitle.value}, isLoading=${_isLoading.value}")
                 cachedPopularBooks = cachedBooks
-                // Only update booksState from the DB flow if we are NOT currently searching
                 if (_displayTitle.value == "Popular Books") {
                     _booksState.value = cachedBooks + paginatedMemoryCache
+                    Timber.d("booksState updated from DB — total=${_booksState.value.size}, nextPageUrl=$nextPageUrl")
                 }
             }
         }
-
         syncPopularFeed()
     }
 
@@ -90,12 +91,16 @@ class GutenbergViewModel(
 
             repository.searchBooks(query)
                 .onSuccess { result ->
+                    Timber.d("Search success — ${result.books.size} books, nextUrl=${result.nextPageUrl}")
                     _booksState.value = result.books
                     nextPageUrl = result.nextPageUrl
                     _displayTitle.value =
                         if (result.books.isEmpty()) "No results for '$query'" else "Results for '$query'"
                 }
-                .onFailure { handleError(it) }
+                .onFailure {
+                    Timber.e(it, "Search failed")
+                    handleError(it)
+                }
 
             _isLoading.value = false
         }
@@ -104,26 +109,40 @@ class GutenbergViewModel(
     private fun syncPopularFeed() {
         viewModelScope.launch {
             _isLoading.value = true
+            Timber.d("syncPopularFeed() started")
             repository.syncPopularFeed()
+                .onSuccess { url ->
+                    nextPageUrl = url
+                    Timber.d("syncPopularFeed() succeeded — nextPageUrl=$url")
+                }
+                .onFailure { Timber.e(it, "syncPopularFeed() failed") }
             _isLoading.value = false
         }
     }
 
     fun loadNextPage() {
         val url = nextPageUrl
-        if (url == null || _isPaginating.value || _isLoading.value) return
+        Timber.d("loadNextPage() called — url=$url, isPaginating=${_isPaginating.value}, isLoading=${_isLoading.value}")
+        if (url == null || _isPaginating.value || _isLoading.value) {
+            Timber.d("loadNextPage() bailed — url null=${url == null}, isPaginating=${_isPaginating.value}, isLoading=${_isLoading.value}")
+            return
+        }
 
         paginationJob?.cancel()
         paginationJob = viewModelScope.launch {
             _isPaginating.value = true
+            Timber.d("Paginating — fetching next page from: $url")
 
             repository.getNextPage(url)
                 .onSuccess { result ->
+                    Timber.d("Pagination success — got ${result.books.size} books, nextUrl=${result.nextPageUrl}")
                     paginatedMemoryCache.addAll(result.books)
                     _booksState.value += result.books
                     nextPageUrl = result.nextPageUrl
                 }
-                .onFailure { /* Keep existing list */ }
+                .onFailure {
+                    Timber.e(it, "Pagination failed")
+                }
 
             _isPaginating.value = false
         }
