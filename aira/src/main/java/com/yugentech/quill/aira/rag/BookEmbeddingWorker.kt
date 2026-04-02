@@ -15,7 +15,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class BookIndexingWorker(
+class BookEmbeddingWorker(
     context: Context,
     params: WorkerParameters,
     private val bookDao: BookDao,

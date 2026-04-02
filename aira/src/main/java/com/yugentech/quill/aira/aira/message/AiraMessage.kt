@@ -1,4 +1,4 @@
-package com.yugentech.quill.aira.aira.viewmodel
+package com.yugentech.quill.aira.aira.message
 
 data class AiraMessage(
     val role: Role,

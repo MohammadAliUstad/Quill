@@ -2,8 +2,8 @@ package com.yugentech.quill.aira.aira.util
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
-import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.response.AiraResponse
+import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.database.dao.AiraMessageDao
 import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import timber.log.Timber
 
-class LongPromptHandler(
+class AiraHandler(
     private val model: GenerativeModel,
     private val expansionModel: GenerativeModel,
     private val ragRetriever: RagRetriever,
@@ -59,16 +59,16 @@ class LongPromptHandler(
             )
         }
 
-        val contextBlock = LongPromptBuilder.buildContextBlock(retrieved.map { it.text })
-
+        val contextBlock = AiraBuilder.buildContextBlock(retrieved.map { it.text })
         val recentHistory = airaMessageDao.getRecentMessagesForBook(bookId)
+
         val filteredHistory = recentHistory
             .windowed(size = 2, step = 2, partialWindows = true)
             .filter { pair ->
                 if (pair.size < 2) return@filter true
                 val airaResponse = pair[1]
                 if (airaResponse.role != AiraMessageRole.AIRA) return@filter true
-                !LongPromptBuilder.isDeadEnd(airaResponse.content)
+                !AiraBuilder.isDeadEnd(airaResponse.content)
             }
             .flatten()
 
@@ -79,8 +79,8 @@ class LongPromptHandler(
             }
         }
 
-        val userPrompt = LongPromptBuilder.buildUserPrompt(question, contextBlock)
-        val systemPrompt = LongPromptBuilder.buildSystemPrompt(book.title, book.author)
+        val userPrompt = AiraBuilder.buildUserPrompt(question, contextBlock)
+        val systemPrompt = AiraBuilder.buildSystemPrompt(book.title, book.author)
 
         try {
             val chat = model.startChat(
@@ -108,6 +108,7 @@ class LongPromptHandler(
 
             val finalAnswer =
                 fullResponseBuilder.toString().replace("**", "").replace("*", "").trim()
+
             if (finalAnswer.isBlank()) {
                 emit(AiraResponse.Error("Aira didn't have a response."))
             } else {
@@ -122,18 +123,18 @@ class LongPromptHandler(
 
         } catch (e: Exception) {
             Timber.e(e, "Gemini chat stream failed for bookId: $bookId")
-            if (e.message?.contains("MAX_TOKENS") == true) {
-                emit(AiraResponse.Error("The answer was too long. Please try asking for a summary."))
+            val errorMsg = if (e.message?.contains("MAX_TOKENS") == true) {
+                "The answer was too long. Please try asking for a summary."
             } else {
-                emit(AiraResponse.Error("Error: ${e.message}"))
+                "Error: ${e.message}"
             }
+            emit(AiraResponse.Error(errorMsg))
         }
     }
 
     private suspend fun expandQuery(question: String): List<String> {
         return try {
-            val prompt = LongPromptBuilder.buildExpansionPrompt(question)
-
+            val prompt = AiraBuilder.buildExpansionPrompt(question)
             val response = expansionModel.generateContent(prompt)
             val text = response.text?.trim() ?: return listOf(question)
             val variants = text.lines().map { it.trim() }.filter { it.isNotBlank() }.take(3)

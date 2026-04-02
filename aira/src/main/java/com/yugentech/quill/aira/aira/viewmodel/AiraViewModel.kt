@@ -2,11 +2,14 @@ package com.yugentech.quill.aira.aira.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yugentech.quill.aira.aira.message.AiraMessage
 import com.yugentech.quill.aira.aira.repository.AiraChatRepository
-import com.yugentech.quill.aira.book.BookRepository
 import com.yugentech.quill.aira.response.AiraResponse
+import com.yugentech.quill.aira.aira.state.AiraUiState
+import com.yugentech.quill.aira.book.BookRepository
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.QuotaRepository
+import com.yugentech.theme.tokens.AppConstants.EMPTY
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,8 +48,8 @@ class AiraViewModel(
                 it.copy(
                     isReady = ready,
                     isIndexing = !ready,
-                    bookTitle = book?.title ?: "",
-                    bookAuthor = book?.author ?: "",
+                    bookTitle = book?.title ?: EMPTY,
+                    bookAuthor = book?.author ?: EMPTY,
                     lastChapterTitle = book?.lastChapterTitle,
                     hasStartedReading = book?.lastChapterTitle != null,
                     spoilerLockEnabled = book?.spoilerLockEnabled ?: true
@@ -74,7 +77,7 @@ class AiraViewModel(
         }
 
         val userMessage = AiraMessage(AiraMessage.Role.USER, question.trim())
-        val initialAiraMessage = AiraMessage(AiraMessage.Role.AIRA, "")
+        val initialAiraMessage = AiraMessage(AiraMessage.Role.AIRA, EMPTY)
 
         isCurrentlyStreaming = true
         _uiState.update {
@@ -138,23 +141,31 @@ class AiraViewModel(
         }
     }
 
-    fun dismissPaywall() {
-        _uiState.update { it.copy(showPaywall = false) }
-    }
-
     fun clearError() {
-        _uiState.update { it.copy(error = null) }
+        _uiState.update { airaUiState ->
+            airaUiState.copy(
+                error = null
+            )
+        }
     }
 
     private fun observeQuota() {
         viewModelScope.launch {
             quotaRepository.canSendQuery.collectLatest { canSend ->
-                _uiState.update { it.copy(canSendQuery = canSend) }
+                _uiState.update { airaUiState ->
+                    airaUiState.copy(
+                        canSendQuery = canSend
+                    )
+                }
             }
         }
         viewModelScope.launch {
             quotaRepository.remainingQueries.collectLatest { remaining ->
-                _uiState.update { it.copy(remainingQueries = remaining) }
+                _uiState.update { airaUiState ->
+                    airaUiState.copy(
+                        remainingQueries = remaining
+                    )
+                }
             }
         }
     }
@@ -162,13 +173,13 @@ class AiraViewModel(
     private fun handleStreamResponse(response: AiraResponse) {
         when (response) {
             is AiraResponse.Success -> {
-                _uiState.update { state ->
-                    val updatedMessages = state.messages.toMutableList()
+                _uiState.update { airaUiState ->
+                    val updatedMessages = airaUiState.messages.toMutableList()
                     if (updatedMessages.isNotEmpty() && updatedMessages.last().role == AiraMessage.Role.AIRA) {
                         updatedMessages[updatedMessages.lastIndex] =
                             updatedMessages.last().copy(content = response.text)
                     }
-                    state.copy(
+                    airaUiState.copy(
                         messages = updatedMessages,
                         isLoading = false,
                         isStreaming = true
@@ -177,9 +188,9 @@ class AiraViewModel(
             }
 
             is AiraResponse.Error -> {
-                _uiState.update { state ->
-                    state.copy(
-                        messages = state.messages.dropLast(1),
+                _uiState.update { airaUiState ->
+                    airaUiState.copy(
+                        messages = airaUiState.messages.dropLast(1),
                         error = response.message
                     )
                 }
@@ -191,6 +202,11 @@ class AiraViewModel(
         generationJob?.cancel()
         generationJob = null
         isCurrentlyStreaming = false
-        _uiState.update { it.copy(isLoading = false, isStreaming = false) }
+        _uiState.update { airaUiState ->
+            airaUiState.copy(
+                isLoading = false,
+                isStreaming = false
+            )
+        }
     }
 }

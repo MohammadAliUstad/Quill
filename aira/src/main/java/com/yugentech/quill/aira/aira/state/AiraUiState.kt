@@ -1,4 +1,6 @@
-package com.yugentech.quill.aira.aira.viewmodel
+package com.yugentech.quill.aira.aira.state
+
+import com.yugentech.quill.aira.aira.message.AiraMessage
 
 data class AiraUiState(
     val bookTitle: String = "",

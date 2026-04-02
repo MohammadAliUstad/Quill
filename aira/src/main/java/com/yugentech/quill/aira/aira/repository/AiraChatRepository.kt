@@ -1,6 +1,6 @@
 package com.yugentech.quill.aira.aira.repository
 
-import com.yugentech.quill.aira.aira.viewmodel.AiraMessage
+import com.yugentech.quill.aira.aira.message.AiraMessage
 import com.yugentech.quill.aira.response.AiraResponse
 import kotlinx.coroutines.flow.Flow
 

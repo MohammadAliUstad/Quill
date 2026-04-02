@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,15 +34,29 @@ fun BookStorageList(
         LazyColumn(
             modifier = modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            // Tightened spacing to make them look like a grouped block
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            items(
+            itemsIndexed(
                 items = books,
-                key = { it.id }
-            ) { book ->
+                key = { _, book -> book.id }
+            ) { index, book ->
+
+                val isFirst = index == 0
+                val isLast = index == books.lastIndex
+
+                // Determine the shape based on the item's position
+                val shape = when {
+                    isFirst && isLast -> RoundedCornerShape(16.dp)
+                    isFirst -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
+                    isLast -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
+                    else -> RoundedCornerShape(4.dp)
+                }
+
                 BookStorageItem(
                     book = book,
                     breakdown = breakdowns[book.id],
+                    shape = shape,
                     onDeleteClick = { onDeleteClick(book) },
                     modifier = Modifier.animateItem()
                 )

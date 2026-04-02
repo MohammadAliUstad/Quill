@@ -42,32 +42,29 @@ import com.yugentech.quill.R
 
 @Composable
 fun AiraChatHeader(
-    isIndexing: Boolean,
-    isStreaming: Boolean,
+    modifier: Modifier = Modifier,
     isLoading: Boolean,
+    isStreaming: Boolean,
     isVisuallyTyping: Boolean,
     lastChapterTitle: String?,
-    spoilerLockEnabled: Boolean,
-    modifier: Modifier = Modifier
+    spoilerLockEnabled: Boolean
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
 
-    // Wrap everything in a Column to hold the gradient and the fade tail
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(
                 Brush.verticalGradient(
                     0.0f to surfaceColor,
-                    0.4f to surfaceColor, // The solid top 40%
-                    0.55f to surfaceColor.copy(alpha = 0.85f), // Gently eases into the fade
-                    0.75f to surfaceColor.copy(alpha = 0.4f), // The middle of the transition
-                    0.9f to surfaceColor.copy(alpha = 0.1f), // Softens out the very end
-                    1.0f to Color.Transparent // Flawless blend into the background
+                    0.4f to surfaceColor,
+                    0.55f to surfaceColor.copy(alpha = 0.85f),
+                    0.75f to surfaceColor.copy(alpha = 0.4f),
+                    0.9f to surfaceColor.copy(alpha = 0.1f),
+                    1.0f to Color.Transparent
                 )
             )
     ) {
-        // Foreground Content
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -104,7 +101,6 @@ fun AiraChatHeader(
 
             Spacer(modifier = Modifier.width(20.dp))
 
-            // Metadata Column
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
@@ -129,7 +125,6 @@ fun AiraChatHeader(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // 1. Use solid container colors instead of low-alpha copies
                 val backgroundColor by animateColorAsState(
                     targetValue = if (spoilerLockEnabled)
                         MaterialTheme.colorScheme.primaryContainer
@@ -138,7 +133,6 @@ fun AiraChatHeader(
                     label = "spoilerBgColor"
                 )
 
-                // 2. Use the matching "on-container" colors so the text contrasts perfectly
                 val textColor by animateColorAsState(
                     targetValue = if (spoilerLockEnabled)
                         MaterialTheme.colorScheme.onPrimaryContainer
@@ -152,7 +146,6 @@ fun AiraChatHeader(
                     color = backgroundColor,
                     modifier = Modifier.offset(x = (-10).dp)
                 ) {
-                    // 3. Animate the actual text swapping
                     AnimatedContent(
                         targetState = spoilerLockEnabled,
                         transitionSpec = {
@@ -173,7 +166,6 @@ fun AiraChatHeader(
             }
         }
 
-        // This Spacer acts as the gradient "tail" where messages will slowly fade out
         Spacer(modifier = Modifier.height(24.dp))
     }
 }

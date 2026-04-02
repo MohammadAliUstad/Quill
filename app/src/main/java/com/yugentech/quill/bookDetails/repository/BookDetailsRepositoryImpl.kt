@@ -11,7 +11,7 @@ import com.yugentech.quill.database.entity.CategoryEntity
 import com.yugentech.quill.database.mapper.toEntity
 import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.quill.bookDetails.worker.BookDownloadWorker
-import com.yugentech.quill.aira.rag.BookIndexingWorker
+import com.yugentech.quill.aira.rag.BookEmbeddingWorker
 import com.yugentech.quill.cloud.repository.CloudSyncRepository // <-- NEW IMPORT
 import kotlinx.coroutines.flow.Flow
 import java.io.File
@@ -76,9 +76,9 @@ class BookDetailsRepositoryImpl(
             .addTag("download_${book.id}")
             .build()
 
-        val indexRequest = OneTimeWorkRequestBuilder<BookIndexingWorker>()
+        val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
             .setInputData(
-                workDataOf(BookIndexingWorker.KEY_BOOK_ID to book.id)
+                workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to book.id)
             )
             .addTag("index_${book.id}")
             .build()

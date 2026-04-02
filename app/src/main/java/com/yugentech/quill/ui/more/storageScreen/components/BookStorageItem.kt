@@ -13,18 +13,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Card
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,90 +39,97 @@ import com.yugentech.quill.database.model.BookStorageBreakdown
 fun BookStorageItem(
     book: BookEntity,
     breakdown: BookStorageBreakdown?,
+    shape: Shape, // <-- NEW PARAMETER
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(bottom = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+    // Surface acts as our "Card" container to apply the dynamic shape and background
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f), // A nice subtle card background
     ) {
-        Card(
-            shape = RoundedCornerShape(4.dp),
+        Row(
             modifier = Modifier
-                .width(64.dp)
-                .height(96.dp)
+                .fillMaxWidth()
+                // Padding is now applied INSIDE the card, rather than bottom margins
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = book.coverUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // --- TITLE, AUTHOR & SIZE CHIP ---
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .height(96.dp)
-                .padding(vertical = 2.dp)
-        ) {
-            Text(
-                text = book.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = book.author,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            // THE FIX: This greedy spacer pushes the chip to the absolute bottom of the column!
-            Spacer(modifier = Modifier.weight(1f))
-
-            val totalBytes = breakdown?.totalBytes ?: book.fileSizeBytes
-
-            // Size Chip
-            Box(
+            Card(
+                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .width(80.dp)
+                    .height(120.dp)
             ) {
-                Text(
-                    text = formatBytes(totalBytes),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    fontWeight = FontWeight.SemiBold
+                AsyncImage(
+                    model = book.coverUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
-        // --- OUTLINED DELETE BUTTON ---
-        IconButton(
-            onClick = onDeleteClick,
-            modifier = Modifier.size(48.dp),
-            colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.error,
-                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-            )
-        ) {
-            Icon(Icons.Outlined.Delete, contentDescription = "Delete File")
+            // --- TITLE, AUTHOR & SIZE CHIP ---
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(96.dp)
+                    .padding(vertical = 2.dp)
+            ) {
+                Text(
+                    text = book.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = book.author,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                val totalBytes = breakdown?.totalBytes ?: book.fileSizeBytes
+
+                // Size Chip
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = formatBytes(totalBytes),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // --- OUTLINED DELETE BUTTON ---
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier.size(48.dp),
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                )
+            ) {
+                Icon(Icons.Filled.Delete, contentDescription = "Delete File")
+            }
         }
     }
 }

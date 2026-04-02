@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.zIndex
-import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
+import com.yugentech.quill.aira.quick.prompt.QuickPrompt
 import com.yugentech.quill.reader.ui.components.aira.components.AiraPeekHeader
 import com.yugentech.quill.reader.ui.components.aira.components.InputBar
 import com.yugentech.quill.reader.ui.components.aira.components.PeekResponseArea

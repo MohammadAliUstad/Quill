@@ -60,7 +60,7 @@ val airaModule = module {
     viewModel {
         ReaderAiraViewModel(
             airaChatRepository = get(),
-            quickPromptRepository = get(),
+            quickRepository = get(),
             quotaRepository = get(),
             authRepository = get(),
             bookRepository = get()

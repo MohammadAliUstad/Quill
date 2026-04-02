@@ -43,6 +43,7 @@ android {
 dependencies {
     implementation(project(":database"))
     implementation(project(":domain"))
+    implementation(project(":theme"))
 
     // 1. WorkManager (Required for BookIndexingWorker)
     implementation(libs.androidx.work.runtime.ktx)

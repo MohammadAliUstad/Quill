@@ -2,10 +2,10 @@ package com.yugentech.quill.aira.aira.repository
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.generationConfig
-import com.yugentech.quill.aira.aira.util.LongPromptHandler
-import com.yugentech.quill.aira.aira.viewmodel.AiraMessage
-import com.yugentech.quill.aira.rag.RagRetriever
+import com.yugentech.quill.aira.aira.message.AiraMessage
 import com.yugentech.quill.aira.response.AiraResponse
+import com.yugentech.quill.aira.aira.util.AiraHandler
+import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.database.dao.AiraMessageDao
 import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
@@ -44,7 +44,7 @@ class AiraChatRepositoryImpl(
     }
 
     private val handler by lazy {
-        LongPromptHandler(
+        AiraHandler(
             model = model,
             expansionModel = expansionModel,
             ragRetriever = ragRetriever,

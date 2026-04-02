@@ -1,6 +1,6 @@
 package com.yugentech.quill.aira.aira.util
 
-object LongPromptBuilder {
+object AiraBuilder {
 
     private val DEAD_END_PREFIXES = listOf(
         "I haven't read that part yet",

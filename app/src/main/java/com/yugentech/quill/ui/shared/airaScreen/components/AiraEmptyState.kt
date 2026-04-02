@@ -1,5 +1,6 @@
 package com.yugentech.quill.ui.shared.airaScreen.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -40,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.R
 import com.yugentech.theme.WindSongFont
-import androidx.compose.animation.AnimatedContent
 
 @Composable
 fun AiraEmptyState(
@@ -118,7 +118,6 @@ fun AiraEmptyState(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // THE FIX: Hide the entire card if they haven't started reading
         AnimatedVisibility(
             visible = hasStartedReading,
             enter = fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 4 },
@@ -170,7 +169,7 @@ fun AiraEmptyState(
                     )
 
                     Surface(
-                        onClick = onToggleSpoilerLock, // <-- Now clickable!
+                        onClick = onToggleSpoilerLock,
                         shape = CircleShape,
                         color = backgroundColor
                     ) {
@@ -184,10 +183,10 @@ fun AiraEmptyState(
                         ) { isLocked ->
                             Text(
                                 text = if (isLocked) "Spoiler lock active" else "Spoiler lock disabled",
-                                style = MaterialTheme.typography.labelMedium, // Upgraded from labelSmall
+                                style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = textColor,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp) // Increased size
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
                             )
                         }
                     }
