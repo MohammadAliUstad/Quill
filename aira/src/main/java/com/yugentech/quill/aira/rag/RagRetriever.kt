@@ -217,7 +217,7 @@ class RagRetriever(
             if (progressCeiling == 0f) return null
 
             val totalChapters = (allChunks.maxOfOrNull { it.chapterIndex } ?: 0) + 1
-            val maxChapterIndex = ((progressCeiling / 100f) * totalChapters).toInt()
+            val maxChapterIndex = (progressCeiling * totalChapters).toInt()
 
             allChunks.filter { it.chapterIndex <= maxChapterIndex }.ifEmpty { null }
         } catch (e: Exception) {

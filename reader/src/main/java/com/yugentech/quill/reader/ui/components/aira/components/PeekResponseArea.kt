@@ -18,7 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.reader.viewmodel.ReaderAiraUiState
+import com.yugentech.quill.aira.quick.state.QuickUiState
 
 private val idleMessages = listOf(
     "Need a quick recap of the this chapter? Just ask.",
@@ -30,7 +30,7 @@ private val idleMessages = listOf(
 
 @Composable
 fun PeekResponseArea(
-    airaUiState: ReaderAiraUiState
+    airaUiState: QuickUiState
 ) {
     Box(
         modifier = Modifier

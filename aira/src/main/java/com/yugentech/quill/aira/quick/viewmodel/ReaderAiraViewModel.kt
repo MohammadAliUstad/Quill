@@ -1,11 +1,12 @@
-package com.yugentech.quill.reader.viewmodel
+package com.yugentech.quill.aira.quick.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.aira.aira.repository.AiraChatRepository
 import com.yugentech.quill.aira.book.BookRepository
-import com.yugentech.quill.aira.quickPrompt.repository.QuickPromptRepository
-import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
+import com.yugentech.quill.aira.quick.prompt.QuickPrompt
+import com.yugentech.quill.aira.quick.repository.QuickRepository
+import com.yugentech.quill.aira.quick.state.QuickUiState
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.QuotaRepository
@@ -18,20 +19,19 @@ import kotlinx.coroutines.launch
 
 class ReaderAiraViewModel(
     private val airaChatRepository: AiraChatRepository,
-    private val quickPromptRepository: QuickPromptRepository,
+    private val quickRepository: QuickRepository,
     private val quotaRepository: QuotaRepository,
     private val authRepository: AuthRepository,
-    private val bookRepository: BookRepository // NEW: Injected BookRepository
+    private val bookRepository: BookRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ReaderAiraUiState())
+    private val _uiState = MutableStateFlow(QuickUiState())
     val uiState = _uiState.asStateFlow()
 
     private var activeJob: Job? = null
     private val currentUserId: String? get() = authRepository.currentUser
 
     init {
-        // Automatically keep track of quota status
         viewModelScope.launch {
             quotaRepository.canSendQuery.collectLatest { canSend ->
                 _uiState.update { it.copy(canSendQuery = canSend) }
@@ -39,7 +39,6 @@ class ReaderAiraViewModel(
         }
     }
 
-    // --- INDEXING CHECK ---
     fun checkIndexingStatus(bookId: String) {
         viewModelScope.launch {
             val ready = bookRepository.isReady(bookId)
@@ -47,7 +46,6 @@ class ReaderAiraViewModel(
         }
     }
 
-    // --- 1. MANUAL CHAT (Saves to DB via Repository) ---
     fun ask(bookId: String, question: String) {
         if (question.isBlank() || _uiState.value.isLoading) return
         if (!checkQuota()) return
@@ -71,7 +69,6 @@ class ReaderAiraViewModel(
         }
     }
 
-    // --- 2. QUICK PROMPTS (Chips - Does NOT save to DB) ---
     fun handleQuickPrompt(bookId: String, intent: QuickPrompt) {
         if (_uiState.value.isLoading) return
         if (!checkQuota()) return
@@ -81,7 +78,7 @@ class ReaderAiraViewModel(
         activeJob = viewModelScope.launch {
             var hasConsumedQuota = false
             try {
-                quickPromptRepository.handle(bookId, intent).collect { response ->
+                quickRepository.handle(bookId, intent).collect { response ->
                     handleResponseStream(response) {
                         if (!hasConsumedQuota) {
                             hasConsumedQuota = true
@@ -99,7 +96,7 @@ class ReaderAiraViewModel(
     private fun handleResponseStream(response: AiraResponse, onFirstSuccess: () -> Unit) {
         when (response) {
             is AiraResponse.Success -> {
-                onFirstSuccess() // Deduct quota only once per successful stream
+                onFirstSuccess()
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -109,6 +106,7 @@ class ReaderAiraViewModel(
                     )
                 }
             }
+
             is AiraResponse.Error -> {
                 _uiState.update {
                     it.copy(
@@ -164,9 +162,5 @@ class ReaderAiraViewModel(
         _uiState.update {
             it.copy(isLoading = false, isStreaming = false, response = null, error = null)
         }
-    }
-
-    fun dismissPaywall() {
-        _uiState.update { it.copy(showPaywall = false) }
     }
 }
