@@ -22,13 +22,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
+import com.yugentech.quill.aira.quick.prompt.QuickPrompt
 import com.yugentech.quill.reader.ui.components.aira.AiraPeekBar
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.ReaderBottomControls
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.button.AskAiraButton
 import com.yugentech.quill.reader.ui.components.overlay.components.brightnessSlider.BrightnessSlider
 import com.yugentech.quill.reader.ui.components.overlay.components.topBar.ReaderTopBar
-import com.yugentech.quill.reader.viewmodel.ReaderAiraUiState
+import com.yugentech.quill.aira.quick.state.QuickUiState
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,7 +50,7 @@ fun ReaderMenuOverlay(
     onBrightnessInteraction: (Boolean) -> Unit = {},
     onQuickAction: (QuickPrompt) -> Unit = {},
     onAiraSend: (String) -> Unit = {},
-    airaUiState: ReaderAiraUiState = ReaderAiraUiState()
+    airaUiState: QuickUiState = QuickUiState()
 ) {
     var sliderPosition by remember { mutableFloatStateOf(readerOverlayState.progress) }
 

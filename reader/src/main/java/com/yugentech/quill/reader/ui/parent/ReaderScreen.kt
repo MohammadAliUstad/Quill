@@ -23,7 +23,7 @@ import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderMenuOverlay
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
 import com.yugentech.quill.reader.ui.components.settingsSheet.SettingsSheet
 import com.yugentech.quill.reader.ui.components.tocSheet.TocSheet
-import com.yugentech.quill.reader.viewmodel.ReaderAiraViewModel
+import com.yugentech.quill.aira.quick.viewmodel.QuickViewModel
 import com.yugentech.quill.reader.viewmodel.ReaderUiState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
@@ -73,11 +73,11 @@ private fun ReaderSuccess(
     onMenuVisibilityChange: (Boolean) -> Unit
 ) {
     // THE FIX: Clean koinViewModel injection without parameters
-    val readerAiraViewModel: ReaderAiraViewModel = koinViewModel()
-    val airaUiState by readerAiraViewModel.uiState.collectAsState()
+    val quickViewModel: QuickViewModel = koinViewModel()
+    val airaUiState by quickViewModel.uiState.collectAsState()
 
     LaunchedEffect(state.bookId) {
-        readerAiraViewModel.checkIndexingStatus(state.bookId)
+        quickViewModel.checkIndexingStatus(state.bookId)
     }
 
     var isMenuVisible by rememberSaveable { mutableStateOf(false) }
@@ -211,13 +211,13 @@ private fun ReaderSuccess(
             onAiraDismiss = {
                 showAiraPeek = false
                 selectedText = null
-                readerAiraViewModel.clearResponse()
+                quickViewModel.clearResponse()
             },
             airaUiState = airaUiState,
-            onQuickAction = { intent -> readerAiraViewModel.handleQuickPrompt(state.bookId, intent) },
-            onAiraSend = { question -> readerAiraViewModel.ask(state.bookId, question) },
+            onQuickAction = { intent -> quickViewModel.handleQuickPrompt(state.bookId, intent) },
+            onAiraSend = { question -> quickViewModel.ask(state.bookId, question) },
             onStop = {
-                readerAiraViewModel.stopGeneration()
+                quickViewModel.stopGeneration()
             }
         )
     }

@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ReaderAiraViewModel(
+class QuickViewModel(
     private val airaChatRepository: AiraChatRepository,
     private val quickRepository: QuickRepository,
     private val quotaRepository: QuotaRepository,

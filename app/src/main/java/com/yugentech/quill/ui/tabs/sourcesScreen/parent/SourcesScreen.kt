@@ -3,9 +3,8 @@ package com.yugentech.quill.ui.tabs.sourcesScreen.parent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -61,6 +60,19 @@ fun SourcesScreen(
 
     val catalogs = listOf(
         CatalogInfo(
+            source = BookSource.USER_IMPORTED,
+            title = "Import from Device",
+            subtitle = "Supports EPUB files",
+            description = "Import and read your own book collection. Select EPUB files stored anywhere on your device.",
+            icon = Icons.Default.FolderOpen,
+            shape = MaterialShapes.Bun.toShape(),
+            containerColor = { MaterialTheme.colorScheme.tertiaryContainer },
+            contentColor = { MaterialTheme.colorScheme.onTertiaryContainer },
+            buttonContainerColor = { MaterialTheme.colorScheme.tertiary },
+            buttonContentColor = { MaterialTheme.colorScheme.onTertiary },
+            buttonText = if (isImporting) "Importing..." else "Browse Device",
+        ),
+        CatalogInfo(
             source = BookSource.STANDARD_EBOOKS,
             title = "Standard Ebooks",
             subtitle = "High quality public domain",
@@ -85,21 +97,7 @@ fun SourcesScreen(
             buttonContainerColor = { MaterialTheme.colorScheme.secondary },
             buttonContentColor = { MaterialTheme.colorScheme.onSecondary },
             buttonText = "Explore Collection",
-        ),
-    )
-
-    val localImportCatalog = CatalogInfo(
-        source = BookSource.USER_IMPORTED,
-        title = "Import from Device",
-        subtitle = "Supports EPUB files",
-        description = "Import and read your own book collection. Select EPUB files stored anywhere on your device.",
-        icon = Icons.Default.FolderOpen,
-        shape = MaterialShapes.Bun.toShape(),
-        containerColor = { MaterialTheme.colorScheme.tertiaryContainer },
-        contentColor = { MaterialTheme.colorScheme.onTertiaryContainer },
-        buttonContainerColor = { MaterialTheme.colorScheme.tertiary },
-        buttonContentColor = { MaterialTheme.colorScheme.onTertiary },
-        buttonText = if (isImporting) "Importing..." else "Browse Device",
+        )
     )
 
     Scaffold(
@@ -126,62 +124,58 @@ fun SourcesScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(
+                    start = 16.dp,
+                    end = 16.dp,
                     top = innerPadding.calculateTopPadding(),
                     bottom = contentPadding.calculateBottomPadding() + 8.dp
-                )
+                ),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
-            // --- NEW: The Local Import Card is now at the very top! ---
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            catalogs.forEach { catalog ->
                 LargeCatalogCard(
-                    catalog = localImportCatalog,
-                    onClick = { if (!isImporting) showFilePickerSheet = true },
+                    catalog = catalog,
+                    onClick = {
+                        // Intercept the click based on the source type
+                        when (catalog.source) {
+                            BookSource.USER_IMPORTED -> {
+                                showFilePickerSheet = true
+                            }
+                            else -> {
+                                onSourceClick(catalog.source)
+                            }
+                        }
+                    },
                 )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // --- The rest of the online catalogs follow below ---
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp), // Increased spacing slightly for better rhythm
-            ) {
-                catalogs.forEach { catalog ->
-                    LargeCatalogCard(
-                        catalog = catalog,
-                        onClick = { onSourceClick(catalog.source) },
-                    )
-                }
             }
         }
-    }
 
-    if (showFilePickerSheet) {
-        FilePickerBottomSheet(
-            onDismiss = { showFilePickerSheet = false },
-            onFilesSelected = { uris ->
-                showFilePickerSheet = false
-                isImporting = true
-                scope.launch {
-                    val results = LocalBookImporter.importFiles(context, bookDao, uris)
-                    importResults = results
-                    isImporting = false
-                    showResultsSheet = true
-                }
-            },
-        )
-    }
+        if (showFilePickerSheet) {
+            FilePickerBottomSheet(
+                onDismiss = { showFilePickerSheet = false },
+                onFilesSelected = { uris ->
+                    showFilePickerSheet = false
+                    isImporting = true
+                    scope.launch {
+                        val results = LocalBookImporter.importFiles(context, bookDao, uris)
+                        importResults = results
+                        isImporting = false
+                        showResultsSheet = true
+                    }
+                },
+            )
+        }
 
-    if (showResultsSheet && importResults.isNotEmpty()) {
-        ImportStatusSheet(
-            results = importResults,
-            onDismiss = {
-                showResultsSheet = false
-                importResults = emptyList()
-                if (importResults.any { it is ImportResult.Success }) {
-                    onLocalFilesClick()
-                }
-            },
-        )
+        if (showResultsSheet && importResults.isNotEmpty()) {
+            ImportStatusSheet(
+                results = importResults,
+                onDismiss = {
+                    showResultsSheet = false
+                    importResults = emptyList()
+                    if (importResults.any { it is ImportResult.Success }) {
+                        onLocalFilesClick()
+                    }
+                },
+            )
+        }
     }
 }
