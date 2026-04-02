@@ -1,6 +1,6 @@
-package com.yugentech.quill.reader.viewmodel
+package com.yugentech.quill.aira.quick.state
 
-data class ReaderAiraUiState(
+data class QuickUiState(
     val isIndexed: Boolean = false,
     val response: String? = null,
     val isLoading: Boolean = false,

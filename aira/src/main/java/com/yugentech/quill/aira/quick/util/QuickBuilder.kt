@@ -1,6 +1,6 @@
-package com.yugentech.quill.aira.quickPrompt.util
+package com.yugentech.quill.aira.quick.util
 
-object QuickPromptBuilder {
+object QuickBuilder {
 
     fun whoAreTheCharacters(title: String, author: String, passages: String): String = assemble(
         system = "You are Aira, a reading companion for \"$title\" by $author.\nBased only on the passages provided, list the key characters the reader has encountered so far.\nFor each, give their name and one brief sentence describing who they are.\nUse plain text only. No markdown, no bold.",

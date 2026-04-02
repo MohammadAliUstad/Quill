@@ -1,21 +1,21 @@
-package com.yugentech.quill.aira.quickPrompt.repository
+package com.yugentech.quill.aira.quick.repository
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.generationConfig
-import com.yugentech.quill.aira.quickPrompt.state.QuickPrompt
-import com.yugentech.quill.aira.quickPrompt.util.QuickPromptHandler
+import com.yugentech.quill.aira.quick.prompt.QuickPrompt
+import com.yugentech.quill.aira.quick.util.QuickHandler
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
 import kotlinx.coroutines.flow.Flow
 
-class QuickPromptRepositoryImpl(
+class QuickRepositoryImpl(
     private val geminiApiKey: String,
     private val ragRetriever: RagRetriever,
     private val bookChunkDao: BookChunkDao,
     private val bookDao: BookDao
-) : QuickPromptRepository {
+) : QuickRepository {
 
     private val model by lazy {
         GenerativeModel(
@@ -29,7 +29,7 @@ class QuickPromptRepositoryImpl(
     }
 
     private val handler by lazy {
-        QuickPromptHandler(
+        QuickHandler(
             model = model,
             ragRetriever = ragRetriever,
             bookDao = bookDao,

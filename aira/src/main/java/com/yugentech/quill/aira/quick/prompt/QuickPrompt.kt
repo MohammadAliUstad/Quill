@@ -1,4 +1,4 @@
-package com.yugentech.quill.aira.quickPrompt.state
+package com.yugentech.quill.aira.quick.prompt
 
 sealed class QuickPrompt {
     data object WhoAreTheCharacters : QuickPrompt()
