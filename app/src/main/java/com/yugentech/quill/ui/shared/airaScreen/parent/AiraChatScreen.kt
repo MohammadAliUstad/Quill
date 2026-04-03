@@ -189,6 +189,7 @@ fun AiraChatScreen(
                 ) {
                     StatusBanner(
                         isIndexing = uiState.isIndexing,
+                        indexingProgress = uiState.indexingProgress, // <-- ADD THIS LINE
                         error = uiState.error,
                         onDismiss = { viewModel.clearError() }
                     )
@@ -230,7 +231,8 @@ fun AiraChatScreen(
                     }
                 } else {
                     QuotaLimitBar(
-                        onProClick = { navigateToSubscriptions() }
+                        isPro = uiState.isPro,
+                        onUpgradeClick = { navigateToSubscriptions() }
                     )
                 }
             }

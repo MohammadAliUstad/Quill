@@ -23,18 +23,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,14 +41,13 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import androidx.compose.ui.zIndex
 import com.yugentech.quill.aira.quick.prompt.QuickPrompt
+import com.yugentech.quill.aira.quick.state.QuickUiState
 import com.yugentech.quill.reader.ui.components.aira.components.AiraPeekHeader
 import com.yugentech.quill.reader.ui.components.aira.components.InputBar
 import com.yugentech.quill.reader.ui.components.aira.components.PeekResponseArea
 import com.yugentech.quill.reader.ui.components.aira.components.QuotaLimitBar
 import com.yugentech.quill.reader.ui.components.aira.components.resolveChips
-import com.yugentech.quill.reader.viewmodel.ReaderAiraUiState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -63,9 +55,10 @@ fun AiraPeekBar(
     isVisible: Boolean,
     selectedText: String? = null,
     currentChapterIndex: Int = 0,
-    airaUiState: ReaderAiraUiState,
+    airaUiState: QuickUiState,
     onQuickAction: (QuickPrompt) -> Unit,
     onSendMessage: (String) -> Unit,
+    onClearSelection: () -> Unit,
     onDismiss: () -> Unit,
     onStop: () -> Unit,
     onUpgradeClick: () -> Unit = {}
@@ -81,8 +74,18 @@ fun AiraPeekBar(
         resolveChips(selectedText, currentChapterIndex)
     }
 
-    LaunchedEffect(selectedText) { inputText = selectedText ?: "" }
-    LaunchedEffect(isVisible) { inputText = if (isVisible) selectedText ?: "" else "" }
+    // THE LATCH FIX: We only update the limit UI state when the bar opens.
+    // If the limit is reached mid-session, the UI won't switch until they dismiss and reopen.
+    var enforceLimitUi by remember { mutableStateOf(!airaUiState.canSendQuery) }
+
+    LaunchedEffect(isVisible) {
+        if (isVisible) {
+            enforceLimitUi = !airaUiState.canSendQuery
+        } else {
+            inputText = ""
+        }
+    }
+
     LaunchedEffect(isImeVisible) { if (!isImeVisible) focusManager.clearFocus() }
 
     val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
@@ -110,6 +113,8 @@ fun AiraPeekBar(
         if (text.isBlank()) return
         onSendMessage(text)
         inputText = ""
+        focusManager.clearFocus()
+        onClearSelection()
     }
 
     Box(
@@ -133,42 +138,6 @@ fun AiraPeekBar(
                     .padding(bottom = liftDp),
                 verticalArrangement = Arrangement.Bottom
             ) {
-                // Only show chips if they have quota
-                AnimatedVisibility(visible = airaUiState.canSendQuery) {
-                    LazyRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp)
-                            .offset(y = 4.dp)
-                            .zIndex(1f),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(
-                            items = activeChips,
-                            key = { (label, _) -> label }
-                        ) { (label, intent) ->
-                            SuggestionChip(
-                                onClick = {
-                                    onQuickAction(intent)
-                                    inputText = ""
-                                    focusManager.clearFocus()
-                                },
-                                label = {
-                                    Text(
-                                        text = label,
-                                        style = MaterialTheme.typography.labelMedium
-                                    )
-                                },
-                                shape = CircleShape,
-                                colors = SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                    labelColor = MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                        }
-                    }
-                }
-
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                     shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
@@ -186,19 +155,32 @@ fun AiraPeekBar(
                             onDismiss = onDismiss
                         )
 
+                        // Removed AnimatedVisibility here. PeekResponseArea handles its own animations
+                        // and we WANT it to be visible so it can gracefully display the response or paywall message.
                         PeekResponseArea(
-                            airaUiState = airaUiState
+                            airaUiState = airaUiState,
+                            showLimitReached = enforceLimitUi,
+                            selectedText = selectedText,
+                            activeChips = activeChips,
+                            onChipClick = { intent ->
+                                onQuickAction(intent)
+                                inputText = ""
+                                focusManager.clearFocus()
+                                onClearSelection()
+                            }
                         )
 
-                        // Smoothly animate between the InputBar and QuotaLimitBar
+                        // Smoothly animate between the InputBar and QuotaLimitBar using our latched state
                         AnimatedContent(
-                            targetState = airaUiState.canSendQuery,
+                            targetState = enforceLimitUi,
                             transitionSpec = {
-                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(
+                                    animationSpec = tween(300)
+                                )
                             },
                             label = "InputBarSwap"
-                        ) { hasQuota ->
-                            if (hasQuota) {
+                        ) { isLimitReached ->
+                            if (!isLimitReached) {
                                 InputBar(
                                     inputText = inputText,
                                     onInputChange = { inputText = it },
@@ -213,7 +195,10 @@ fun AiraPeekBar(
                                     onStop = onStop
                                 )
                             } else {
-                                QuotaLimitBar(onUpgradeClick = onUpgradeClick)
+                                QuotaLimitBar(
+                                    isPro = airaUiState.isPro,
+                                    onUpgradeClick = onUpgradeClick
+                                )
                             }
                         }
                     }

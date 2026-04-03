@@ -23,7 +23,7 @@ class AiraChatRepositoryImpl(
 
     private val model by lazy {
         GenerativeModel(
-            modelName = "gemini-2.5-flash",
+            modelName = "gemini-2.5-flash-lite",
             apiKey = geminiApiKey,
             generationConfig = generationConfig {
                 temperature = 0.4f
@@ -34,7 +34,7 @@ class AiraChatRepositoryImpl(
 
     private val expansionModel by lazy {
         GenerativeModel(
-            modelName = "gemini-2.5-flash",
+            modelName = "gemini-2.5-flash-lite",
             apiKey = geminiApiKey,
             generationConfig = generationConfig {
                 temperature = 0.0f

@@ -1,4 +1,4 @@
-package com.yugentech.quill.di.modules
+package com.yugentech.quill.di.modules.ai
 
 import com.yugentech.quill.BuildConfig
 import com.yugentech.quill.aira.aira.repository.AiraChatRepository
@@ -9,6 +9,7 @@ import com.yugentech.quill.aira.book.BookRepositoryImpl
 import com.yugentech.quill.aira.rag.EmbeddingEngine
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.quick.viewmodel.QuickViewModel
+import com.yugentech.quill.ui.tabs.moreScreen.parent.IndexingQueueViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -29,12 +30,12 @@ val airaModule = module {
         )
     }
 
-    // 1. Provide the new BookRepository (Handles Book Metadata & Chunk Status)
     single<BookRepository> {
         BookRepositoryImpl(
             bookDao = get(),
             chunkDao = get(),
-            indexingStateDao = get()
+            indexingStateDao = get(),
+            workManager = get()
         )
     }
 
@@ -56,6 +57,7 @@ val airaModule = module {
             quotaRepository = get(),
             authRepository = get(),
             workManager = get(),
+            billingRepository = get(),
         )
     }
 
@@ -67,6 +69,13 @@ val airaModule = module {
             authRepository = get(),
             bookRepository = get(),
             billingRepository = get()
+        )
+    }
+
+    viewModel {
+        IndexingQueueViewModel(
+            workManager = get(),
+            bookDao = get()
         )
     }
 }

@@ -61,7 +61,7 @@ object AboutContent {
             ),
             AboutOption(
                 title = "Share with Friends",
-                subtitle = "Help others focus better",
+                subtitle = "Help others read better",
                 icon = Icons.Default.Share,
                 onClick = {
                     val sendIntent = Intent().apply {

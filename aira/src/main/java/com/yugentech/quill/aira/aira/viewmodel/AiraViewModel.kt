@@ -1,19 +1,25 @@
 package com.yugentech.quill.aira.aira.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.yugentech.quill.aira.aira.message.AiraMessage
 import com.yugentech.quill.aira.aira.repository.AiraChatRepository
-import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.aira.aira.state.AiraUiState
 import com.yugentech.quill.aira.book.BookRepository
+import com.yugentech.quill.aira.rag.BookEmbeddingWorker
+import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.domain.AuthRepository
+import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.domain.QuotaRepository
-import com.yugentech.theme.tokens.AppConstants.EMPTY
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,7 +28,9 @@ class AiraViewModel(
     private val airaChatRepository: AiraChatRepository,
     private val bookRepository: BookRepository,
     private val quotaRepository: QuotaRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val workManager: WorkManager,
+    private val billingRepository: BillingRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AiraUiState())
@@ -35,27 +43,85 @@ class AiraViewModel(
 
     init {
         observeQuota()
-        fetchInitialBookData()
+        observeBilling() // Start observing billing
+        observeBookAndIndexing()
         observeChatHistory()
     }
 
-    private fun fetchInitialBookData() {
+    private fun observeBilling() {
         viewModelScope.launch {
-            val ready = bookRepository.isReady(bookId)
-            val book = bookRepository.getBookDetails(bookId)
+            billingRepository.isPro.collectLatest { proStatus ->
+                _uiState.update { it.copy(isPro = proStatus) }
+            }
+        }
+    }
 
+    // ... inside AiraViewModel.kt ...
+
+    private fun observeBookAndIndexing() {
+        viewModelScope.launch {
+            val book = bookRepository.getBookDetails(bookId)
             _uiState.update {
                 it.copy(
-                    isReady = ready,
-                    isIndexing = !ready,
-                    bookTitle = book?.title ?: EMPTY,
-                    bookAuthor = book?.author ?: EMPTY,
+                    bookTitle = book?.title ?: "",
+                    bookAuthor = book?.author ?: "",
                     lastChapterTitle = book?.lastChapterTitle,
                     hasStartedReading = book?.lastChapterTitle != null,
                     spoilerLockEnabled = book?.spoilerLockEnabled ?: true
                 )
             }
         }
+
+        workManager
+            .getWorkInfosByTagLiveData("index_$bookId")
+            .asFlow()
+            .onEach { workInfoList ->
+                // BUG FIX: Don't use firstOrNull(). WorkManager might return an old
+                // SUCCEEDED/FAILED job first. Find the active one, or fallback to the latest.
+                val info = workInfoList.firstOrNull {
+                    it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED
+                } ?: workInfoList.lastOrNull()
+
+                when {
+                    info == null -> {
+                        val ready = bookRepository.isReady(bookId)
+                        _uiState.update { it.copy(isReady = ready, isIndexing = !ready) }
+                    }
+                    info.state == WorkInfo.State.RUNNING || info.state == WorkInfo.State.ENQUEUED -> {
+                        val progress = info.progress.getInt(BookEmbeddingWorker.KEY_PROGRESS, 0)
+                        _uiState.update {
+                            it.copy(
+                                isReady = false,
+                                isIndexing = true,
+                                indexingProgress = progress
+                            )
+                        }
+                    }
+                    info.state == WorkInfo.State.SUCCEEDED -> {
+                        _uiState.update {
+                            it.copy(
+                                isReady = true,
+                                isIndexing = false,
+                                indexingProgress = 100
+                            )
+                        }
+                    }
+                    info.state == WorkInfo.State.FAILED -> {
+                        _uiState.update {
+                            it.copy(
+                                isReady = false,
+                                isIndexing = false,
+                                error = "Indexing failed. Please try again."
+                            )
+                        }
+                    }
+                    info.state == WorkInfo.State.CANCELLED -> {
+                        _uiState.update { it.copy(isIndexing = false) }
+                    }
+                    else -> Unit
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeChatHistory() {
@@ -77,7 +143,7 @@ class AiraViewModel(
         }
 
         val userMessage = AiraMessage(AiraMessage.Role.USER, question.trim())
-        val initialAiraMessage = AiraMessage(AiraMessage.Role.AIRA, EMPTY)
+        val initialAiraMessage = AiraMessage(AiraMessage.Role.AIRA, "")
 
         isCurrentlyStreaming = true
         _uiState.update {

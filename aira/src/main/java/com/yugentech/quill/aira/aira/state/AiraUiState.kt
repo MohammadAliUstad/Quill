@@ -7,7 +7,8 @@ data class AiraUiState(
     val bookAuthor: String = "",
     val lastChapterTitle: String? = null,
     val isReady: Boolean = false,
-    val isIndexing: Boolean = false,
+    val isIndexing: Boolean = true,
+    val indexingProgress: Int = 0,
     val hasStartedReading: Boolean = false,
     val messages: List<AiraMessage> = emptyList(),
     val isLoading: Boolean = false,
@@ -16,5 +17,6 @@ data class AiraUiState(
     val error: String? = null,
     val canSendQuery: Boolean = true,
     val remainingQueries: Int = 10,
-    val showPaywall: Boolean = false
+    val showPaywall: Boolean = false,
+    val isPro: Boolean = false
 )
