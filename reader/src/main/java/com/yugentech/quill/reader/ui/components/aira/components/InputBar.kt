@@ -30,13 +30,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yugentech.quill.reader.viewmodel.ReaderAiraUiState
+import com.yugentech.quill.aira.quick.state.QuickUiState
 
 @Composable
 fun InputBar(
     inputText: String,
     onInputChange: (String) -> Unit,
-    airaUiState: ReaderAiraUiState,
+    airaUiState: QuickUiState,
     canSend: Boolean,
     buttonContainerColor: Color,
     buttonContentColor: Color,

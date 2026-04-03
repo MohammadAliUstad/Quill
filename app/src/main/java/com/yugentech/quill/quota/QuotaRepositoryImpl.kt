@@ -24,8 +24,6 @@ class QuotaRepositoryImpl(
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
     // 1. THE SINGLE SOURCE OF TRUTH: The UI directly observes Room!
-    // No more manual MutableStateFlows. If Room changes, the UI updates instantly.
-
     override val remainingQueries: StateFlow<Int> = authRepository.authState
         .map { user -> user?.uid }
         .flatMapLatest { uid ->
@@ -43,7 +41,7 @@ class QuotaRepositoryImpl(
         .stateIn(repositoryScope, SharingStarted.WhileSubscribed(5000), true)
 
 
-    // 2. THE BACKGROUND SYNC (Called ONCE by GlobalSyncManager on launch)
+    // 2. THE BACKGROUND SYNC
     override suspend fun loadQuota(userId: String, isPro: Boolean) {
         var networkQuota = quotaService.fetchQuota(userId)
 
@@ -64,18 +62,29 @@ class QuotaRepositoryImpl(
                 userId = userId,
                 queriesUsed = networkQuota.queriesUsed,
                 queriesLimit = networkQuota.queriesLimit,
-                // THE FIX: Safely unwrap the timestamp, or default to 0 if missing
-                resetAtMillis = networkQuota.resetAt?.toDate()?.time ?: 0L
+                resetAtMillis = networkQuota.resetAt?.toDate()?.time ?: 0L,
+                isLifetime = networkQuota.isLifetime // <-- ADDED: Crucial to prevent Free Tier from expiring
             )
             // Saving to Room automatically triggers the StateFlows above to update the UI!
             quotaDao.saveQuota(entity)
         }
     }
 
-    // 3. USER ACTIONS (Write locally immediately, sync to cloud quietly)
+    // 3. USER ACTIONS
     override suspend fun consumeQuery(userId: String): Boolean {
-        // We check the DB directly to ensure they have quota
-        val currentQuota = quotaDao.getQuota(userId)
+        var currentQuota = quotaDao.getQuota(userId)
+
+        // NEW: Check if the Pro quota expired since the last time they opened the app
+        if (currentQuota?.isExpired == true) {
+            val newResetTime = System.currentTimeMillis() + 86400000L // 24 hours from right now
+
+            quotaDao.resetUsage(userId, newResetTime) // Update local DB instantly
+            quotaService.resetQuota(userId)           // Sync the reset to the cloud
+
+            currentQuota = quotaDao.getQuota(userId)  // Re-fetch the fresh local quota
+        }
+
+        // If they still have no quota after the reset check, block the query
         if (currentQuota?.hasQuota == false) return false
 
         // 1. Instantly update Room (This automatically triggers the UI flows above to update!)
@@ -88,10 +97,12 @@ class QuotaRepositoryImpl(
     }
 
     override suspend fun onProStatusChanged(userId: String, isPro: Boolean) {
-        val newLimit = if (isPro) QuotaLimits.PRO else QuotaLimits.FREE
-        quotaDao.updateLimit(userId, newLimit) // Updates UI via Room
-        quotaService.updateLimit(userId, isPro) // Syncs to Cloud
+        // Step 1: Update the limits and booleans in Firestore
+        quotaService.updateLimit(userId, isPro)
 
+        // Step 2: Re-fetch the completely updated Firestore document and cleanly overwrite Room.
+        // This is much safer than manual updates because it ensures the `isLifetime` flag
+        // and `resetAtMillis` timestamp are perfectly in sync.
         loadQuota(userId, isPro)
     }
 }

@@ -26,7 +26,8 @@ class QuotaService(
             QuotaData(
                 queriesUsed = doc.getLong(QuotaFields.QUERIES_USED)?.toInt() ?: 0,
                 queriesLimit = doc.getLong(QuotaFields.QUERIES_LIMIT)?.toInt() ?: QuotaLimits.FREE,
-                resetAt = doc.getTimestamp(QuotaFields.RESET_AT)
+                resetAt = doc.getTimestamp(QuotaFields.RESET_AT),
+                isLifetime = doc.getBoolean(QuotaFields.IS_LIFETIME) ?: false
             )
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch quota for user: $userId")
@@ -42,7 +43,8 @@ class QuotaService(
             val data = mapOf(
                 QuotaFields.QUERIES_USED to 0,
                 QuotaFields.QUERIES_LIMIT to if (isPro) QuotaLimits.PRO else QuotaLimits.FREE,
-                QuotaFields.RESET_AT to midnightTimestamp()
+                QuotaFields.RESET_AT to midnightTimestamp(),
+                QuotaFields.IS_LIFETIME to !isPro
             )
             quotaDocRef(userId).set(data).await()
             Timber.d("Quota initialized for user: $userId isPro=$isPro")
@@ -89,7 +91,10 @@ class QuotaService(
         try {
             val limit = if (isPro) QuotaLimits.PRO else QuotaLimits.FREE
             quotaDocRef(userId).set(
-                mapOf(QuotaFields.QUERIES_LIMIT to limit),
+                mapOf(
+                    QuotaFields.QUERIES_LIMIT to limit,
+                    QuotaFields.IS_LIFETIME to !isPro
+                ),
                 SetOptions.merge()
             ).await()
             Timber.d("Quota limit updated for user: $userId isPro=$isPro limit=$limit")

@@ -55,15 +55,15 @@ fun InputBar(
     inputText: String,
     onInputChange: (String) -> Unit,
     isEnabled: Boolean,
-    isStreaming: Boolean, // NEW: Know when Aira is typing
+    isStreaming: Boolean,
     onSend: () -> Unit,
-    onStop: () -> Unit,   // NEW: Callback for stopping
+    onStop: () -> Unit,
 ) {
     val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
     val isImeVisible = WindowInsets.isImeVisible
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
-    val keyboardController = LocalSoftwareKeyboardController.current // NEW: Native keyboard control
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     var isFocused by remember { mutableStateOf(false) }
 
@@ -84,7 +84,6 @@ fun InputBar(
     val canSend = inputText.isNotBlank() && isEnabled
     val surfaceColor = MaterialTheme.colorScheme.surface
 
-    // Update button colors to handle the "Stop" state dynamically
     val buttonContainerColor by animateColorAsState(
         targetValue = when {
             isStreaming -> MaterialTheme.colorScheme.errorContainer
