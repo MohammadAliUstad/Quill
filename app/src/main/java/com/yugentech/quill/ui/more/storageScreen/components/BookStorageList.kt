@@ -18,10 +18,10 @@ import com.yugentech.quill.database.model.BookStorageBreakdown
 
 @Composable
 fun BookStorageList(
+    modifier: Modifier = Modifier,
     books: List<BookEntity>,
     breakdowns: Map<String, BookStorageBreakdown>,
-    onDeleteClick: (BookEntity) -> Unit,
-    modifier: Modifier = Modifier
+    onDeleteClick: (BookEntity) -> Unit
 ) {
     if (books.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -33,8 +33,11 @@ fun BookStorageList(
     } else {
         LazyColumn(
             modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 8.dp),
-            // Tightened spacing to make them look like a grouped block
+            contentPadding = PaddingValues(
+                start = 24.dp,
+                end = 24.dp,
+                bottom = 28.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             itemsIndexed(
@@ -45,11 +48,22 @@ fun BookStorageList(
                 val isFirst = index == 0
                 val isLast = index == books.lastIndex
 
-                // Determine the shape based on the item's position
                 val shape = when {
                     isFirst && isLast -> RoundedCornerShape(16.dp)
-                    isFirst -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
-                    isLast -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
+                    isFirst -> RoundedCornerShape(
+                        topStart = 16.dp,
+                        topEnd = 16.dp,
+                        bottomStart = 4.dp,
+                        bottomEnd = 4.dp
+                    )
+
+                    isLast -> RoundedCornerShape(
+                        topStart = 4.dp,
+                        topEnd = 4.dp,
+                        bottomStart = 16.dp,
+                        bottomEnd = 16.dp
+                    )
+
                     else -> RoundedCornerShape(4.dp)
                 }
 

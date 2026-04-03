@@ -14,6 +14,15 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface BookDao {
 
+    // NEW: Get downloaded books that haven't been fully indexed yet
+    @Query("""
+        SELECT b.* FROM books b 
+        LEFT JOIN book_indexing_state i ON b.id = i.bookId
+        WHERE b.downloadStatus = 'DOWNLOADED' 
+        AND (i.isComplete IS NULL OR i.isComplete = 0)
+    """)
+    suspend fun getUnindexedDownloadedBooks(): List<BookEntity>
+
     @Query("SELECT * FROM books")
     fun getAllBooksFlow(): Flow<List<BookEntity>>
 

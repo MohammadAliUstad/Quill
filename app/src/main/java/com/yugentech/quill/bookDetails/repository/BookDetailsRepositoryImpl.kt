@@ -1,5 +1,6 @@
 package com.yugentech.quill.bookDetails.repository
 
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -71,6 +72,7 @@ class BookDetailsRepositoryImpl(
                     "BOOK_ID" to book.id,
                     "DOWNLOAD_URL" to book.downloadUrl,
                     "BOOK_TITLE" to book.title
+                    // "IS_PRO_USER" to isProUser // <-- Add this back here if you are passing it into the function
                 )
             )
             .addTag("download_${book.id}")
@@ -81,10 +83,16 @@ class BookDetailsRepositoryImpl(
                 workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to book.id)
             )
             .addTag("index_${book.id}")
+            .addTag("AI_INDEXING")
             .build()
 
+        // Use beginUniqueWork to apply the REPLACE policy to the whole chain
         workManager
-            .beginWith(downloadRequest)
+            .beginUniqueWork(
+                "process_book_${book.id}", // A unique name for this specific book's chain
+                ExistingWorkPolicy.REPLACE,
+                downloadRequest
+            )
             .then(indexRequest)
             .enqueue()
 

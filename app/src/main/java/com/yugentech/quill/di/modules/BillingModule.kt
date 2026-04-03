@@ -54,7 +54,8 @@ val billingModule = module {
         SubscriptionViewModel(
             billingRepository = get(),
             authRepository = get(),
-            userRepository = get()
+            userRepository = get(),
+            bookRepository = get()
         )
     }
 }

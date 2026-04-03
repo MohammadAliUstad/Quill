@@ -13,7 +13,7 @@ val bookDetailsModule = module {
             categoryDao = get(),
             bookDao = get(),
             workManager = get(),
-            cloudSyncRepository = get(),
+            cloudSyncRepository = get()
         )
     }
 

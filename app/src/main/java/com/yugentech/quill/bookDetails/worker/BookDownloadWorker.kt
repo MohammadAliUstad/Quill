@@ -102,22 +102,35 @@ class BookDownloadWorker(
             val parser = EpubParser(applicationContext)
             val parsedData = parser.parse(file.absolutePath, bookTitle)
 
-            // 5. Finalize the Database Save
             val existingBook = bookDao.getBookEntity(bookId)
 
             if (existingBook != null) {
                 val updatedBook = existingBook.copy(
                     localFilePath = file.absolutePath,
                     downloadStatus = DownloadStatus.DOWNLOADED,
-
-                    // Save final disk size for the Storage Screen
                     fileSizeBytes = file.length(),
-
                     chapters = parsedData.chapters,
                     totalPages = parsedData.totalPages
                 )
 
                 bookDao.insertBook(updatedBook)
+
+                // --- NEW: TRIGGER THE INDEXING QUEUE ON SUCCESS ---
+                val isProUser = inputData.getBoolean("IS_PRO_USER", false)
+                if (isProUser) {
+                    val indexRequest = androidx.work.OneTimeWorkRequestBuilder<com.yugentech.quill.aira.rag.BookEmbeddingWorker>()
+                        .setInputData(androidx.work.workDataOf(com.yugentech.quill.aira.rag.BookEmbeddingWorker.KEY_BOOK_ID to bookId))
+                        .addTag("AI_INDEXING")
+                        .addTag("index_${bookId}")
+                        .build()
+
+                    androidx.work.WorkManager.getInstance(applicationContext).beginUniqueWork(
+                        "BOOK_PROCESSING_QUEUE",
+                        androidx.work.ExistingWorkPolicy.APPEND_OR_REPLACE, // Funnel into the 1-by-1 queue!
+                        indexRequest
+                    ).enqueue()
+                }
+
                 Result.success()
             } else {
                 Timber.Forest.e("Book not found in DB: $bookId")
