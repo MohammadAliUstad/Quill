@@ -9,11 +9,15 @@ import com.yugentech.quill.aira.quick.repository.QuickRepository
 import com.yugentech.quill.aira.quick.state.QuickUiState
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.domain.AuthRepository
+import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.domain.QuotaRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,7 +26,8 @@ class QuickViewModel(
     private val quickRepository: QuickRepository,
     private val quotaRepository: QuotaRepository,
     private val authRepository: AuthRepository,
-    private val bookRepository: BookRepository
+    private val bookRepository: BookRepository,
+    private val billingRepository: BillingRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(QuickUiState())
@@ -37,12 +42,24 @@ class QuickViewModel(
                 _uiState.update { it.copy(canSendQuery = canSend) }
             }
         }
+        viewModelScope.launch {
+            billingRepository.isPro.collectLatest { isPro ->
+                _uiState.update { it.copy(isPro = isPro) }
+            }
+        }
     }
 
-    fun checkIndexingStatus(bookId: String) {
+    fun observeIndexingStatus(bookId: String) {
         viewModelScope.launch {
-            val ready = bookRepository.isReady(bookId)
-            _uiState.update { it.copy(isIndexed = ready) }
+            combine(
+                bookRepository.observeIsReady(bookId),
+                billingRepository.isPro
+            ) { isIndexed, isPro ->
+                // This block runs automatically whenever EITHER value changes
+                isIndexed && isPro
+            }.collectLatest { readyState ->
+                _uiState.update { it.copy(isReady = readyState) }
+            }
         }
     }
 

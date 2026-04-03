@@ -19,7 +19,7 @@ class QuickRepositoryImpl(
 
     private val model by lazy {
         GenerativeModel(
-            modelName = "gemini-2.5-flash",
+            modelName = "gemini-3.1-flash-lite-preview",
             apiKey = geminiApiKey,
             generationConfig = generationConfig {
                 temperature = 0.4f

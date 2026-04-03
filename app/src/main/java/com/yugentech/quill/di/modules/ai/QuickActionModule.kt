@@ -1,4 +1,4 @@
-package com.yugentech.quill.di.modules
+package com.yugentech.quill.di.modules.ai
 
 import com.yugentech.quill.BuildConfig
 import com.yugentech.quill.aira.quick.repository.QuickRepository

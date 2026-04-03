@@ -1,7 +1,8 @@
 package com.yugentech.quill.aira.quick.state
 
 data class QuickUiState(
-    val isIndexed: Boolean = false,
+    val isReady: Boolean = false,
+    val isPro: Boolean = false,
     val response: String? = null,
     val isLoading: Boolean = false,
     val isStreaming: Boolean = false,

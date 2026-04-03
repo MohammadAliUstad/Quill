@@ -8,7 +8,7 @@ import com.yugentech.quill.aira.book.BookRepository
 import com.yugentech.quill.aira.book.BookRepositoryImpl
 import com.yugentech.quill.aira.rag.EmbeddingEngine
 import com.yugentech.quill.aira.rag.RagRetriever
-import com.yugentech.quill.reader.viewmodel.ReaderAiraViewModel
+import com.yugentech.quill.aira.quick.viewmodel.QuickViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -33,7 +33,8 @@ val airaModule = module {
     single<BookRepository> {
         BookRepositoryImpl(
             bookDao = get(),
-            chunkDao = get()
+            chunkDao = get(),
+            indexingStateDao = get()
         )
     }
 
@@ -54,16 +55,18 @@ val airaModule = module {
             bookRepository = get(),
             quotaRepository = get(),
             authRepository = get(),
+            workManager = get(),
         )
     }
 
     viewModel {
-        ReaderAiraViewModel(
+        QuickViewModel(
             airaChatRepository = get(),
             quickRepository = get(),
             quotaRepository = get(),
             authRepository = get(),
-            bookRepository = get()
+            bookRepository = get(),
+            billingRepository = get()
         )
     }
 }
