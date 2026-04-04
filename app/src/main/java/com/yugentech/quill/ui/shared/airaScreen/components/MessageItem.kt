@@ -32,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.reader.ui.components.aira.components.ThinkingIndicator
@@ -55,7 +54,6 @@ fun MessageItem(
 
         LaunchedEffect(message.text) {
             if (textLength.value < message.text.length) {
-                // 2. Tell the parent we are visually typing
                 onTypingStateChange(true)
 
                 val charsRemaining = message.text.length - textLength.value
@@ -67,13 +65,12 @@ fun MessageItem(
                     )
                 )
 
-                // 3. Tell the parent the animation has finished!
                 onTypingStateChange(false)
             }
         }
 
-        val displayedText = message.text.substring(0, textLength.value.toInt().coerceAtMost(message.text.length))
-        // --------------------------------
+        val displayedText =
+            message.text.substring(0, textLength.value.toInt().coerceAtMost(message.text.length))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -119,7 +116,6 @@ fun MessageItem(
             }
         }
     } else {
-        // --- USER MESSAGE ---
         var visible by remember(message.stableKey) {
             mutableStateOf(!message.isNew)
         }

@@ -37,6 +37,7 @@ import com.yugentech.quill.ui.mainScreen.components.QuillTab
 import com.yugentech.quill.ui.mainScreen.components.ResumeFab
 import com.yugentech.quill.ui.tabs.discoverScreen.parent.DiscoverScreen
 import com.yugentech.quill.ui.tabs.libraryScreen.parent.LibraryScreen
+import com.yugentech.quill.ui.tabs.moreScreen.parent.IndexingQueueViewModel
 import com.yugentech.quill.ui.tabs.moreScreen.parent.MoreScreen
 import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesScreen
 import com.yugentech.quill.user.viewmodel.UserViewModel
@@ -69,6 +70,8 @@ fun MainScreen(
     libraryViewModel: LibraryViewModel,
     userViewModel: UserViewModel = koinViewModel(),
     onSubscriptions: () -> Unit,
+    onViewIndexingQueue: () -> Unit,
+    indexingQueueViewModel: IndexingQueueViewModel = koinViewModel()
 ) {
     val userId = remember { FirebaseAuth.getInstance().currentUser?.uid.orEmpty() }
 
@@ -78,6 +81,9 @@ fun MainScreen(
 
     val userUiState by userViewModel.uiState.collectAsStateWithLifecycle()
     val userData = userUiState.user ?: UserData()
+
+    val queueState by indexingQueueViewModel.queueState.collectAsStateWithLifecycle()
+    val isIndexingActive = queueState.isNotEmpty()
 
     var currentTab by rememberSaveable { mutableStateOf(QuillTab.Library) }
     var isScrollingDown by remember { mutableStateOf(false) }
@@ -175,6 +181,8 @@ fun MainScreen(
                             onSignOut = { showSignOutDialog = true },
                             onSubscriptions = onSubscriptions,
                             onExit = { showExitDialog = true },
+                            isIndexingActive = isIndexingActive,
+                            onViewIndexingQueue = onViewIndexingQueue,
                         )
                     }
                 }

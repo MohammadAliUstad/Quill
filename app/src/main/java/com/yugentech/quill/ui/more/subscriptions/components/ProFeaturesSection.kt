@@ -33,7 +33,7 @@ fun ProFeaturesSection() {
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
     ) {
-        // Free tier card (Visualized as the current standard state)
+        // Free tier card
         QueryTierCard(
             icon = {
                 Icon(
@@ -44,15 +44,15 @@ fun ProFeaturesSection() {
                 )
             },
             label = "Current Plan",
-            tierName = "Free",
-            queryCount = "10 queries / day",
-            description = "Resets at midnight every day.",
+            tierName = "Basic Reader",
+            subtitle = "Limited Preview",
+            description = "Experience the magic of Aira. Ask a few free questions to discover how AI can enhance your reading.",
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             borderColor = MaterialTheme.colorScheme.outlineVariant
         )
 
-        // Pro tier card (Emphasized as the premium upgrade)
+        // Pro tier card
         QueryTierCard(
             icon = {
                 Icon(
@@ -64,8 +64,8 @@ fun ProFeaturesSection() {
             },
             label = "Upgrade to",
             tierName = "Quill Pro",
-            queryCount = "100 queries / day",
-            description = "Ask Aira anything, as much as you want.",
+            subtitle = "Premium Access",
+            description = "Unlock your personal AI companion. Dive deeply into themes, plots, and characters with generous daily access.",
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
@@ -78,7 +78,7 @@ private fun QueryTierCard(
     icon: @Composable () -> Unit,
     label: String,
     tierName: String,
-    queryCount: String,
+    subtitle: String,
     description: String,
     containerColor: Color,
     contentColor: Color,
@@ -115,7 +115,7 @@ private fun QueryTierCard(
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
                 Text(
-                    text = queryCount,
+                    text = subtitle,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold
                 )

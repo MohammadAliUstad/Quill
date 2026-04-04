@@ -32,6 +32,7 @@ fun MoreScreen(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     userData: UserData,
     streakCount: Int,
+    isIndexingActive: Boolean,             // <-- NEW
     onSignOut: () -> Unit,
     onExit: () -> Unit,
     onEditProfile: () -> Unit,
@@ -42,6 +43,7 @@ fun MoreScreen(
     onManageStorage: () -> Unit,
     onAboutAira: () -> Unit,
     onSubscriptions: () -> Unit,
+    onViewIndexingQueue: () -> Unit,       // <-- NEW
 ) {
     Scaffold(
         topBar = {
@@ -82,6 +84,8 @@ fun MoreScreen(
             }
 
             // --- AI SECTION ---
+            val aiItemCount = if (isIndexingActive) 3 else 2 // Dynamic count for corner rounding
+
             item {
                 SectionHeader(
                     icon = Icons.Default.AutoAwesome,
@@ -93,7 +97,7 @@ fun MoreScreen(
                     title = "Meet Aira",
                     subtitle = "Learn about your AI reading companion",
                     index = 0,
-                    totalCount = 2,
+                    totalCount = aiItemCount,
                     onClick = onAboutAira,
                 )
             }
@@ -102,9 +106,23 @@ fun MoreScreen(
                     title = "Subscriptions",
                     subtitle = "Manage your plan and unlock pro features",
                     index = 1,
-                    totalCount = 2,
+                    totalCount = aiItemCount,
                     onClick = onSubscriptions,
                 )
+            }
+
+            // --- CONDITIONAL INDEXING QUEUE ITEM ---
+            if (isIndexingActive) {
+                item(key = "indexing_queue") { // <-- CRITICAL: Key allows Compose to track this specific item
+                    SettingsListItem(
+                        modifier = Modifier.animateItem(), // <-- Animates the fade-in/out and sizing (Compose Foundation 1.7+)
+                        title = "Indexing Library",
+                        subtitle = "Aira is reading your books.",
+                        index = 2,
+                        totalCount = aiItemCount,
+                        onClick = onViewIndexingQueue,
+                    )
+                }
             }
 
             // --- LIBRARY SECTION ---
@@ -160,7 +178,7 @@ fun MoreScreen(
             item {
                 SettingsListItem(
                     title = "About Quill",
-                    subtitle = "Version 2.0.0",
+                    subtitle = "Version 2.5.0",
                     index = 0,
                     totalCount = 1,
                     onClick = onAbout,

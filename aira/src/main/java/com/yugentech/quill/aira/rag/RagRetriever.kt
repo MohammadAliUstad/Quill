@@ -216,10 +216,11 @@ class RagRetriever(
             val progressCeiling = book?.progressPercent ?: 0f
             if (progressCeiling == 0f) return null
 
-            val totalChapters = (allChunks.maxOfOrNull { it.chapterIndex } ?: 0) + 1
-            val maxChapterIndex = (progressCeiling * totalChapters).toInt()
+            val maxChapterIndex = (book?.lastChapterIndex ?: 0) + 1
+            Timber.d("Spoiler lock active. lastChapterIndex: ${book?.lastChapterIndex}, maxChapterIndex: $maxChapterIndex")
 
             allChunks.filter { it.chapterIndex <= maxChapterIndex }.ifEmpty { null }
+
         } catch (e: Exception) {
             Timber.e(e, "Error getting candidates for bookId: $bookId")
             null
