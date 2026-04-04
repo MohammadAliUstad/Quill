@@ -72,12 +72,12 @@ fun SubscribedContent(
 
         // Overlapping Avatar Grid (2 Rows of 4)
         Column(
-            verticalArrangement = Arrangement.spacedBy((-48).dp), // Increased vertical overlap
+            verticalArrangement = Arrangement.spacedBy((-48).dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // TOP ROW
             Row(
-                horizontalArrangement = Arrangement.spacedBy((-48).dp), // Increased horizontal overlap
+                horizontalArrangement = Arrangement.spacedBy((-48).dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 topRow.forEachIndexed { index, (drawableId, isFlipped) ->
@@ -86,7 +86,7 @@ fun SubscribedContent(
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(120.dp) // Larger size
+                            .size(120.dp)
                             .zIndex(index.toFloat())
                             .clip(CircleShape)
                             .scale(scaleX = if (isFlipped) -1f else 1f, scaleY = 1f)
@@ -105,7 +105,7 @@ fun SubscribedContent(
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(120.dp) // Larger size
+                            .size(120.dp)
                             .zIndex((index + 4).toFloat())
                             .clip(CircleShape)
                             .scale(scaleX = if (isFlipped) -1f else 1f, scaleY = 1f)
@@ -126,7 +126,7 @@ fun SubscribedContent(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = "You've unlocked the full reading experience. Aira is ready with 100 daily queries to help you dive deeper into your library and uncover new insights.",
+            text = "You've unlocked the full reading experience. Aira is ready to help you dive deeper into your library, explore complex themes, and uncover new insights.",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -134,7 +134,7 @@ fun SubscribedContent(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Bottom Actions using your provided button styling
+        // Bottom Actions
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally

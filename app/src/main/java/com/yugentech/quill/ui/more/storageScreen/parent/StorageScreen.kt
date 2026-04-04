@@ -136,7 +136,7 @@ fun StorageScreen(
                         .fillMaxSize()
                         .padding(
                             top = innerPadding.calculateTopPadding(),
-                            bottom = innerPadding.calculateBottomPadding() + 16.dp
+                            bottom = innerPadding.calculateBottomPadding()
                         )
                 ) {
                     StorageHeader(

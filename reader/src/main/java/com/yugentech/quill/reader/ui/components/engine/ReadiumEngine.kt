@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.epub.EpubPreferences
@@ -31,12 +32,15 @@ fun ReadiumEngine(
     initialLocation: Locator?,
     targetJumpHref: String?,
     targetSeekProgress: Double?,
+    targetLocator: Locator? = null,
     allPositions: List<Locator>,
     preferences: EpubPreferences,
+    isAiraReady: Boolean = false,
     onTap: () -> Unit,
     onAskAira: (String) -> Unit = {},
     onJumpComplete: () -> Unit,
     onSeekComplete: () -> Unit,
+    onTargetLocatorComplete: () -> Unit = {},
     onLocatorChange: (Locator) -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -59,6 +63,45 @@ fun ReadiumEngine(
                 navigator = nav
             }
         )
+    }
+
+    // THE FIX: Browser-Level Smooth Scrolling Override
+    LaunchedEffect(targetLocator, navigator) {
+        val nav = navigator ?: return@LaunchedEffect
+        targetLocator?.let { loc ->
+
+            // 1. Force the internal WebView to use native smooth scrolling
+            val smoothScrollJs = """
+                (function() {
+                    document.documentElement.style.scrollBehavior = 'smooth';
+                    document.body.style.scrollBehavior = 'smooth';
+                })();
+            """.trimIndent()
+
+            try { nav.evaluateJavascript(smoothScrollJs) } catch (e: Exception) {}
+
+            // 2. Give the WebView a 50ms beat to apply the CSS
+            delay(50)
+
+            // 3. Command Readium to jump. The browser will now force this jump to glide!
+            nav.go(loc, animated = false)
+
+            // 4. Wait for the glide animation to physically finish
+            delay(400)
+
+            // 5. Turn smooth scrolling back off so normal page turns aren't sluggish
+            val resetJs = """
+                (function() {
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    document.body.style.scrollBehavior = 'auto';
+                })();
+            """.trimIndent()
+
+            try { nav.evaluateJavascript(resetJs) } catch (e: Exception) {}
+
+            // 6. Clear the Compose state
+            onTargetLocatorComplete()
+        }
     }
 
     LaunchedEffect(preferences, navigator) {

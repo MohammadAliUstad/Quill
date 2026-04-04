@@ -2,11 +2,18 @@ package com.yugentech.quill.ui.more.subscriptions.parent
 
 import android.app.Activity
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -38,7 +46,6 @@ import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.ui.more.subscriptions.components.SubscribeBottomBar
 import com.yugentech.quill.ui.more.subscriptions.components.SubscribedContent
 import com.yugentech.quill.ui.more.subscriptions.components.UnsubscribedContent
-import kotlinx.coroutines.delay
 
 data class PlanOption(
     val basePlanId: String,
@@ -71,108 +78,116 @@ fun SubscriptionsScreen(
     LaunchedEffect(Unit) {
         subscriptionViewModel.events.collect { event ->
             val message = when (event) {
-                is BillingEvent.SubscriptionActivated -> "Welcome to Quill Pro!"
                 is BillingEvent.NoSubscriptionFound -> "No active subscription found."
                 is BillingEvent.Error -> event.message
                 else -> null
-            }
-
-            if (event is BillingEvent.SubscriptionActivated) {
-                delay(2000)
             }
             message?.let { snackbarHostState.showSnackbar(it) }
         }
     }
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                // Custom Snackbar Implementation
-                Snackbar(
-                    modifier = Modifier.padding(12.dp),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    shape = MaterialTheme.shapes.medium,
-                    actionColor = MaterialTheme.colorScheme.primary,
-                    dismissActionContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    snackbarData = data
-                )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                if (isPro) {
+                    TopAppBar(
+                        title = {
+                            Column {
+                                Text(text = "Subscription")
+                                Text(
+                                    text = "Premium Purchased",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            }
+                        }
+                    )
+                } else {
+                    LargeTopAppBar(
+                        title = {
+                            Column {
+                                Text(text = "Quill Pro")
+                                Text(
+                                    text = "Unlock the Aira AI Assistant",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            }
+                        },
+                        scrollBehavior = scrollBehavior
+                    )
+                }
+            },
+            bottomBar = {
+                if (!isPro) {
+                    SubscribeBottomBar(
+                        selectedPlanIndex = selectedPlanIndex,
+                        isRestoring = isRestoring,
+                        onSubscribeClick = {
+                            activity?.let {
+                                subscriptionViewModel.subscribe(it, planOptions[selectedPlanIndex].basePlanId)
+                            }
+                        },
+                        onRestoreClick = { subscriptionViewModel.restorePurchases() }
+                    )
+                }
             }
-        },
-        topBar = {
-            if (isPro) {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(
-                                text = "Subscription"
-                            )
-                            Text(
-                                text = "Premium Purchased",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    }
-                )
-            } else {
-                // LargeTopAppBar for the scrollable unsubscribed screen
-                LargeTopAppBar(
-                    title = {
-                        Column {
-                            Text(text = "Quill Pro")
-                            Text(
-                                text = "Unlock Aira's full potential",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    scrollBehavior = scrollBehavior
-                )
-            }
-        },
-        bottomBar = {
-            if (!isPro) {
-                SubscribeBottomBar(
-                    selectedPlanIndex = selectedPlanIndex,
-                    isRestoring = isRestoring,
-                    onSubscribeClick = {
-                        activity?.let {
-                            subscriptionViewModel.subscribe(it, planOptions[selectedPlanIndex].basePlanId)
-                        }
-                    },
-                    onRestoreClick = { subscriptionViewModel.restorePurchases() }
-                )
+        ) { paddingValues ->
+            AnimatedContent(
+                targetState = isPro,
+                transitionSpec = {
+                    (slideInVertically(
+                        initialOffsetY = { 60 },
+                        animationSpec = tween(400)
+                    ) + fadeIn(animationSpec = tween(400))).togetherWith(
+                        slideOutVertically(
+                            targetOffsetY = { -60 },
+                            animationSpec = tween(400)
+                        ) + fadeOut(animationSpec = tween(400))
+                    )
+                },
+                label = "subscription_state"
+            ) { isSubscribed ->
+                if (isSubscribed) {
+                    SubscribedContent(paddingValues = paddingValues, onBack = onBack)
+                } else {
+                    UnsubscribedContent(
+                        paddingValues = paddingValues,
+                        selectedPlanIndex = selectedPlanIndex,
+                        subProducts = subProducts,
+                        onPlanSelected = { selectedPlanIndex = it }
+                    )
+                }
             }
         }
-    ) { paddingValues ->
-        AnimatedContent(
-            targetState = isPro,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "subscription_state"
-        ) { isSubscribed ->
-            if (isSubscribed) {
-                SubscribedContent(paddingValues = paddingValues, onBack = onBack)
-            } else {
-                UnsubscribedContent(
-                    paddingValues = paddingValues,
-                    selectedPlanIndex = selectedPlanIndex,
-                    subProducts = subProducts,
-                    onPlanSelected = { selectedPlanIndex = it }
-                )
-            }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .systemBarsPadding()
+                .imePadding()
+        ) { data ->
+            Snackbar(
+                modifier = Modifier.padding(12.dp),
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                shape = MaterialTheme.shapes.medium,
+                actionColor = MaterialTheme.colorScheme.primary,
+                dismissActionContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                snackbarData = data
+            )
         }
     }
 }

@@ -24,6 +24,7 @@ import com.yugentech.quill.ui.mainScreen.components.itemShape
 
 @Composable
 fun SettingsListItem(
+    modifier: Modifier = Modifier,
     title: String,
     subtitle: String? = null,
     leadingIcon: ImageVector? = null,

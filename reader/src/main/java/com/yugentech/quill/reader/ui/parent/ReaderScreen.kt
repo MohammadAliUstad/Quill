@@ -38,8 +38,8 @@ private const val MENU_AUTO_HIDE_MS = 4000L
 fun ReaderScreen(
     uiState: ReaderUiState,
     onBackClick: () -> Unit,
-    preferences: EpubPreferences, // NEW
-    onPreferencesChange: (EpubPreferences) -> Unit, //
+    preferences: EpubPreferences,
+    onPreferencesChange: (EpubPreferences) -> Unit,
     onLocatorChange: (Locator) -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit = {}
 ) {
@@ -54,7 +54,7 @@ fun ReaderScreen(
         is ReaderUiState.Success -> ReaderSuccess(
             state = uiState,
             onBackClick = onBackClick,
-            preferences = preferences, // Pass down
+            preferences = preferences,
             onPreferencesChange = onPreferencesChange,
             onLocatorChange = onLocatorChange,
             onMenuVisibilityChange = onMenuVisibilityChange
@@ -67,17 +67,16 @@ fun ReaderScreen(
 private fun ReaderSuccess(
     state: ReaderUiState.Success,
     onBackClick: () -> Unit,
-    preferences: EpubPreferences, // NEW
+    preferences: EpubPreferences,
     onPreferencesChange: (EpubPreferences) -> Unit,
     onLocatorChange: (Locator) -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit
 ) {
-    // THE FIX: Clean koinViewModel injection without parameters
     val quickViewModel: QuickViewModel = koinViewModel()
     val airaUiState by quickViewModel.uiState.collectAsState()
 
     LaunchedEffect(state.bookId) {
-        quickViewModel.checkIndexingStatus(state.bookId)
+        quickViewModel.observeIndexingStatus(state.bookId)
     }
 
     var isMenuVisible by rememberSaveable { mutableStateOf(false) }
@@ -93,6 +92,13 @@ private fun ReaderSuccess(
     var pendingSeekProgress by remember { mutableStateOf<Double?>(null) }
     var currentLocator by remember { mutableStateOf<Locator?>(null) }
     var isScrubbing by remember { mutableStateOf(false) }
+
+    // --- CHAPTER MEMORY STATES ---
+    val chapterProgressMap = remember { mutableMapOf<String, Locator>() }
+    var previousHref by remember { mutableStateOf<String?>(null) }
+    var isHandlingAutoJump by remember { mutableStateOf(false) }
+    var isExplicitJump by remember { mutableStateOf(false) }
+    var targetLocator by remember { mutableStateOf<Locator?>(null) }
 
     val currentChapterIndex by remember(currentLocator) {
         derivedStateOf {
@@ -172,8 +178,10 @@ private fun ReaderSuccess(
             initialLocation = state.initialLocator,
             targetJumpHref = targetJumpHref,
             targetSeekProgress = pendingSeekProgress,
+            targetLocator = targetLocator,
             allPositions = state.allPositions,
             preferences = preferences,
+            isAiraReady = airaUiState.isReady,
             onTap = {
                 if (showAiraPeek) {
                     showAiraPeek = false
@@ -183,12 +191,48 @@ private fun ReaderSuccess(
             onAskAira = { text ->
                 selectedText = text
                 showAiraPeek = true
+                quickViewModel.clearResponse()
             },
             onJumpComplete = { targetJumpHref = null },
             onSeekComplete = { pendingSeekProgress = null },
+            onTargetLocatorComplete = { targetLocator = null },
             onLocatorChange = { newLocator ->
                 currentLocator = newLocator
                 onLocatorChange(newLocator)
+
+                val currentHref = newLocator.href.toString()
+
+                if (isHandlingAutoJump) {
+                    isHandlingAutoJump = false
+                    previousHref = currentHref
+                    chapterProgressMap[currentHref] = newLocator
+                    return@ReadiumEngine
+                }
+
+                if (isExplicitJump) {
+                    isExplicitJump = false
+                    previousHref = currentHref
+                    chapterProgressMap[currentHref] = newLocator
+                    return@ReadiumEngine
+                }
+
+                if (previousHref != null && previousHref != currentHref) {
+                    val savedLocator = chapterProgressMap[currentHref]
+
+                    if (savedLocator != null) {
+                        val currentProg = newLocator.locations.progression ?: 0.0
+                        val savedProg = savedLocator.locations.progression ?: 0.0
+
+                        if (Math.abs(currentProg - savedProg) > 0.01) {
+                            isHandlingAutoJump = true
+                            targetLocator = savedLocator
+                            return@ReadiumEngine
+                        }
+                    }
+                }
+
+                previousHref = currentHref
+                chapterProgressMap[currentHref] = newLocator
             }
         )
 
@@ -200,7 +244,10 @@ private fun ReaderSuccess(
             onBackClick = onBackClick,
             onSettingsClick = { isMenuVisible = false; showSettingsSheet = true },
             onTocClick = { isMenuVisible = false; showTocSheet = true },
-            onSeek = { pendingSeekProgress = it.toDouble() },
+            onSeek = {
+                isExplicitJump = true
+                pendingSeekProgress = it.toDouble()
+            },
             onScrubStart = { isScrubbing = true },
             onScrubEnd = { isScrubbing = false },
             onBrightnessInteraction = { interacting -> isBrightnessInteracting = interacting },
@@ -218,6 +265,9 @@ private fun ReaderSuccess(
             onAiraSend = { question -> quickViewModel.ask(state.bookId, question) },
             onStop = {
                 quickViewModel.stopGeneration()
+            },
+            onClearSelection = {
+                selectedText = null
             }
         )
     }
@@ -227,15 +277,18 @@ private fun ReaderSuccess(
             toc = state.publication.tableOfContents,
             currentHref = currentLocator?.href?.toString(),
             onDismiss = { showTocSheet = false },
-            onTocItemClick = { href -> targetJumpHref = href; showTocSheet = false }
+            onTocItemClick = { href ->
+                isExplicitJump = true
+                targetJumpHref = href
+                showTocSheet = false
+            }
         )
     }
 
     if (showSettingsSheet) {
         SettingsSheet(
-            preferences = preferences, // 6. Use passed preferences
+            preferences = preferences,
             onPreferencesChange = {
-                // 7. Fire the callback to the ViewModel/DataStore
                 onPreferencesChange(it.copy(publisherStyles = false))
             },
             onDismiss = { showSettingsSheet = false }
