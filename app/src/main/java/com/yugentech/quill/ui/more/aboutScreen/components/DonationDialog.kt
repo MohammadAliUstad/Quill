@@ -104,7 +104,7 @@ fun DonationDialog(
                         )
 
                         Text(
-                            text = "Sessions is free and open source. If you enjoy the focus, consider supporting the journey!",
+                            text = "Quill is free and open source. If you enjoy the reads, consider supporting the journey!",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center

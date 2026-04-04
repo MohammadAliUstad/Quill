@@ -1,8 +1,10 @@
 package com.yugentech.quill.ui.tabs.discoverScreen.parent
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -38,17 +41,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.discover.DiscoverViewModel
-import com.yugentech.quill.ui.sources.standardScreen.components.AnimatedSearchIcon
 import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
+import com.yugentech.quill.ui.sources.standardScreen.components.AnimatedSearchIcon
 import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfRow
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfSkeleton
@@ -76,8 +82,9 @@ fun DiscoverScreen(
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+    val density = LocalDensity.current
+    val windowInfo = LocalWindowInfo.current
+    val screenWidth = with(density) { windowInfo.containerSize.width.toDp() }
     val dockedWidth = screenWidth - 32.dp
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -219,13 +226,30 @@ fun DiscoverScreen(
                     .graphicsLayer { alpha = scrollAlpha }
                     .background(
                         Brush.verticalGradient(
-                            0.0f to surfaceColor.copy(alpha = 0.98f),
-                            0.3f to surfaceColor.copy(alpha = 0.90f),
-                            0.6f to surfaceColor.copy(alpha = 0.60f),
-                            0.8f to surfaceColor.copy(alpha = 0.20f),
+                            0.0f to surfaceColor.copy(alpha = 0.9f),
+                            0.4f to surfaceColor.copy(alpha = 0.7f),
+                            0.7f to surfaceColor.copy(alpha = 0.30f),
                             1.0f to surfaceColor.copy(alpha = 0.0f)
                         )
                     )
+            )
+
+            val animatedContainerColor by animateColorAsState(
+                targetValue = if (searchExpanded) {
+                    MaterialTheme.colorScheme.surfaceContainer // Solid when active
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f) // Glass when closed
+                },
+                label = "container_color"
+            )
+
+            val animatedBorderColor by animateColorAsState(
+                targetValue = if (searchExpanded) {
+                    Color.Transparent
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                },
+                label = "border_color"
             )
 
             SearchBar(
@@ -267,7 +291,13 @@ fun DiscoverScreen(
                                     Icon(Icons.Default.Close, contentDescription = "Clear")
                                 }
                             }
-                        }
+                        },
+                        // 1. ADD THE BORDER HERE to the InputField
+                        modifier = Modifier.border(
+                            width = 1.dp,
+                            color = animatedBorderColor,
+                            shape = RoundedCornerShape(28.dp)
+                        )
                     )
                 },
                 expanded = searchExpanded,
@@ -279,10 +309,11 @@ fun DiscoverScreen(
                         focusManager.clearFocus()
                     }
                 },
+                // 2. REMOVE .clip() and .border() from this outer modifier
                 modifier = Modifier.widthIn(min = dockedWidth),
                 colors = SearchBarDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    dividerColor = MaterialTheme.colorScheme.outlineVariant
+                    containerColor = animatedContainerColor,
+                    dividerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                 ),
                 windowInsets = SearchBarDefaults.windowInsets
             ) {

@@ -38,8 +38,9 @@ class DiscoverViewModel(
             // 1. Observe New Releases for the Hero Carousel
             launch {
                 standardRepository.getNewReleasesFlow().collect { books ->
-                    // FIX: Ignore empty DB emissions during network overwrites to prevent Carousel flickering!
-                    if (books.isNotEmpty()) {
+                    // THE FIX: Only populate the Hero Carousel if it is currently empty!
+                    // This stops the books from snapping when the background network sync finishes.
+                    if (books.isNotEmpty() && _uiState.value.heroBooks.isEmpty()) {
                         _uiState.update { it.copy(
                             heroBooks = books.take(10),
                             isFeedLoading = false
@@ -49,13 +50,9 @@ class DiscoverViewModel(
             }
 
             // 2. Build the Shuffled Category Rows from a solid pool
-            // 2. Build the Shuffled Category Rows from a solid pool
             if (!hasSelectedCategories) {
                 hasSelectedCategories = true
 
-                // FIX: Removed "super-genres" like Fiction and Shorts.
-                // Sticking to highly specific genres prevents the parallel network syncs
-                // from downloading overlapping books and overwriting each other in the database!
                 val genrePool = listOf(
                     "Philosophy", "Mystery", "Fantasy", "Adventure", "Science Fiction",
                     "Horror", "Comedy", "Drama", "Biography", "Poetry",
@@ -75,8 +72,9 @@ class DiscoverViewModel(
 
                     launch {
                         standardRepository.getTopicBooksFlow(category).collect { categoryBooks ->
-                            // FIX: Only update the map if we actually have books. Prevents vanishing shelves.
-                            if (categoryBooks.isNotEmpty()) {
+                            // THE FIX: Only update this specific category row if it is currently empty!
+                            // Prevents shelves from reloading and shifting the user's scroll position.
+                            if (categoryBooks.isNotEmpty() && _uiState.value.categoryRows[category].isNullOrEmpty()) {
                                 _uiState.update { state ->
                                     val updatedMap = LinkedHashMap(state.categoryRows)
                                     updatedMap[category] = categoryBooks.take(15) // Keep shelves tidy

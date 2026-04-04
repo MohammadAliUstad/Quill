@@ -6,7 +6,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Builds the Material Typography set using the selected Font Family
 fun getTypography(fontFamily: FontFamily): Typography {
     return Typography(
         displayLarge = TextStyle(

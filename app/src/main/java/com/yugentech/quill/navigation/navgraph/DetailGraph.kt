@@ -30,6 +30,8 @@ import com.yugentech.quill.ui.more.storageScreen.parent.StorageScreen
 import com.yugentech.quill.ui.more.subscriptions.parent.SubscriptionsScreen
 import com.yugentech.quill.ui.shared.airaScreen.parent.AiraChatScreen
 import com.yugentech.quill.ui.shared.bookDetailsScreen.parent.BookDetailsScreen
+import com.yugentech.quill.ui.tabs.moreScreen.parent.IndexingQueueScreen
+import com.yugentech.quill.ui.tabs.moreScreen.parent.IndexingQueueViewModel
 import com.yugentech.quill.user.viewmodel.UserViewModel
 import com.yugentech.theme.ThemeViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -58,6 +60,17 @@ fun NavGraphBuilder.detailGraph(
                 navController.navigate(AppScreen.Aira.route + "/$bookId") {
                     launchSingleTop = true
                 }
+            }
+        )
+    }
+
+    composable(AppScreen.Queue.route) {
+        val viewModel: IndexingQueueViewModel = koinViewModel()
+
+        IndexingQueueScreen(
+            viewModel = viewModel,
+            onBack = {
+                navController.popBackStack()
             }
         )
     }
@@ -111,7 +124,7 @@ fun NavGraphBuilder.detailGraph(
         AiraChatScreen(
             viewModel = airaViewModel,
             onBackClick = { navController.popBackStack() },
-            onNavigateToSubscriptions = {
+            navigateToSubscriptions = {
                 navController.navigate(AppScreen.Subscriptions.route) {
                     launchSingleTop = true
                 }

@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import org.readium.r2.shared.util.asset.AssetRetriever
 import org.readium.r2.shared.util.getOrElse
 import org.readium.r2.shared.util.http.DefaultHttpClient
@@ -85,6 +86,29 @@ class EpubTextExtractor(private val context: Context) {
             Timber.e(e, "✗ Fatal error during EPUB extraction stream")
         }
     }.flowOn(Dispatchers.IO)
+
+    suspend fun countChapters(filePath: String): Int = withContext(Dispatchers.IO) {
+        val file = File(filePath)
+        if (!file.exists()) return@withContext 0
+        try {
+            val httpClient = DefaultHttpClient()
+            val assetRetriever = AssetRetriever(context.contentResolver, httpClient)
+            val parser = DefaultPublicationParser(context, httpClient, assetRetriever, null)
+            val publicationOpener = PublicationOpener(parser, emptyList(), onCreatePublication = {})
+            val asset = assetRetriever.retrieve(file).getOrElse { return@withContext 0 }
+            val publication = publicationOpener.open(asset, allowUserInteraction = false)
+                .getOrElse { return@withContext 0 }
+            val count = publication.readingOrder.count { link ->
+                // Mirror the same MIN_CHAPTER_LENGTH filter from extractStream
+                true // we count all spine items; extractor filters short ones anyway
+            }
+            publication.close()
+            count
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to count chapters for $filePath")
+            0
+        }
+    }
 
     private fun stripHtml(html: String): String =
         HtmlCompat.fromHtml(

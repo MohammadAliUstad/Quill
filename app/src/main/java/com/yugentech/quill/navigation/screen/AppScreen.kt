@@ -18,6 +18,7 @@ sealed class AppScreen(val route: String) {
     data object StandardEbooks : AppScreen("sources/standard_ebooks")
     data object Gutenberg : AppScreen("sources/gutenberg")
     data object Aira : AppScreen("aira")
+    data object Queue : AppScreen("queue")
     data object Appearance : AppScreen("appearance")
     data object ManageCategories : AppScreen("manageCategories")
     data object Storage : AppScreen("storage")

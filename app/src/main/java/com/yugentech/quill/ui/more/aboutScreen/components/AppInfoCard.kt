@@ -89,7 +89,7 @@ fun AppInfoCard() {
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
 
             Text(
-                text = "Version 2.0.1",
+                text = "Version 2.5.0",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )

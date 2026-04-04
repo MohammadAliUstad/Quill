@@ -52,4 +52,8 @@ val databaseModule = module {
     single {
         get<AppDatabase>().quotaDao()
     }
+
+    single {
+        get<AppDatabase>().bookIndexingStateDao()
+    }
 }
