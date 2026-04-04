@@ -3,6 +3,7 @@ package com.yugentech.quill.billing
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yugentech.quill.aira.book.BookRepository
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.domain.BillingRepository
@@ -19,7 +20,8 @@ import kotlinx.coroutines.launch
 class SubscriptionViewModel(
     private val billingRepository: BillingRepository,
     private val authRepository: AuthRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val bookRepository: BookRepository
 ) : ViewModel() {
 
     // The UI now listens EXCLUSIVELY to the Database via UserFlow
@@ -35,7 +37,6 @@ class SubscriptionViewModel(
     val events = _events.asSharedFlow()
 
     init {
-
         viewModelScope.launch {
             authRepository.authState.collectLatest { user ->
                 if (user != null) {
@@ -48,15 +49,27 @@ class SubscriptionViewModel(
             }
         }
 
-        // Intercept successful new purchases and update the DB immediately
+        // UPDATE THIS EXISTING BLOCK
         viewModelScope.launch {
             billingRepository.billingEvents.collect { event ->
                 if (event is BillingEvent.SubscriptionActivated) {
                     authRepository.currentUser?.let { uid ->
                         userRepository.updateProStatus(uid, true)
                     }
+                    // NEW: Trigger indexer exactly when payment clears!
+                    bookRepository.indexLibraryBacklog()
                 }
                 _events.emit(event)
+            }
+        }
+
+        // NEW BLOCK: Catch users on App Launch or "Restore Purchases"
+        // Since the DAO query only fetches unindexed books, it's 100% safe to run often.
+        viewModelScope.launch {
+            isPro.collectLatest { isPro ->
+                if (isPro) {
+                    bookRepository.indexLibraryBacklog()
+                }
             }
         }
     }
@@ -90,7 +103,8 @@ class SubscriptionViewModel(
 
             // This now returns Boolean? (null indicates a network/Play Store error)
             val wasRestored = billingRepository.restorePurchases(userId)
-            delay(800) // Small delay for UX so the loading spinner doesn't just flash
+
+            delay(800)
             _isRestoring.value = false
 
             when (wasRestored) {

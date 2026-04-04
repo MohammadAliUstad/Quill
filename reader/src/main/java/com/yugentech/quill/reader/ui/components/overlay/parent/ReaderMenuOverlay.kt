@@ -23,12 +23,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.yugentech.quill.aira.quick.prompt.QuickPrompt
+import com.yugentech.quill.aira.quick.state.QuickUiState
 import com.yugentech.quill.reader.ui.components.aira.AiraPeekBar
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.ReaderBottomControls
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.button.AskAiraButton
 import com.yugentech.quill.reader.ui.components.overlay.components.brightnessSlider.BrightnessSlider
 import com.yugentech.quill.reader.ui.components.overlay.components.topBar.ReaderTopBar
-import com.yugentech.quill.aira.quick.state.QuickUiState
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +47,7 @@ fun ReaderMenuOverlay(
     onAiraDismiss: () -> Unit = {},
     onScrubStart: () -> Unit = {},
     onScrubEnd: () -> Unit = {},
+    onClearSelection: () -> Unit = {},
     onBrightnessInteraction: (Boolean) -> Unit = {},
     onQuickAction: (QuickPrompt) -> Unit = {},
     onAiraSend: (String) -> Unit = {},
@@ -60,6 +61,7 @@ fun ReaderMenuOverlay(
     LaunchedEffect(isDragging) {
         if (isDragging) onScrubStart() else onScrubEnd()
     }
+
     LaunchedEffect(readerOverlayState.progress) {
         if (!isDragging) sliderPosition = readerOverlayState.progress
     }
@@ -97,11 +99,12 @@ fun ReaderMenuOverlay(
             isVisible = showAiraPeek,
             selectedText = readerOverlayState.selectedText,
             currentChapterIndex = readerOverlayState.currentChapterIndex,
-            airaUiState = airaUiState, // Passing unified state directly!
+            airaUiState = airaUiState,
             onQuickAction = onQuickAction,
             onSendMessage = onAiraSend,
             onDismiss = onAiraDismiss,
             onStop = onStop,
+            onClearSelection = onClearSelection
         )
 
         Column(
@@ -111,7 +114,7 @@ fun ReaderMenuOverlay(
             horizontalAlignment = Alignment.End
         ) {
             AnimatedVisibility(
-                visible = isVisible && showBottomControls && airaUiState.isIndexed,
+                visible = isVisible && showBottomControls,
                 enter = slideInVertically(
                     initialOffsetY = { it },
                     animationSpec = tween(300, easing = FastOutSlowInEasing)

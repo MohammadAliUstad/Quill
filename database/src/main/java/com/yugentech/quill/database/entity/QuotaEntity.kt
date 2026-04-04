@@ -8,9 +8,9 @@ data class QuotaEntity(
     @PrimaryKey val userId: String,
     val queriesUsed: Int,
     val queriesLimit: Int,
-    val resetAtMillis: Long
+    val resetAtMillis: Long,
+    val isLifetime: Boolean = false
 ) {
-    // Helper properties identical to your network data class
     val remaining: Int
         get() = (queriesLimit - queriesUsed).coerceAtLeast(0)
 
@@ -18,5 +18,5 @@ data class QuotaEntity(
         get() = remaining > 0
 
     val isExpired: Boolean
-        get() = System.currentTimeMillis() > resetAtMillis
+        get() = !isLifetime && System.currentTimeMillis() > resetAtMillis
 }

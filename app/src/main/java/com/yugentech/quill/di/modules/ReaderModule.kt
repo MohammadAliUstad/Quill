@@ -9,7 +9,6 @@ import com.yugentech.quill.reader.repository.ReaderRepositoryImpl
 import com.yugentech.quill.reader.repository.ReadingSessionRepository
 import com.yugentech.quill.reader.repository.ReadingSessionRepositoryImpl
 import com.yugentech.quill.reader.viewmodel.ReaderViewModel
-import com.yugentech.quill.user.datastore.UserDataStore
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -17,25 +16,27 @@ import org.koin.dsl.module
 
 val readerModule = module {
 
-    single<ReaderRepository> {
-        ReaderRepositoryImpl(
-            bookDao = get()
-        )
-    }
-
     single {
-        ReaderDataStore(get(named("reader")))
-    }
-
-    single<ReadingSessionRepository> {
-        ReadingSessionRepositoryImpl(
-            dao = get()
+        ReaderDataStore(
+            get(named("reader"))
         )
     }
 
     single<ReaderPreferencesRepository> {
         ReaderPreferencesRepositoryImpl(
             readerDataStore = get()
+        )
+    }
+
+    single<ReaderRepository> {
+        ReaderRepositoryImpl(
+            bookDao = get()
+        )
+    }
+
+    single<ReadingSessionRepository> {
+        ReadingSessionRepositoryImpl(
+            dao = get()
         )
     }
 

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -26,7 +27,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun QuotaLimitBar(
-    onProClick: () -> Unit
+    isPro: Boolean,
+    onUpgradeClick: () -> Unit = {}
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -37,50 +39,50 @@ fun QuotaLimitBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = if (isPro) Arrangement.Center else Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Schedule,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
+                    imageVector = if (isPro) Icons.Default.Schedule else Icons.Default.Lock,
+                    contentDescription = "Limit Reached",
+                    tint = if (isPro) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(24.dp)
                 )
 
                 Column {
                     Text(
-                        text = "Daily limit reached",
+                        text = if (isPro) "Daily limit reached" else "Preview limit reached",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.error
+                        color = if (isPro) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
                     )
 
                     Text(
-                        text = "Resets at midnight",
+                        text = if (isPro) "Your access automatically resets every day." else "Upgrade for premium access",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            Button(
-                onClick = onProClick,
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AutoAwesome,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-
-                Spacer(Modifier.width(8.dp))
-
-                Text("Pro")
+            if (!isPro) {
+                Button(
+                    onClick = onUpgradeClick,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Pro")
+                }
             }
         }
     }
