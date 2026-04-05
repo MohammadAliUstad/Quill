@@ -51,7 +51,8 @@ class QuotaRepositoryImpl(
                 networkQuota = quotaService.fetchQuota(userId)
             }
 
-            networkQuota.isExpired -> {
+            // UPDATE 1: Only reset if it is NOT a lifetime (Free) quota
+            networkQuota.isExpired && !networkQuota.isLifetime -> {
                 quotaService.resetQuota(userId)
                 networkQuota = quotaService.fetchQuota(userId)
             }
@@ -63,7 +64,7 @@ class QuotaRepositoryImpl(
                 queriesUsed = networkQuota.queriesUsed,
                 queriesLimit = networkQuota.queriesLimit,
                 resetAtMillis = networkQuota.resetAt?.toDate()?.time ?: 0L,
-                isLifetime = networkQuota.isLifetime // <-- ADDED: Crucial to prevent Free Tier from expiring
+                isLifetime = networkQuota.isLifetime
             )
             // Saving to Room automatically triggers the StateFlows above to update the UI!
             quotaDao.saveQuota(entity)
@@ -74,8 +75,8 @@ class QuotaRepositoryImpl(
     override suspend fun consumeQuery(userId: String): Boolean {
         var currentQuota = quotaDao.getQuota(userId)
 
-        // NEW: Check if the Pro quota expired since the last time they opened the app
-        if (currentQuota?.isExpired == true) {
+        // UPDATE 2: Ensure we only reset expired quotas if they aren't lifetime (Free) accounts
+        if (currentQuota?.isExpired == true && currentQuota.isLifetime == false) {
             val newResetTime = System.currentTimeMillis() + 86400000L // 24 hours from right now
 
             quotaDao.resetUsage(userId, newResetTime) // Update local DB instantly
@@ -101,8 +102,6 @@ class QuotaRepositoryImpl(
         quotaService.updateLimit(userId, isPro)
 
         // Step 2: Re-fetch the completely updated Firestore document and cleanly overwrite Room.
-        // This is much safer than manual updates because it ensures the `isLifetime` flag
-        // and `resetAtMillis` timestamp are perfectly in sync.
         loadQuota(userId, isPro)
     }
 }

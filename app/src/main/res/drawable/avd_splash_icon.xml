@@ -5,61 +5,55 @@
         <vector
             android:width="288dp"
             android:height="288dp"
-            android:viewportWidth="360"
-            android:viewportHeight="360">
-
-            <path
-                android:pathData="M0,0h360v360h-360z"
-                android:fillColor="#8D806A" />
+            android:viewportWidth="512"
+            android:viewportHeight="512">
 
             <group
-                android:translateY="30"
-                android:scaleX="1.15"
-                android:pivotX="180"
-                android:pivotY="180">
+                android:pivotX="256"
+                android:pivotY="256"
+                android:scaleX="0.7"
+                android:scaleY="0.7">
 
                 <path
-                    android:pathData="M137,60L233,60A12,12 0,0 1,245 72L245,218A12,12 0,0 1,233 230L137,230A12,12 0,0 1,125 218L125,72A12,12 0,0 1,137 60z"
+                    android:pathData="M367.615 88.0934H143.385C129.365 88.0934 118 98.7219 118 111.833V400.665C118 413.776 129.365 424.404 143.385 424.404H367.615C381.635 424.404 393 413.776 393 400.665V111.833C393 98.7219 381.635 88.0934 367.615 88.0934Z"
                     android:fillColor="#333333"/>
-                <path
-                    android:pathData="M125,60h18v170h-18z"
-                    android:fillColor="#1A1A1A"/>
-                <path
-                    android:pathData="M224,60h10v170h-10z"
-                    android:fillColor="#C6A85A"/>
 
-                <group
-                    android:name="quill_group"
-                    android:translateY="-5"
-                    android:pivotX="117"
-                    android:pivotY="231">
+                <path
+                    android:pathData="M156.077 88.0934H118V424.404H156.077V88.0934Z"
+                    android:fillColor="#1A1A1A"/>
+
+                <path
+                    android:pathData="M369.731 88.0934H348.577V424.404H369.731V88.0934Z"
+                    android:fillColor="#333333"/>
+
+                <group android:name="quill_group">
                     <path
-                        android:pathData="M179.99,70.44C140.93,87.02 143.6,120.45 123.09,144.52C110.96,161.19 120.14,191.86 121.92,214.15C138.69,199.36 164.74,182.92 169.45,163.25C166.78,129.82 196.56,109.49 179.99,70.44Z"
+                        android:pathData="M324.829 97.4676C243.055 131.253 247.663 197.27 204.281 245.381C178.559 278.648 196.795 339.034 199.867 383.045C235.187 353.359 289.895 320.191 300.26 281.193C295.653 215.176 358.231 174.228 324.829 97.4676Z"
                         android:fillColor="#E6D3A3"/>
 
                     <path
-                        android:pathData="M122.67,212.3L117.03,231.59"
-                        android:strokeWidth="5.0"
+                        android:pathData="M202.379 377.944L190.212 416.111"
+                        android:strokeWidth="12.0"
                         android:fillColor="#00000000"
                         android:strokeColor="#A88B4A"
                         android:strokeLineCap="round"/>
 
                     <path
-                        android:pathData="M179.99,70.44C140.93,87.02 143.6,120.45 123.09,144.52C110.96,161.19 120.14,191.86 121.92,214.15"
-                        android:strokeWidth="6.0"
+                        android:pathData="M323.771 97.4288C242.492 131.145 247.073 197.025 203.953 245.037C178.387 278.236 196.514 338.496 199.568 382.416"
+                        android:strokeWidth="12.0"
                         android:fillColor="#00000000"
                         android:strokeColor="#A88B4A"
                         android:strokeLineCap="round"/>
 
                     <path
-                        android:pathData="M179.99,70.44C196.56,109.49 164.91,134.45 169.45,163.25C164.74,182.92 138.69,199.36 121.92,214.15"
-                        android:strokeWidth="6.0"
+                        android:pathData="M325.13 98.108C358.326 174.706 292.129 224.761 300.715 281.446C290.414 320.361 236.045 353.46 200.944 383.084"
+                        android:strokeWidth="12.0"
                         android:fillColor="#00000000"
                         android:strokeColor="#A88B4A"
                         android:strokeLineCap="round"/>
                 </group>
-
             </group>
+
         </vector>
     </aapt:attr>
 
@@ -69,7 +63,7 @@
                 <objectAnimator
                     android:propertyName="translateX"
                     android:valueFrom="0"
-                    android:valueTo="70"
+                    android:valueTo="100"
                     android:duration="800"
                     android:interpolator="@android:interpolator/fast_out_slow_in" />
             </set>
