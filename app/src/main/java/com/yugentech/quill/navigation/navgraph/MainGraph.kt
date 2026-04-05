@@ -1,5 +1,6 @@
 package com.yugentech.quill.navigation.navgraph
 
+import android.app.Activity
 import android.content.Context
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -83,11 +84,14 @@ fun NavGraphBuilder.mainGraph(
                 navController.navigate(AppScreen.Subscriptions.route) { launchSingleTop = true }
             },
             onExitApp = {
-                (context as? android.app.Activity)?.finishAffinity()
+                (context as? Activity)?.finishAffinity()
             },
             onSignOut = {
                 authViewModel.signOut()
-            }
+            },
+            onViewIndexingQueue = {
+                navController.navigate(AppScreen.Queue.route) { launchSingleTop = true }
+            },
         )
     }
 
