@@ -7,7 +7,7 @@ import android.provider.OpenableColumns
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.yugentech.quill.aira.rag.BookIndexingWorker
+import com.yugentech.quill.aira.rag.BookEmbeddingWorker
 import com.yugentech.quill.bookDetails.EpubParser
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.dao.BookDao
@@ -113,9 +113,9 @@ object LocalBookImporter {
             bookDao.insertBook(updatedEntity)
 
             // ── Step 6: Trigger Aira Indexing ─────────────────────────────
-            val indexRequest = OneTimeWorkRequestBuilder<BookIndexingWorker>()
+            val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
                 .setInputData(
-                    workDataOf(BookIndexingWorker.KEY_BOOK_ID to bookId)
+                    workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId)
                 )
                 .addTag("index_$bookId")
                 .build()

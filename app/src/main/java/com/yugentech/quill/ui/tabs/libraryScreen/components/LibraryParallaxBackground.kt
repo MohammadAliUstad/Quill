@@ -33,10 +33,8 @@ fun LibraryParallaxBackground(
             .fillMaxWidth()
             .height(headerHeight)
             .graphicsLayer {
-                // Parallax: Move up at 50% speed of the actual scroll
                 translationY = -scrollOffset * 0.5f
 
-                // Fade logic
                 val fadeStart = 0f
                 val fadeEnd = size.height
                 val currentAlpha = 1f - ((scrollOffset - fadeStart) / (fadeEnd - fadeStart))

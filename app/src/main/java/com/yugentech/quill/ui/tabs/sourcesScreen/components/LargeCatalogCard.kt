@@ -71,10 +71,14 @@ fun LargeCatalogCard(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp),
+                    .padding(
+                        start = 24.dp,
+                        end = 24.dp,
+                        top = 24.dp,
+                        bottom = 16.dp
+                    ),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                // --- TOP GROUP (Title & Subtitle) ---
                 Column {
                     Surface(
                         shape = catalog.shape,
@@ -109,13 +113,11 @@ fun LargeCatalogCard(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // --- BOTTOM GROUP (Description & Button) ---
                 Column {
                     Text(
                         text = catalog.description,
                         style = MaterialTheme.typography.bodyMedium,
                         color = catalog.contentColor().copy(alpha = 0.9f),
-                        // Controls the tight gap right above the button
                         modifier = Modifier.padding(bottom = 16.dp),
                     )
 
