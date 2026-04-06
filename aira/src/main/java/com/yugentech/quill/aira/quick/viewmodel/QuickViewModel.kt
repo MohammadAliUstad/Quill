@@ -51,14 +51,8 @@ class QuickViewModel(
 
     fun observeIndexingStatus(bookId: String) {
         viewModelScope.launch {
-            combine(
-                bookRepository.observeIsReady(bookId),
-                billingRepository.isPro
-            ) { isIndexed, isPro ->
-                // This block runs automatically whenever EITHER value changes
-                isIndexed && isPro
-            }.collectLatest { readyState ->
-                _uiState.update { it.copy(isReady = readyState) }
+            bookRepository.observeIsReady(bookId).collectLatest { isIndexed ->
+                _uiState.update { it.copy(isReady = isIndexed) }
             }
         }
     }

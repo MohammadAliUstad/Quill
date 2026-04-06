@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
@@ -45,12 +46,11 @@ fun Modifier.shimmerEffect(): Modifier = composed {
     this.background(brush)
 }
 
-// 2. The Hero Carousel Skeleton
 @Composable
 fun HeroCarouselSkeleton(title: String, subtitle: String) {
-    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+    // FIX 1: Match the 8.dp bottom padding of the real HeroCarousel
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
         Column(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
-            // Display the real title/subtitle while the carousel loads
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
@@ -67,7 +67,6 @@ fun HeroCarouselSkeleton(title: String, subtitle: String) {
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Two Book Skeletons for the Carousel (Aspect Ratio 2:3)
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -82,6 +81,24 @@ fun HeroCarouselSkeleton(title: String, subtitle: String) {
                     .clip(RoundedCornerShape(12.dp))
                     .shimmerEffect()
             )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically // Matched alignment to real dots
+        ) {
+            repeat(5) { index ->
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 3.dp)
+                        .height(8.dp)
+                        .width(if (index == 0) 24.dp else 8.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .shimmerEffect()
+                )
+            }
         }
     }
 }
@@ -104,13 +121,15 @@ fun BookShelfSkeleton(title: String, subtitle: String) {
         }
         Spacer(modifier = Modifier.height(16.dp))
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            // FIX 2: Match the 24.dp horizontal padding and 16.dp spacing of the real BookShelfRow
+            contentPadding = PaddingValues(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(4) {
                 Box(
                     modifier = Modifier
-                        .width(120.dp)
+                        // FIX 3: Match the 130.dp width of the real DiscoverBookCard
+                        .width(130.dp)
                         .aspectRatio(2f / 3f)
                         .clip(RoundedCornerShape(8.dp))
                         .shimmerEffect()

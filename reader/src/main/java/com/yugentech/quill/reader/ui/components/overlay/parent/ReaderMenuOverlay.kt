@@ -114,7 +114,7 @@ fun ReaderMenuOverlay(
             horizontalAlignment = Alignment.End
         ) {
             AnimatedVisibility(
-                visible = isVisible && showBottomControls,
+                visible = isVisible && showBottomControls && airaUiState.isReady,
                 enter = slideInVertically(
                     initialOffsetY = { it },
                     animationSpec = tween(300, easing = FastOutSlowInEasing)
