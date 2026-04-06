@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -112,15 +113,23 @@ object LocalBookImporter {
             )
             bookDao.insertBook(updatedEntity)
 
-            // ── Step 6: Trigger Aira Indexing ─────────────────────────────
+            // ── Step 6: Trigger Aira Indexing (Matched to Repo Setup) ─────
             val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
                 .setInputData(
                     workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId)
                 )
                 .addTag("index_$bookId")
+                .addTag("AI_INDEXING") // Added missing tag to match repo
                 .build()
 
-            WorkManager.getInstance(context).enqueue(indexRequest)
+            // Use beginUniqueWork with REPLACE policy exactly like the repository
+            WorkManager.getInstance(context)
+                .beginUniqueWork(
+                    "global_book_processing_queue", // <-- Match the exact same global name
+                    ExistingWorkPolicy.APPEND_OR_REPLACE, // <-- Queue them up
+                    indexRequest
+                )
+                .enqueue()
 
             ImportResult.Success(bookId, title)
 

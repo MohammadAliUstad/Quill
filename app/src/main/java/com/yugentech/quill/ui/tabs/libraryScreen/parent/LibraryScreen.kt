@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.tabs.libraryScreen.parent
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -145,143 +147,150 @@ fun LibraryScreen(
         containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
 
-        if (isEmpty) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        top = innerPadding.calculateTopPadding(),
-                        bottom = contentPadding.calculateBottomPadding() + 8.dp
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+        // Wrap the content in a Crossfade to smooth out the transition when data loads
+        Crossfade(
+            targetState = isEmpty,
+            animationSpec = tween(durationMillis = 800), // Smooth 800ms fade transition
+            label = "library_content_transition"
+        ) { currentlyEmpty ->
+
+            if (currentlyEmpty) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            top = innerPadding.calculateTopPadding(),
+                            bottom = contentPadding.calculateBottomPadding() + 8.dp
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.empty_library),
-                        contentDescription = "Empty library",
-                        modifier = Modifier.size(240.dp)
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text(
-                        text = "Your library is empty",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Books you download or add\nwill appear here",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-            return@Scaffold
-        }
-
-        val headerHeight = 550.dp
-
-        var currentBackgroundIndex by remember { mutableIntStateOf(0) }
-        LaunchedEffect(allHistoryBooks) {
-            if (allHistoryBooks.isNotEmpty()) {
-                while (true) {
-                    delay(6000)
-                    currentBackgroundIndex = (currentBackgroundIndex + 1) % allHistoryBooks.size
-                }
-            }
-        }
-
-        val parallaxCoverUrl = allHistoryBooks.getOrNull(currentBackgroundIndex)?.coverUrl
-            ?: lastReadBook?.coverUrl
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (parallaxCoverUrl != null) {
-                LibraryParallaxBackground(
-                    coverUrl = parallaxCoverUrl,
-                    scrollOffset = scrollState.value,
-                    headerHeight = headerHeight
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    // Take the top padding from Scaffold, and add the parent's bottom nav padding + 8.dp
-                    .padding(
-                        top = innerPadding.calculateTopPadding(),
-                        bottom = contentPadding.calculateBottomPadding() + 8.dp
-                    ),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                if (lastReadBook != null) {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.empty_library),
+                            contentDescription = "Empty library",
+                            modifier = Modifier.size(240.dp)
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            text = "Continue Reading",
+                            text = "Your library is empty",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 12.dp)
+                            fontWeight = FontWeight.Bold
                         )
-                        LastReadBookCard(
-                            book = lastReadBook!!,
-                            onCardClick = { onResumeClick(lastReadBook!!.toBook()) },
-                            onCoverClick = { onLibraryBookClick(it.toBook()) }
-                        )
-                    }
-                }
-
-                if (historyBooks.isNotEmpty()) {
-                    Column {
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Recently Read",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 12.dp)
-                        )
-                        HistoryCarousel(
-                            books = historyBooks,
-                            onBookClick = { onLibraryBookClick(it.toBook()) }
+                            text = "Books you download or add\nwill appear here",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
+            } else {
+                val headerHeight = 550.dp
 
-                userCategories.forEach { category ->
-                    val booksFlow = remember(category.name) {
-                        viewModel.getBooksForCategory(category.name)
+                var currentBackgroundIndex by remember { mutableIntStateOf(0) }
+                LaunchedEffect(allHistoryBooks) {
+                    if (allHistoryBooks.isNotEmpty()) {
+                        while (true) {
+                            delay(6000)
+                            currentBackgroundIndex = (currentBackgroundIndex + 1) % allHistoryBooks.size
+                        }
                     }
-                    val categoryBooks by booksFlow.collectAsState(initial = emptyList())
+                }
 
-                    if (categoryBooks.isNotEmpty()) {
-                        BookRow(
-                            title = category.name,
-                            books = categoryBooks,
-                            onBookClick = { onLibraryBookClick(it.toBook()) },
-                            onSeeAllClick = { onSeeAllClick(category.name, categoryBooks) }
+                val parallaxCoverUrl = allHistoryBooks.getOrNull(currentBackgroundIndex)?.coverUrl
+                    ?: lastReadBook?.coverUrl
+
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (parallaxCoverUrl != null) {
+                        LibraryParallaxBackground(
+                            coverUrl = parallaxCoverUrl,
+                            scrollOffset = scrollState.value,
+                            headerHeight = headerHeight
                         )
                     }
-                }
 
-                if (favoriteBooks.isNotEmpty()) {
-                    BookRow(
-                        title = "Favorites",
-                        books = favoriteBooks,
-                        onBookClick = { onLibraryBookClick(it.toBook()) },
-                        onSeeAllClick = { onSeeAllClick("Favorites", favoriteBooks) }
-                    )
-                }
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            // Take the top padding from Scaffold, and add the parent's bottom nav padding + 8.dp
+                            .padding(
+                                top = innerPadding.calculateTopPadding(),
+                                bottom = contentPadding.calculateBottomPadding() + 8.dp
+                            ),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        if (lastReadBook != null) {
+                            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                Text(
+                                    text = "Continue Reading",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+                                LastReadBookCard(
+                                    book = lastReadBook!!,
+                                    onCardClick = { onResumeClick(lastReadBook!!.toBook()) },
+                                    onCoverClick = { onLibraryBookClick(it.toBook()) }
+                                )
+                            }
+                        }
 
-                if (bookShelf.isNotEmpty()) {
-                    BookRow(
-                        title = "My Shelf",
-                        books = bookShelf,
-                        onBookClick = { onLibraryBookClick(it.toBook()) },
-                        onSeeAllClick = { onSeeAllClick("My Shelf", bookShelf) }
-                    )
+                        if (historyBooks.isNotEmpty()) {
+                            Column {
+                                Text(
+                                    text = "Recently Read",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 12.dp)
+                                )
+                                HistoryCarousel(
+                                    books = historyBooks,
+                                    onBookClick = { onLibraryBookClick(it.toBook()) }
+                                )
+                            }
+                        }
+
+                        userCategories.forEach { category ->
+                            val booksFlow = remember(category.name) {
+                                viewModel.getBooksForCategory(category.name)
+                            }
+                            val categoryBooks by booksFlow.collectAsState(initial = emptyList())
+
+                            if (categoryBooks.isNotEmpty()) {
+                                BookRow(
+                                    title = category.name,
+                                    books = categoryBooks,
+                                    onBookClick = { onLibraryBookClick(it.toBook()) },
+                                    onSeeAllClick = { onSeeAllClick(category.name, categoryBooks) }
+                                )
+                            }
+                        }
+
+                        if (favoriteBooks.isNotEmpty()) {
+                            BookRow(
+                                title = "Favorites",
+                                books = favoriteBooks,
+                                onBookClick = { onLibraryBookClick(it.toBook()) },
+                                onSeeAllClick = { onSeeAllClick("Favorites", favoriteBooks) }
+                            )
+                        }
+
+                        if (bookShelf.isNotEmpty()) {
+                            BookRow(
+                                title = "My Shelf",
+                                books = bookShelf,
+                                onBookClick = { onLibraryBookClick(it.toBook()) },
+                                onSeeAllClick = { onSeeAllClick("My Shelf", bookShelf) }
+                            )
+                        }
+                    }
                 }
             }
         }
