@@ -89,8 +89,8 @@ class BookDetailsRepositoryImpl(
         // Use beginUniqueWork to apply the REPLACE policy to the whole chain
         workManager
             .beginUniqueWork(
-                "process_book_${book.id}", // A unique name for this specific book's chain
-                ExistingWorkPolicy.REPLACE,
+                "global_book_processing_queue", // <-- Use ONE global name
+                ExistingWorkPolicy.APPEND_OR_REPLACE, // <-- Queue them up
                 downloadRequest
             )
             .then(indexRequest)

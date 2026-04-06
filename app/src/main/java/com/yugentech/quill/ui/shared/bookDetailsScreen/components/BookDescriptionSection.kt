@@ -73,7 +73,7 @@ fun BookDescriptionSection(
     var isUserInitiated by remember { mutableStateOf(false) }
 
     Column(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth().padding(bottom = 24.dp)
     ) {
         Text(
             text = "Description",
@@ -123,11 +123,8 @@ fun BookDescriptionSection(
             )
 
             if (fullLineCount > 3) {
-                if (isGutenberg) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
 
-                val yOffset = if (!isGutenberg && isExpanded) (-16).dp else 0.dp
+                val yOffset = if (!isGutenberg && isExpanded) (-8).dp else 0.dp
 
                 Box(
                     modifier = Modifier
@@ -151,7 +148,7 @@ fun BookDescriptionSection(
         }
 
         if (cleanedSubjects.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(horizontal = 4.dp)
