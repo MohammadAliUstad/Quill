@@ -86,7 +86,7 @@ fun DesignCreditCard() {
             }
 
             Text(
-                "The beautiful illustrations and doodles used throughout Sessions are created by Pablo Stanley. Big thanks for his amazing contributions to the open design community!",
+                "The beautiful illustrations and doodles used throughout Quill are created by Pablo Stanley. Big thanks for his amazing contributions to the open design community!",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
                 minLines = 4,

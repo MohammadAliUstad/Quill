@@ -23,7 +23,7 @@ fun BookShelfRow(
     books: List<Book>,
     onBookClick: (Book) -> Unit
 ) {
-    Column(modifier = Modifier.padding(vertical = 12.dp)) {
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
                 text = title,
