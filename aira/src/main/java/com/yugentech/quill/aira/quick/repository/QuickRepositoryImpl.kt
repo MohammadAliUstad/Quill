@@ -1,7 +1,6 @@
 package com.yugentech.quill.aira.quick.repository
 
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.generationConfig
+import com.google.firebase.functions.FirebaseFunctions
 import com.yugentech.quill.aira.quick.prompt.QuickPrompt
 import com.yugentech.quill.aira.quick.util.QuickHandler
 import com.yugentech.quill.aira.rag.RagRetriever
@@ -11,26 +10,15 @@ import com.yugentech.quill.database.dao.BookDao
 import kotlinx.coroutines.flow.Flow
 
 class QuickRepositoryImpl(
-    private val geminiApiKey: String,
+    private val functions: FirebaseFunctions,
     private val ragRetriever: RagRetriever,
     private val bookChunkDao: BookChunkDao,
     private val bookDao: BookDao
 ) : QuickRepository {
 
-    private val model by lazy {
-        GenerativeModel(
-            modelName = "gemini-3.1-flash-lite-preview",
-            apiKey = geminiApiKey,
-            generationConfig = generationConfig {
-                temperature = 0.4f
-                maxOutputTokens = 4096
-            }
-        )
-    }
-
     private val handler by lazy {
         QuickHandler(
-            model = model,
+            functions = functions,
             ragRetriever = ragRetriever,
             bookDao = bookDao,
             bookChunkDao = bookChunkDao

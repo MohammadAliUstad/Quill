@@ -1,9 +1,7 @@
-package com.yugentech.quill.ui.more.subscriptions.components
+package com.yugentech.quill.ui.more.subscriptionsScreen.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -17,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.billingclient.api.ProductDetails
-import com.yugentech.quill.ui.more.subscriptions.parent.PlanOption
+import com.yugentech.quill.ui.more.subscriptionsScreen.parent.PlanOption
 
 @Composable
 fun PriceCard(

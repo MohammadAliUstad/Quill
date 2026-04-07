@@ -12,6 +12,13 @@ import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.text.Normalizer
 
+data class RetrievedChunk(
+    val text: String,
+    val chapterIndex: Int,
+    val chunkIndex: Int,
+    val score: Float
+)
+
 class RagRetriever(
     private val chunkDao: BookChunkDao,
     private val bookDao: BookDao,
@@ -21,13 +28,6 @@ class RagRetriever(
     private var cachedBookId: String? = null
     private var cachedVectors: List<ChunkVectorTuple> = emptyList()
     private val cacheMutex = Mutex()
-
-    data class RetrievedChunk(
-        val text: String,
-        val chapterIndex: Int,
-        val chunkIndex: Int,
-        val score: Float
-    )
 
     suspend fun retrieve(
         bookId: String,

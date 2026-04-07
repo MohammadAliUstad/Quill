@@ -11,13 +11,9 @@ class QuotaService(
     private val firestore: FirebaseFirestore
 ) {
 
-    // Reference to the quota document for a given user
     private fun quotaDocRef(userId: String) =
         firestore.collection("users").document(userId).collection("quota").document("daily")
 
-    // ── fetchQuota ────────────────────────────────────────────────────────────
-
-    // Returns the current quota document, or null if it doesn't exist yet
     suspend fun fetchQuota(userId: String): QuotaData? {
         return try {
             val doc = quotaDocRef(userId).get().await()
@@ -35,9 +31,6 @@ class QuotaService(
         }
     }
 
-    // ── initQuota ─────────────────────────────────────────────────────────────
-
-    // Creates a fresh quota document for a new user or first-time Aira user
     suspend fun initQuota(userId: String, isPro: Boolean) {
         try {
             val data = mapOf(
@@ -53,16 +46,12 @@ class QuotaService(
         }
     }
 
-    // ── resetQuota ────────────────────────────────────────────────────────────
-
-    // Resets queriesUsed to 0 and pushes resetAt to the next midnight
     suspend fun resetQuota(userId: String) {
         try {
             val data = mapOf(
                 QuotaFields.QUERIES_USED to 0,
                 QuotaFields.RESET_AT to midnightTimestamp()
             )
-            // Merge so queriesLimit is preserved
             quotaDocRef(userId).set(data, SetOptions.merge()).await()
             Timber.d("Quota reset for user: $userId")
         } catch (e: Exception) {
@@ -70,9 +59,6 @@ class QuotaService(
         }
     }
 
-    // ── incrementUsage ────────────────────────────────────────────────────────
-
-    // Increments queriesUsed by 1 — called after every successful Aira message send
     suspend fun incrementUsage(userId: String) {
         try {
             quotaDocRef(userId).update(
@@ -84,9 +70,6 @@ class QuotaService(
         }
     }
 
-    // ── updateLimit ───────────────────────────────────────────────────────────
-
-    // Updates queriesLimit when the user's Pro status changes
     suspend fun updateLimit(userId: String, isPro: Boolean) {
         try {
             val limit = if (isPro) QuotaLimits.PRO else QuotaLimits.FREE
@@ -103,9 +86,6 @@ class QuotaService(
         }
     }
 
-    // ── midnightTimestamp ─────────────────────────────────────────────────────
-
-    // Returns a Firestore Timestamp for tonight's midnight in the device's local timezone
     private fun midnightTimestamp(): Timestamp {
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 23)

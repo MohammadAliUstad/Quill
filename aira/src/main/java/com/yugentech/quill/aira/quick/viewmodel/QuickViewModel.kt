@@ -11,13 +11,11 @@ import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.domain.QuotaRepository
+import com.yugentech.theme.tokens.AppConstants.EMPTY
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -103,7 +101,6 @@ class QuickViewModel(
         }
     }
 
-    // --- SHARED STREAM HANDLER ---
     private fun handleResponseStream(response: AiraResponse, onFirstSuccess: () -> Unit) {
         when (response) {
             is AiraResponse.Success -> {
@@ -133,7 +130,12 @@ class QuickViewModel(
     private fun prepareForNewQuery() {
         activeJob?.cancel()
         _uiState.update {
-            it.copy(isLoading = true, isStreaming = false, response = "", error = null)
+            it.copy(
+                isLoading = true,
+                isStreaming = false,
+                response = EMPTY,
+                error = null
+            )
         }
     }
 
@@ -171,7 +173,12 @@ class QuickViewModel(
         activeJob?.cancel()
         activeJob = null
         _uiState.update {
-            it.copy(isLoading = false, isStreaming = false, response = null, error = null)
+            it.copy(
+                isLoading = false,
+                isStreaming = false,
+                response = null,
+                error = null
+            )
         }
     }
 }

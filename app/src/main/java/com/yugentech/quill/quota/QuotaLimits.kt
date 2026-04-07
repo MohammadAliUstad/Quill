@@ -1,6 +1,6 @@
 package com.yugentech.quill.quota
 
 object QuotaLimits {
-    const val FREE = 10
-    const val PRO = 25
+    const val FREE = 0
+    const val PRO = 50
 }

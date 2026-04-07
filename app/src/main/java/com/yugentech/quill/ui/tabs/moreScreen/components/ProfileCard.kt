@@ -137,7 +137,7 @@ fun ProfileCard(
                 }
 
                 FilledTonalButton(
-                    onClick = { /* Non-interactive */ },
+                    onClick = {},
                     modifier = Modifier
                         .weight(1f)
                         .height(MaterialTheme.components.buttonHeight),
