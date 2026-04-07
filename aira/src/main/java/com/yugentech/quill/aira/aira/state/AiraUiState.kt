@@ -1,10 +1,11 @@
 package com.yugentech.quill.aira.aira.state
 
 import com.yugentech.quill.aira.aira.message.AiraMessage
+import com.yugentech.theme.tokens.AppConstants.EMPTY
 
 data class AiraUiState(
-    val bookTitle: String = "",
-    val bookAuthor: String = "",
+    val bookTitle: String = EMPTY,
+    val bookAuthor: String = EMPTY,
     val lastChapterTitle: String? = null,
     val isReady: Boolean = false,
     val isIndexing: Boolean = true,

@@ -74,8 +74,6 @@ fun AiraPeekBar(
         resolveChips(selectedText, currentChapterIndex)
     }
 
-    // THE LATCH FIX: We only update the limit UI state when the bar opens.
-    // If the limit is reached mid-session, the UI won't switch until they dismiss and reopen.
     var enforceLimitUi by remember { mutableStateOf(!airaUiState.canSendQuery) }
 
     LaunchedEffect(isVisible) {
@@ -155,8 +153,6 @@ fun AiraPeekBar(
                             onDismiss = onDismiss
                         )
 
-                        // Removed AnimatedVisibility here. PeekResponseArea handles its own animations
-                        // and we WANT it to be visible so it can gracefully display the response or paywall message.
                         PeekResponseArea(
                             airaUiState = airaUiState,
                             showLimitReached = enforceLimitUi,
@@ -170,7 +166,6 @@ fun AiraPeekBar(
                             }
                         )
 
-                        // Smoothly animate between the InputBar and QuotaLimitBar using our latched state
                         AnimatedContent(
                             targetState = enforceLimitUi,
                             transitionSpec = {
