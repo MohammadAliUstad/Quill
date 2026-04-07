@@ -29,7 +29,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.allBooks.viewmodel.AllBooksViewModel
+import com.yugentech.quill.allBooks.AllBooksViewModel
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.ui.tabs.libraryScreen.components.BookItem
@@ -40,7 +40,7 @@ import org.koin.androidx.compose.koinViewModel
 fun AllBooksScreen(
     onBackClick: () -> Unit,
     onBookClick: (Book) -> Unit,
-    viewModel: AllBooksViewModel = koinViewModel()
+    viewModel: AllBooksViewModel
 ) {
     val title by viewModel.title.collectAsState()
     val books by viewModel.books.collectAsState()
@@ -53,9 +53,9 @@ fun AllBooksScreen(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                // Gradient fades in as user scrolls — gives the bar a background
-                // without a hard colour change. At rest (offset = 0) it's invisible.
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -110,7 +110,10 @@ fun AllBooksScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(items = books, key = { it.id }) { book ->
+            items(
+                items = books,
+                key = { it.id }
+            ) { book ->
                 BookItem(
                     book = book,
                     onClick = { onBookClick(book.toBook()) }

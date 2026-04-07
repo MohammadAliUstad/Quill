@@ -21,7 +21,8 @@ val bookDetailsModule = module {
     viewModel {
         BookDetailsViewModel(
             repository = get(),
-            savedStateHandle = get()
+            savedStateHandle = get(),
+            billingRepository = get()
         )
     }
 }

@@ -79,9 +79,12 @@ fun SubscribeBottomBar(
                         targetState = isRestoring,
                         transitionSpec = {
                             // Fade + Scale In for the new state, simple fade out for the old one
-                            (fadeIn(animationSpec = tween(220, delayMillis = 90)) +
-                                    scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90)))
-                                .togetherWith(fadeOut(animationSpec = tween(90)))
+                            (fadeIn(animationSpec = tween(220, delayMillis = 90))
+                                    + scaleIn(
+                                        initialScale = 0.92f,
+                                        animationSpec = tween(220, delayMillis = 90)
+                                    )
+                            ).togetherWith(fadeOut(animationSpec = tween(90)))
                         },
                         label = "restore_button_transition"
                     ) { stateIsRestoring ->

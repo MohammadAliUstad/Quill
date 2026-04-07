@@ -33,7 +33,7 @@ fun ProFeaturesSection() {
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
     ) {
-        // Free tier card
+        // Free tier card - NO AI MENTIONED
         QueryTierCard(
             icon = {
                 Icon(
@@ -45,14 +45,14 @@ fun ProFeaturesSection() {
             },
             label = "Current Plan",
             tierName = "Basic Reader",
-            subtitle = "Limited Preview",
-            description = "Experience the magic of Aira. Ask a few free questions to discover how AI can enhance your reading.",
+            subtitle = "Standard Library",
+            description = "Enjoy a beautiful, focused reading environment for your local library. AI companion features are reserved for Pro members.",
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             borderColor = MaterialTheme.colorScheme.outlineVariant
         )
 
-        // Pro tier card
+        // Pro tier card - UNLOCKS AI
         QueryTierCard(
             icon = {
                 Icon(
@@ -64,8 +64,8 @@ fun ProFeaturesSection() {
             },
             label = "Upgrade to",
             tierName = "Quill Pro",
-            subtitle = "Premium Access",
-            description = "Unlock your personal AI companion. Dive deeply into themes, plots, and characters with generous daily access.",
+            subtitle = "AI Reading Companion",
+            description = "Unlock Aira, your personal AI companion. Deeply analyze themes, hidden plots, and character motivations with generous daily access to AI insights.",
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
@@ -93,38 +93,47 @@ private fun QueryTierCard(
         border = BorderStroke(1.dp, borderColor),
         shape = RoundedCornerShape(MaterialTheme.corners.extraLarge)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = MaterialTheme.spacing.l),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.l)
+                .padding(MaterialTheme.spacing.l), // Standardize padding for the entire content block
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m) // Spacing between the header row and description
         ) {
-            icon()
-            Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = contentColor.copy(alpha = 0.7f),
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = tierName,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = contentColor.copy(alpha = 0.8f)
-                )
+            // Header Row: Icon and Title Information
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.l)
+            ) {
+                icon()
+                Column {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
+                    Text(
+                        text = tierName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
+
+            // Description Text: Positioned directly below the header row
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = contentColor.copy(alpha = 0.8f)
+            )
         }
     }
 }

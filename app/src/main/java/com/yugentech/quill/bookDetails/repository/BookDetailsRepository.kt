@@ -10,7 +10,8 @@ interface BookDetailsRepository {
     fun getAllCategories(): Flow<List<CategoryEntity>>
     suspend fun isBookInLibrary(bookId: String): Boolean
     suspend fun getBookOnce(bookId: String): BookEntity?
-    suspend fun startDownload(book: Book)
+    suspend fun startDownload(book: Book, isPro: Boolean)
+    suspend fun indexAllDownloadedBooks()
     suspend fun removeDownload(bookId: String)
     suspend fun deleteBook(bookId: String)
     suspend fun updateCategory(book: Book, newCategory: String)

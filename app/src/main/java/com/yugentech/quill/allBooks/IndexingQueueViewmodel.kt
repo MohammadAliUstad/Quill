@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.tabs.moreScreen.parent
+package com.yugentech.quill.allBooks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -38,30 +38,36 @@ class IndexingQueueViewModel(
                         it.state == WorkInfo.State.BLOCKED
             }
 
-            // 2. Map the generic WorkInfo to our UI state
-            activeWorks.mapNotNull { workInfo ->
-                // Extract the exact book ID from the tag we set earlier ("index_12345")
+            val uiItems = mutableListOf<QueueItemUiState>()
+
+            // 2. Loop manually so we can safely call suspend functions
+            for (workInfo in activeWorks) {
                 val bookId = workInfo.tags
                     .find { it.startsWith("index_") }
-                    ?.removePrefix("index_") 
-                    ?: return@mapNotNull null
+                    ?.removePrefix("index_")
+                    ?: continue
 
-                // Fetch the book title and cover from the DB
-                val book = bookDao.getBookEntity(bookId) ?: return@mapNotNull null
+                // Safely suspend to fetch the book title and cover from the DB
+                val book = bookDao.getBookEntity(bookId) ?: continue
 
                 // Extract the real-time progress we broadcast from the Worker
                 val progress = workInfo.progress.getInt(BookEmbeddingWorker.KEY_PROGRESS, 0)
 
-                QueueItemUiState(
-                    bookId = book.id,
-                    title = book.title,
-                    coverUrl = book.coverUrl,
-                    isRunning = workInfo.state == WorkInfo.State.RUNNING,
-                    progress = progress
+                uiItems.add(
+                    QueueItemUiState(
+                        bookId = book.id,
+                        title = book.title,
+                        coverUrl = book.coverUrl,
+                        isRunning = workInfo.state == WorkInfo.State.RUNNING,
+                        progress = progress
+                    )
                 )
             }
-            // 3. Sort so the currently RUNNING book is always at the top of the screen
-            .sortedByDescending { it.isRunning }
+
+            // 3. FIX: Filter duplicates if the same book is queued multiple times, then sort
+            uiItems
+                .distinctBy { it.bookId }
+                .sortedByDescending { it.isRunning }
         }
         .stateIn(
             scope = viewModelScope,

@@ -22,7 +22,6 @@ fun NavGraphBuilder.authGraph(
     webClientId: String,
     context: Context
 ) {
-    // Defines the sign-in screen
     composable(
         route = AppScreen.SignIn.route,
         enterTransition = { defaultEnterTransition() },
@@ -52,7 +51,6 @@ fun NavGraphBuilder.authGraph(
         )
     }
 
-    // Defines the sign-up screen
     composable(
         route = AppScreen.SignUp.route,
         enterTransition = { defaultEnterTransition() },

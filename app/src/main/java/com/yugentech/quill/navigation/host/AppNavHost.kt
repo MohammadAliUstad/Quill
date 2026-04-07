@@ -15,9 +15,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.billing.SubscriptionViewModel
+import com.yugentech.quill.navigation.navgraph.aboutGraph
+import com.yugentech.quill.navigation.navgraph.accountGraph
 import com.yugentech.quill.navigation.navgraph.authGraph
-import com.yugentech.quill.navigation.navgraph.detailGraph
+import com.yugentech.quill.navigation.navgraph.bookFeatureGraph
 import com.yugentech.quill.navigation.navgraph.mainGraph
+import com.yugentech.quill.navigation.navgraph.settingsGraph
 import com.yugentech.quill.navigation.navgraph.sourceGraph
 import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.ui.mainScreen.utils.defaultEnterTransition
@@ -46,7 +49,6 @@ fun AppNavHost(
         }
     }
 
-    // Handles the Google Sign-In intent launcher
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = { result ->
@@ -59,7 +61,6 @@ fun AppNavHost(
         }
     )
 
-    // Launches the Google Sign-In intent when available
     LaunchedEffect(authState.intent) {
         authState.intent?.let {
             Timber.d("Launching Google Sign-In Intent")
@@ -67,7 +68,6 @@ fun AppNavHost(
         }
     }
 
-    // Manages auth-driven navigation
     LaunchedEffect(authState.isUserLoggedIn, authState.userId) {
         if (!authState.isLoading && !authState.isInitializing) {
             val currentRoute = navController.currentDestination?.route
@@ -115,11 +115,9 @@ fun AppNavHost(
         sourceGraph(
             navController = navController
         )
-        detailGraph(
-            navController = navController,
-            context = context,
-            authViewModel = authViewModel,
-            subscriptionViewModel = subscriptionViewModel
-        )
+        bookFeatureGraph(navController, context)
+        accountGraph(navController, authViewModel, subscriptionViewModel)
+        settingsGraph(navController)
+        aboutGraph(navController)
     }
 }

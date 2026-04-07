@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 
 @Composable
 fun BookDescriptionSection(
@@ -68,12 +70,26 @@ fun BookDescriptionSection(
     }
 
     var fullLineCount by remember { mutableIntStateOf(0) }
-
-    // THE FIX: Track if a human actually clicked the button
     var isUserInitiated by remember { mutableStateOf(false) }
 
+    // 1. ANIMATION FIX: Allow animations after the initial composition.
+    // This prevents the screen-load glitch, but allows ViewModel state changes
+    // (like finishing a download) to smoothly animate the collapse.
+    var allowAnimations by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(100) // Give the UI a tiny moment to calculate initial layout
+        allowAnimations = true
+    }
+
+    // 2. VISIBILITY FIX: A robust check to show the expand button.
+    // Relying solely on lineCount can be flaky if maxLines limits the reported count.
+    // We use a character length heuristic (>150 chars) as a reliable fallback.
+    val showExpandToggle = fullLineCount > 3 || (processedDescription?.length ?: 0) > 150
+
     Column(
-        modifier = modifier.fillMaxWidth().padding(bottom = 24.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = if (isExpanded) 24.dp else 8.dp)
     ) {
         Text(
             text = "Description",
@@ -89,9 +105,7 @@ fun BookDescriptionSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .animateContentSize(
-                    // If the user hasn't clicked yet (DB is loading/overriding), SNAP instantly to prevent visual glitching.
-                    // Once they tap the button, switch to SPRING for a beautiful, smooth expansion.
-                    animationSpec = if (isUserInitiated) {
+                    animationSpec = if (allowAnimations || isUserInitiated) {
                         spring(
                             dampingRatio = Spring.DampingRatioNoBouncy,
                             stiffness = Spring.StiffnessMediumLow
@@ -112,18 +126,21 @@ fun BookDescriptionSection(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) {
-                        if (fullLineCount > 3) {
-                            isUserInitiated = true // User touched it! Enable animations.
+                        if (showExpandToggle) {
+                            isUserInitiated = true
                             onExpandedChange(!isExpanded)
                         }
                     },
                 onLineCountChanged = { lineCount ->
-                    fullLineCount = lineCount
+                    // VISIBILITY FIX PART 2: Never shrink the recorded max lines.
+                    // This stops the button from vanishing when the text collapses.
+                    if (lineCount > fullLineCount) {
+                        fullLineCount = lineCount
+                    }
                 }
             )
 
-            if (fullLineCount > 3) {
-
+            if (showExpandToggle) {
                 val yOffset = if (!isGutenberg && isExpanded) (-8).dp else 0.dp
 
                 Box(
@@ -131,7 +148,7 @@ fun BookDescriptionSection(
                         .offset(y = yOffset)
                         .clip(CircleShape)
                         .clickable {
-                            isUserInitiated = true // User touched it! Enable animations.
+                            isUserInitiated = true
                             onExpandedChange(!isExpanded)
                         }
                         .size(40.dp),
