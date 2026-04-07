@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -47,36 +49,26 @@ dependencies {
     implementation(project(":database"))
     implementation(project(":domain"))
 
+    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.datastore.preferences)
-
     implementation(libs.readium.shared)
     implementation(libs.readium.streamer)
     implementation(libs.readium.navigator)
-
     implementation(libs.timber)
-
     implementation(libs.androidx.webkit)
     implementation(libs.androidx.core.ktx)
-
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.runtime)
-
+    implementation(libs.androidx.material3)
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
-
-    implementation(libs.wavy.slider)
-    implementation(libs.androidx.animation)
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -10,7 +12,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 26
     }
 
     compileOptions {
@@ -26,8 +28,7 @@ android {
 }
 
 dependencies {
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.google.firebase.auth.ktx)
+    implementation(libs.firebase.auth.ktx)
     implementation(libs.billing.ktx)
     implementation(libs.kotlinx.coroutines.android)
 }

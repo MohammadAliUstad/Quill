@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -45,30 +47,19 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":theme"))
 
-    // 1. WorkManager (Required for BookIndexingWorker)
     implementation(libs.androidx.work.runtime.ktx)
-
+    implementation(libs.firebase.functions.ktx)
     implementation(libs.onnxruntime.android)
-
-    // 2. Readium (Required for EpubTextExtractor)
     implementation(libs.readium.shared)
     implementation(libs.readium.streamer)
-
-    // 3. MediaPipe (Required for EmbeddingEngine)
-    implementation(libs.tasks.text)
-
-    // 4. Lifecycle (Required for AiraViewModel)
+    implementation(libs.firebase.auth.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-
-    // 5. AI & Logic
     implementation(libs.generativeai)
     implementation(libs.koin.android)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.timber)
-
-    // 6. Core Android Library Defaults
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.google.material)

@@ -16,6 +16,8 @@ import com.yugentech.quill.database.entity.CategoryEntity
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.theme.tokens.AppConstants.EMPTY
+import com.yugentech.theme.tokens.AppConstants.SHELF
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -33,11 +35,9 @@ class CloudSyncRepositoryImpl(
         try {
             Timber.d("Starting library and category sync on login")
 
-            // 1. Wipe the local database
             bookDao.deleteAllBooks()
             categoryDao.deleteAllUserCategories()
 
-            // 2. Fetch and restore the user's categories from Firestore first
             val cloudCategoriesResult = cloudSyncService.fetchCategories()
             if (cloudCategoriesResult.isSuccess) {
                 val cloudCategories = cloudCategoriesResult.getOrNull() ?: emptyList()
@@ -59,7 +59,6 @@ class CloudSyncRepositoryImpl(
                 Timber.e("Failed to fetch categories from cloud")
             }
 
-            // 3. Fetch the user's library from Firestore
             val cloudLibraryResult = cloudSyncService.fetchCloudLibrary()
 
             if (cloudLibraryResult.isSuccess) {
@@ -69,7 +68,6 @@ class CloudSyncRepositoryImpl(
                 for (cloudData in cloudBooks) {
                     val bookId = cloudData["id"] as? String ?: continue
 
-                    // CHANGED: Point to the internal hidden books folder
                     val expectedFile = File(context.filesDir, "books/$bookId.epub")
                     val fileExists = expectedFile.exists()
 
@@ -77,22 +75,19 @@ class CloudSyncRepositoryImpl(
                     val cloudSubjects = cloudData["subjects"] as? List<String> ?: emptyList()
                     val bookTitle = cloudData["title"] as? String ?: "Unknown Title"
 
-                    // --- NEW: The Silent Re-Parse ---
                     var localChapters: List<Chapter> = emptyList()
                     var localTotalPages = (cloudData["totalPages"] as? Long)?.toInt() ?: 0
 
                     if (fileExists) {
                         try {
-                            // If the file is here, parse it quickly to rebuild the Table of Contents
                             val parser = EpubParser(context)
                             val parsedData = parser.parse(expectedFile.absolutePath, bookTitle)
                             localChapters = parsedData.chapters
-                            localTotalPages = parsedData.totalPages // Use accurate local calculation
+                            localTotalPages = parsedData.totalPages
                         } catch (e: Exception) {
                             Timber.e(e, "Silent parse failed for existing book: $bookId")
                         }
                     }
-                    // --------------------------------
 
                     val entity = BookEntity(
                         id = bookId,
@@ -102,29 +97,24 @@ class CloudSyncRepositoryImpl(
                         source = runCatching {
                             BookSource.valueOf(cloudData["source"] as String)
                         }.getOrDefault(BookSource.STANDARD_EBOOKS),
-
-                        progressPercent = (cloudData["progressPercent"] as? Double)?.toFloat() ?: 0f,
-
-                        // CHANGED: Use the local reparsed pages if available, otherwise cloud fallback
+                        progressPercent = (cloudData["progressPercent"] as? Double)?.toFloat()
+                            ?: 0f,
                         totalPages = localTotalPages,
-
                         lastChapterTitle = cloudData["lastChapterTitle"] as? String,
                         lastReadTime = cloudData["lastReadTime"] as? Long ?: 0L,
                         lastChapterIndex = (cloudData["lastChapterIndex"] as? Long)?.toInt() ?: 0,
-                        lastScrollPosition = (cloudData["lastScrollPosition"] as? Long)?.toInt() ?: 0,
+                        lastScrollPosition = (cloudData["lastScrollPosition"] as? Long)?.toInt()
+                            ?: 0,
                         lastLocatorJson = cloudData["lastLocatorJson"] as? String,
-                        userCategory = cloudData["userCategory"] as? String ?: "Shelf",
+                        userCategory = cloudData["userCategory"] as? String ?: SHELF,
                         isFavorite = cloudData["isFavorite"] as? Boolean ?: false,
-                        downloadUrl = cloudData["downloadUrl"] as? String ?: "",
+                        downloadUrl = cloudData["downloadUrl"] as? String ?: EMPTY,
                         description = cloudData["description"] as? String,
                         subjects = cloudSubjects,
                         language = cloudData["language"] as? String,
-
                         downloadStatus = if (fileExists) DownloadStatus.DOWNLOADED else DownloadStatus.NOT_DOWNLOADED,
                         localFilePath = if (fileExists) expectedFile.absolutePath else null,
                         fileSizeBytes = if (fileExists) expectedFile.length() else 0L,
-
-                        // CHANGED: Attach the rebuilt chapter list!
                         chapters = localChapters
                     )
 
@@ -150,30 +140,24 @@ class CloudSyncRepositoryImpl(
         Timber.d("Wiping local data on sign out")
         bookDao.deleteAllBooks()
         categoryDao.deleteAllUserCategories()
-        // Clear sessions and Aira messages here too
     }
 
     override suspend fun syncBooksToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // 1. Ask the DAO for the dirty books
             val unsyncedBooks = bookDao.getUnsyncedBooks()
 
-            // FILTER: Exclude any book that is user imported
             val booksToSync = unsyncedBooks.filter { it.source != BookSource.USER_IMPORTED }
 
             if (booksToSync.isEmpty()) {
                 Timber.d("No unsynced books to upload")
-                // Still mark as synced so the DAO doesn't keep querying the local-only books
                 bookDao.markAllBooksAsSynced()
                 return@withContext Result.success(Unit)
             }
 
-            // 2. Upload them one by one
             booksToSync.forEach { book ->
                 cloudSyncService.syncBookToCloud(book)
             }
 
-            // 3. Mark them all as clean!
             bookDao.markAllBooksAsSynced()
 
             Timber.i("Successfully uploaded ${booksToSync.size} books to cloud")
@@ -208,7 +192,6 @@ class CloudSyncRepositoryImpl(
 
     override suspend fun deleteCategoryFromCloud(categoryId: String) = withContext(Dispatchers.IO) {
         try {
-            // ONLY handles the network call
             cloudSyncService.deleteCategoryFromCloud(categoryId)
             Timber.i("Successfully deleted category document $categoryId from cloud")
         } catch (e: Exception) {
@@ -218,7 +201,6 @@ class CloudSyncRepositoryImpl(
 
     override suspend fun deleteBookFromCloud(bookId: String) = withContext(Dispatchers.IO) {
         try {
-            // ONLY handles the network call to Firestore
             cloudSyncService.deleteBookFromCloud(bookId)
             Timber.i("Successfully deleted book document $bookId from cloud")
         } catch (e: Exception) {
@@ -235,11 +217,9 @@ class CloudSyncRepositoryImpl(
 
         val syncWorkRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(constraints)
-            // Wait 15 seconds before actually running the network call
             .setInitialDelay(15, TimeUnit.SECONDS)
             .build()
 
-        // REPLACE is the magic policy that resets the timer
         WorkManager.getInstance(context).enqueueUniqueWork(
             "OpportunisticCloudSync",
             ExistingWorkPolicy.REPLACE,
@@ -251,37 +231,33 @@ class CloudSyncRepositoryImpl(
         try {
             Timber.d("Starting category-only sync on login")
 
-            // 1. Wipe the local database to ensure a clean slate for the new user
             bookDao.deleteAllBooks()
             categoryDao.deleteAllUserCategories()
 
-            // 2. Fetch the user's categories from Firestore
             val cloudCategoriesResult = cloudSyncService.fetchCategories()
 
             if (cloudCategoriesResult.isSuccess) {
                 val cloudCategories = cloudCategoriesResult.getOrNull() ?: emptyList()
 
-                // 3. Map Firestore maps back to Room entities
                 val categoryEntities = cloudCategories.map { categoryMap ->
                     CategoryEntity(
-                        // Firestore stores the Long ID as a String
                         id = (categoryMap["id"] as? String)?.toLongOrNull() ?: 0L,
                         name = categoryMap["name"] as? String ?: "Unknown",
                         sortOrder = (categoryMap["sortOrder"] as? Long)?.toInt() ?: 0,
                         isSystem = (categoryMap["isSystem"] as? Boolean) ?: false,
-                        isSynced = true // Freshly pulled from the cloud
+                        isSynced = true
                     )
                 }
 
                 if (categoryEntities.isNotEmpty()) {
-                    // 4. Batch insert into Room
                     categoryDao.insertCategories(categoryEntities)
                     Timber.i("Successfully restored ${categoryEntities.size} categories")
                 }
 
                 Result.success(Unit)
             } else {
-                val error = cloudCategoriesResult.exceptionOrNull() ?: Exception("Cloud fetch failed")
+                val error =
+                    cloudCategoriesResult.exceptionOrNull() ?: Exception("Cloud fetch failed")
                 Timber.e(error, "Failed to fetch categories from Firestore")
                 Result.failure(error)
             }

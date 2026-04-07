@@ -40,7 +40,7 @@ fun LazyListScope.chaptersListSection(
     if (chapters.isEmpty()) return
 
     item {
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Chapters",
             style = MaterialTheme.typography.titleLarge,

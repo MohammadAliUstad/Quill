@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    // Add KSP for Room and Serialization for TypeConverters
     id("com.google.devtools.ksp")
     kotlin("plugin.serialization")
 }
@@ -13,7 +12,6 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        // Aligned with app module for consistent behavior
         minSdk = 26
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -43,21 +41,13 @@ android {
 }
 
 dependencies {
-    // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-
     implementation(libs.kotlinx.serialization.json)
-
-    // Logging
     implementation(libs.timber)
-
-    // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-
-    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

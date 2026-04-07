@@ -2,7 +2,6 @@ package com.yugentech.quill.discover
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.gutenberg.repository.GutenbergRepository
 import com.yugentech.quill.standardEBooks.repository.StandardRepository
 import kotlinx.coroutines.Job
@@ -23,33 +22,29 @@ class DiscoverViewModel(
 
     private var searchJob: Job? = null
 
-    // Flag to prevent the UI from violently reshuffling while the user is scrolling
     private var hasSelectedCategories = false
 
     init {
         loadStandardStorefront()
     }
 
-    // ─── STOREFRONT LOGIC (Bulletproof Approach) ───────────────────────────
     private fun loadStandardStorefront() {
         viewModelScope.launch {
             _uiState.update { it.copy(isFeedLoading = true) }
 
-            // 1. Observe New Releases for the Hero Carousel
             launch {
                 standardRepository.getNewReleasesFlow().collect { books ->
-                    // THE FIX: Only populate the Hero Carousel if it is currently empty!
-                    // This stops the books from snapping when the background network sync finishes.
                     if (books.isNotEmpty() && _uiState.value.heroBooks.isEmpty()) {
-                        _uiState.update { it.copy(
-                            heroBooks = books.take(10),
-                            isFeedLoading = false
-                        )}
+                        _uiState.update {
+                            it.copy(
+                                heroBooks = books.take(10),
+                                isFeedLoading = false
+                            )
+                        }
                     }
                 }
             }
 
-            // 2. Build the Shuffled Category Rows from a solid pool
             if (!hasSelectedCategories) {
                 hasSelectedCategories = true
 
@@ -61,23 +56,19 @@ class DiscoverViewModel(
 
                 val displayCategories = genrePool.shuffled().take(5)
 
-                // Pre-allocate the map to guarantee strict vertical UI order
                 _uiState.update { state ->
                     state.copy(categoryRows = displayCategories.associateWith { emptyList() })
                 }
 
-                // Fetch and observe the chosen categories
                 displayCategories.forEach { category ->
                     launch { standardRepository.syncTopicBooks(category) }
 
                     launch {
                         standardRepository.getTopicBooksFlow(category).collect { categoryBooks ->
-                            // THE FIX: Only update this specific category row if it is currently empty!
-                            // Prevents shelves from reloading and shifting the user's scroll position.
                             if (categoryBooks.isNotEmpty() && _uiState.value.categoryRows[category].isNullOrEmpty()) {
                                 _uiState.update { state ->
                                     val updatedMap = LinkedHashMap(state.categoryRows)
-                                    updatedMap[category] = categoryBooks.take(15) // Keep shelves tidy
+                                    updatedMap[category] = categoryBooks.take(15)
                                     state.copy(categoryRows = updatedMap)
                                 }
                             }
@@ -86,24 +77,24 @@ class DiscoverViewModel(
                 }
             }
 
-            // 3. Trigger base network syncs
             launch { standardRepository.syncNewReleases() }
             launch { standardRepository.syncCategories() }
         }
     }
 
-    // ─── GLOBAL SEARCH LOGIC ─────────────────────────────────────────────────
     fun onSearchQuery(query: String) {
         if (query.isBlank()) {
             clearSearch()
             return
         }
 
-        _uiState.update { it.copy(
-            isSearchActive = true,
-            isSearchLoading = true,
-            searchResults = emptyList()
-        )}
+        _uiState.update {
+            it.copy(
+                isSearchActive = true,
+                isSearchLoading = true,
+                searchResults = emptyList()
+            )
+        }
 
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
@@ -113,19 +104,23 @@ class DiscoverViewModel(
             val standardResult = standardDeferred.await().getOrNull()?.books ?: emptyList()
             val gutenbergResult = gutenbergDeferred.await().getOrNull()?.books ?: emptyList()
 
-            _uiState.update { it.copy(
-                searchResults = standardResult + gutenbergResult,
-                isSearchLoading = false
-            )}
+            _uiState.update {
+                it.copy(
+                    searchResults = standardResult + gutenbergResult,
+                    isSearchLoading = false
+                )
+            }
         }
     }
 
     fun clearSearch() {
         searchJob?.cancel()
-        _uiState.update { it.copy(
-            isSearchActive = false,
-            isSearchLoading = false,
-            searchResults = emptyList()
-        )}
+        _uiState.update {
+            it.copy(
+                isSearchActive = false,
+                isSearchLoading = false,
+                searchResults = emptyList()
+            )
+        }
     }
 }

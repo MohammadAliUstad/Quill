@@ -51,7 +51,6 @@ fun DonationDialog(
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        // Samsung Fix: Disable platform default width
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Card(
@@ -116,21 +115,18 @@ fun DonationDialog(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Button 1: Coffee
                     PaymentOptionButton(
                         text = "Buy me a Coffee",
-                        icon = Icons.Default.Coffee, // You can reuse the Coffee icon
+                        icon = Icons.Default.Coffee,
                         onClick = onCoffeeClick
                     )
 
-                    // Button 2: Lunch
                     PaymentOptionButton(
                         text = "Buy me Lunch",
-                        icon = Icons.Default.ShoppingBag, // Use a different icon for distinction
+                        icon = Icons.Default.ShoppingBag,
                         onClick = onLunchClick
                     )
 
-                    // Button 3: Ko-fi
                     PaymentOptionButton(
                         text = "Ko-fi (PayPal / International)",
                         icon = Icons.Default.Public,

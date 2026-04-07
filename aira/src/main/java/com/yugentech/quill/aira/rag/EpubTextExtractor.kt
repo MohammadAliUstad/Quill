@@ -99,8 +99,7 @@ class EpubTextExtractor(private val context: Context) {
             val publication = publicationOpener.open(asset, allowUserInteraction = false)
                 .getOrElse { return@withContext 0 }
             val count = publication.readingOrder.count { link ->
-                // Mirror the same MIN_CHAPTER_LENGTH filter from extractStream
-                true // we count all spine items; extractor filters short ones anyway
+                true
             }
             publication.close()
             count
