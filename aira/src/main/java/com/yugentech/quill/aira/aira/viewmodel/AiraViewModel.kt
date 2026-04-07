@@ -14,6 +14,7 @@ import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.domain.QuotaRepository
+import com.yugentech.theme.tokens.AppConstants.EMPTY
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +44,7 @@ class AiraViewModel(
 
     init {
         observeQuota()
-        observeBilling() // Start observing billing
+        observeBilling()
         observeBookAndIndexing()
         observeChatHistory()
     }
@@ -56,15 +57,13 @@ class AiraViewModel(
         }
     }
 
-    // ... inside AiraViewModel.kt ...
-
     private fun observeBookAndIndexing() {
         viewModelScope.launch {
             val book = bookRepository.getBookDetails(bookId)
             _uiState.update {
                 it.copy(
-                    bookTitle = book?.title ?: "",
-                    bookAuthor = book?.author ?: "",
+                    bookTitle = book?.title ?: EMPTY,
+                    bookAuthor = book?.author ?: EMPTY,
                     lastChapterTitle = book?.lastChapterTitle,
                     hasStartedReading = book?.lastChapterTitle != null,
                     spoilerLockEnabled = book?.spoilerLockEnabled ?: true
@@ -76,8 +75,6 @@ class AiraViewModel(
             .getWorkInfosByTagLiveData("index_$bookId")
             .asFlow()
             .onEach { workInfoList ->
-                // BUG FIX: Don't use firstOrNull(). WorkManager might return an old
-                // SUCCEEDED/FAILED job first. Find the active one, or fallback to the latest.
                 val info = workInfoList.firstOrNull {
                     it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED
                 } ?: workInfoList.lastOrNull()
@@ -87,6 +84,7 @@ class AiraViewModel(
                         val ready = bookRepository.isReady(bookId)
                         _uiState.update { it.copy(isReady = ready, isIndexing = !ready) }
                     }
+
                     info.state == WorkInfo.State.RUNNING || info.state == WorkInfo.State.ENQUEUED -> {
                         val progress = info.progress.getInt(BookEmbeddingWorker.KEY_PROGRESS, 0)
                         _uiState.update {
@@ -97,6 +95,7 @@ class AiraViewModel(
                             )
                         }
                     }
+
                     info.state == WorkInfo.State.SUCCEEDED -> {
                         _uiState.update {
                             it.copy(
@@ -106,6 +105,7 @@ class AiraViewModel(
                             )
                         }
                     }
+
                     info.state == WorkInfo.State.FAILED -> {
                         _uiState.update {
                             it.copy(
@@ -115,9 +115,11 @@ class AiraViewModel(
                             )
                         }
                     }
+
                     info.state == WorkInfo.State.CANCELLED -> {
                         _uiState.update { it.copy(isIndexing = false) }
                     }
+
                     else -> Unit
                 }
             }

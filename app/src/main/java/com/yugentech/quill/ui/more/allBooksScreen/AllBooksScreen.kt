@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.tabs.libraryScreen.parent
+package com.yugentech.quill.ui.more.allBooksScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -33,7 +33,6 @@ import com.yugentech.quill.allBooks.AllBooksViewModel
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.ui.tabs.libraryScreen.components.BookItem
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
