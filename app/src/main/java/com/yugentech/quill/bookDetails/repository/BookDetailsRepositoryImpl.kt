@@ -13,7 +13,8 @@ import com.yugentech.quill.database.mapper.toEntity
 import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.quill.bookDetails.worker.BookDownloadWorker
 import com.yugentech.quill.aira.rag.BookEmbeddingWorker
-import com.yugentech.quill.cloud.repository.CloudSyncRepository // <-- NEW IMPORT
+import com.yugentech.quill.cloud.repository.CloudSyncRepository
+import com.yugentech.theme.tokens.AppConstants.SHELF
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 
@@ -21,7 +22,7 @@ class BookDetailsRepositoryImpl(
     private val bookDao: BookDao,
     private val categoryDao: CategoryDao,
     private val workManager: WorkManager,
-    private val cloudSyncRepository: CloudSyncRepository // <-- INJECTED SCHEDULER
+    private val cloudSyncRepository: CloudSyncRepository
 ) : BookDetailsRepository {
 
     override fun getBook(bookId: String): Flow<BookEntity?> =
@@ -36,8 +37,7 @@ class BookDetailsRepositoryImpl(
     override suspend fun getBookOnce(bookId: String): BookEntity? =
         bookDao.getBookEntity(bookId)
 
-    // LOCAL ONLY: Downloading a file doesn't affect cloud sync status
-    override suspend fun startDownload(book: Book) {
+    override suspend fun startDownload(book: Book, isPro: Boolean) {
         val existingBook = bookDao.getBookEntity(book.id)
 
         val newEntity = BookEntity(
@@ -53,7 +53,7 @@ class BookDetailsRepositoryImpl(
             downloadStatus = DownloadStatus.DOWNLOADING,
             isFavorite = existingBook?.isFavorite ?: false,
             isSynced = false,
-            userCategory = existingBook?.userCategory ?: "Shelf",
+            userCategory = existingBook?.userCategory ?: SHELF,
             addedAt = existingBook?.addedAt ?: System.currentTimeMillis(),
             progressPercent = existingBook?.progressPercent ?: 0f,
             totalPages = existingBook?.totalPages ?: 0,
@@ -71,53 +71,53 @@ class BookDetailsRepositoryImpl(
                 workDataOf(
                     "BOOK_ID" to book.id,
                     "DOWNLOAD_URL" to book.downloadUrl,
-                    "BOOK_TITLE" to book.title
-                    // "IS_PRO_USER" to isProUser // <-- Add this back here if you are passing it into the function
+                    "BOOK_TITLE" to book.title,
+                    "IS_PRO_USER" to isPro
                 )
             )
             .addTag("download_${book.id}")
             .build()
 
-        val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
-            .setInputData(
-                workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to book.id)
-            )
-            .addTag("index_${book.id}")
-            .addTag("AI_INDEXING")
-            .build()
-
-        // Use beginUniqueWork to apply the REPLACE policy to the whole chain
-        workManager
-            .beginUniqueWork(
-                "global_book_processing_queue", // <-- Use ONE global name
-                ExistingWorkPolicy.APPEND_OR_REPLACE, // <-- Queue them up
-                downloadRequest
-            )
-            .then(indexRequest)
-            .enqueue()
+        workManager.enqueueUniqueWork(
+            "download_${book.id}",
+            ExistingWorkPolicy.REPLACE,
+            downloadRequest
+        )
 
         cloudSyncRepository.scheduleBackgroundSync()
     }
 
-    // LOCAL ONLY: Removing a file doesn't erase cloud reading progress
+    override suspend fun indexAllDownloadedBooks() {
+        val downloadedBooks = bookDao.getUnindexedDownloadedBooks()
+
+        downloadedBooks.forEach { book ->
+            val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
+                .setInputData(workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to book.id))
+                .addTag("index_${book.id}")
+                .addTag("AI_INDEXING")
+                .build()
+
+            workManager.enqueueUniqueWork(
+                "global_book_processing_queue",
+                ExistingWorkPolicy.APPEND_OR_REPLACE,
+                indexRequest
+            )
+        }
+    }
+
     override suspend fun removeDownload(bookId: String) {
         val book = bookDao.getBookEntity(bookId)
         book?.localFilePath?.let { File(it).takeIf { f -> f.exists() }?.delete() }
         bookDao.removeDownload(bookId)
     }
 
-    // CLOUD SYNC: Full deletion happens instantly (no timer)
     override suspend fun deleteBook(bookId: String) {
         val book = bookDao.getBookEntity(bookId)
         book?.localFilePath?.let { File(it).takeIf { f -> f.exists() }?.delete() }
-
-        // Delete locally
         bookDao.deleteBook(bookId)
-        // Delete from cloud immediately
         cloudSyncRepository.deleteBookFromCloud(bookId)
     }
 
-    // CLOUD SYNC: Trigger 15s timer
     override suspend fun updateFavorite(book: Book, isFavorite: Boolean) {
         if (bookDao.getBookEntity(book.id) != null) {
             bookDao.updateFavorite(book.id, isFavorite)
@@ -126,13 +126,12 @@ class BookDetailsRepositoryImpl(
                 book.toEntity(
                     isFavorite = isFavorite,
                     status = DownloadStatus.NOT_DOWNLOADED
-                ).copy(isSynced = false) // Ensure new inserts are flagged
+                ).copy(isSynced = false)
             )
         }
         cloudSyncRepository.scheduleBackgroundSync()
     }
 
-    // CLOUD SYNC: Trigger 15s timer
     override suspend fun updateCategory(book: Book, newCategory: String) {
         if (bookDao.getBookEntity(book.id) != null) {
             bookDao.updateCategory(book.id, newCategory)
@@ -141,18 +140,15 @@ class BookDetailsRepositoryImpl(
                 book.toEntity(
                     category = newCategory,
                     status = DownloadStatus.NOT_DOWNLOADED
-                ).copy(isSynced = false) // Ensure new inserts are flagged
+                ).copy(isSynced = false)
             )
         }
         cloudSyncRepository.scheduleBackgroundSync()
     }
 
-    // CLOUD SYNC: Trigger 15s timer + Bug Fixed
     override suspend fun updateProgress(bookId: String, progressPercent: Float, chapterIndex: Int) {
         val existing = bookDao.getBookEntity(bookId)
         if (existing != null) {
-            // BUG FIX: Use the targeted DAO method so 'isSynced = 0' gets applied
-            // and we don't accidentally wipe out lastChapterTitle or lastLocatorJson
             bookDao.updateReadingProgress(
                 bookId = bookId,
                 progress = progressPercent,
@@ -165,7 +161,6 @@ class BookDetailsRepositoryImpl(
         }
     }
 
-    // CLOUD SYNC: Trigger 15s timer
     override suspend fun resetReadingProgress(bookId: String) {
         bookDao.resetReadingProgress(bookId)
         cloudSyncRepository.scheduleBackgroundSync()

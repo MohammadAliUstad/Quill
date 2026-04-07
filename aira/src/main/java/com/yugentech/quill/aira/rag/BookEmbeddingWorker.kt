@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 class BookEmbeddingWorker(
     context: Context,
@@ -31,28 +30,19 @@ class BookEmbeddingWorker(
         val bookId = inputData.getString(KEY_BOOK_ID)
             ?: return@withContext Result.failure(workDataOf(KEY_ERROR to "Missing BOOK_ID"))
 
-        val startTime = System.currentTimeMillis()
-        Timber.i("[$bookId] ▶ Embedding worker started")
-
         try {
             val existingState = indexingStateDao.getState(bookId)
             if (existingState?.isComplete == true) {
-                Timber.i("[$bookId] ✓ Already complete — skipping")
                 setProgress(workDataOf(KEY_PHASE to PHASE_DONE, KEY_PROGRESS to 100))
                 return@withContext Result.success(workDataOf(KEY_PHASE to PHASE_DONE))
             }
 
-            val bookEntity = bookDao.getBookEntity(bookId)
-            val filePath = bookEntity?.localFilePath
+            val filePath = bookDao.getBookEntity(bookId)?.localFilePath
                 ?: return@withContext Result.failure(workDataOf(KEY_ERROR to "No local file path found"))
 
             val resumeFromChapter = (existingState?.lastCompletedChapterIndex ?: -1) + 1
-            val isResume = resumeFromChapter > 0
 
-            if (isResume) {
-                Timber.i("[$bookId] ↩ Resuming from chapter $resumeFromChapter (last completed: ${existingState?.lastCompletedChapterIndex})")
-            } else {
-                Timber.i("[$bookId] 🆕 Fresh start — wiping existing chunks")
+            if (resumeFromChapter == 0) {
                 chunkDao.deleteChunksForBook(bookId)
             }
 
@@ -61,28 +51,23 @@ class BookEmbeddingWorker(
             val chunkChannel = Channel<ChunkingStrategy.TextChunk>(100)
             val entityChannel = Channel<BookChunkEntity>(100)
             val concurrencyLevel = Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
-            Timber.d("[$bookId] ⚙ Concurrency level: $concurrencyLevel")
 
             val totalChapters = withContext(Dispatchers.IO) {
                 EpubTextExtractor(applicationContext).countChapters(filePath)
             }
-            Timber.i("[$bookId] 📚 Pre-scan: $totalChapters total spine chapters")
-
 
             val extractorJob = launch(Dispatchers.IO) {
-                val extractor = EpubTextExtractor(applicationContext)
-                extractor.extractStream(filePath)
+                EpubTextExtractor(applicationContext)
+                    .extractStream(filePath)
                     .onEach { chapter ->
                         if (chapter.chapterIndex < resumeFromChapter) return@onEach
-                        Timber.v("[$bookId] 📖 Extracted chapter ${chapter.chapterIndex}: '${chapter.chapterTitle}' (${chapter.text.length} chars)")
                         ChunkingStrategy.chunk(chapter).forEach { chunkChannel.send(it) }
                     }
                     .collect()
                 chunkChannel.close()
-                Timber.d("[$bookId] 📖 Extraction complete — $totalChapters total chapters, chunk channel closed")
             }
 
-            val embedders = (1..concurrencyLevel).map { workerId ->
+            val embedders = (1..concurrencyLevel).map {
                 launch(Dispatchers.Default) {
                     for (chunk in chunkChannel) {
                         embeddingEngine.embed(chunk.text)?.let { vector ->
@@ -98,24 +83,17 @@ class BookEmbeddingWorker(
                             )
                         }
                     }
-                    Timber.v("[$bookId] 🧠 Embedder #$workerId finished")
                 }
             }
 
             launch(Dispatchers.Default) {
                 embedders.joinAll()
                 entityChannel.close()
-                Timber.d("[$bookId] 🧠 All embedders done — entity channel closed")
             }
 
             var embeddedCount = 0
             val batchToSave = mutableListOf<BookChunkEntity>()
             var lastSeenChapterIndex = -1
-            var lastLoggedMilestone = 0
-
-
-
-            // Track the highest chapter we've checkpointed
             var highestCheckpointedChapter = resumeFromChapter - 1
 
             for (entity in entityChannel) {
@@ -125,7 +103,6 @@ class BookEmbeddingWorker(
                         batchToSave.clear()
                     }
 
-                    // Only checkpoint if this is genuinely a new chapter
                     if (lastSeenChapterIndex > highestCheckpointedChapter) {
                         highestCheckpointedChapter = lastSeenChapterIndex
 
@@ -148,17 +125,6 @@ class BookEmbeddingWorker(
                                 KEY_PROGRESS to chapterProgress
                             )
                         )
-
-                        val milestone = (chapterProgress / 10) * 10
-                        if (milestone > lastLoggedMilestone) {
-                            lastLoggedMilestone = milestone
-                            val elapsed = System.currentTimeMillis() - startTime
-                            Timber.i("[$bookId] ⏳ ~$chapterProgress% — chapter $lastSeenChapterIndex/$totalChapters — $embeddedCount chunks — ${elapsed}ms elapsed")
-                        }
-
-                        Timber.d("[$bookId] ✅ Checkpoint — chapter $lastSeenChapterIndex complete, progress ~$chapterProgress% ($embeddedCount chunks so far)")
-                    } else {
-                        Timber.v("[$bookId] ↩ Skipping backward checkpoint — chapter $lastSeenChapterIndex already covered")
                     }
                 }
 
@@ -172,7 +138,6 @@ class BookEmbeddingWorker(
                 }
             }
 
-            // Final flush
             if (batchToSave.isNotEmpty()) {
                 chunkDao.insertChunks(batchToSave)
             }
@@ -189,14 +154,9 @@ class BookEmbeddingWorker(
 
             setProgress(workDataOf(KEY_PHASE to PHASE_DONE, KEY_PROGRESS to 100))
 
-            val totalTime = System.currentTimeMillis() - startTime
-            Timber.i("[$bookId] 🏁 Embedding complete — $embeddedCount chunks, $totalChapters chapters, ${totalTime}ms (${totalTime / 1000}s)")
-
             Result.success(workDataOf(KEY_CHUNK_COUNT to embeddedCount, KEY_PHASE to PHASE_DONE))
 
         } catch (e: Exception) {
-            val elapsed = System.currentTimeMillis() - startTime
-            Timber.e(e, "[$bookId] ✗ Embedding failed after ${elapsed}ms")
             Result.failure(workDataOf(KEY_ERROR to (e.message ?: "Unknown error")))
         }
     }

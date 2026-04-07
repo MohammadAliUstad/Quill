@@ -13,14 +13,12 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val billingModule = module {
-    // Single BillingClientService — one BillingClient for the entire app lifetime
     single {
         BillingClientService(
             androidContext()
         )
     }
 
-    // Single BillingRepository — shared across SubscriptionViewModel and AboutViewModel
     single<BillingRepository> {
         BillingRepositoryImpl(
             get()

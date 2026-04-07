@@ -2,8 +2,12 @@ package com.yugentech.quill.bookDetails.worker
 
 import android.content.Context
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager.Companion.getInstance
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.yugentech.quill.aira.rag.BookEmbeddingWorker
 import com.yugentech.quill.bookDetails.EpubParser
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.model.DownloadStatus
@@ -26,20 +30,16 @@ class BookDownloadWorker(
         val downloadUrl = inputData.getString("DOWNLOAD_URL") ?: return@withContext Result.failure()
         val bookTitle = inputData.getString("BOOK_TITLE") ?: "Unknown"
 
-        // 1. Clean file name matching the Sync logic exactly
         val fileName = "$bookId.epub"
 
-        // 2. Setup internal private directory
         val booksDir = File(applicationContext.filesDir, "books")
         if (!booksDir.exists()) {
             booksDir.mkdirs()
         }
 
         try {
-            // 1. Set Status to Downloading
             bookDao.updateDownloadStatus(bookId, DownloadStatus.DOWNLOADING)
 
-            // 2. Setup the Connection pointing to the hidden folder
             val file = File(booksDir, fileName)
             if (file.exists()) file.delete()
 
@@ -51,14 +51,12 @@ class BookDownloadWorker(
                 throw Exception("Server returned HTTP ${connection.responseCode}")
             }
 
-            // Get total file size from server headers
             val totalBytes = connection.contentLength.toLong()
             var bytesDownloaded = 0L
 
-            // 3. Download with Buffered Progress Tracking
             connection.inputStream.use { input ->
                 FileOutputStream(file).use { output ->
-                    val buffer = ByteArray(8 * 1024) // 8KB buffer
+                    val buffer = ByteArray(8 * 1024)
                     var bytesRead: Int
                     var lastProgressUpdate = 0L
 
@@ -67,7 +65,6 @@ class BookDownloadWorker(
                         bytesDownloaded += bytesRead
 
                         val currentTime = System.currentTimeMillis()
-                        // Throttle progress updates to every 500ms to keep the UI smooth
                         if (currentTime - lastProgressUpdate > 500) {
                             val progressPercent = if (totalBytes > 0) {
                                 (bytesDownloaded.toFloat() / totalBytes.toFloat()) * 100f
@@ -75,7 +72,6 @@ class BookDownloadWorker(
                                 0f
                             }
 
-                            // Broadcast progress to the ViewModel
                             setProgress(
                                 workDataOf(
                                     "PROGRESS_PERCENT" to progressPercent,
@@ -89,7 +85,6 @@ class BookDownloadWorker(
                 }
             }
 
-            // Force 100% broadcast when finished
             setProgress(
                 workDataOf(
                     "PROGRESS_PERCENT" to 100f,
@@ -98,7 +93,6 @@ class BookDownloadWorker(
                 )
             )
 
-            // 4. Parse the Epub
             val parser = EpubParser(applicationContext)
             val parsedData = parser.parse(file.absolutePath, bookTitle)
 
@@ -115,32 +109,30 @@ class BookDownloadWorker(
 
                 bookDao.insertBook(updatedBook)
 
-                // --- NEW: TRIGGER THE INDEXING QUEUE ON SUCCESS ---
                 val isProUser = inputData.getBoolean("IS_PRO_USER", false)
                 if (isProUser) {
-                    val indexRequest = androidx.work.OneTimeWorkRequestBuilder<com.yugentech.quill.aira.rag.BookEmbeddingWorker>()
-                        .setInputData(androidx.work.workDataOf(com.yugentech.quill.aira.rag.BookEmbeddingWorker.KEY_BOOK_ID to bookId))
+                    val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
+                        .setInputData(workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId))
                         .addTag("AI_INDEXING")
                         .addTag("index_${bookId}")
                         .build()
 
-                    androidx.work.WorkManager.getInstance(applicationContext).beginUniqueWork(
+                    getInstance(applicationContext).beginUniqueWork(
                         "BOOK_PROCESSING_QUEUE",
-                        androidx.work.ExistingWorkPolicy.APPEND_OR_REPLACE, // Funnel into the 1-by-1 queue!
+                        ExistingWorkPolicy.APPEND_OR_REPLACE,
                         indexRequest
                     ).enqueue()
                 }
 
                 Result.success()
             } else {
-                Timber.Forest.e("Book not found in DB: $bookId")
+                Timber.e("Book not found in DB: $bookId")
                 Result.failure()
             }
 
         } catch (e: Exception) {
-            Timber.Forest.e(e, "Download failed")
+            Timber.e(e, "Download failed")
 
-            // Ensure we delete from the correct internal folder on failure
             val file = File(booksDir, fileName)
             if (file.exists()) file.delete()
 

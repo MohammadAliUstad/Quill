@@ -22,14 +22,12 @@ class BillingRepositoryImpl(
         service.setCurrentUser(userId)
     }
 
-    // 1. Accept userId and pass it to the service
     override fun launchSubscriptionFlow(activity: Activity, basePlanId: String, userId: String) =
         service.launchSubscriptionFlow(activity, basePlanId, userId)
 
     override fun launchTipFlow(activity: Activity, productId: String) =
         service.launchTipFlow(activity, productId)
 
-    // UPDATED: Explicitly return Boolean? to match the interface and service
     override suspend fun restorePurchases(userId: String): Boolean? =
         service.restorePurchases(userId)
 }

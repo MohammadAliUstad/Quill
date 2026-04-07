@@ -136,7 +136,7 @@ fun BookDetailsScreen(
             )
         },
         floatingActionButton = {
-            if (downloadStatus == DownloadStatus.DOWNLOADED) {
+            if (downloadStatus == DownloadStatus.DOWNLOADED && uiState.isPro) {
                 Box(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
                     FloatingActionButton(
                         currentTabHasFab = true,

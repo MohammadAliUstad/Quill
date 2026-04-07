@@ -7,8 +7,8 @@ import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.database.converter.AppJson
 import com.yugentech.quill.database.mapper.toDomainModel
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.quill.domain.BillingRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,19 +18,12 @@ import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
-data class BookDetailsUiState(
-    val book: Book? = null,
-    val chapters: List<Chapter> = emptyList(),
-    val isLoading: Boolean = true,
-    val isDescriptionExpanded: Boolean = true
-)
-
 class BookDetailsViewModel(
     savedStateHandle: SavedStateHandle,
+    billingRepository: BillingRepository,
     private val repository: BookDetailsRepository
 ) : ViewModel() {
 
-    // 1. Extract Navigation Arguments
     private val bookIdParam: String? = savedStateHandle["bookId"]
     private val bookJsonParam: String? = savedStateHandle["bookJson"]
 
@@ -45,35 +38,26 @@ class BookDetailsViewModel(
         ?: bookIdParam
         ?: throw IllegalArgumentException("BookDetailsViewModel requires either bookId or bookJson")
 
-    // 2. Track Manual User Interactions
-    // Null means "let the database dictate if the description is open or closed"
-    // True/False means "the user clicked the expand/collapse button, respect their choice"
     private val userExpandedOverride = MutableStateFlow<Boolean?>(null)
 
-    // 3. The Pure Reactive State Flow
     val uiState: StateFlow<BookDetailsUiState> = combine(
         repository.getBook(targetBookId),
-        userExpandedOverride
-    ) { dbEntity, userExpanded ->
+        userExpandedOverride,
+        billingRepository.isPro
+    ) { dbEntity, userExpanded, isPro ->
 
-        // Prefer the fresh DB data. If it doesn't exist yet, use the JSON fallback to prevent a blank screen.
         val richBook = dbEntity?.toDomainModel() ?: passedBook
-
-        if (richBook == null) {
-            return@combine BookDetailsUiState(isLoading = true)
-        }
+        if (richBook == null) return@combine BookDetailsUiState(isLoading = true)
 
         val isDownloaded = richBook.downloadStatus == DownloadStatus.DOWNLOADED
-
-        // If the user manually toggled the description, use their choice.
-        // Otherwise, automatically collapse it if the book is downloaded, and expand if it is not.
         val shouldExpand = userExpanded ?: !isDownloaded
 
         BookDetailsUiState(
             book = richBook,
             chapters = richBook.chapters,
             isLoading = false,
-            isDescriptionExpanded = shouldExpand
+            isDescriptionExpanded = shouldExpand,
+            isPro = isPro
         )
     }.stateIn(
         scope = viewModelScope,
@@ -81,12 +65,7 @@ class BookDetailsViewModel(
         initialValue = BookDetailsUiState(
             book = passedBook,
             chapters = passedBook?.chapters ?: emptyList(),
-
-            // FIX 1: Change this from (passedBook == null) to strictly true!
-            // This hides the description section for 5 milliseconds until the DB
-            // confirms the absolute true download status, eliminating the flicker.
             isLoading = true,
-
             isDescriptionExpanded = passedBook?.downloadStatus != DownloadStatus.DOWNLOADED
         )
     )
@@ -94,21 +73,20 @@ class BookDetailsViewModel(
     val categories = repository.getAllCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // --- ACTIONS ---
-
     fun onToggleDescription() {
-        // Record the user's manual override
         userExpandedOverride.value = !uiState.value.isDescriptionExpanded
     }
 
     fun onDownloadClick() {
         viewModelScope.launch {
-            uiState.value.book?.let { repository.startDownload(it) }
+            val currentState = uiState.value
+            currentState.book?.let { book ->
+                repository.startDownload(book, currentState.isPro)
+            }
         }
     }
 
     fun deleteBook() {
-        // Auto-expand description when file is removed
         userExpandedOverride.value = true
         viewModelScope.launch {
             repository.removeDownload(targetBookId)

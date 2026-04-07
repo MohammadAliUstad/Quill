@@ -9,5 +9,4 @@ interface BookRepository {
     suspend fun isReady(bookId: String): Boolean
     suspend fun isSpoilerLockEnabled(bookId: String): Boolean
     suspend fun setSpoilerLock(bookId: String, enabled: Boolean)
-    suspend fun indexLibraryBacklog()
 }
