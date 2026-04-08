@@ -20,7 +20,6 @@ class GutenbergViewModel(
     private val repository: GutenbergRepository
 ) : ViewModel() {
 
-    // ── Content & UI Status ───────────────────────────────────────────────────
     private val _booksState = MutableStateFlow<List<Book>>(emptyList())
     val booksState = _booksState.asStateFlow()
 
@@ -39,23 +38,19 @@ class GutenbergViewModel(
     private val _navigationEvent = MutableSharedFlow<GutenbergNavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
-    // ── Internal State ────────────────────────────────────────────────────────
     private var nextPageUrl: String? = null
     private var contentJob: Job? = null
     private var paginationJob: Job? = null
 
-    // Caches to prevent Flow-wipeouts and empty screens during state transitions
     private var cachedPopularBooks = emptyList<Book>()
     private var paginatedMemoryCache = mutableListOf<Book>()
 
     init {
         viewModelScope.launch {
             repository.getPopularBooksFlow().collect { cachedBooks ->
-                Timber.d("DB flow emitted — ${cachedBooks.size} cached books, displayTitle=${_displayTitle.value}, isLoading=${_isLoading.value}")
                 cachedPopularBooks = cachedBooks
                 if (_displayTitle.value == "Popular Books") {
                     _booksState.value = cachedBooks + paginatedMemoryCache
-                    Timber.d("booksState updated from DB — total=${_booksState.value.size}, nextPageUrl=$nextPageUrl")
                 }
             }
         }
@@ -70,7 +65,6 @@ class GutenbergViewModel(
 
     fun onSearchQuery(query: String) {
         if (query.isBlank()) {
-            // Revert back to the default popular feed
             paginatedMemoryCache.clear()
             _displayTitle.value = "Popular Books"
             _booksState.value = cachedPopularBooks
@@ -78,7 +72,6 @@ class GutenbergViewModel(
             return
         }
 
-        // Prepare for new search
         _booksState.value = emptyList()
         paginatedMemoryCache.clear()
         nextPageUrl = null

@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.tabs.moreScreen.parent
+package com.yugentech.quill.ui.more.indexingQueueScreen
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.yugentech.quill.R
+import com.yugentech.quill.allBooks.IndexingQueueViewModel
+import com.yugentech.quill.allBooks.QueueItemUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

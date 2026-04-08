@@ -1,11 +1,7 @@
-package com.yugentech.quill.ui.more.insightsScreen.insights
+package com.yugentech.quill.insghts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.database.entity.ReadingSessionEntity
-import com.yugentech.quill.insghts.InsightsRepository
-import com.yugentech.quill.insghts.InsightsUiState
-import com.yugentech.quill.insghts.ProgressBrackets
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +15,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Calendar
-import java.util.concurrent.TimeUnit
 
 class InsightsViewModel(
     private val insightsRepository: InsightsRepository
@@ -41,7 +36,6 @@ class InsightsViewModel(
             Triple(sessions, streak, finishedCount)
         }
 
-        // Group 2: Library and Aira Activity (3 flows)
         val libraryActivityFlow = combine(
             insightsRepository.getAllBooksFlow(),
             insightsRepository.getTotalUserQuestionsFlow(),
@@ -50,12 +44,10 @@ class InsightsViewModel(
             Triple(books, totalQuestions, questionsPerBook)
         }
 
-        // Final Combine: Merge the two groups
         combine(sessionActivityFlow, libraryActivityFlow) { sessionData, libraryData ->
             val (sessions, streak, finishedCount) = sessionData
             val (books, totalQuestions, questionsPerBook) = libraryData
 
-            // --- Session derived stats ---
             val heatmapData = mutableMapOf<LocalDate, Int>()
             val hourlyCounts = IntArray(24)
             var totalTime = 0L
@@ -76,7 +68,6 @@ class InsightsViewModel(
                 peakHourIndex
             } else null
 
-            // --- Aira / Library derived stats ---
             val mostExploredBookId = questionsPerBook.maxByOrNull { it.count }?.bookId
             val mostExploredBookName = books.find { it.id == mostExploredBookId }?.title ?: "None"
 
