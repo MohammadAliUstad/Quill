@@ -24,10 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.yugentech.quill.R
-import com.yugentech.theme.ThemeViewModel
+import com.yugentech.quill.theme.ThemeViewModel
 import com.yugentech.quill.ui.mainScreen.components.SectionHeader
 import com.yugentech.quill.ui.mainScreen.components.itemShape
 import com.yugentech.theme.models.ThemeMode

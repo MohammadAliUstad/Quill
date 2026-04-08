@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.more.subscriptions.components
+package com.yugentech.quill.ui.more.subscriptionsScreen.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -29,7 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.ui.more.subscriptions.parent.planOptions
+import com.yugentech.quill.ui.more.subscriptionsScreen.parent.planOptions
 
 @Composable
 fun SubscribeBottomBar(

@@ -19,7 +19,6 @@ class ThemeService(
     private val dataStore: DataStore<Preferences>
 ) {
     companion object {
-        // Define persistent keys for storing theme settings
         private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
         private val COLOR_THEME_KEY = stringPreferencesKey("color_theme")
         private val USE_DYNAMIC_COLORS_KEY = booleanPreferencesKey("use_dynamic_colors")
@@ -27,14 +26,12 @@ class ThemeService(
         private val APP_FONT_KEY = stringPreferencesKey("app_font")
     }
 
-    // Stream that converts raw DataStore preferences into a ThemeConfiguration object
     val themeConfiguration: Flow<ThemeConfiguration> = dataStore.data
         .catch {
             Timber.e(it, "Error reading theme preferences")
             emit(emptyPreferences())
         }
         .map { prefs ->
-            // Safely convert stored strings back to Enums, defaulting if invalid
             val savedFontName = prefs[APP_FONT_KEY] ?: AppFont.Google.name
             val appFont = try {
                 AppFont.valueOf(savedFontName)
@@ -51,7 +48,6 @@ class ThemeService(
             )
         }
 
-    // Saves the current theme configuration to disk
     suspend fun updateThemeConfig(config: ThemeConfiguration) {
         Timber.d("Saving theme config: Font=${config.appFont}, Mode=${config.themeMode}...")
         dataStore.edit { prefs ->
@@ -63,7 +59,6 @@ class ThemeService(
         }
     }
 
-    // Clears all stored theme preferences
     suspend fun resetToDefaults() {
         Timber.i("Resetting theme preferences to default")
         dataStore.edit { it.clear() }

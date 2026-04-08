@@ -22,8 +22,6 @@ class StandardRepositoryImpl(
     private val categoryCacheDao: CategoryCacheDao,
 ) : StandardRepository {
 
-    // ── Books ─────────────────────────────────────────────────────────────────
-
     override fun getNewReleasesFlow(): Flow<List<Book>> {
         return catalogDao.getBooksByCategory("new-releases").map { entities ->
             entities.map { it.toDomainModel() }
@@ -42,15 +40,12 @@ class StandardRepositoryImpl(
                 catalogDao.insertBooks(newEntities)
                 catalogDao.deleteStaleBooks("new-releases", newIds.toList())
             }
-            // Reverted back to returning Unit instead of the URL
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.w(e, "Background sync failed. UI will just continue showing cached data.")
             Result.failure(e)
         }
     }
-
-    // ── Categories & Topics ───────────────────────────────────────────────────
 
     override fun getCategoriesFlow(): Flow<List<String>> {
         return categoryCacheDao.getCategoriesBySource(SOURCE_KEY)
@@ -100,8 +95,6 @@ class StandardRepositoryImpl(
             Result.failure(e)
         }
     }
-
-    // ── Search & Discovery ────────────────────────────────────────────────────
 
     override suspend fun searchBooks(query: String): Result<OpdsFeedResult> {
         return try {

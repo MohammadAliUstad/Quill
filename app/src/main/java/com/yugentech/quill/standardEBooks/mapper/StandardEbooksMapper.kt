@@ -10,7 +10,6 @@ import java.io.StringReader
 
 object StandardEbooksMapper {
 
-    // UPDATED: Now returns OpdsFeedResult so we can capture the pagination link
     fun parseOpdsToBooks(xmlString: String): OpdsFeedResult {
         val books = mutableListOf<Book>()
         var nextPageUrl: String? = null
@@ -42,21 +41,17 @@ object StandardEbooksMapper {
                             val type = parser.getAttributeValue(null, "type")
 
                             if (rel != null && href != null) {
-                                // NEW: Intercept root-level "next" pagination link
                                 if (currentBook == null && rel.equals("next", ignoreCase = true)) {
                                     nextPageUrl = href
                                 }
-                                // Existing logic for book-level links
                                 else if (currentBook != null) {
                                     when {
                                         rel.contains("thumbnail") -> {
-                                            // Only set if we don't already have a full image
                                             if (currentBook["coverUrl"] == null) {
                                                 currentBook["coverUrl"] = href
                                             }
                                         }
                                         rel.contains("image") -> {
-                                            // Always prefer the full image, overwrite thumbnail if already set
                                             currentBook["coverUrl"] = href
                                         }
                                         rel.contains("acquisition") && type?.contains("epub") == true -> {
@@ -110,7 +105,6 @@ object StandardEbooksMapper {
             e.printStackTrace()
         }
 
-        // Return both the mapped books AND the link to the next page
         return OpdsFeedResult(books, nextPageUrl)
     }
 
@@ -168,7 +162,6 @@ object StandardEbooksMapper {
         return categories.distinct()
     }
 
-    // --- NEW FUNCTION: Parses Collections ---
     fun parseOpdsToCollections(xmlString: String): List<OpdsCollection> {
         val collections = mutableListOf<OpdsCollection>()
 
@@ -198,7 +191,6 @@ object StandardEbooksMapper {
                             currentUrl = ""
                         }
 
-                        // Capture the feed URL specifically for this collection
                         if (insideEntry && currentTag.equals("link", ignoreCase = true)) {
                             val rel = parser.getAttributeValue(null, "rel")
                             val href = parser.getAttributeValue(null, "href")
@@ -237,7 +229,6 @@ object StandardEbooksMapper {
         return collections
     }
 
-    // --- PRIVATE METHODS ---
     private fun mapToBook(data: Map<String, String>): Book? {
         val title = data["title"] ?: return null
         val idRaw = data["id"] ?: return null

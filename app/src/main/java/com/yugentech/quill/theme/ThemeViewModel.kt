@@ -1,7 +1,8 @@
-package com.yugentech.theme
+package com.yugentech.quill.theme
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yugentech.theme.AppFont
 import com.yugentech.theme.ThemeRepository
 import com.yugentech.theme.models.ColorTheme
 import com.yugentech.theme.models.ThemeConfiguration
@@ -18,7 +19,6 @@ class ThemeViewModel(
     private val themeRepository: ThemeRepository
 ) : ViewModel() {
 
-    // Internal mutable state for the current theme configuration
     private val _themeConfiguration = MutableStateFlow(
         ThemeConfiguration(
             themeMode = ThemeMode.LIGHT,
@@ -29,10 +29,8 @@ class ThemeViewModel(
         )
     )
 
-    // Public read-only stream of theme configuration
     val themeConfiguration: StateFlow<ThemeConfiguration> = _themeConfiguration.asStateFlow()
 
-    // Derived stream specifically for the current fonts, helpful for UI logic
     val currentFont: StateFlow<AppFont> = _themeConfiguration
         .map { it.appFont }
         .stateIn(
@@ -42,7 +40,6 @@ class ThemeViewModel(
         )
 
     init {
-        // Automatically update local state whenever the repository data changes
         viewModelScope.launch {
             themeRepository.themeConfiguration.collect { config ->
                 _themeConfiguration.value = config
@@ -50,7 +47,6 @@ class ThemeViewModel(
         }
     }
 
-    // Updates the full theme configuration and persists it
     fun updateTheme(config: ThemeConfiguration) {
         _themeConfiguration.value = config
 
@@ -59,7 +55,6 @@ class ThemeViewModel(
         }
     }
 
-    // Helper method to update just the fonts while keeping other settings
     fun setFont(font: AppFont) {
         val current = _themeConfiguration.value
         val newConfig = current.copy(appFont = font)

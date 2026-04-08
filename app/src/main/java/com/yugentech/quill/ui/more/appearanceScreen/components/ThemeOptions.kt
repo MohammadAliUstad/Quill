@@ -28,15 +28,14 @@ fun themeOptions(
         )
     ),
 
-    // Sakura (Pink/Red)
+    // Quill (Gold/Grey)
     ThemeOption(
         colorTheme = ColorTheme.QUILL,
         displayName = "Quill",
-        primaryColor = AppColorSchemes.SakuraLightColorScheme.primary,
+        primaryColor = AppColorSchemes.QuillLightColorScheme.primary,
         gradientColors = listOf(
-            AppColorSchemes.SakuraLightColorScheme.primary,
-            AppColorSchemes.SakuraLightColorScheme.tertiary,
-            AppColorSchemes.SakuraLightColorScheme.primaryContainer
+            AppColorSchemes.QuillLightColorScheme.primary,
+            AppColorSchemes.QuillLightColorScheme.primaryContainer
         )
     ),
 
@@ -47,7 +46,6 @@ fun themeOptions(
         primaryColor = AppColorSchemes.CanyonLightColorScheme.primary,
         gradientColors = listOf(
             AppColorSchemes.CanyonLightColorScheme.primary,
-            AppColorSchemes.CanyonLightColorScheme.tertiary,
             AppColorSchemes.CanyonLightColorScheme.primaryContainer
         )
     ),
@@ -59,7 +57,6 @@ fun themeOptions(
         primaryColor = AppColorSchemes.HarvestLightColorScheme.primary,
         gradientColors = listOf(
             AppColorSchemes.HarvestLightColorScheme.primary,
-            AppColorSchemes.HarvestLightColorScheme.tertiary,
             AppColorSchemes.HarvestLightColorScheme.primaryContainer
         )
     ),
@@ -71,19 +68,17 @@ fun themeOptions(
         primaryColor = AppColorSchemes.GroveLightColorScheme.primary,
         gradientColors = listOf(
             AppColorSchemes.GroveLightColorScheme.primary,
-            AppColorSchemes.GroveLightColorScheme.tertiary,
             AppColorSchemes.GroveLightColorScheme.primaryContainer
         )
     ),
 
-    // Sakura
+    // Sakura (Pink/Red)
     ThemeOption(
         colorTheme = ColorTheme.SAKURA,
         displayName = "Sakura",
         primaryColor = AppColorSchemes.SakuraLightColorScheme.primary,
         gradientColors = listOf(
             AppColorSchemes.SakuraLightColorScheme.primary,
-            AppColorSchemes.SakuraLightColorScheme.tertiary,
             AppColorSchemes.SakuraLightColorScheme.primaryContainer
         )
     ),
@@ -95,7 +90,6 @@ fun themeOptions(
         primaryColor = AppColorSchemes.AlpineLightColorScheme.primary,
         gradientColors = listOf(
             AppColorSchemes.AlpineLightColorScheme.primary,
-            AppColorSchemes.AlpineLightColorScheme.tertiary,
             AppColorSchemes.AlpineLightColorScheme.primaryContainer
         )
     ),
@@ -107,7 +101,6 @@ fun themeOptions(
         primaryColor = AppColorSchemes.TwilightLightColorScheme.primary,
         gradientColors = listOf(
             AppColorSchemes.TwilightLightColorScheme.primary,
-            AppColorSchemes.TwilightLightColorScheme.tertiary,
             AppColorSchemes.TwilightLightColorScheme.primaryContainer
         )
     )

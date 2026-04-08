@@ -37,10 +37,7 @@ class StandardApiService(
         }.bodyAsText()
     }
 
-    // --- NEW DISCOVERY FEATURES ---
-
     suspend fun getNextPage(nextUrl: String): String {
-        // FIX: Bulletproof URL formatting
         val url = when {
             nextUrl.startsWith("http") -> nextUrl
             nextUrl.startsWith("/") -> "$BASE_URL$nextUrl"
