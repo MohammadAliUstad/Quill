@@ -75,6 +75,8 @@ private fun ReaderSuccess(
     val quickViewModel: QuickViewModel = koinViewModel()
     val airaUiState by quickViewModel.uiState.collectAsState()
 
+    val isPro = airaUiState.isPro
+
     LaunchedEffect(state.bookId) {
         quickViewModel.observeIndexingStatus(state.bookId)
     }
@@ -175,6 +177,7 @@ private fun ReaderSuccess(
         ReadiumEngine(
             publication = state.publication,
             bookId = state.bookId,
+            isPro = isPro,
             initialLocation = state.initialLocator,
             targetJumpHref = targetJumpHref,
             targetSeekProgress = pendingSeekProgress,
@@ -238,6 +241,7 @@ private fun ReaderSuccess(
 
         ReaderMenuOverlay(
             isVisible = isMenuVisible || showAiraPeek,
+            isPro = isPro,
             showBottomControls = !showAiraPeek,
             showAiraPeek = showAiraPeek,
             readerOverlayState = overlayState,

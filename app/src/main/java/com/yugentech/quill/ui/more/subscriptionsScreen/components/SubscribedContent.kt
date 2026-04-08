@@ -1,8 +1,7 @@
-package com.yugentech.quill.ui.more.subscriptions.components
+package com.yugentech.quill.ui.more.subscriptionsScreen.components
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

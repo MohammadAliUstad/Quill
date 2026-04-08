@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.more.subscriptions.components
+package com.yugentech.quill.ui.more.subscriptionsScreen.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -8,7 +8,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.yugentech.quill.ui.more.subscriptions.parent.planOptions
+import com.yugentech.quill.ui.more.subscriptionsScreen.parent.planOptions
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

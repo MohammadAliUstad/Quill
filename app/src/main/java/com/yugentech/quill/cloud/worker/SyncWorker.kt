@@ -16,11 +16,9 @@ class SyncWorker(
         Timber.d("SyncWorker started: Pushing local changes to cloud")
 
         return try {
-            // Push both sets of data
             val categoryResult = cloudSyncRepository.syncCategoriesToCloud()
             val bookResult = cloudSyncRepository.syncBooksToCloud()
 
-            // If BOTH were successful, we are fully synced
             if (categoryResult.isSuccess && bookResult.isSuccess) {
                 Timber.i("SyncWorker completed successfully")
                 Result.success()

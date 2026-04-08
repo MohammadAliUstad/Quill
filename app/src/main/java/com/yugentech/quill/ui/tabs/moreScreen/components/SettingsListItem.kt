@@ -40,8 +40,8 @@ fun SettingsListItem(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(
-                    start = MaterialTheme.spacing.s, // 8.dp
-                    top = MaterialTheme.spacing.s    // 8.dp
+                    start = MaterialTheme.spacing.s,
+                    top = MaterialTheme.spacing.s
                 )
             )
         },
@@ -52,8 +52,8 @@ fun SettingsListItem(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(
-                        start = MaterialTheme.spacing.s, // 8.dp
-                        bottom = MaterialTheme.spacing.s // 8.dp
+                        start = MaterialTheme.spacing.s,
+                        bottom = MaterialTheme.spacing.s
                     )
                 )
             }
@@ -64,7 +64,7 @@ fun SettingsListItem(
                     imageVector = it,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(MaterialTheme.icons.medium) // 24.dp
+                    modifier = Modifier.size(MaterialTheme.icons.medium)
                 )
             }
         },
@@ -74,8 +74,8 @@ fun SettingsListItem(
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 modifier = Modifier
-                    .size(MaterialTheme.icons.medium) // 24.dp
-                    .clip(RoundedCornerShape(MaterialTheme.corners.small)) // 8.dp
+                    .size(MaterialTheme.icons.medium)
+                    .clip(RoundedCornerShape(MaterialTheme.corners.small))
             )
         },
         modifier = Modifier

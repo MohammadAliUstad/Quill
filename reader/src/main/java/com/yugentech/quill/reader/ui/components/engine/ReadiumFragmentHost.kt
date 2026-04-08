@@ -46,7 +46,8 @@ private class ReadiumWrapperView @JvmOverloads constructor(
 ) : FrameLayout(context, attrs) {
 
     var onAskAira: (String) -> Unit = {}
-    var currentSelectedText: String? = null // Tracks the active highlight
+    var currentSelectedText: String? = null
+    var isPro: Boolean = false // 1. Track Pro status here
 
     val container = FragmentContainerView(context).also { addView(it) }
 
@@ -55,11 +56,11 @@ private class ReadiumWrapperView @JvmOverloads constructor(
         callback: ActionMode.Callback,
         type: Int
     ): ActionMode? {
-        // Wrap the callback to customize the menu and dynamically fetch selected text
+        // 2. Pass isPro to the menu callbacks
         val wrapped = if (callback is ActionMode.Callback2) {
-            WrappedCallback2(callback, onAskAira) { currentSelectedText }
+            WrappedCallback2(callback, onAskAira, isPro) { currentSelectedText }
         } else {
-            WrappedCallback(callback, onAskAira) { currentSelectedText }
+            WrappedCallback(callback, onAskAira, isPro) { currentSelectedText }
         }
         return super.startActionModeForChild(originalView, wrapped, type)
     }
@@ -69,12 +70,14 @@ private class ReadiumWrapperView @JvmOverloads constructor(
 private class WrappedCallback(
     private val original: ActionMode.Callback,
     private val onAskAira: (String) -> Unit,
+    private val isPro: Boolean, // 3. Receive Pro status
     private val getSelectedText: () -> String?
 ) : ActionMode.Callback {
     override fun onCreateActionMode(mode: ActionMode, menu: Menu) = original.onCreateActionMode(mode, menu)
 
     override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
         original.onPrepareActionMode(mode, menu)
+
         // Remove unwanted items
         for (i in menu.size - 1 downTo 0) {
             val title = menu[i].title.toString()
@@ -82,8 +85,9 @@ private class WrappedCallback(
                 menu.removeItem(menu[i].itemId)
             }
         }
-        // Add Custom "Ask Aira" Item
-        if (menu.findItem(ASKAIRA) == null) {
+
+        // 4. Add Custom "Ask Aira" Item ONLY IF USER IS PRO
+        if (isPro && menu.findItem(ASKAIRA) == null) {
             menu.add(Menu.NONE, ASKAIRA, Menu.NONE, "Ask Aira")
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
         }
@@ -92,7 +96,6 @@ private class WrappedCallback(
 
     override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
         if (item.itemId == ASKAIRA) {
-            // Trigger Aira with the real text, falling back to a dummy string if missing
             onAskAira(getSelectedText() ?: "Processing selection...")
             mode.finish()
             return true
@@ -106,9 +109,10 @@ private class WrappedCallback(
 private class WrappedCallback2(
     private val original: ActionMode.Callback2,
     onAskAira: (String) -> Unit,
+    isPro: Boolean,
     getSelectedText: () -> String?
 ) : ActionMode.Callback2() {
-    private val delegate = WrappedCallback(original, onAskAira, getSelectedText)
+    private val delegate = WrappedCallback(original, onAskAira, isPro, getSelectedText)
 
     override fun onCreateActionMode(mode: ActionMode, menu: Menu) = delegate.onCreateActionMode(mode, menu)
     override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = delegate.onPrepareActionMode(mode, menu)
@@ -125,6 +129,7 @@ fun ReadiumFragmentHost(
     initialLocation: Locator?,
     preferences: EpubPreferences,
     onTap: () -> Unit,
+    isPro: Boolean = false, // 5. Composable now accepts isPro
     onAskAira: (selectedText: String) -> Unit = {},
     onNavigatorReady: (EpubNavigatorFragment) -> Unit
 ) {
@@ -132,6 +137,7 @@ fun ReadiumFragmentHost(
     val currentOnTap by rememberUpdatedState(onTap)
     val currentOnNavigatorReady by rememberUpdatedState(onNavigatorReady)
     val currentOnAskAira by rememberUpdatedState(onAskAira)
+    val currentIsPro by rememberUpdatedState(isPro) // 6. Remember latest Pro status
 
     AndroidView(
         modifier = Modifier.fillMaxSize(),
@@ -140,15 +146,15 @@ fun ReadiumFragmentHost(
                 container.id = View.generateViewId()
                 clipToPadding = false
                 fitsSystemWindows = false
+                this.isPro = currentIsPro // Initialize
                 ViewCompat.setOnApplyWindowInsetsListener(this) { _, _ -> WindowInsetsCompat.CONSUMED }
 
-                // Wait for view to attach before manipulating Fragments
                 addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                     override fun onViewAttachedToWindow(v: View) {
                         val activity = ctx as? FragmentActivity ?: return
                         attachNavigator(
                             activity,
-                            this@apply, // Pass the wrapper view to track text
+                            this@apply,
                             container.id,
                             fragmentTag,
                             publication,
@@ -163,10 +169,12 @@ fun ReadiumFragmentHost(
                 })
             }
         },
-        update = { view -> view.onAskAira = currentOnAskAira }
+        update = { view ->
+            view.onAskAira = currentOnAskAira
+            view.isPro = currentIsPro // 7. Update view when Pro status changes
+        }
     )
 
-    // Cleanup when Composable leaves the screen
     DisposableEffect(fragmentTag) {
         onDispose {
             val fm = (context as? FragmentActivity)?.supportFragmentManager ?: return@onDispose

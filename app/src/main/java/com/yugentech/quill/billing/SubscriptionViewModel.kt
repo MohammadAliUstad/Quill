@@ -24,7 +24,6 @@ class SubscriptionViewModel(
     private val bookRepository: BookRepository
 ) : ViewModel() {
 
-    // The UI now listens EXCLUSIVELY to the Database via UserFlow
     private val _isPro = MutableStateFlow(false)
     val isPro: StateFlow<Boolean> = _isPro.asStateFlow()
 
@@ -44,37 +43,23 @@ class SubscriptionViewModel(
                         _isPro.value = userData?.isPro == true
                     }
                 } else {
-                    _isPro.value = false // Auto-lock when logged out
+                    _isPro.value = false
                 }
             }
         }
 
-        // UPDATE THIS EXISTING BLOCK
         viewModelScope.launch {
             billingRepository.billingEvents.collect { event ->
                 if (event is BillingEvent.SubscriptionActivated) {
                     authRepository.currentUser?.let { uid ->
                         userRepository.updateProStatus(uid, true)
                     }
-                    // NEW: Trigger indexer exactly when payment clears!
-                    bookRepository.indexLibraryBacklog()
                 }
                 _events.emit(event)
             }
         }
-
-        // NEW BLOCK: Catch users on App Launch or "Restore Purchases"
-        // Since the DAO query only fetches unindexed books, it's 100% safe to run often.
-        viewModelScope.launch {
-            isPro.collectLatest { isPro ->
-                if (isPro) {
-                    bookRepository.indexLibraryBacklog()
-                }
-            }
-        }
     }
 
-    // Called when the user taps "Get Started"
     fun subscribe(activity: Activity, basePlanId: String) {
         val userId = authRepository.currentUser
 
@@ -87,7 +72,6 @@ class SubscriptionViewModel(
         }
     }
 
-    // Called from the "Restore Purchases" button
     fun restorePurchases() {
         val userId = authRepository.currentUser
 
@@ -101,7 +85,6 @@ class SubscriptionViewModel(
         viewModelScope.launch {
             _isRestoring.value = true
 
-            // This now returns Boolean? (null indicates a network/Play Store error)
             val wasRestored = billingRepository.restorePurchases(userId)
 
             delay(800)
@@ -117,7 +100,6 @@ class SubscriptionViewModel(
                     _events.emit(BillingEvent.NoSubscriptionFound)
                 }
                 null -> {
-                    // Network error or Play Store unavailable. Don't overwrite the DB!
                     _events.emit(BillingEvent.Error("Could not connect to Google Play. Please check your internet connection and try again."))
                 }
             }

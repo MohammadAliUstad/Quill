@@ -35,6 +35,7 @@ import kotlin.math.roundToInt
 @Composable
 fun ReaderMenuOverlay(
     isVisible: Boolean,
+    isPro: Boolean,
     showBottomControls: Boolean = true,
     showAiraPeek: Boolean = false,
     readerOverlayState: ReaderOverlayState,
@@ -114,7 +115,7 @@ fun ReaderMenuOverlay(
             horizontalAlignment = Alignment.End
         ) {
             AnimatedVisibility(
-                visible = isVisible && showBottomControls && airaUiState.isReady,
+                visible = isVisible && showBottomControls && airaUiState.isReady && isPro,
                 enter = slideInVertically(
                     initialOffsetY = { it },
                     animationSpec = tween(300, easing = FastOutSlowInEasing)

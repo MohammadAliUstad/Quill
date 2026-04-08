@@ -5,15 +5,9 @@ import com.yugentech.quill.database.model.BookStorageBreakdown
 import kotlinx.coroutines.flow.Flow
 
 interface StorageRepository {
-    // Database Flows
     fun getDownloadedBooksBySize(): Flow<List<BookEntity>>
-    
-    // Actions
     suspend fun removeDownload(bookId: String)
-    
-    // Device Stats
     fun getDeviceFreeSpace(): Long
     fun getDeviceTotalSpace(): Long
-    // StorageRepository.kt
     fun getBookStorageBreakdowns(): Flow<List<BookStorageBreakdown>>
 }

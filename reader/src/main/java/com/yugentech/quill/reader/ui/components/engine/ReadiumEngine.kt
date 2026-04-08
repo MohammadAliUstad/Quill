@@ -29,6 +29,7 @@ import kotlin.math.roundToInt
 fun ReadiumEngine(
     publication: Publication,
     bookId: String,
+    isPro: Boolean = false,
     initialLocation: Locator?,
     targetJumpHref: String?,
     targetSeekProgress: Double?,
@@ -57,6 +58,7 @@ fun ReadiumEngine(
             fragmentTag = fragmentTag,
             initialLocation = initialLocation,
             preferences = preferences,
+            isPro = isPro,
             onTap = onTap,
             onAskAira = onAskAira,
             onNavigatorReady = { nav ->

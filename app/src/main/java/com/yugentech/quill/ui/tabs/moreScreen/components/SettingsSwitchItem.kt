@@ -40,8 +40,8 @@ fun SettingsSwitchItem(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(
-                    start = MaterialTheme.spacing.s, // 8.dp
-                    top = MaterialTheme.spacing.s    // 8.dp
+                    start = MaterialTheme.spacing.s,
+                    top = MaterialTheme.spacing.s
                 )
             )
         },
@@ -52,8 +52,8 @@ fun SettingsSwitchItem(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(
-                        start = MaterialTheme.spacing.s, // 8.dp
-                        bottom = MaterialTheme.spacing.s // 8.dp
+                        start = MaterialTheme.spacing.s,
+                        bottom = MaterialTheme.spacing.s
                     )
                 )
             }

@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.more.subscriptions.parent
+package com.yugentech.quill.ui.more.subscriptionsScreen.parent
 
 import android.app.Activity
 import androidx.compose.animation.AnimatedContent
@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,9 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.billing.SubscriptionViewModel
 import com.yugentech.quill.domain.BillingEvent
-import com.yugentech.quill.ui.more.subscriptions.components.SubscribeBottomBar
-import com.yugentech.quill.ui.more.subscriptions.components.SubscribedContent
-import com.yugentech.quill.ui.more.subscriptions.components.UnsubscribedContent
+import com.yugentech.quill.ui.more.subscriptionsScreen.components.SubscribeBottomBar
+import com.yugentech.quill.ui.more.subscriptionsScreen.components.SubscribedContent
+import com.yugentech.quill.ui.more.subscriptionsScreen.components.UnsubscribedContent
 
 data class PlanOption(
     val basePlanId: String,
