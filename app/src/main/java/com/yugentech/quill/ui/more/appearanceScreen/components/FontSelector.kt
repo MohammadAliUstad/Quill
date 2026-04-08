@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.yugentech.quill.ui.mainScreen.components.SectionHeader
 import com.yugentech.theme.AppFont
-import com.yugentech.theme.ThemeViewModel
+import com.yugentech.quill.theme.ThemeViewModel
 import com.yugentech.theme.builder.getFontFamily
 import com.yugentech.theme.tokens.spacing
 

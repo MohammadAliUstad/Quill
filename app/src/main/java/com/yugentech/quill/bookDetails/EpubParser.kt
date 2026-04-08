@@ -3,6 +3,7 @@ package com.yugentech.quill.bookDetails
 import android.content.Context
 import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.utils.ParsedEpub
+import com.yugentech.theme.tokens.AppConstants.EMPTY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.readium.r2.shared.publication.Link
@@ -48,12 +49,11 @@ class EpubParser(private val context: Context) {
                     .groupingBy { it.href.toString().substringBefore("#") }
                     .eachCount()
 
-                // 4. Flatten TOC
                 val allLinks = flattenLinks(publication.tableOfContents, 0)
 
                 var globalIndex = 0
                 val rawEntities = allLinks.mapNotNull { (link, depth) ->
-                    val title = link.title?.trim() ?: ""
+                    val title = link.title?.trim() ?: EMPTY
                     val lowerTitle = title.lowercase(Locale.ROOT)
 
                     val isJunk = ignoredTitles.contains(lowerTitle)
@@ -61,7 +61,6 @@ class EpubParser(private val context: Context) {
 
                     if (title.isNotBlank() && !isJunk && !isBookTitle) {
 
-                        // Look up the page count for this chapter's file
                         val cleanHref = link.href.toString().substringBefore("#")
                         val chapterPageCount = pageCountsByHref[cleanHref] ?: 0
 
@@ -77,7 +76,6 @@ class EpubParser(private val context: Context) {
                     }
                 }
 
-                // 5. Post-Processing (Hierarchy)
                 val refinedChapters = rawEntities.map { entity ->
                     val lower = entity.title.trim().lowercase(Locale.ROOT)
                     val newDepth = when {
@@ -90,11 +88,10 @@ class EpubParser(private val context: Context) {
 
                 publication.close()
 
-                // Return the complete package
                 return@withContext ParsedEpub(totalPages, refinedChapters)
 
             } catch (e: Exception) {
-                Timber.Forest.e(e, "EpubParser failed")
+                Timber.e(e, "EpubParser failed")
                 return@withContext ParsedEpub(0, emptyList())
             }
         }

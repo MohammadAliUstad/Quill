@@ -31,27 +31,22 @@ class GlobalSyncManager(
             authRepository.authState.collectLatest { user ->
                 if (user != null) {
 
-                    // 1. Boot up the Google Play connection immediately
                     billingRepository.setUserId(user.uid)
                     billingRepository.startConnection()
 
-                    // 2. Perform the Silent Reality Check in the background
                     applicationScope.launch {
-                        delay(2000) // Give the BillingClient 2 seconds to connect
+                        delay(2000)
                         val verifiedStatus = billingRepository.restorePurchases(user.uid)
 
-                        // If Play Store confirms a status, force the DB to match reality
                         if (verifiedStatus != null) {
                             userRepository.updateProStatus(user.uid, verifiedStatus)
                             Timber.d("Global Sync: Pro status verified as $verifiedStatus")
                         }
                     }
 
-                    // 3. Keep Quota and UI perfectly in sync with the Database
                     userRepository.getUserFlow(user.uid).collectLatest { userData ->
                         val isPro = userData?.isPro == true
 
-                        // This perfectly syncs the cloud limit AND loads the quota into Room!
                         quotaRepository.onProStatusChanged(user.uid, isPro)
                     }
                 }

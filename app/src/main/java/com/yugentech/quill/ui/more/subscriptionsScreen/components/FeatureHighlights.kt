@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.more.subscriptions.components
+package com.yugentech.quill.ui.more.subscriptionsScreen.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
