@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.more.attributions.components
+package com.yugentech.quill.ui.more.attributionsScreen.components
 
 object LicensesContent {
     val libraries = listOf(

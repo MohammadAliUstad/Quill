@@ -18,26 +18,26 @@ class LibraryViewModel(
 ) : ViewModel() {
 
     val userCategories: StateFlow<List<CategoryEntity>> = categoryRepository.getUserCategories()
-        .stateIn(viewModelScope, SharingStarted.Companion.WhileSubscribed(AppConstants.FIVE), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(AppConstants.FIVE), emptyList())
 
     val lastReadBook: StateFlow<LibraryBookView?> = libraryRepository.getLastReadBook()
-        .stateIn(viewModelScope, SharingStarted.Companion.WhileSubscribed(AppConstants.FIVE), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(AppConstants.FIVE), null)
 
     val historyBooks: StateFlow<List<LibraryBookView>> = libraryRepository.getReadingHistory()
-        .stateIn(viewModelScope, SharingStarted.Companion.WhileSubscribed(AppConstants.FIVE), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(AppConstants.FIVE), emptyList())
 
     val allHistoryBooks: StateFlow<List<LibraryBookView>> = libraryRepository.getCompleteReadingHistory()
-        .stateIn(viewModelScope, SharingStarted.Companion.WhileSubscribed(AppConstants.FIVE), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(AppConstants.FIVE), emptyList())
 
     val favoriteBooks: StateFlow<List<LibraryBookView>> = libraryRepository.getFavoriteBooks()
-        .stateIn(viewModelScope, SharingStarted.Companion.WhileSubscribed(AppConstants.FIVE), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(AppConstants.FIVE), emptyList())
 
     val bookShelf: StateFlow<List<LibraryBookView>> = libraryRepository.getBookShelf()
-        .stateIn(viewModelScope, SharingStarted.Companion.WhileSubscribed(AppConstants.FIVE), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(AppConstants.FIVE), emptyList())
 
     fun getBooksForCategory(category: String): StateFlow<List<LibraryBookView>> {
         return libraryRepository.getBooksByCategory(category)
-            .stateIn(viewModelScope, SharingStarted.Companion.WhileSubscribed(AppConstants.FIVE), emptyList())
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(AppConstants.FIVE), emptyList())
     }
 
     fun initializeDefaultCategories() {

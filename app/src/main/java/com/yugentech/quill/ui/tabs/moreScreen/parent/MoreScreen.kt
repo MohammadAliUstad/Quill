@@ -32,7 +32,7 @@ fun MoreScreen(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     userData: UserData,
     streakCount: Int,
-    isIndexingActive: Boolean,             // <-- NEW
+    isIndexingActive: Boolean,
     onSignOut: () -> Unit,
     onExit: () -> Unit,
     onEditProfile: () -> Unit,
@@ -43,7 +43,7 @@ fun MoreScreen(
     onManageStorage: () -> Unit,
     onAboutAira: () -> Unit,
     onSubscriptions: () -> Unit,
-    onViewIndexingQueue: () -> Unit,       // <-- NEW
+    onViewIndexingQueue: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -83,8 +83,7 @@ fun MoreScreen(
                 )
             }
 
-            // --- AI SECTION ---
-            val aiItemCount = if (isIndexingActive) 3 else 2 // Dynamic count for corner rounding
+            val aiItemCount = if (isIndexingActive) 3 else 2
 
             item {
                 SectionHeader(
@@ -111,11 +110,10 @@ fun MoreScreen(
                 )
             }
 
-            // --- CONDITIONAL INDEXING QUEUE ITEM ---
             if (isIndexingActive) {
-                item(key = "indexing_queue") { // <-- CRITICAL: Key allows Compose to track this specific item
+                item(key = "indexing_queue") {
                     SettingsListItem(
-                        modifier = Modifier.animateItem(), // <-- Animates the fade-in/out and sizing (Compose Foundation 1.7+)
+                        modifier = Modifier.animateItem(),
                         title = "Indexing Library",
                         subtitle = "Aira is reading your books.",
                         index = 2,
@@ -125,7 +123,6 @@ fun MoreScreen(
                 }
             }
 
-            // --- LIBRARY SECTION ---
             item {
                 SectionHeader(
                     icon = Icons.AutoMirrored.Filled.List,
@@ -151,7 +148,6 @@ fun MoreScreen(
                 )
             }
 
-            // --- APPEARANCE SECTION ---
             item {
                 SectionHeader(
                     icon = Icons.Default.Palette,
@@ -168,7 +164,6 @@ fun MoreScreen(
                 )
             }
 
-            // --- ABOUT SECTION ---
             item {
                 SectionHeader(
                     icon = Icons.Default.Info,
@@ -178,14 +173,13 @@ fun MoreScreen(
             item {
                 SettingsListItem(
                     title = "About Quill",
-                    subtitle = "Version 2.5.0",
+                    subtitle = "Version 3.0.0",
                     index = 0,
                     totalCount = 1,
                     onClick = onAbout,
                 )
             }
 
-            // --- SESSION / DESTRUCTIVE SECTION ---
             item {
                 SectionHeader(
                     icon = Icons.AutoMirrored.Filled.ExitToApp,

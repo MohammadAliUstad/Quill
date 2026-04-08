@@ -1,7 +1,6 @@
 package com.yugentech.quill
 
 import android.graphics.Color
-import com.yugentech.quill.BuildConfig
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -19,7 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.navigation.host.AppNavHost
 import com.yugentech.theme.QuillTheme
-import com.yugentech.theme.ThemeViewModel
+import com.yugentech.quill.theme.ThemeViewModel
 import com.yugentech.theme.models.ThemeMode
 import org.koin.android.ext.android.get
 import org.koin.androidx.compose.koinViewModel

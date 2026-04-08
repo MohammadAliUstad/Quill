@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import com.yugentech.quill.R
 import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.database.view.LibraryBookView
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
 import com.yugentech.quill.ui.tabs.libraryScreen.components.BookRow
 import com.yugentech.quill.ui.tabs.libraryScreen.components.HistoryCarousel
@@ -58,7 +57,7 @@ fun LibraryScreen(
     modifier: Modifier = Modifier,
     onLibraryBookClick: (Book) -> Unit,
     onResumeClick: (Book) -> Unit,
-    onSeeAllClick: (title: String, books: List<LibraryBookView>) -> Unit,
+    onSeeAllClick: (categoryName: String) -> Unit,
     viewModel: LibraryViewModel,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -196,7 +195,8 @@ fun LibraryScreen(
                     if (allHistoryBooks.isNotEmpty()) {
                         while (true) {
                             delay(6000)
-                            currentBackgroundIndex = (currentBackgroundIndex + 1) % allHistoryBooks.size
+                            currentBackgroundIndex =
+                                (currentBackgroundIndex + 1) % allHistoryBooks.size
                         }
                     }
                 }
@@ -204,7 +204,9 @@ fun LibraryScreen(
                 val parallaxCoverUrl = allHistoryBooks.getOrNull(currentBackgroundIndex)?.coverUrl
                     ?: lastReadBook?.coverUrl
 
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
                     if (parallaxCoverUrl != null) {
                         LibraryParallaxBackground(
                             coverUrl = parallaxCoverUrl,
@@ -217,7 +219,6 @@ fun LibraryScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(scrollState)
-                            // Take the top padding from Scaffold, and add the parent's bottom nav padding + 8.dp
                             .padding(
                                 top = innerPadding.calculateTopPadding(),
                                 bottom = contentPadding.calculateBottomPadding() + 8.dp
@@ -268,7 +269,7 @@ fun LibraryScreen(
                                     title = category.name,
                                     books = categoryBooks,
                                     onBookClick = { onLibraryBookClick(it.toBook()) },
-                                    onSeeAllClick = { onSeeAllClick(category.name, categoryBooks) }
+                                    onSeeAllClick = { onSeeAllClick(category.name) }
                                 )
                             }
                         }
@@ -278,7 +279,7 @@ fun LibraryScreen(
                                 title = "Favorites",
                                 books = favoriteBooks,
                                 onBookClick = { onLibraryBookClick(it.toBook()) },
-                                onSeeAllClick = { onSeeAllClick("Favorites", favoriteBooks) }
+                                onSeeAllClick = { onSeeAllClick("Favorites") }
                             )
                         }
 
@@ -287,7 +288,7 @@ fun LibraryScreen(
                                 title = "My Shelf",
                                 books = bookShelf,
                                 onBookClick = { onLibraryBookClick(it.toBook()) },
-                                onSeeAllClick = { onSeeAllClick("My Shelf", bookShelf) }
+                                onSeeAllClick = { onSeeAllClick("My Shelf") }
                             )
                         }
                     }

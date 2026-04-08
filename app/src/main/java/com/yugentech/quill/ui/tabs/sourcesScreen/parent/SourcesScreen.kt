@@ -3,7 +3,6 @@ package com.yugentech.quill.ui.tabs.sourcesScreen.parent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -31,8 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.model.BookSource
+import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.CatalogInfo
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.FilePickerBottomSheet
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.ImportStatusSheet
@@ -51,7 +52,11 @@ fun SourcesScreen(
 ) {
     val context = LocalContext.current
     val bookDao: BookDao = koinInject()
+    val billingRepository: BillingRepository = koinInject() // 1. Inject BillingRepo
     val scope = rememberCoroutineScope()
+
+    // 2. Observe the Pro status
+    val isPro by billingRepository.isPro.collectAsStateWithLifecycle(initialValue = false)
 
     var showFilePickerSheet by remember { mutableStateOf(false) }
     var isImporting by remember { mutableStateOf(false) }
@@ -135,14 +140,9 @@ fun SourcesScreen(
                 LargeCatalogCard(
                     catalog = catalog,
                     onClick = {
-                        // Intercept the click based on the source type
                         when (catalog.source) {
-                            BookSource.USER_IMPORTED -> {
-                                showFilePickerSheet = true
-                            }
-                            else -> {
-                                onSourceClick(catalog.source)
-                            }
+                            BookSource.USER_IMPORTED -> showFilePickerSheet = true
+                            else -> onSourceClick(catalog.source)
                         }
                     },
                 )
@@ -156,7 +156,8 @@ fun SourcesScreen(
                     showFilePickerSheet = false
                     isImporting = true
                     scope.launch {
-                        val results = LocalBookImporter.importFiles(context, bookDao, uris)
+                        // 3. Pass isPro to the importer
+                        val results = LocalBookImporter.importFiles(context, bookDao, uris, isPro)
                         importResults = results
                         isImporting = false
                         showResultsSheet = true

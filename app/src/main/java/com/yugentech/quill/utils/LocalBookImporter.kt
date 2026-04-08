@@ -31,21 +31,22 @@ object LocalBookImporter {
     suspend fun importFiles(
         context: Context,
         bookDao: BookDao,
-        uris: List<Uri>
+        uris: List<Uri>,
+        isPro: Boolean
     ): List<ImportResult> = withContext(Dispatchers.IO) {
-        uris.map { uri -> importSingle(context, bookDao, uri) }
+        uris.map { uri -> importSingle(context, bookDao, uri, isPro) }
     }
 
     private suspend fun importSingle(
         context: Context,
         bookDao: BookDao,
-        uri: Uri
+        uri: Uri,
+        isPro: Boolean
     ): ImportResult {
         val fileName = resolveFileName(context, uri) ?: "unknown.epub"
         val bookId = "local_${uri.hashCode()}"
 
         return try {
-            // ── Step 1: Copy to internal storage ─────────────────────────
             val importsDir = File(context.filesDir, "imports").also { it.mkdirs() }
             val destFile = File(importsDir, "$bookId.epub")
 
@@ -53,7 +54,6 @@ object LocalBookImporter {
                 FileOutputStream(destFile).use { output -> input.copyTo(output) }
             } ?: return ImportResult.Failure(fileName, "Could not open file")
 
-            // ── Step 2: Open with Readium and extract metadata ────────────
             val httpClient = DefaultHttpClient()
             val assetRetriever = AssetRetriever(context.contentResolver, httpClient)
             val parser = DefaultPublicationParser(context, httpClient, assetRetriever, null)
@@ -79,12 +79,10 @@ object LocalBookImporter {
             val language = metadata.languages.firstOrNull() ?: "en"
             val subjects = metadata.subjects.map { it.name.trim() }.filter { it.isNotBlank() }
 
-            // ── Step 3: Save cover image ──────────────────────────────────
             val coverUrl = saveCover(context, publication.cover(), bookId)
 
             publication.close()
 
-            // ── Step 4: Insert into Room as DOWNLOADED ────────────────────
             val entity = BookEntity(
                 id = bookId,
                 title = title,
@@ -102,7 +100,6 @@ object LocalBookImporter {
 
             bookDao.insertBook(entity)
 
-            // ── Step 5: Parse chapters in background and update ───────────
             val epubParser = EpubParser(context)
             val parsed = epubParser.parse(destFile.absolutePath, title)
 
@@ -113,23 +110,21 @@ object LocalBookImporter {
             )
             bookDao.insertBook(updatedEntity)
 
-            // ── Step 6: Trigger Aira Indexing (Matched to Repo Setup) ─────
-            val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
-                .setInputData(
-                    workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId)
-                )
-                .addTag("index_$bookId")
-                .addTag("AI_INDEXING") // Added missing tag to match repo
-                .build()
+            if (isPro) {
+                val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
+                    .setInputData(
+                        workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId)
+                    )
+                    .addTag("index_$bookId")
+                    .addTag("AI_INDEXING")
+                    .build()
 
-            // Use beginUniqueWork with REPLACE policy exactly like the repository
-            WorkManager.getInstance(context)
-                .beginUniqueWork(
-                    "global_book_processing_queue", // <-- Match the exact same global name
-                    ExistingWorkPolicy.APPEND_OR_REPLACE, // <-- Queue them up
+                WorkManager.getInstance(context).enqueueUniqueWork(
+                    "global_book_processing_queue",
+                    ExistingWorkPolicy.APPEND_OR_REPLACE,
                     indexRequest
                 )
-                .enqueue()
+            }
 
             ImportResult.Success(bookId, title)
 
@@ -139,10 +134,6 @@ object LocalBookImporter {
         }
     }
 
-    /**
-     * Saves the cover [Bitmap] to internal storage and returns its file:// path,
-     * or null if no cover is available.
-     */
     private fun saveCover(context: Context, bitmap: Bitmap?, bookId: String): String? {
         bitmap ?: return null
         return try {

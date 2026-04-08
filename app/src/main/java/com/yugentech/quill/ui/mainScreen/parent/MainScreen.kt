@@ -28,7 +28,6 @@ import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.UserData
-import com.yugentech.quill.database.view.LibraryBookView
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
 import com.yugentech.quill.ui.mainScreen.components.BottomBar
 import com.yugentech.quill.ui.mainScreen.components.ExitConfirmationDialog
@@ -37,7 +36,7 @@ import com.yugentech.quill.ui.mainScreen.components.QuillTab
 import com.yugentech.quill.ui.mainScreen.components.ResumeFab
 import com.yugentech.quill.ui.tabs.discoverScreen.parent.DiscoverScreen
 import com.yugentech.quill.ui.tabs.libraryScreen.parent.LibraryScreen
-import com.yugentech.quill.ui.tabs.moreScreen.parent.IndexingQueueViewModel
+import com.yugentech.quill.allBooks.IndexingQueueViewModel
 import com.yugentech.quill.ui.tabs.moreScreen.parent.MoreScreen
 import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesScreen
 import com.yugentech.quill.user.viewmodel.UserViewModel
@@ -57,7 +56,7 @@ fun MainScreen(
     onDiscoverBookClick: (Book) -> Unit,
     onResumeClick: (Book) -> Unit,
     onSourceClick: (BookSource) -> Unit,
-    onSeeAllClick: (title: String, books: List<LibraryBookView>) -> Unit,
+    onSeeAllClick: (title: String) -> Unit,
     onAboutClick: () -> Unit = {},
     onAppearanceClick: () -> Unit = {},
     onManageCategories: () -> Unit = {},

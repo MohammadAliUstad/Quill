@@ -12,7 +12,6 @@ class LibraryRepositoryImpl(
 ) : LibraryRepository {
 
     override fun getLastReadBook(): Flow<LibraryBookView?> {
-        // Uses the optimized 'LIMIT 1' query from the DAO
         return bookDao.getLastReadBook()
     }
 
@@ -31,7 +30,6 @@ class LibraryRepositoryImpl(
     }
 
     override fun getBookShelf(): Flow<List<LibraryBookView>> {
-        // Uses the specific "Shelf" category query
         return bookDao.getBookShelf()
     }
 
@@ -44,7 +42,6 @@ class LibraryRepositoryImpl(
     }
 
     override suspend fun deleteBook(bookId: String) {
-        // 1. Delete the physical file
         val book = bookDao.getBookEntity(bookId)
         book?.localFilePath?.let { path ->
             val file = File(path)
@@ -52,7 +49,6 @@ class LibraryRepositoryImpl(
                 file.delete()
             }
         }
-        // 2. Soft delete in DB (clears path, sets status to NOT_DOWNLOADED)
         bookDao.removeDownload(bookId)
     }
 }
