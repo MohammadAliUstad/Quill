@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.more.attributions.components
+package com.yugentech.quill.ui.more.attributionsScreen.components
 
 import android.content.Intent
 import androidx.compose.foundation.background
