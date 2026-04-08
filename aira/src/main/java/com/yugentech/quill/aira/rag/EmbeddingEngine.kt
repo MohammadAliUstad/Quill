@@ -13,12 +13,15 @@ import java.io.File
 import java.nio.LongBuffer
 import kotlin.math.sqrt
 
-class EmbeddingEngine(private val context: Context) {
-
+class EmbeddingEngine(
+    private val context: Context
+) {
     @Volatile
     private var ortEnv: OrtEnvironment? = null
+
     @Volatile
     private var ortSession: OrtSession? = null
+
     @Volatile
     private var tokenizer: WordPieceTokenizer? = null
 

@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 class BillingClientService(context: Context) {
@@ -48,9 +49,6 @@ class BillingClientService(context: Context) {
 
     private var currentUserId: String? = null
 
-    /**
-     * Updates the local user context. Call this whenever the user logs in or logs out.
-     */
     fun setCurrentUser(userId: String?) {
         currentUserId = userId
         Timber.d("Billing user context set to: $userId")
@@ -64,7 +62,6 @@ class BillingClientService(context: Context) {
             BillingClient.BillingResponseCode.USER_CANCELED ->
                 scope.launch { _events.emit(BillingEvent.UserCancelled) }
 
-            // ADD THIS BLOCK CATCHING "ITEM_ALREADY_OWNED"
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
                 Timber.w("User attempted to buy, but Play Store account already owns it.")
                 scope.launch {
@@ -78,7 +75,6 @@ class BillingClientService(context: Context) {
 
             else -> {
                 Timber.e("Purchase error [${result.responseCode}]: ${result.debugMessage}")
-                // Fallback for network errors, declined cards, etc.
                 val errorMessage = result.debugMessage.ifBlank {
                     "An error occurred with Google Play. Please try again."
                 }
@@ -94,12 +90,6 @@ class BillingClientService(context: Context) {
         )
         .build()
 
-    // ── 1. connect ────────────────────────────────────────────────────────────
-
-    /**
-     * Establishes connection to Google Play. If a user is already logged in,
-     * it will automatically trigger a restore check.
-     */
     fun connect() {
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(result: BillingResult) {
@@ -109,7 +99,6 @@ class BillingClientService(context: Context) {
                         querySubProducts()
                         queryTipProducts()
 
-                        // If we already have a user context, sync their Pro status immediately
                         currentUserId?.let { restorePurchases(it) }
                     }
                 } else {
@@ -122,8 +111,6 @@ class BillingClientService(context: Context) {
             }
         })
     }
-
-    // ── 2. queryProductDetails ────────────────────────────────────────────────
 
     private suspend fun querySubProducts() {
         val params = QueryProductDetailsParams.newBuilder()
@@ -161,13 +148,8 @@ class BillingClientService(context: Context) {
         }
     }
 
-    // ── 3. launch flows ───────────────────────────────────────────────────────
-
-    // ── 3. launch flows ───────────────────────────────────────────────────────
-
     fun launchSubscriptionFlow(activity: Activity, basePlanId: String, userId: String) {
         scope.launch {
-            // 1. PRE-FLIGHT CHECK: Ask Google if this device already owns the sub
             val queryParams = QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.SUBS)
                 .build()
@@ -181,18 +163,16 @@ class BillingClientService(context: Context) {
                 }
 
                 if (existingSub != null) {
-                    // The device already owns it! Abort the launch and show our custom error.
                     _events.emit(
                         BillingEvent.Error(
                             "This Google Play account is already subscribed. To subscribe on this Quill profile, please switch to a different Google account in the Play Store app."
                         )
                     )
-                    return@launch // Stop execution here
+                    return@launch
                 }
             }
 
-            // 2. If no existing sub, switch to the Main thread and launch the Google Play UI
-            kotlinx.coroutines.withContext(Dispatchers.Main) {
+            withContext(Dispatchers.Main) {
                 val product = _subProducts.value.find { it.productId == ProductIds.QUILL_PRO }
 
                 if (product == null) {
@@ -242,18 +222,12 @@ class BillingClientService(context: Context) {
                     )
                 )
                 .build()
-            kotlinx.coroutines.withContext(Dispatchers.Main) {
+            withContext(Dispatchers.Main) {
                 billingClient.launchBillingFlow(activity, params)
             }
         }
     }
 
-    // ── 4. restorePurchases ───────────────────────────────────────────────────
-
-    /**
-     * Checks Google Play for active subscriptions belonging to this userId.
-     * Returns true if a valid Pro subscription was found and applied.
-     */
     suspend fun restorePurchases(userId: String): Boolean? {
         val params = QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.SUBS)
@@ -265,9 +239,8 @@ class BillingClientService(context: Context) {
             val validPurchase = purchases.find { purchase ->
                 val isPurchased = purchase.purchaseState == PurchaseState.PURCHASED
                 val isProProduct = purchase.products.contains(ProductIds.QUILL_PRO)
-                // Verify the receipt "tag" matches the current Quill account
                 val belongsToUser = purchase.accountIdentifiers?.obfuscatedAccountId.let { id ->
-                    id == null || id == userId  // null = old purchase without account tagging, still accept it
+                    id == null || id == userId
                 }
 
                 isPurchased && isProProduct && belongsToUser
@@ -277,18 +250,14 @@ class BillingClientService(context: Context) {
             _isPro.value = hasPro
 
             if (hasPro) {
-                // If it's valid but not acknowledged yet (edge case), acknowledge it
                 handleSubscription(validPurchase)
             }
 
             return hasPro
         }
-        // Return null instead of false on network errors!
         Timber.w("Failed to query purchases. Code: ${result.responseCode}")
         return null
     }
-
-    // ── 5. handlePurchase (internal) ──────────────────────────────────────────
 
     private suspend fun handlePurchase(purchase: Purchase) {
         if (purchase.purchaseState != PurchaseState.PURCHASED) return
@@ -299,7 +268,6 @@ class BillingClientService(context: Context) {
     }
 
     private suspend fun handleSubscription(purchase: Purchase) {
-        // Double-check user ownership before granting access
         val belongsToUser = purchase.accountIdentifiers?.obfuscatedAccountId == currentUserId
         if (!belongsToUser) {
             Timber.w("Subscription owned by different account. Access denied.")

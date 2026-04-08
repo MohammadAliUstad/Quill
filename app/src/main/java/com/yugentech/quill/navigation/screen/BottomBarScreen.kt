@@ -1,17 +1,16 @@
 package com.yugentech.quill.navigation.screen
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Explore
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.icons.outlined.Explore
-import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Source
 import androidx.compose.ui.graphics.vector.ImageVector
 
-// Defines the main bottom navigation screens with icons
 sealed class BottomBarScreen(
     val route: String,
     val title: String,
@@ -21,8 +20,8 @@ sealed class BottomBarScreen(
     data object Library : BottomBarScreen(
         route = "library",
         title = "Library",
-        selectedIcon = Icons.Filled.MenuBook,
-        unselectedIcon = Icons.Outlined.MenuBook
+        selectedIcon = Icons.AutoMirrored.Filled.MenuBook,
+        unselectedIcon = Icons.AutoMirrored.Outlined.MenuBook
     )
 
     data object Discover : BottomBarScreen(
@@ -47,7 +46,6 @@ sealed class BottomBarScreen(
     )
 
     companion object {
-        // Maps a string route to its corresponding screen object
         fun fromRoute(route: String): BottomBarScreen = when (route) {
             Library.route -> Library
             Discover.route -> Discover

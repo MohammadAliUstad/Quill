@@ -49,7 +49,6 @@ class AuthViewModel(
                     Timber.d("Auth state update: User logged in ${firebaseUser.uid}")
                     FirebaseCrashlytics.getInstance().setUserId(firebaseUser.uid)
 
-                    // Only load the profile if we haven't already loaded it for this specific user
                     if (_authState.value.userId != firebaseUser.uid) {
                         loadUserProfile(firebaseUser)
                     }
@@ -78,7 +77,6 @@ class AuthViewModel(
         viewModelScope.launch {
             when (val result = authRepository.signIn(email, password)) {
                 is AuthResult.Success -> {
-                    // Focused category sync on successful sign in
                     cloudSyncRepository.syncLibraryOnLogin()
                 }
 
@@ -106,7 +104,6 @@ class AuthViewModel(
                     )
 
                     syncOrCreateUser(newUser)
-                    // Ensure categories are synced/initialized for the new user
                     cloudSyncRepository.syncLibraryOnLogin()
                 }
 
@@ -156,7 +153,6 @@ class AuthViewModel(
         Timber.i("User requested sign out")
         _authState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            // Wipe local category data and sync flags on sign out
             cloudSyncRepository.wipeLocalData()
             syncDataStore.clearSyncFlags()
             authRepository.signOut()
@@ -187,8 +183,6 @@ class AuthViewModel(
     fun clearError() {
         _authState.update { it.copy(error = null) }
     }
-
-    // --- Profile Management Logic ---
 
     private fun loadUserProfile(firebaseUser: FirebaseUser) {
         profileLoadingJob?.cancel()
