@@ -1,15 +1,14 @@
 package com.yugentech.quill.di.modules.ai
 
-import com.yugentech.quill.BuildConfig
 import com.yugentech.quill.aira.aira.repository.AiraChatRepository
 import com.yugentech.quill.aira.aira.repository.AiraChatRepositoryImpl
 import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
 import com.yugentech.quill.aira.book.BookRepository
 import com.yugentech.quill.aira.book.BookRepositoryImpl
+import com.yugentech.quill.aira.quick.viewmodel.QuickViewModel
 import com.yugentech.quill.aira.rag.EmbeddingEngine
 import com.yugentech.quill.aira.rag.RagRetriever
-import com.yugentech.quill.aira.quick.viewmodel.QuickViewModel
-import com.yugentech.quill.ui.tabs.moreScreen.parent.IndexingQueueViewModel
+import com.yugentech.quill.allBooks.IndexingQueueViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -41,7 +40,7 @@ val airaModule = module {
 
     single<AiraChatRepository> {
         AiraChatRepositoryImpl(
-            geminiApiKey = BuildConfig.GEMINI_API_KEY,
+            functions = get(),
             ragRetriever = get(),
             bookDao = get(),
             chunkDao = get(),
