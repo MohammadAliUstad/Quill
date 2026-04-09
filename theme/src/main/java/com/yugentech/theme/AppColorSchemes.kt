@@ -568,7 +568,6 @@ object AppColorSchemes {
         surfaceContainerHigh = Color(0xFFF0E7D9),
         surfaceContainerHighest = Color(0xFFEAE1D4)
     )
-
     val QuillDarkColorScheme = darkColorScheme(
         primary = Color(0xFFE5C36C),
         onPrimary = Color(0xFF3E2E00),

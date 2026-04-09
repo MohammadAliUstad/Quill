@@ -24,7 +24,7 @@ import com.yugentech.quill.ui.more.appearanceScreen.components.AmoledThemeSelect
 import com.yugentech.quill.ui.more.appearanceScreen.components.FontSelector
 import com.yugentech.quill.ui.more.appearanceScreen.components.ThemeColorSelector
 import com.yugentech.quill.ui.more.appearanceScreen.components.ThemeModeSelector
-import com.yugentech.theme.ThemeViewModel
+import com.yugentech.quill.theme.ThemeViewModel
 import com.yugentech.theme.tokens.spacing
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)

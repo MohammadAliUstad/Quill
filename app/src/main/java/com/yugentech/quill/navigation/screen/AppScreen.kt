@@ -5,11 +5,9 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.yugentech.quill.database.converter.AppJson
 import com.yugentech.quill.database.model.Book
-import kotlinx.serialization.json.Json
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-// Defines all available navigation routes in the application
 sealed class AppScreen(val route: String) {
     data object SignIn : AppScreen("sign_in")
     data object SignUp : AppScreen("sign_up")
@@ -32,7 +30,7 @@ sealed class AppScreen(val route: String) {
 
     data object BookDetailsScreen : AppScreen("bookDetailsScreen") {
 
-        const val routeWithArgs = "bookDetailsScreen?bookId={bookId}&bookJson={bookJson}"
+        const val ROUTE = "bookDetailsScreen?bookId={bookId}&bookJson={bookJson}"
 
         val arguments: List<NamedNavArgument> = listOf(
             navArgument("bookId") {
