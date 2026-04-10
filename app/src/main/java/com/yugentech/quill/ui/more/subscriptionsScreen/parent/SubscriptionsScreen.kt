@@ -40,7 +40,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.yugentech.quill.billing.SubscriptionViewModel
+import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
 import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.ui.more.subscriptionsScreen.components.SubscribeBottomBar
 import com.yugentech.quill.ui.more.subscriptionsScreen.components.SubscribedContent

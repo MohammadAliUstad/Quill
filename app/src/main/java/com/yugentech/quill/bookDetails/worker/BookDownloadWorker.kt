@@ -8,7 +8,7 @@ import androidx.work.WorkManager.Companion.getInstance
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.yugentech.quill.aira.rag.BookEmbeddingWorker
-import com.yugentech.quill.bookDetails.EpubParser
+import com.yugentech.quill.utils.EpubParser
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.model.DownloadStatus
 import kotlinx.coroutines.Dispatchers

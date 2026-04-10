@@ -4,16 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.OpenableColumns
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
-import com.yugentech.quill.aira.rag.BookEmbeddingWorker
-import com.yugentech.quill.bookDetails.EpubParser
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.theme.tokens.AppConstants.EMPTY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.readium.r2.shared.publication.services.cover
@@ -31,17 +26,15 @@ object LocalBookImporter {
     suspend fun importFiles(
         context: Context,
         bookDao: BookDao,
-        uris: List<Uri>,
-        isPro: Boolean
+        uris: List<Uri>
     ): List<ImportResult> = withContext(Dispatchers.IO) {
-        uris.map { uri -> importSingle(context, bookDao, uri, isPro) }
+        uris.map { uri -> importSingle(context, bookDao, uri) }
     }
 
     private suspend fun importSingle(
         context: Context,
         bookDao: BookDao,
-        uri: Uri,
-        isPro: Boolean
+        uri: Uri
     ): ImportResult {
         val fileName = resolveFileName(context, uri) ?: "unknown.epub"
         val bookId = "local_${uri.hashCode()}"
@@ -89,7 +82,7 @@ object LocalBookImporter {
                 author = author,
                 description = description,
                 coverUrl = coverUrl,
-                downloadUrl = "",
+                downloadUrl = EMPTY,
                 source = BookSource.USER_IMPORTED,
                 subjects = subjects,
                 language = language,
@@ -109,22 +102,6 @@ object LocalBookImporter {
                 fileSizeBytes = destFile.length()
             )
             bookDao.insertBook(updatedEntity)
-
-            if (isPro) {
-                val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
-                    .setInputData(
-                        workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId)
-                    )
-                    .addTag("index_$bookId")
-                    .addTag("AI_INDEXING")
-                    .build()
-
-                WorkManager.getInstance(context).enqueueUniqueWork(
-                    "global_book_processing_queue",
-                    ExistingWorkPolicy.APPEND_OR_REPLACE,
-                    indexRequest
-                )
-            }
 
             ImportResult.Success(bookId, title)
 

@@ -29,7 +29,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.allBooks.AllBooksViewModel
+import com.yugentech.quill.viewmodel.seeAll.SeeAllViewModel
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.ui.tabs.libraryScreen.components.BookItem
@@ -39,7 +39,7 @@ import com.yugentech.quill.ui.tabs.libraryScreen.components.BookItem
 fun AllBooksScreen(
     onBackClick: () -> Unit,
     onBookClick: (Book) -> Unit,
-    viewModel: AllBooksViewModel
+    viewModel: SeeAllViewModel
 ) {
     val title by viewModel.title.collectAsState()
     val books by viewModel.books.collectAsState()

@@ -7,7 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.yugentech.quill.allBooks.AllBooksViewModel
+import com.yugentech.quill.viewmodel.seeAll.SeeAllViewModel
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
@@ -99,12 +99,12 @@ fun NavGraphBuilder.mainGraph(
         arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
     ) { backStackEntry ->
         val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
-        val allBooksViewModel: AllBooksViewModel = koinViewModel(
+        val seeAllViewModel: SeeAllViewModel = koinViewModel(
             parameters = { parametersOf(categoryName) }
         )
 
         AllBooksScreen(
-            viewModel = allBooksViewModel,
+            viewModel = seeAllViewModel,
             onBackClick = { navController.popBackStack() },
             onBookClick = { book ->
                 navController.navigate(AppScreen.BookDetailsScreen.createRoute(book = book)) {

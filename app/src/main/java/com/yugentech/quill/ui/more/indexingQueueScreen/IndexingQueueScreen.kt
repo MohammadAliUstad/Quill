@@ -48,8 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.yugentech.quill.R
-import com.yugentech.quill.allBooks.IndexingQueueViewModel
-import com.yugentech.quill.allBooks.QueueItemUiState
+import com.yugentech.quill.viewmodel.indexing.IndexingQueueViewModel
+import com.yugentech.quill.viewmodel.indexing.IndexingUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,7 +117,7 @@ fun IndexingQueueScreen(
 @Composable
 private fun QueueGridItem(
     modifier: Modifier= Modifier,
-    item: QueueItemUiState
+    item: IndexingUiState
 ) {
     val coverShape = RoundedCornerShape(8.dp)
 

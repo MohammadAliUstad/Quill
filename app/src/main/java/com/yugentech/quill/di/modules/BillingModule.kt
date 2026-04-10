@@ -1,8 +1,8 @@
 package com.yugentech.quill.di.modules
 
-import com.yugentech.quill.billing.BillingClientService
-import com.yugentech.quill.billing.BillingRepositoryImpl
-import com.yugentech.quill.billing.SubscriptionViewModel
+import com.yugentech.quill.billing.service.BillingService
+import com.yugentech.quill.billing.repository.BillingRepositoryImpl
+import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
 import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.domain.QuotaRepository
 import com.yugentech.quill.quota.QuotaRepositoryImpl
@@ -14,7 +14,7 @@ import org.koin.dsl.module
 
 val billingModule = module {
     single {
-        BillingClientService(
+        BillingService(
             androidContext()
         )
     }

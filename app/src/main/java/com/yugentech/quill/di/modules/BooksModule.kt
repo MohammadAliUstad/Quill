@@ -4,7 +4,7 @@ import androidx.work.WorkManager
 import com.yugentech.quill.category.repository.CategoryRepository
 import com.yugentech.quill.category.repository.CategoryRepositoryImpl
 import com.yugentech.quill.category.viewmodel.CategoryViewModel
-import com.yugentech.quill.allBooks.AllBooksViewModel
+import com.yugentech.quill.viewmodel.seeAll.SeeAllViewModel
 import com.yugentech.quill.library.repository.LibraryRepository
 import com.yugentech.quill.library.repository.LibraryRepositoryImpl
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
@@ -54,7 +54,7 @@ val booksModule = module {
     }
 
     viewModel { (categoryName: String) ->
-        AllBooksViewModel(
+        SeeAllViewModel(
             categoryName = categoryName,
             libraryRepository = get()
         )

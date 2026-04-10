@@ -4,28 +4,28 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.yugentech.quill.navigation.screen.AppScreen
-import com.yugentech.quill.ui.more.aboutAira.AiraAboutScreen
-import com.yugentech.quill.ui.more.aboutScreen.parent.AboutScreen
-import com.yugentech.quill.ui.more.attributionsScreen.parent.AttributionsScreen
-import com.yugentech.quill.ui.more.contributorsScreen.ContributorsScreen
+import com.yugentech.quill.ui.about.aboutAira.AiraAboutScreen
+import com.yugentech.quill.ui.about.aboutScreen.parent.AboutScreen
+import com.yugentech.quill.ui.about.attributionsScreen.parent.AttributionsScreen
+import com.yugentech.quill.ui.about.contributorsScreen.ContributorsScreen
 
 fun NavGraphBuilder.aboutGraph(
     navController: NavHostController
 ) {
     composable(AppScreen.AboutAira.route) {
-        AiraAboutScreen(
+        _root_ide_package_.com.yugentech.quill.ui.about.aboutAira.AiraAboutScreen(
             onBack = { navController.popBackStack() }
         )
     }
 
     composable(AppScreen.Contributors.route) {
-        ContributorsScreen(
+        _root_ide_package_.com.yugentech.quill.ui.about.contributorsScreen.ContributorsScreen(
             onBack = { navController.popBackStack() }
         )
     }
 
     composable(AppScreen.About.route) {
-        AboutScreen(
+        _root_ide_package_.com.yugentech.quill.ui.about.aboutScreen.parent.AboutScreen(
             onNavigateBack = { navController.popBackStack() },
             onNavigateToLicenses = {
                 navController.navigate(AppScreen.Licenses.route) {
@@ -36,7 +36,7 @@ fun NavGraphBuilder.aboutGraph(
     }
 
     composable(AppScreen.Licenses.route) {
-        AttributionsScreen(
+        _root_ide_package_.com.yugentech.quill.ui.about.attributionsScreen.parent.AttributionsScreen(
             onNavigateBack = { navController.popBackStack() }
         )
     }

@@ -8,7 +8,7 @@ import com.yugentech.quill.aira.book.BookRepositoryImpl
 import com.yugentech.quill.aira.quick.viewmodel.QuickViewModel
 import com.yugentech.quill.aira.rag.EmbeddingEngine
 import com.yugentech.quill.aira.rag.RagRetriever
-import com.yugentech.quill.allBooks.IndexingQueueViewModel
+import com.yugentech.quill.viewmodel.indexing.IndexingQueueViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module

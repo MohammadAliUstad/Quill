@@ -36,7 +36,7 @@ import com.yugentech.quill.ui.mainScreen.components.QuillTab
 import com.yugentech.quill.ui.mainScreen.components.ResumeFab
 import com.yugentech.quill.ui.tabs.discoverScreen.parent.DiscoverScreen
 import com.yugentech.quill.ui.tabs.libraryScreen.parent.LibraryScreen
-import com.yugentech.quill.allBooks.IndexingQueueViewModel
+import com.yugentech.quill.viewmodel.indexing.IndexingQueueViewModel
 import com.yugentech.quill.ui.tabs.moreScreen.parent.MoreScreen
 import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesScreen
 import com.yugentech.quill.user.viewmodel.UserViewModel

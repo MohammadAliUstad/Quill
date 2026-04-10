@@ -6,7 +6,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.yugentech.quill.bookDetails.EpubParser
+import com.yugentech.quill.utils.EpubParser
 import com.yugentech.quill.cloud.CloudSyncService
 import com.yugentech.quill.cloud.worker.SyncWorker
 import com.yugentech.quill.database.dao.BookDao

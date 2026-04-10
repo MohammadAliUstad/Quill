@@ -7,7 +7,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
-import com.yugentech.quill.billing.SubscriptionViewModel
+import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
 import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.ui.more.editProfileScreen.EditProfileScreen
 import com.yugentech.quill.ui.more.insightsScreen.InsightsScreen

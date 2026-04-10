@@ -24,24 +24,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.model.BookSource
-import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.CatalogInfo
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.FilePickerBottomSheet
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.ImportStatusSheet
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.LargeCatalogCard
 import com.yugentech.quill.utils.ImportResult
-import com.yugentech.quill.utils.LocalBookImporter
-import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -49,19 +44,14 @@ fun SourcesScreen(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     onSourceClick: (BookSource) -> Unit,
     onLocalFilesClick: () -> Unit,
+    viewModel: SourcesViewModel
 ) {
     val context = LocalContext.current
-    val bookDao: BookDao = koinInject()
-    val billingRepository: BillingRepository = koinInject() // 1. Inject BillingRepo
-    val scope = rememberCoroutineScope()
 
-    // 2. Observe the Pro status
-    val isPro by billingRepository.isPro.collectAsStateWithLifecycle(initialValue = false)
+    val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
+    val importResults by viewModel.importResults.collectAsStateWithLifecycle()
 
     var showFilePickerSheet by remember { mutableStateOf(false) }
-    var isImporting by remember { mutableStateOf(false) }
-    var importResults by remember { mutableStateOf<List<ImportResult>>(emptyList()) }
-    var showResultsSheet by remember { mutableStateOf(false) }
 
     val catalogs = listOf(
         CatalogInfo(
@@ -154,25 +144,20 @@ fun SourcesScreen(
                 onDismiss = { showFilePickerSheet = false },
                 onFilesSelected = { uris ->
                     showFilePickerSheet = false
-                    isImporting = true
-                    scope.launch {
-                        // 3. Pass isPro to the importer
-                        val results = LocalBookImporter.importFiles(context, bookDao, uris, isPro)
-                        importResults = results
-                        isImporting = false
-                        showResultsSheet = true
-                    }
+                    viewModel.importFiles(context, uris)
                 },
             )
         }
 
-        if (showResultsSheet && importResults.isNotEmpty()) {
+        // We check if there are results instead of using a separate boolean flag
+        if (importResults.isNotEmpty()) {
             ImportStatusSheet(
                 results = importResults,
                 onDismiss = {
-                    showResultsSheet = false
-                    importResults = emptyList()
-                    if (importResults.any { it is ImportResult.Success }) {
+                    val hasSuccess = importResults.any { it is ImportResult.Success }
+                    // Clear the state in ViewModel to remove the sheet
+                    viewModel.clearResults()
+                    if (hasSuccess) {
                         onLocalFilesClick()
                     }
                 },
