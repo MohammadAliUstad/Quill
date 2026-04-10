@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.more.attributions.parent
+package com.yugentech.quill.ui.more.attributionsScreen.parent
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,11 +24,11 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import com.yugentech.quill.ui.mainScreen.components.SectionHeader
 import com.yugentech.quill.ui.mainScreen.components.itemShape
-import com.yugentech.quill.ui.more.attributions.components.AttributionCarousel
-import com.yugentech.quill.ui.more.attributions.components.AttributionsTopBar
-import com.yugentech.quill.ui.more.attributions.components.LibraryItem
-import com.yugentech.quill.ui.more.attributions.components.LicensesContent
-import com.yugentech.quill.ui.more.attributions.components.OpenSourceCard
+import com.yugentech.quill.ui.more.attributionsScreen.components.AttributionCarousel
+import com.yugentech.quill.ui.more.attributionsScreen.components.AttributionsTopBar
+import com.yugentech.quill.ui.more.attributionsScreen.components.LibraryItem
+import com.yugentech.quill.ui.more.attributionsScreen.components.LicensesContent
+import com.yugentech.quill.ui.more.attributionsScreen.components.OpenSourceCard
 import com.yugentech.theme.tokens.AppConstants.GITHUB_URL
 import com.yugentech.theme.tokens.spacing
 

@@ -2,10 +2,8 @@ package com.yugentech.quill.auth.mapper
 
 import com.google.firebase.auth.FirebaseAuthException
 
-// Utility to translate technical exceptions into user-friendly error messages
 object AuthErrorMapper {
 
-    // Main entry point to map any exception to a readable string
     fun mapFirebaseAuthError(exception: Exception): String {
         return when (exception) {
             is FirebaseAuthException -> mapFirebaseAuthException(exception)
@@ -13,7 +11,6 @@ object AuthErrorMapper {
         }
     }
 
-    // Handles specific Firebase authentication error codes
     private fun mapFirebaseAuthException(exception: FirebaseAuthException): String {
         return when (exception.errorCode) {
             "ERROR_WEAK_PASSWORD" -> "Password is too weak. Please use at least 6 characters."
@@ -43,7 +40,6 @@ object AuthErrorMapper {
         }
     }
 
-    // Handles generic system exceptions like network issues or timeouts
     private fun mapGeneralException(exception: Exception): String {
         val message = exception.message?.lowercase() ?: ""
         return when {
@@ -55,7 +51,6 @@ object AuthErrorMapper {
         }
     }
 
-    // Specific mapper for Google Sign-In related errors
     fun mapGoogleSignInError(exception: Exception): String {
         val message = exception.message?.uppercase() ?: ""
         return when {

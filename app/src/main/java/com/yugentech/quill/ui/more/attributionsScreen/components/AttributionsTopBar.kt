@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.more.attributions.components
+package com.yugentech.quill.ui.more.attributionsScreen.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack

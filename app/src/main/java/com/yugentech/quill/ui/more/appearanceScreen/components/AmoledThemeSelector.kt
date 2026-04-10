@@ -26,7 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.yugentech.theme.ThemeViewModel
+import com.yugentech.quill.theme.ThemeViewModel
 import com.yugentech.theme.models.ThemeMode
 import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.corners
