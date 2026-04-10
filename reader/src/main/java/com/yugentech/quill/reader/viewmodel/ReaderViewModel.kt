@@ -3,11 +3,10 @@ package com.yugentech.quill.reader.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.reader.repository.ReaderPreferencesRepository
+import com.yugentech.quill.reader.datastore.ReaderPrefRepository
 import com.yugentech.quill.reader.repository.ReaderRepository
-import com.yugentech.quill.reader.repository.ReadingSessionRepository
+import com.yugentech.quill.reader.session.ReadingSessionRepository
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
-import com.yugentech.quill.reader.viewmodel.ReaderUiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,7 +36,7 @@ class ReaderViewModel(
     application: Application,
     private val readerRepository: ReaderRepository,
     private val sessionRepository: ReadingSessionRepository,
-    private val preferencesRepository: ReaderPreferencesRepository
+    private val preferencesRepository: ReaderPrefRepository
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<ReaderUiState>(ReaderUiState.Idle)
@@ -53,7 +52,6 @@ class ReaderViewModel(
     private var saveJob: Job? = null
     private var tocMap: Map<String, String> = emptyMap()
 
-    // 2. Track when the user started reading
     private var sessionStartTime: Long = 0L
 
     fun loadBook(bookId: String, initialHref: String?) {
@@ -99,7 +97,7 @@ class ReaderViewModel(
 
                     val savedLocator = bookEntity.lastLocatorJson?.let { jsonStr ->
                         try {
-                            Locator.Companion.fromJSON(JSONObject(jsonStr))
+                            Locator.fromJSON(JSONObject(jsonStr))
                         } catch (_: Exception) {
                             null
                         }
@@ -107,7 +105,6 @@ class ReaderViewModel(
 
                     val finalLocator = explicitLocator ?: savedLocator
 
-                    // 3. Start the session clock the moment the book is successfully loaded
                     sessionStartTime = System.currentTimeMillis()
 
                     _uiState.value = ReaderUiState.Success(
@@ -176,7 +173,7 @@ class ReaderViewModel(
     }
 
     override fun onCleared() {
-        saveReadingSession() // 4. Save the session before clearing resources
+        saveReadingSession()
         super.onCleared()
         publication?.close()
     }
@@ -187,9 +184,7 @@ class ReaderViewModel(
             val endTime = System.currentTimeMillis()
             val duration = endTime - sessionStartTime
 
-            // Only save if they read for more than 10 seconds to prevent DB clutter
             if (duration > 10_000L) {
-                // Use a detached scope because viewModelScope gets cancelled during onCleared
                 CoroutineScope(Dispatchers.IO).launch {
                     sessionRepository.insertSession(
                         bookId = currentState.bookId,

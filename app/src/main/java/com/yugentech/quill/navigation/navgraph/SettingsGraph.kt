@@ -10,7 +10,7 @@ import com.yugentech.quill.ui.more.appearanceScreen.parent.AppearanceScreen
 import com.yugentech.quill.ui.more.categoryScreen.parent.CategoryScreen
 import com.yugentech.quill.ui.more.storageScreen.parent.StorageScreen
 import com.yugentech.quill.ui.more.indexingQueueScreen.IndexingQueueScreen
-import com.yugentech.quill.viewmodel.indexing.IndexingQueueViewModel
+import com.yugentech.quill.viewmodel.indexing.IndexingViewModel
 import com.yugentech.quill.theme.ThemeViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -18,7 +18,7 @@ fun NavGraphBuilder.settingsGraph(
     navController: NavHostController
 ) {
     composable(AppScreen.Queue.route) {
-        val viewModel: IndexingQueueViewModel = koinViewModel()
+        val viewModel: IndexingViewModel = koinViewModel()
         IndexingQueueScreen(
             viewModel = viewModel,
             onBack = { navController.popBackStack() }

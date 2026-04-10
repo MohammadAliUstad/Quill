@@ -38,7 +38,7 @@ class ReaderActivity : AppCompatActivity() {
 
         setContent {
             val uiState by viewModel.uiState.collectAsState()
-            val preferences by viewModel.readerPreferences.collectAsState() // 1. Collect preferences
+            val preferences by viewModel.readerPreferences.collectAsState()
             val currentThemeConfig by themeRepository.themeConfiguration.collectAsState(
                 initial = ThemeConfiguration()
             )
@@ -47,7 +47,7 @@ class ReaderActivity : AppCompatActivity() {
                 ReaderScreen(
                     uiState = uiState,
                     onBackClick = { finish() },
-                    preferences = preferences, // 2. Pass them down
+                    preferences = preferences,
                     onPreferencesChange = { viewModel.updatePreferences(it) },
                     onLocatorChange = { locator -> viewModel.saveProgress(bookId, locator) },
                     onMenuVisibilityChange = { visible -> setSystemBarsVisible(visible) }

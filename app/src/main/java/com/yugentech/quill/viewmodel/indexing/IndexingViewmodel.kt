@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class IndexingQueueViewModel(
+class IndexingViewModel(
     workManager: WorkManager,
     private val bookDao: BookDao
 ) : ViewModel() {

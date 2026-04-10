@@ -36,9 +36,10 @@ import com.yugentech.quill.ui.mainScreen.components.QuillTab
 import com.yugentech.quill.ui.mainScreen.components.ResumeFab
 import com.yugentech.quill.ui.tabs.discoverScreen.parent.DiscoverScreen
 import com.yugentech.quill.ui.tabs.libraryScreen.parent.LibraryScreen
-import com.yugentech.quill.viewmodel.indexing.IndexingQueueViewModel
+import com.yugentech.quill.viewmodel.indexing.IndexingViewModel
 import com.yugentech.quill.ui.tabs.moreScreen.parent.MoreScreen
 import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesScreen
+import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesViewModel
 import com.yugentech.quill.user.viewmodel.UserViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -68,9 +69,10 @@ fun MainScreen(
     onSignOut: () -> Unit = {},
     libraryViewModel: LibraryViewModel,
     userViewModel: UserViewModel = koinViewModel(),
+    sourcesViewModel: SourcesViewModel = koinViewModel(),
     onSubscriptions: () -> Unit,
     onViewIndexingQueue: () -> Unit,
-    indexingQueueViewModel: IndexingQueueViewModel = koinViewModel()
+    indexingViewModel: IndexingViewModel = koinViewModel()
 ) {
     val userId = remember { FirebaseAuth.getInstance().currentUser?.uid.orEmpty() }
 
@@ -81,7 +83,7 @@ fun MainScreen(
     val userUiState by userViewModel.uiState.collectAsStateWithLifecycle()
     val userData = userUiState.user ?: UserData()
 
-    val queueState by indexingQueueViewModel.queueState.collectAsStateWithLifecycle()
+    val queueState by indexingViewModel.queueState.collectAsStateWithLifecycle()
     val isIndexingActive = queueState.isNotEmpty()
 
     var currentTab by rememberSaveable { mutableStateOf(QuillTab.Library) }
@@ -163,6 +165,7 @@ fun MainScreen(
                         QuillTab.Sources -> SourcesScreen(
                             contentPadding = innerPadding,
                             onSourceClick = onSourceClick,
+                            viewModel = sourcesViewModel,
                             onLocalFilesClick = {},
                         )
 

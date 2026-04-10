@@ -22,13 +22,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
+import com.yugentech.quill.ui.about.attributionsScreen.components.AttributionCarousel
+import com.yugentech.quill.ui.about.attributionsScreen.components.AttributionsTopBar
+import com.yugentech.quill.ui.about.attributionsScreen.components.LibraryItem
+import com.yugentech.quill.ui.about.attributionsScreen.components.LicensesContent
+import com.yugentech.quill.ui.about.attributionsScreen.components.OpenSourceCard
 import com.yugentech.quill.ui.mainScreen.components.SectionHeader
 import com.yugentech.quill.ui.mainScreen.components.itemShape
-import com.yugentech.quill.ui.more.attributionsScreen.components.AttributionCarousel
-import com.yugentech.quill.ui.more.attributionsScreen.components.AttributionsTopBar
-import com.yugentech.quill.ui.more.attributionsScreen.components.LibraryItem
-import com.yugentech.quill.ui.more.attributionsScreen.components.LicensesContent
-import com.yugentech.quill.ui.more.attributionsScreen.components.OpenSourceCard
 import com.yugentech.theme.tokens.AppConstants.GITHUB_URL
 import com.yugentech.theme.tokens.spacing
 

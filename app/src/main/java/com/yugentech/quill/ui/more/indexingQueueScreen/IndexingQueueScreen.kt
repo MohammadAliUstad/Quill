@@ -48,13 +48,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.yugentech.quill.R
-import com.yugentech.quill.viewmodel.indexing.IndexingQueueViewModel
+import com.yugentech.quill.viewmodel.indexing.IndexingViewModel
 import com.yugentech.quill.viewmodel.indexing.IndexingUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IndexingQueueScreen(
-    viewModel: IndexingQueueViewModel,
+    viewModel: IndexingViewModel,
     onBack: () -> Unit
 ) {
     val queue by viewModel.queueState.collectAsStateWithLifecycle()

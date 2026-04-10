@@ -3,23 +3,23 @@ package com.yugentech.quill.di
 import android.app.Application
 import androidx.work.Configuration
 import com.yugentech.quill.BuildConfig
-import com.yugentech.quill.di.modules.ai.airaModule
-import com.yugentech.quill.di.modules.authModule
-import com.yugentech.quill.di.modules.billingModule
-import com.yugentech.quill.di.modules.bookDetailsModule
-import com.yugentech.quill.di.modules.booksModule
-import com.yugentech.quill.di.modules.cloudModule
-import com.yugentech.quill.di.modules.dataStoreModule
-import com.yugentech.quill.di.modules.databaseModule
-import com.yugentech.quill.di.modules.gutenbergModule
-import com.yugentech.quill.di.modules.networkModule
+import com.yugentech.quill.di.modules.shared.airaModule
+import com.yugentech.quill.di.modules.access.authModule
+import com.yugentech.quill.di.modules.access.billingModule
+import com.yugentech.quill.di.modules.shared.bookDetailsModule
+import com.yugentech.quill.di.modules.books.booksModule
+import com.yugentech.quill.di.modules.core.cloudModule
+import com.yugentech.quill.di.modules.core.dataStoreModule
+import com.yugentech.quill.di.modules.core.databaseModule
+import com.yugentech.quill.di.modules.books.gutenbergModule
+import com.yugentech.quill.di.modules.core.networkModule
 import com.yugentech.quill.di.modules.ai.quickActionModule
-import com.yugentech.quill.di.modules.readerModule
-import com.yugentech.quill.di.modules.standardEBooksModule
+import com.yugentech.quill.di.modules.shared.readerModule
+import com.yugentech.quill.di.modules.books.sourcesModule
 import com.yugentech.quill.di.modules.storageModule
-import com.yugentech.quill.di.modules.themeModule
-import com.yugentech.quill.di.modules.userModule
-import com.yugentech.quill.di.modules.workerModule
+import com.yugentech.quill.di.modules.config.themeModule
+import com.yugentech.quill.di.modules.access.userModule
+import com.yugentech.quill.di.modules.core.firebaseModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.workmanager.factory.KoinWorkerFactory
@@ -48,10 +48,10 @@ class QuillApp : Application(), Configuration.Provider {
                 databaseModule,
                 themeModule,
                 networkModule,
-                workerModule,
+                firebaseModule,
                 gutenbergModule,
                 storageModule,
-                standardEBooksModule,
+                sourcesModule,
                 readerModule,
                 airaModule,
                 bookDetailsModule,
