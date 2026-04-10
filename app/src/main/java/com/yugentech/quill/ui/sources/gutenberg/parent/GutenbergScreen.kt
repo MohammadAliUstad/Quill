@@ -32,11 +32,11 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.gutenberg.viewmodel.GutenbergNavigationEvent
-import com.yugentech.quill.gutenberg.viewmodel.GutenbergViewModel
-import com.yugentech.quill.ui.sources.standardScreen.components.AnimatedSearchIcon
+import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergNavigationEvent
+import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel
 import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
 import com.yugentech.quill.ui.sources.gutenberg.components.GutenbergScreenHeader
+import com.yugentech.quill.ui.sources.standardScreen.components.AnimatedSearchIcon
 import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
@@ -50,7 +50,6 @@ fun GutenbergScreen(
 ) {
     val books by viewModel.booksState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val isPaginating by viewModel.isPaginating.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.navigationEvent.collectLatest { event ->

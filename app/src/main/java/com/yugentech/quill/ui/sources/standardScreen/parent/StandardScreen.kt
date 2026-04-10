@@ -30,8 +30,8 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.standardEBooks.viewmodel.StandardNavigationEvent
-import com.yugentech.quill.standardEBooks.viewmodel.StandardViewModel
+import com.yugentech.quill.sources.standardEBooks.viewmodel.StandardNavigationEvent
+import com.yugentech.quill.sources.standardEBooks.viewmodel.StandardViewModel
 import com.yugentech.quill.ui.sources.standardScreen.components.AnimatedSearchIcon
 import com.yugentech.quill.ui.sources.standardScreen.components.BooksGrid
 import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions

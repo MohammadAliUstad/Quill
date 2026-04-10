@@ -1,19 +1,28 @@
 package com.yugentech.quill.di.modules.books
 
 import com.yugentech.quill.sources.discover.DiscoverViewModel
+import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
+import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepositoryImpl
+import com.yugentech.quill.sources.gutenberg.service.GutenbergApiService
+import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel
+import com.yugentech.quill.sources.standardEBooks.repository.StandardRepository
+import com.yugentech.quill.sources.standardEBooks.repository.StandardRepositoryImpl
+import com.yugentech.quill.sources.standardEBooks.service.StandardApiService
+import com.yugentech.quill.sources.standardEBooks.viewmodel.StandardViewModel
+import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val sourcesModule = module {
 
     single {
-        _root_ide_package_.com.yugentech.quill.sources.standardEBooks.service.StandardApiService(
+        StandardApiService(
             httpClient = get()
         )
     }
 
-    single<com.yugentech.quill.sources.standardEBooks.repository.StandardRepository> {
-        _root_ide_package_.com.yugentech.quill.sources.standardEBooks.repository.StandardRepositoryImpl(
+    single<StandardRepository> {
+        StandardRepositoryImpl(
             standardApi = get(),
             catalogDao = get(),
             categoryCacheDao = get()
@@ -21,28 +30,35 @@ val sourcesModule = module {
     }
 
     viewModel {
-        _root_ide_package_.com.yugentech.quill.sources.standardEBooks.viewmodel.StandardViewModel(
+        StandardViewModel(
             standardRepository = get(),
             bookDetailsRepository = get()
         )
     }
 
     single {
-        _root_ide_package_.com.yugentech.quill.sources.gutenberg.service.GutenbergApiService(
+        GutenbergApiService(
             httpClient = get()
         )
     }
 
-    single<com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository> {
-        _root_ide_package_.com.yugentech.quill.sources.gutenberg.repository.GutenbergRepositoryImpl(
+    single<GutenbergRepository> {
+        GutenbergRepositoryImpl(
             apiService = get(),
             catalogDao = get()
         )
     }
 
     viewModel {
-        _root_ide_package_.com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel(
+        GutenbergViewModel(
             repository = get()
+        )
+    }
+
+    viewModel {
+        SourcesViewModel(
+            bookDao = get(),
+            billingRepository = get()
         )
     }
 

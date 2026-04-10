@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.standardEBooks.repository.StandardRepository
+import com.yugentech.quill.sources.standardEBooks.repository.StandardRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -181,7 +181,8 @@ class StandardViewModel(
             standardRepository.searchBooks(query)
                 .onSuccess { result ->
                     _booksState.value = result.books
-                    _displayTitle.value = if (result.books.isEmpty()) "No books found for '$query'" else "Results for '$query'"
+                    _displayTitle.value =
+                        if (result.books.isEmpty()) "No books found for '$query'" else "Results for '$query'"
                     sessionCache[cacheKey] = result.books
                 }
                 .onFailure { handleError(it) }

@@ -67,12 +67,10 @@ fun ReadiumEngine(
         )
     }
 
-    // THE FIX: Browser-Level Smooth Scrolling Override
     LaunchedEffect(targetLocator, navigator) {
         val nav = navigator ?: return@LaunchedEffect
         targetLocator?.let { loc ->
 
-            // 1. Force the internal WebView to use native smooth scrolling
             val smoothScrollJs = """
                 (function() {
                     document.documentElement.style.scrollBehavior = 'smooth';
@@ -82,16 +80,12 @@ fun ReadiumEngine(
 
             try { nav.evaluateJavascript(smoothScrollJs) } catch (e: Exception) {}
 
-            // 2. Give the WebView a 50ms beat to apply the CSS
             delay(50)
 
-            // 3. Command Readium to jump. The browser will now force this jump to glide!
             nav.go(loc, animated = false)
 
-            // 4. Wait for the glide animation to physically finish
             delay(400)
 
-            // 5. Turn smooth scrolling back off so normal page turns aren't sluggish
             val resetJs = """
                 (function() {
                     document.documentElement.style.scrollBehavior = 'auto';
@@ -101,7 +95,6 @@ fun ReadiumEngine(
 
             try { nav.evaluateJavascript(resetJs) } catch (e: Exception) {}
 
-            // 6. Clear the Compose state
             onTargetLocatorComplete()
         }
     }

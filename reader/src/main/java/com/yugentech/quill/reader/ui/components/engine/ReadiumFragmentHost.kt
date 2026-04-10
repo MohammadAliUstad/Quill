@@ -39,7 +39,6 @@ import androidx.core.view.get
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import kotlinx.coroutines.delay
 
-// --- Wrapper View to intercept Action Mode (Selection Menu) ---
 private class ReadiumWrapperView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
@@ -47,7 +46,7 @@ private class ReadiumWrapperView @JvmOverloads constructor(
 
     var onAskAira: (String) -> Unit = {}
     var currentSelectedText: String? = null
-    var isPro: Boolean = false // 1. Track Pro status here
+    var isPro: Boolean = false
 
     val container = FragmentContainerView(context).also { addView(it) }
 
@@ -56,7 +55,6 @@ private class ReadiumWrapperView @JvmOverloads constructor(
         callback: ActionMode.Callback,
         type: Int
     ): ActionMode? {
-        // 2. Pass isPro to the menu callbacks
         val wrapped = if (callback is ActionMode.Callback2) {
             WrappedCallback2(callback, onAskAira, isPro) { currentSelectedText }
         } else {
@@ -66,11 +64,10 @@ private class ReadiumWrapperView @JvmOverloads constructor(
     }
 }
 
-// --- Menu Customization ---
 private class WrappedCallback(
     private val original: ActionMode.Callback,
     private val onAskAira: (String) -> Unit,
-    private val isPro: Boolean, // 3. Receive Pro status
+    private val isPro: Boolean,
     private val getSelectedText: () -> String?
 ) : ActionMode.Callback {
     override fun onCreateActionMode(mode: ActionMode, menu: Menu) = original.onCreateActionMode(mode, menu)
@@ -78,7 +75,6 @@ private class WrappedCallback(
     override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
         original.onPrepareActionMode(mode, menu)
 
-        // Remove unwanted items
         for (i in menu.size - 1 downTo 0) {
             val title = menu[i].title.toString()
             if (title.contains("read aloud", true) || title.contains("define", true)) {
@@ -86,7 +82,6 @@ private class WrappedCallback(
             }
         }
 
-        // 4. Add Custom "Ask Aira" Item ONLY IF USER IS PRO
         if (isPro && menu.findItem(ASKAIRA) == null) {
             menu.add(Menu.NONE, ASKAIRA, Menu.NONE, "Ask Aira")
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
@@ -129,7 +124,7 @@ fun ReadiumFragmentHost(
     initialLocation: Locator?,
     preferences: EpubPreferences,
     onTap: () -> Unit,
-    isPro: Boolean = false, // 5. Composable now accepts isPro
+    isPro: Boolean = false,
     onAskAira: (selectedText: String) -> Unit = {},
     onNavigatorReady: (EpubNavigatorFragment) -> Unit
 ) {
@@ -137,7 +132,7 @@ fun ReadiumFragmentHost(
     val currentOnTap by rememberUpdatedState(onTap)
     val currentOnNavigatorReady by rememberUpdatedState(onNavigatorReady)
     val currentOnAskAira by rememberUpdatedState(onAskAira)
-    val currentIsPro by rememberUpdatedState(isPro) // 6. Remember latest Pro status
+    val currentIsPro by rememberUpdatedState(isPro)
 
     AndroidView(
         modifier = Modifier.fillMaxSize(),
@@ -146,7 +141,7 @@ fun ReadiumFragmentHost(
                 container.id = View.generateViewId()
                 clipToPadding = false
                 fitsSystemWindows = false
-                this.isPro = currentIsPro // Initialize
+                this.isPro = currentIsPro
                 ViewCompat.setOnApplyWindowInsetsListener(this) { _, _ -> WindowInsetsCompat.CONSUMED }
 
                 addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
@@ -171,7 +166,7 @@ fun ReadiumFragmentHost(
         },
         update = { view ->
             view.onAskAira = currentOnAskAira
-            view.isPro = currentIsPro // 7. Update view when Pro status changes
+            view.isPro = currentIsPro
         }
     )
 
@@ -200,7 +195,6 @@ private fun attachNavigator(
 ) {
     val fm = activity.supportFragmentManager
 
-    // Check if it already exists (e.g. rotation)
     var fragment = fm.findFragmentByTag(fragmentTag) as? EpubNavigatorFragment
 
     if (fragment == null) {
@@ -210,7 +204,6 @@ private fun attachNavigator(
             configuration = buildNavigatorConfig()
         )
 
-        // Use the custom factory to instantiate
         fm.fragmentFactory = factory
         fragment = fm.fragmentFactory.instantiate(
             activity.classLoader,
@@ -220,7 +213,6 @@ private fun attachNavigator(
         fm.commitNow { replace(containerId, fragment, fragmentTag) }
     }
 
-    // Attach Input Listener
     fragment.addInputListener(object : InputListener {
         override fun onTap(event: TapEvent): Boolean {
             onTap()
@@ -228,20 +220,13 @@ private fun attachNavigator(
         }
     })
 
-    // Notify Parent
     onNavigatorReady(fragment)
 
-    // Silently collect Readium's selection state and give it to our wrapper
-    // In attachNavigator function
-    // In attachNavigator function within ReadiumFragmentHost.kt
     activity.lifecycleScope.launch {
-        // Since currentSelection() is a suspend function,
-        // we poll for changes while the navigator is active.
         while (true) {
-            val selection = fragment.currentSelection() // Now correctly called as a function
+            val selection = fragment.currentSelection()
             wrapperView.currentSelectedText = selection?.locator?.text?.highlight
 
-            // Small delay to prevent blocking the thread
             delay(200)
         }
     }
@@ -262,15 +247,8 @@ private fun registerFonts(config: EpubNavigatorFragment.Configuration) {
         }
     }
 
-    // 1. Google Sans
     addFont(ReaderDefaults.FONT_GOOGLE_SANS, "google_sans_flex.ttf")
-
-    // 2. Literata
     addFont(ReaderDefaults.FONT_LITERATA, "literata.ttf")
-
-    // 3. Goudy Bookletter
     addFont(ReaderDefaults.FONT_GOUDY, "goudy.ttf")
-
-    // 4. EB Garamond
     addFont(ReaderDefaults.FONT_GARAMOND, "eb_garamond.ttf")
 }
