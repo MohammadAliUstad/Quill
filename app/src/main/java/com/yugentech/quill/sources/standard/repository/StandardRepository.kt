@@ -1,8 +1,8 @@
-package com.yugentech.quill.sources.standardEBooks.repository
+package com.yugentech.quill.sources.standard.repository
 
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.sources.standardEBooks.model.OpdsCollection
-import com.yugentech.quill.sources.standardEBooks.model.OpdsFeedResult
+import com.yugentech.quill.sources.standard.model.OpdsCollection
+import com.yugentech.quill.sources.standard.model.OpdsFeedResult
 import kotlinx.coroutines.flow.Flow
 
 interface StandardRepository {

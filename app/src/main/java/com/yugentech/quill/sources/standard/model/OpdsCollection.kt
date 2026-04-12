@@ -1,4 +1,4 @@
-package com.yugentech.quill.sources.standardEBooks.model
+package com.yugentech.quill.sources.standard.model
 
 data class OpdsCollection(
     val title: String,

@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.datastore
+package com.yugentech.quill.reader.pref.datastore
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences

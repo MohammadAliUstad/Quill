@@ -3,7 +3,7 @@ package com.yugentech.quill.sources.discover
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
-import com.yugentech.quill.sources.standardEBooks.repository.StandardRepository
+import com.yugentech.quill.sources.standard.repository.StandardRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow

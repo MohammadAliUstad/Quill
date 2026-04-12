@@ -44,7 +44,6 @@ val airaModule = module {
             functions = get(),
             ragRetriever = get(),
             bookDao = get(),
-            chunkDao = get(),
             airaMessageDao = get()
         )
     }

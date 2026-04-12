@@ -14,22 +14,14 @@ import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.utils.ImportResult
 import com.yugentech.quill.utils.LocalBookImporter
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class SourcesViewModel(
     private val bookDao: BookDao,
-    billingRepository: BillingRepository
+    private val billingRepository: BillingRepository // Store the repo directly
 ) : ViewModel() {
-
-    private val isPro: StateFlow<Boolean> = billingRepository.isPro.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = false
-    )
 
     private val _isImporting = MutableStateFlow(false)
     val isImporting = _isImporting.asStateFlow()
@@ -48,8 +40,9 @@ class SourcesViewModel(
                 uris = uris
             )
 
-            // 2. Check billing status and handle business logic (AI indexing)
-            if (isPro.value) {
+            val isProUser = billingRepository.isPro.first()
+
+            if (isProUser) {
                 // Filter only the successfully imported books to be indexed
                 results.filterIsInstance<ImportResult.Success>().forEach { success ->
                     scheduleBookIndexing(context, success.bookId)
@@ -70,6 +63,7 @@ class SourcesViewModel(
             .addTag("AI_INDEXING")
             .build()
 
+        // This correctly queues the indexing sequentially as you designed
         WorkManager.getInstance(context).enqueueUniqueWork(
             "global_book_processing_queue",
             ExistingWorkPolicy.APPEND_OR_REPLACE,

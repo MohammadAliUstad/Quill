@@ -1,10 +1,10 @@
-package com.yugentech.quill.sources.standardEBooks.viewmodel
+package com.yugentech.quill.sources.standard.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.sources.standardEBooks.repository.StandardRepository
+import com.yugentech.quill.sources.standard.repository.StandardRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
