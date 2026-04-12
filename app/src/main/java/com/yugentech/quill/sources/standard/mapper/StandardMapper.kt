@@ -1,14 +1,14 @@
-package com.yugentech.quill.sources.standardEBooks.mapper
+package com.yugentech.quill.sources.standard.mapper
 
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.BookSource
-import com.yugentech.quill.sources.standardEBooks.model.OpdsCollection
-import com.yugentech.quill.sources.standardEBooks.model.OpdsFeedResult
+import com.yugentech.quill.sources.standard.model.OpdsCollection
+import com.yugentech.quill.sources.standard.model.OpdsFeedResult
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
 
-object StandardEbooksMapper {
+object StandardMapper {
 
     fun parseOpdsToBooks(xmlString: String): OpdsFeedResult {
         val books = mutableListOf<Book>()

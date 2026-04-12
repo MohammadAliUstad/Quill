@@ -1,5 +1,6 @@
-package com.yugentech.quill.reader.datastore
+package com.yugentech.quill.reader.pref.repository
 
+import com.yugentech.quill.reader.pref.datastore.ReaderDataStore
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

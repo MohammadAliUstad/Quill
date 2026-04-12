@@ -126,3 +126,49 @@ export const airaExpand = onCall(
     return { variants };
   }
 );
+
+// ── airaRoute ────────────────────────────────────────────────────────────────
+export const airaRoute = onCall(
+  { secrets: [geminiKey] },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Login required");
+    }
+
+    const { prompt } = request.data;
+
+    if (!prompt) {
+      throw new HttpsError("invalid-argument", "Prompt is required");
+    }
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiKey.value()}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 256
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("AIRA ROUTE - GEMINI REJECTED:", JSON.stringify(errorData));
+      throw new HttpsError("internal", `Gemini error: ${errorData.error?.message}`);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) {
+      throw new HttpsError("internal", "Empty response from Gemini");
+    }
+
+    return { response: text.trim() };
+  }
+);

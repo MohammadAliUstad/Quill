@@ -1,4 +1,4 @@
-package com.yugentech.quill.sources.standardEBooks.model
+package com.yugentech.quill.sources.standard.model
 
 import com.yugentech.quill.database.model.Book
 

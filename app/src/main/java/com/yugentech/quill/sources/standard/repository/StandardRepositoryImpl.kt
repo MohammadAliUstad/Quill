@@ -1,4 +1,4 @@
-package com.yugentech.quill.sources.standardEBooks.repository
+package com.yugentech.quill.sources.standard.repository
 
 import com.yugentech.quill.database.dao.CatalogDao
 import com.yugentech.quill.database.dao.CategoryCacheDao
@@ -6,10 +6,10 @@ import com.yugentech.quill.database.entity.CategoryCacheEntity
 import com.yugentech.quill.database.mapper.toCatalogEntity
 import com.yugentech.quill.database.mapper.toDomainModel
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.sources.standardEBooks.mapper.StandardEbooksMapper
-import com.yugentech.quill.sources.standardEBooks.model.OpdsCollection
-import com.yugentech.quill.sources.standardEBooks.model.OpdsFeedResult
-import com.yugentech.quill.sources.standardEBooks.service.StandardApiService
+import com.yugentech.quill.sources.standard.mapper.StandardMapper
+import com.yugentech.quill.sources.standard.model.OpdsCollection
+import com.yugentech.quill.sources.standard.model.OpdsFeedResult
+import com.yugentech.quill.sources.standard.service.StandardApiService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
@@ -31,7 +31,7 @@ class StandardRepositoryImpl(
     override suspend fun syncNewReleases(): Result<Unit> {
         return try {
             val xml = standardApi.getNewReleases()
-            val result = StandardEbooksMapper.parseOpdsToBooks(xml)
+            val result = StandardMapper.parseOpdsToBooks(xml)
             val books = result.books
 
             if (books.isNotEmpty()) {
@@ -54,7 +54,7 @@ class StandardRepositoryImpl(
     override suspend fun syncCategories(): Result<Unit> {
         return try {
             val xml = standardApi.getCategories()
-            val categories = StandardEbooksMapper.parseOpdsToCategories(xml)
+            val categories = StandardMapper.parseOpdsToCategories(xml)
 
             if (categories.isNotEmpty()) {
                 categoryCacheDao.clearCategories(SOURCE_KEY)
@@ -79,7 +79,7 @@ class StandardRepositoryImpl(
     override suspend fun syncTopicBooks(topic: String): Result<Unit> {
         return try {
             val xml = standardApi.searchBooks("subject:\"$topic\"")
-            val result = StandardEbooksMapper.parseOpdsToBooks(xml)
+            val result = StandardMapper.parseOpdsToBooks(xml)
 
             if (result.books.isNotEmpty()) {
                 val feedKey = "standard-topic-$topic"
@@ -98,7 +98,7 @@ class StandardRepositoryImpl(
 
     override suspend fun searchBooks(query: String): Result<OpdsFeedResult> {
         return try {
-            Result.success(StandardEbooksMapper.parseOpdsToBooks(standardApi.searchBooks(query)))
+            Result.success(StandardMapper.parseOpdsToBooks(standardApi.searchBooks(query)))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -106,7 +106,7 @@ class StandardRepositoryImpl(
 
     override suspend fun getCollections(): Result<List<OpdsCollection>> {
         return try {
-            Result.success(StandardEbooksMapper.parseOpdsToCollections(standardApi.getCollections()))
+            Result.success(StandardMapper.parseOpdsToCollections(standardApi.getCollections()))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -115,7 +115,7 @@ class StandardRepositoryImpl(
     override suspend fun getBooksByAuthor(authorName: String): Result<OpdsFeedResult> {
         return try {
             Result.success(
-                StandardEbooksMapper.parseOpdsToBooks(
+                StandardMapper.parseOpdsToBooks(
                     standardApi.getBooksByAuthor(
                         authorName
                     )

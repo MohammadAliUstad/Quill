@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.yugentech.quill.aira.quick.prompt.QuickPrompt
 import com.yugentech.quill.aira.quick.state.QuickUiState
 import com.yugentech.quill.reader.ui.components.aira.AiraPeekBar
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.ReaderBottomControls
@@ -39,28 +38,15 @@ fun ReaderMenuOverlay(
     showBottomControls: Boolean = true,
     showAiraPeek: Boolean = false,
     readerOverlayState: ReaderOverlayState,
-    onBackClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-    onTocClick: () -> Unit,
-    onStop: () -> Unit,
-    onSeek: (Float) -> Unit,
-    onAskAiraClick: () -> Unit = {},
-    onAiraDismiss: () -> Unit = {},
-    onScrubStart: () -> Unit = {},
-    onScrubEnd: () -> Unit = {},
-    onClearSelection: () -> Unit = {},
-    onBrightnessInteraction: (Boolean) -> Unit = {},
-    onQuickAction: (QuickPrompt) -> Unit = {},
-    onAiraSend: (String) -> Unit = {},
-    airaUiState: QuickUiState = QuickUiState()
+    airaUiState: QuickUiState = QuickUiState(),
+    onAction: (ReaderAction) -> Unit
 ) {
     var sliderPosition by remember { mutableFloatStateOf(readerOverlayState.progress) }
-
     val interactionSource = remember { MutableInteractionSource() }
     val isDragging by interactionSource.collectIsDraggedAsState()
 
     LaunchedEffect(isDragging) {
-        if (isDragging) onScrubStart() else onScrubEnd()
+        if (isDragging) onAction(ReaderAction.OnScrubStart) else onAction(ReaderAction.OnScrubEnd)
     }
 
     LaunchedEffect(readerOverlayState.progress) {
@@ -74,25 +60,21 @@ fun ReaderMenuOverlay(
         ) + 1
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Box(
-            modifier = Modifier.align(Alignment.TopCenter)
-        ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.align(Alignment.TopCenter)) {
             ReaderTopBar(
                 isVisible = isVisible && !showAiraPeek,
                 bookTitle = readerOverlayState.bookTitle,
-                onBackClick = onBackClick,
-                onTocClick = onTocClick,
-                onSettingsClick = onSettingsClick
+                onBackClick = { onAction(ReaderAction.OnBackClick) },
+                onTocClick = { onAction(ReaderAction.OnTocClick) },
+                onSettingsClick = { onAction(ReaderAction.OnSettingsClick) }
             )
         }
 
         BrightnessSlider(
             isVisible = isVisible && !showAiraPeek,
-            onDragStart = { onBrightnessInteraction(true) },
-            onDragEnd = { onBrightnessInteraction(false) },
+            onDragStart = { onAction(ReaderAction.OnBrightnessInteraction(true)) },
+            onDragEnd = { onAction(ReaderAction.OnBrightnessInteraction(false)) },
             modifier = Modifier.align(Alignment.CenterEnd)
         )
 
@@ -101,11 +83,11 @@ fun ReaderMenuOverlay(
             selectedText = readerOverlayState.selectedText,
             currentChapterIndex = readerOverlayState.currentChapterIndex,
             airaUiState = airaUiState,
-            onQuickAction = onQuickAction,
-            onSendMessage = onAiraSend,
-            onDismiss = onAiraDismiss,
-            onStop = onStop,
-            onClearSelection = onClearSelection
+            onQuickAction = { onAction(ReaderAction.OnQuickAction(it)) },
+            onSendMessage = { onAction(ReaderAction.OnAiraSend(it)) },
+            onDismiss = { onAction(ReaderAction.OnAiraDismiss) },
+            onStop = { onAction(ReaderAction.OnStopGeneration) },
+            onClearSelection = { onAction(ReaderAction.OnClearSelection) }
         )
 
         Column(
@@ -125,7 +107,7 @@ fun ReaderMenuOverlay(
                     animationSpec = tween(250, easing = FastOutSlowInEasing)
                 ) + fadeOut()
             ) {
-                AskAiraButton(onClick = onAskAiraClick)
+                AskAiraButton(onClick = { onAction(ReaderAction.OnAskAiraClick) })
             }
 
             ReaderBottomControls(
@@ -134,7 +116,7 @@ fun ReaderMenuOverlay(
                 sliderPosition = sliderPosition,
                 interactionSource = interactionSource,
                 currentPage = currentPage,
-                onSeek = onSeek
+                onSeek = { onAction(ReaderAction.OnSeek(it)) }
             )
         }
     }

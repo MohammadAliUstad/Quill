@@ -5,10 +5,10 @@ import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
 import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepositoryImpl
 import com.yugentech.quill.sources.gutenberg.service.GutenbergApiService
 import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel
-import com.yugentech.quill.sources.standardEBooks.repository.StandardRepository
-import com.yugentech.quill.sources.standardEBooks.repository.StandardRepositoryImpl
-import com.yugentech.quill.sources.standardEBooks.service.StandardApiService
-import com.yugentech.quill.sources.standardEBooks.viewmodel.StandardViewModel
+import com.yugentech.quill.sources.standard.repository.StandardRepository
+import com.yugentech.quill.sources.standard.repository.StandardRepositoryImpl
+import com.yugentech.quill.sources.standard.service.StandardApiService
+import com.yugentech.quill.sources.standard.viewmodel.StandardViewModel
 import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module

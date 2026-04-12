@@ -3,7 +3,7 @@ package com.yugentech.quill.reader.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.reader.datastore.ReaderPrefRepository
+import com.yugentech.quill.reader.pref.repository.ReaderPrefRepository
 import com.yugentech.quill.reader.repository.ReaderRepository
 import com.yugentech.quill.reader.session.ReadingSessionRepository
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults

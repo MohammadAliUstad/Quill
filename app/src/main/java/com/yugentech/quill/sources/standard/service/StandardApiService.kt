@@ -1,4 +1,4 @@
-package com.yugentech.quill.sources.standardEBooks.service
+package com.yugentech.quill.sources.standard.service
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
