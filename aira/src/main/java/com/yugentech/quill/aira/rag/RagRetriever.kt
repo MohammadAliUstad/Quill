@@ -65,7 +65,6 @@ class RagRetriever(
 
             Timber.d("[RagRetriever] Candidate pool size: ${allCandidates.size} chunks")
 
-            // Smart routing: Path A (entity query) vs Path B (thematic query)
             val candidates = if (entities.isNotEmpty()) {
                 val ftsPositions = resolveFtsPositions(bookId, entities, boostedKeywords)
                 if (ftsPositions.isNotEmpty()) {
@@ -340,6 +339,7 @@ class RagRetriever(
         private const val PASSAGE_WINDOW_AFTER = 1
         private const val ANCHOR_MIN_SCORE = 0.40f
         private const val RRF_MIN_SCORE = 0.015f
+
 
         private val STOP_WORDS = setOf(
             "the", "and", "for", "that", "this", "with", "you", "not", "are", "from",

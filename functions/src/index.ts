@@ -15,15 +15,12 @@ async function callGemini(
   history: { role: string; parts: { text: string }[] }[]
 ): Promise<string> {
 
-  // FIX 1: Clean up broken history.
-  // If the Android DB sends history that ends with a "user" (because a previous AI reply failed to save),
-  // we remove it so we don't send "user" -> "user" consecutively.
+
   let cleanHistory = [...history];
   if (cleanHistory.length > 0 && cleanHistory[cleanHistory.length - 1].role === "user") {
     cleanHistory.pop();
   }
 
-  // Build the base request body
   const requestBody: any = {
     contents: [
       ...cleanHistory,
@@ -35,7 +32,6 @@ async function callGemini(
     }
   };
 
-  // FIX 2: Only attach system_instruction if it actually has content.
   if (systemPrompt && systemPrompt.trim().length > 0) {
     requestBody.system_instruction = {
       parts: [{ text: systemPrompt.trim() }]
@@ -52,7 +48,6 @@ async function callGemini(
   );
 
   if (!response.ok) {
-    // FIX 3: Detailed Error Logging so Logcat tells you exactly what went wrong
     const errorData = await response.json().catch(() => ({}));
     console.error("GEMINI API REJECTED PAYLOAD:", JSON.stringify(errorData));
 
@@ -74,7 +69,6 @@ async function callGemini(
   return text;
 }
 
-// ── airaChat ──────────────────────────────────────────────────────────────────
 export const airaChat = onCall(
   { secrets: [geminiKey] },
   async (request) => {
@@ -99,7 +93,6 @@ export const airaChat = onCall(
   }
 );
 
-// ── airaExpand ────────────────────────────────────────────────────────────────
 export const airaExpand = onCall(
   { secrets: [geminiKey] },
   async (request) => {
@@ -107,14 +100,12 @@ export const airaExpand = onCall(
       throw new HttpsError("unauthenticated", "Login required");
     }
 
-    // Receive the full prompt built by Kotlin
     const { prompt } = request.data;
 
     if (!prompt) {
       throw new HttpsError("invalid-argument", "Prompt is required");
     }
 
-    // Call Gemini (no system prompt or history needed for expansion)
     const text = await callGemini(geminiKey.value(), prompt, "", []);
 
     const variants = text
@@ -127,7 +118,6 @@ export const airaExpand = onCall(
   }
 );
 
-// ── airaRoute ────────────────────────────────────────────────────────────────
 export const airaRoute = onCall(
   { secrets: [geminiKey] },
   async (request) => {

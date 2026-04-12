@@ -12,10 +12,10 @@ import androidx.room.PrimaryKey
             entity = BookEntity::class,
             parentColumns = ["id"],
             childColumns = ["bookId"],
-            onDelete = ForeignKey.CASCADE // Automatically cleans up if the book is deleted
+            onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("bookId")] // Speeds up queries when searching by book
+    indices = [Index("bookId")]
 )
 data class ReadingSessionEntity(
     @PrimaryKey(autoGenerate = true)

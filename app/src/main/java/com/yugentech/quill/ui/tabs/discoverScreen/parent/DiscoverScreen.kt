@@ -51,10 +51,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.sources.discover.DiscoverViewModel
+import com.yugentech.quill.sources.discover.viewmodel.DiscoverViewModel
 import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
-import com.yugentech.quill.ui.sources.standardScreen.components.AnimatedSearchIcon
-import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
+import com.yugentech.quill.ui.sources.standard.components.AnimatedSearchIcon
+import com.yugentech.quill.ui.sources.standard.components.SearchSuggestions
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfRow
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfSkeleton
 import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarousel

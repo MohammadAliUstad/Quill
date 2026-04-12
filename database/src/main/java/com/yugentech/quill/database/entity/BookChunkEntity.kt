@@ -17,7 +17,7 @@ data class BookChunkEntity(
     val id: Long = 0,
     val bookId: String,
     val chapterIndex: Int,
-    val chapterTitle: String = "",  // spine link title for debugging
+    val chapterTitle: String = "",
     val chunkIndex: Int,
     val text: String,
     val embedding: FloatArray,

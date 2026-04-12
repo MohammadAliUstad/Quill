@@ -5,13 +5,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.yugentech.quill.category.viewmodel.CategoryViewModel
 import com.yugentech.quill.navigation.screen.AppScreen
-import com.yugentech.quill.storage.StorageViewModel
-import com.yugentech.quill.ui.more.appearanceScreen.parent.AppearanceScreen
-import com.yugentech.quill.ui.more.categoryScreen.parent.CategoryScreen
-import com.yugentech.quill.ui.more.storageScreen.parent.StorageScreen
-import com.yugentech.quill.ui.more.indexingQueueScreen.IndexingQueueScreen
-import com.yugentech.quill.viewmodel.indexing.IndexingViewModel
-import com.yugentech.quill.theme.ThemeViewModel
+import com.yugentech.quill.storage.viewmodel.StorageViewModel
+import com.yugentech.quill.ui.info.storage.parent.StorageScreen
+import com.yugentech.quill.ui.info.indexing.parent.IndexingQueueScreen
+import com.yugentech.quill.ui.info.indexing.viewmodel.IndexingViewModel
+import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 fun NavGraphBuilder.settingsGraph(
@@ -27,7 +25,7 @@ fun NavGraphBuilder.settingsGraph(
 
     composable(AppScreen.Appearance.route) {
         val themeViewModel: ThemeViewModel = koinViewModel()
-        AppearanceScreen(
+        com.yugentech.quill.ui.config.appearance.parent.AppearanceScreen(
             themeViewModel = themeViewModel,
             onNavigateBack = { navController.popBackStack() }
         )
@@ -35,7 +33,7 @@ fun NavGraphBuilder.settingsGraph(
 
     composable(AppScreen.ManageCategories.route) {
         val categoryViewModel: CategoryViewModel = koinViewModel()
-        CategoryScreen(
+        com.yugentech.quill.ui.config.category.parent.CategoryScreen(
             categoryViewModel = categoryViewModel,
             onBack = { navController.popBackStack() }
         )

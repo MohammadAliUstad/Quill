@@ -47,23 +47,19 @@ private data class TocDisplayItem(
 @Composable
 fun TocSheet(
     toc: List<Link>,
-    currentHref: String?, // <-- ADDED: To track the active chapter
+    currentHref: String?,
     onTocItemClick: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     val flattenedToc = remember(toc) { flattenToc(toc) }
 
-    // Find the index of the currently active chapter
     val activeIndex = remember(flattenedToc, currentHref) {
         flattenedToc.indexOfFirst { item ->
-            // Match the base href (ignoring anchors/fragments like #id)
             item.link.href.toString().substringBefore("#") == currentHref?.substringBefore("#")
         }
     }
 
     val sheetState = rememberModalBottomSheetState()
-
-    // Start scrolling at the active index. We add +1 because the "Table of Contents" title is item 0.
     val initialScrollIndex = if (activeIndex >= 0) activeIndex + 1 else 0
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialScrollIndex)
 
@@ -91,7 +87,7 @@ fun TocSheet(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = { /* Consume the click silently */ }
+                            onClick = {}
                         )
                         .padding(vertical = 22.dp),
                     contentAlignment = Alignment.Center
@@ -153,7 +149,6 @@ private fun SimpleTocItem(
     isActive: Boolean,
     onClick: (String) -> Unit
 ) {
-    // Dynamic styling based on whether this is the currently active chapter
     val containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
     val contentColor = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
     val textWeight = if (isActive) FontWeight.Bold else FontWeight.Medium
@@ -161,11 +156,11 @@ private fun SimpleTocItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 2.dp) // Outer padding for separation
-            .clip(CircleShape) // Distinct list item shape
+            .padding(horizontal = 16.dp, vertical = 2.dp)
+            .clip(CircleShape)
             .background(containerColor)
             .clickable { onClick(item.link.href.toString()) }
-            .padding(horizontal = 16.dp, vertical = 14.dp), // Inner padding
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (item.depth > 0) {
@@ -182,7 +177,6 @@ private fun SimpleTocItem(
             modifier = Modifier.weight(1f)
         )
 
-        // Add a dot indicator to the active chapter
         if (isActive) {
             Box(
                 modifier = Modifier

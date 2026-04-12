@@ -2,7 +2,6 @@ package com.yugentech.theme.tokens.dimensions
 
 import androidx.compose.ui.unit.Dp
 
-// Defines standardized size dimensions for specific UI components to ensure consistency
 data class ComponentTokens(
     val dotSize: Dp,
     val buttonSmall: Dp,

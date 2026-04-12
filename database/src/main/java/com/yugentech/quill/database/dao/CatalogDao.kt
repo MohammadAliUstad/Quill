@@ -22,7 +22,6 @@ interface CatalogDao {
     @Query("DELETE FROM catalog_cache WHERE categorySlug = :category")
     suspend fun clearCategory(category: String)
 
-    // Insert-first pattern — avoids Flow emitting empty list between clear and insert
     @Query("DELETE FROM catalog_cache WHERE categorySlug = :category AND id NOT IN (:freshIds)")
     suspend fun deleteStaleBooks(category: String, freshIds: List<String>)
 }

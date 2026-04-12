@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
+import kotlin.math.abs
 
 @Stable
 class ReaderScreenState(
@@ -17,28 +18,22 @@ class ReaderScreenState(
     private val totalPages: Int,
     initialLocator: Locator?
 ) {
-    // --- UI Visibility States ---
     var isMenuVisible by mutableStateOf(false)
     var showSettingsSheet by mutableStateOf(false)
     var showTocSheet by mutableStateOf(false)
     var isBrightnessInteracting by mutableStateOf(false)
     var showAiraPeek by mutableStateOf(false)
-    
-    // --- Navigation & Playback States ---
     var selectedText by mutableStateOf<String?>(null)
     var targetJumpHref by mutableStateOf<String?>(null)
     var pendingSeekProgress by mutableStateOf<Double?>(null)
-    var currentLocator by mutableStateOf<Locator?>(initialLocator)
+    var currentLocator by mutableStateOf(initialLocator)
     var isScrubbing by mutableStateOf(false)
-
-    // --- Chapter Memory (Business Logic for Auto-Jumping) ---
     private val chapterProgressMap = mutableMapOf<String, Locator>()
     private var previousHref by mutableStateOf<String?>(null)
     var isHandlingAutoJump by mutableStateOf(false)
     var isExplicitJump by mutableStateOf(false)
     var targetLocator by mutableStateOf<Locator?>(null)
 
-    // --- Derived States ---
     private val currentChapterIndex: Int
         get() {
             val currentHref = currentLocator?.href?.toString()?.substringBefore("#") ?: return 0
@@ -72,7 +67,6 @@ class ReaderScreenState(
             selectedText = selectedText
         )
 
-    // --- Intent Functions (Actions) ---
     fun toggleMenu() {
         if (showAiraPeek) {
             showAiraPeek = false
@@ -117,7 +111,7 @@ class ReaderScreenState(
                 val currentProg = newLocator.locations.progression ?: 0.0
                 val savedProg = savedLocator.locations.progression ?: 0.0
 
-                if (Math.abs(currentProg - savedProg) > 0.01) {
+                if (abs(currentProg - savedProg) > 0.01) {
                     isHandlingAutoJump = true
                     targetLocator = savedLocator
                     return

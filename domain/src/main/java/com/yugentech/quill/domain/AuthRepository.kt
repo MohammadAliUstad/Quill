@@ -5,7 +5,6 @@ import android.content.Intent
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.Flow
 
-// Interface defining the contract for all authentication operations
 interface AuthRepository {
     val authState: Flow<FirebaseUser?>
     val currentUser: String?

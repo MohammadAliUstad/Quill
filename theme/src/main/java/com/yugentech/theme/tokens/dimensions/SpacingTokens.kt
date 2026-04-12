@@ -2,7 +2,6 @@ package com.yugentech.theme.tokens.dimensions
 
 import androidx.compose.ui.unit.Dp
 
-// Defines standardized spacing values for margins and padding
 data class SpacingTokens(
     val none: Dp,
     val xxs: Dp,

@@ -8,7 +8,6 @@ import androidx.compose.ui.unit.dp
 
 object AppAnimations {
 
-    // Standard duration constants (in milliseconds) for consistent animation speeds
     object Durations {
         const val Immediate = 0
         const val Micro = 50
@@ -29,7 +28,6 @@ object AppAnimations {
         const val Carousel = 20000
     }
 
-    // Standard easing curves to define how animations accelerate and decelerate
     object Easings {
         val Linear: Easing = LinearEasing
         val Standard: Easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
@@ -41,7 +39,6 @@ object AppAnimations {
         val Accelerate: Easing = CubicBezierEasing(0.4f, 0.0f, 1.0f, 1.0f)
     }
 
-    // Physical constants for motion-based spatial changes
     object Motion {
         val Velocity = 30.dp
     }

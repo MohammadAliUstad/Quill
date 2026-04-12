@@ -3,7 +3,7 @@ package com.yugentech.quill.user.repository
 import com.yugentech.quill.database.entity.UserEntity
 import com.yugentech.quill.database.model.UserData
 import com.yugentech.quill.user.service.SyncDataStore
-import com.yugentech.sessions.room.daos.UserDao
+import com.yugentech.quill.database.dao.UserDao
 import com.yugentech.quill.user.result.UserResult
 import com.yugentech.quill.user.service.UserService
 import kotlinx.coroutines.flow.Flow
@@ -79,13 +79,9 @@ class UserRepositoryImpl(
     }
 
     override suspend fun updateProStatus(userId: String, isPro: Boolean) {
-        // 1. Update Remote Firestore
         userService.updateProStatus(userId, isPro)
-
-        // 2. Update Local Room DB
         val currentEntity = userDao.getUser(userId)
         if (currentEntity != null) {
-            // Assuming UserEntity is a data class, copy the new state and save it
             userDao.saveUser(currentEntity.copy(isPro = isPro))
         }
     }

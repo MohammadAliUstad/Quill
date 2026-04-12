@@ -21,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.UserData
-import com.yugentech.quill.ui.mainScreen.components.SectionHeader
+import com.yugentech.quill.ui.main.components.SectionHeader
 import com.yugentech.quill.ui.tabs.moreScreen.components.ProfileCard
 import com.yugentech.quill.ui.tabs.moreScreen.components.SettingsListItem
 import com.yugentech.theme.tokens.spacing
@@ -173,7 +173,7 @@ fun MoreScreen(
             item {
                 SettingsListItem(
                     title = "About Quill",
-                    subtitle = "Version 3.0.0",
+                    subtitle = "Version 3.1.0",
                     index = 0,
                     totalCount = 1,
                     onClick = onAbout,

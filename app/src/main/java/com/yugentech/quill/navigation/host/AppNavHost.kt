@@ -5,6 +5,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,10 +28,6 @@ import com.yugentech.quill.navigation.navgraph.mainGraph
 import com.yugentech.quill.navigation.navgraph.settingsGraph
 import com.yugentech.quill.navigation.navgraph.sourceGraph
 import com.yugentech.quill.navigation.screen.AppScreen
-import com.yugentech.quill.ui.mainScreen.utils.defaultEnterTransition
-import com.yugentech.quill.ui.mainScreen.utils.defaultExitTransition
-import com.yugentech.quill.ui.mainScreen.utils.defaultPopEnterTransition
-import com.yugentech.quill.ui.mainScreen.utils.defaultPopExitTransition
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 
@@ -97,10 +98,30 @@ fun AppNavHost(
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        enterTransition = { defaultEnterTransition() },
-        exitTransition = { defaultExitTransition() },
-        popEnterTransition = { defaultPopEnterTransition() },
-        popExitTransition = { defaultPopExitTransition() }
+        enterTransition = {
+            slideInHorizontally(
+                animationSpec = tween(250),
+                initialOffsetX = { 1000 }
+            ) + fadeIn(animationSpec = tween(250))
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                animationSpec = tween(250),
+                targetOffsetX = { -1000 }
+            ) + fadeOut(animationSpec = tween(250))
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                animationSpec = tween(250),
+                initialOffsetX = { -1000 }
+            ) + fadeIn(animationSpec = tween(250))
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                animationSpec = tween(250),
+                targetOffsetX = { 1000 }
+            ) + fadeOut(animationSpec = tween(250))
+        }
     ) {
         authGraph(
             navController = navController,

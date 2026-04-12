@@ -8,6 +8,6 @@ import androidx.room.PrimaryKey
 )
 data class CategoryCacheEntity(
     @PrimaryKey val name: String,
-    val source: String, // "standard" or "gutenberg" — lets you reuse the table for both
+    val source: String,
     val cachedAt: Long = System.currentTimeMillis()
 )

@@ -10,7 +10,7 @@ import com.yugentech.quill.cloud.repository.CloudSyncRepository
 import com.yugentech.quill.database.model.UserData
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.AuthResult
-import com.yugentech.quill.ui.auth.state.ForgotPasswordState
+import com.yugentech.quill.ui.access.signIn.state.ForgotPasswordState
 import com.yugentech.quill.user.repository.UserRepository
 import com.yugentech.quill.user.result.UserResult
 import com.yugentech.quill.user.service.SyncDataStore

@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
+import com.yugentech.quill.bookDetails.state.BookDetailsUiState
 import com.yugentech.quill.database.converter.AppJson
 import com.yugentech.quill.database.mapper.toDomainModel
 import com.yugentech.quill.database.model.Book

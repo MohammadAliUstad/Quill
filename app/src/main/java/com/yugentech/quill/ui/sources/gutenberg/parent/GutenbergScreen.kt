@@ -36,8 +36,8 @@ import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergNavigationEvent
 import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel
 import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
 import com.yugentech.quill.ui.sources.gutenberg.components.GutenbergScreenHeader
-import com.yugentech.quill.ui.sources.standardScreen.components.AnimatedSearchIcon
-import com.yugentech.quill.ui.sources.standardScreen.components.SearchSuggestions
+import com.yugentech.quill.ui.sources.standard.components.AnimatedSearchIcon
+import com.yugentech.quill.ui.sources.standard.components.SearchSuggestions
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 

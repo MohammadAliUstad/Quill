@@ -38,7 +38,6 @@ interface BookChunkDao {
         toChunkIndex: Int
     ): List<BookChunkEntity>
 
-    // 🚨 FIX 1: FTS now ONLY returns the two integers it needs to identify the chunk
     @Query("""
         SELECT book_chunks.chapterIndex, book_chunks.chunkIndex 
         FROM book_chunks 
@@ -64,15 +63,35 @@ interface BookChunkDao {
     suspend fun getChunksForChapter(bookId: String, chapterIndex: Int): List<BookChunkEntity>
 }
 
-// Existing vector tuple
 data class ChunkVectorTuple(
     val id: Long,
     val chapterIndex: Int,
     val chunkIndex: Int,
     val embedding: FloatArray
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
-// 🚨 NEW: Ultra-lightweight tuple for FTS hits
+        other as ChunkVectorTuple
+
+        if (id != other.id) return false
+        if (chapterIndex != other.chapterIndex) return false
+        if (chunkIndex != other.chunkIndex) return false
+        if (!embedding.contentEquals(other.embedding)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + chapterIndex
+        result = 31 * result + chunkIndex
+        result = 31 * result + embedding.contentHashCode()
+        return result
+    }
+}
+
 data class ChunkLocationTuple(
     val chapterIndex: Int,
     val chunkIndex: Int

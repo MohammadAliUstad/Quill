@@ -10,8 +10,8 @@ import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
 import com.yugentech.quill.bookDetails.viewmodel.BookDetailsViewModel
 import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.reader.ReaderActivity
-import com.yugentech.quill.ui.shared.airaScreen.parent.AiraChatScreen
-import com.yugentech.quill.ui.shared.bookDetailsScreen.parent.BookDetailsScreen
+import com.yugentech.quill.ui.shared.airaChat.parent.AiraChatScreen
+import com.yugentech.quill.ui.shared.bookDetails.parent.BookDetailsScreen
 import com.yugentech.theme.tokens.AppConstants.EMPTY
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf

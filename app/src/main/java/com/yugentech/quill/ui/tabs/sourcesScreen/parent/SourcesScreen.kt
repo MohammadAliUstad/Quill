@@ -35,8 +35,8 @@ import com.yugentech.quill.ui.tabs.sourcesScreen.components.CatalogInfo
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.FilePickerBottomSheet
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.ImportStatusSheet
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.LargeCatalogCard
-import com.yugentech.quill.utils.ImportResult
-import org.koin.androidx.compose.koinViewModel
+import com.yugentech.quill.ui.tabs.sourcesScreen.result.ImportResult
+import com.yugentech.quill.ui.tabs.sourcesScreen.viewmodel.SourcesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable

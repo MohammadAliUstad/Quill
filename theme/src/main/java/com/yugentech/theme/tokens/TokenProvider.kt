@@ -11,10 +11,8 @@ import com.yugentech.theme.tokens.dimensions.IconSizeTokens
 import com.yugentech.theme.tokens.dimensions.SpacingTokens
 import com.yugentech.theme.tokens.dimensions.StrokeTokens
 
-// Creates a CompositionLocal to provide tokens down the UI tree, defaulting to Compact
 val LocalDesignTokens = staticCompositionLocalOf { TokensCompact }
 
-// Extension properties to allow easy access like `MaterialTheme.spacing.m`
 val MaterialTheme.spacing: SpacingTokens
     @Composable
     @ReadOnlyComposable

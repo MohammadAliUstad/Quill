@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
-import com.yugentech.quill.ui.mainScreen.components.itemShape
+import com.yugentech.quill.ui.main.components.itemShape
 
 @Composable
 fun SettingsListItem(

@@ -42,7 +42,7 @@ class UserService(
                 name = document.getString("name"),
                 email = document.getString("email"),
                 avatarId = document.getLong("avatarId")?.toInt() ?: 0,
-                isPro = document.getBoolean("isPro") ?: false // <-- ADD THIS
+                isPro = document.getBoolean("isPro") ?: false
             )
 
             Timber.i("User profile fetched successfully")

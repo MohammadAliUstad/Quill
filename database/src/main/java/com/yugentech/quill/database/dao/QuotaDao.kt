@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.yugentech.quill.database.entity.QuotaEntity
-import kotlinx.coroutines.flow.Flow // <-- Import this
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface QuotaDao {

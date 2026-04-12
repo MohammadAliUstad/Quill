@@ -1,6 +1,6 @@
 package com.yugentech.quill.di.modules.books
 
-import com.yugentech.quill.sources.discover.DiscoverViewModel
+import com.yugentech.quill.sources.discover.viewmodel.DiscoverViewModel
 import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
 import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepositoryImpl
 import com.yugentech.quill.sources.gutenberg.service.GutenbergApiService
@@ -9,7 +9,7 @@ import com.yugentech.quill.sources.standard.repository.StandardRepository
 import com.yugentech.quill.sources.standard.repository.StandardRepositoryImpl
 import com.yugentech.quill.sources.standard.service.StandardApiService
 import com.yugentech.quill.sources.standard.viewmodel.StandardViewModel
-import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesViewModel
+import com.yugentech.quill.ui.tabs.sourcesScreen.viewmodel.SourcesViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 

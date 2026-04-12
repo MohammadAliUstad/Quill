@@ -14,6 +14,7 @@ object AppConstants {
     const val KOFI_URL = "https://ko-fi.com/yugentech"
     const val SUPPORT_EMAIL = "mailto:yugentech.kazuki@gmail.com"
     const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=$APP_PACKAGE_NAME"
+    const val SESSIONS_URL = "https://play.google.com/store/apps/details?id=com.yugentech.sessions"
     const val SHARE_MESSAGE = "Check out Quill, a modern AI book reader app\n$PLAY_STORE_URL"
     const val MARKET_URL = "market://details?id=com.yugentech.quill"
 }

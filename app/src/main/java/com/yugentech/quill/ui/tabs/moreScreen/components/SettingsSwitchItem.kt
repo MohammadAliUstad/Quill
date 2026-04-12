@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import com.yugentech.theme.tokens.spacing
-import com.yugentech.quill.ui.mainScreen.components.itemShape
+import com.yugentech.quill.ui.main.components.itemShape
 
 @Composable
 fun SettingsSwitchItem(

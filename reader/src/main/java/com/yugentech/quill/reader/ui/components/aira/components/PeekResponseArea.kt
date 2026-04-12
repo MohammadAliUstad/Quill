@@ -45,7 +45,7 @@ private val idleMessages = listOf(
 @Composable
 fun PeekResponseArea(
     airaUiState: QuickUiState,
-    showLimitReached: Boolean, // Added explicit parameter to control paywall UI
+    showLimitReached: Boolean,
     selectedText: String? = null,
     activeChips: List<Pair<String, QuickPrompt>> = emptyList(),
     onChipClick: (QuickPrompt) -> Unit = {}
@@ -56,7 +56,6 @@ fun PeekResponseArea(
             .animateContentSize(tween(350, easing = FastOutSlowInEasing))
     ) {
         when {
-            // Priority 1: Always show the loader if it's actively fetching
             airaUiState.isLoading -> {
                 Column {
                     Spacer(Modifier.height(16.dp))
@@ -65,7 +64,6 @@ fun PeekResponseArea(
                 }
             }
 
-            // Priority 2: Paywall (Now respects the latched session state)
             showLimitReached -> {
                 Column {
                     Spacer(Modifier.height(16.dp))
@@ -79,7 +77,6 @@ fun PeekResponseArea(
                 }
             }
 
-            // Priority 3: Protect the Active Stream OR show Old Response
             airaUiState.isStreaming || (selectedText.isNullOrBlank() && (airaUiState.error != null || airaUiState.response != null)) -> {
                 val fullText = airaUiState.error ?: airaUiState.response ?: ""
                 val textLength = remember { Animatable(0f) }
@@ -113,7 +110,6 @@ fun PeekResponseArea(
                 }
             }
 
-            // Priority 4: Show Selected Text
             !selectedText.isNullOrBlank() -> {
                 Column(modifier = Modifier.padding(vertical = 12.dp)) {
                     Box(
@@ -170,7 +166,6 @@ fun PeekResponseArea(
                 }
             }
 
-            // Priority 5: Idle
             else -> {
                 val greeting = remember { idleMessages.random() }
 

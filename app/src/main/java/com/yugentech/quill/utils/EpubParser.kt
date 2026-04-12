@@ -17,6 +17,11 @@ import timber.log.Timber
 import java.io.File
 import java.util.Locale
 
+data class ParsedEpub(
+    val totalPages: Int,
+    val chapters: List<Chapter>
+)
+
 class EpubParser(private val context: Context) {
 
     private val ignoredTitles = setOf(
@@ -90,7 +95,7 @@ class EpubParser(private val context: Context) {
                 return@withContext ParsedEpub(totalPages, refinedChapters)
 
             } catch (e: Exception) {
-                Timber.Forest.e(e, "EpubParser failed")
+                Timber.e(e, "EpubParser failed")
                 return@withContext ParsedEpub(0, emptyList())
             }
         }

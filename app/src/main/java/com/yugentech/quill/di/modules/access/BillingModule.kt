@@ -5,10 +5,10 @@ import com.yugentech.quill.billing.repository.BillingRepositoryImpl
 import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
 import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.domain.QuotaRepository
-import com.yugentech.quill.quota.QuotaRepositoryImpl
-import com.yugentech.quill.quota.QuotaService
-import com.yugentech.quill.quota.GlobalSyncManager
-import com.yugentech.quill.ui.about.aboutScreen.parent.AboutViewModel
+import com.yugentech.quill.quota.repository.QuotaRepositoryImpl
+import com.yugentech.quill.quota.service.QuotaService
+import com.yugentech.quill.quota.manager.GlobalSyncManager
+import com.yugentech.quill.ui.about.about.parent.AboutViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module

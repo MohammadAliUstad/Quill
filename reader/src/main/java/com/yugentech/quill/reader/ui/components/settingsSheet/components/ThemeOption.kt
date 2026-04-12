@@ -36,10 +36,8 @@ fun ThemeOption(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = modifier
-            // Removed .aspectRatio(1f) to prevent text clipping on narrow screens
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            // Use vertical padding to give it a nice balanced shape instead
             .padding(vertical = 12.dp, horizontal = 2.dp)
     ) {
         val borderColor = if (isSelected) {
@@ -52,7 +50,6 @@ fun ThemeOption(
 
         Box(
             modifier = Modifier
-                // Scaled down slightly from 52.dp to safely fit 4 items horizontally
                 .size(52.dp)
                 .clip(CircleShape)
                 .background(color)

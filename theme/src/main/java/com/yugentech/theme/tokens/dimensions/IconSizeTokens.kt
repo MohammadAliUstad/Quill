@@ -2,7 +2,6 @@ package com.yugentech.theme.tokens.dimensions
 
 import androidx.compose.ui.unit.Dp
 
-// Defines standardized icon sizes for consistency across the app
 data class IconSizeTokens(
     val extraSmall: Dp,
     val small: Dp,

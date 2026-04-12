@@ -51,7 +51,7 @@ class BillingService(context: Context) {
 
     fun setCurrentUser(userId: String?) {
         currentUserId = userId
-        Timber.Forest.d("Billing user context set to: $userId")
+        Timber.d("Billing user context set to: $userId")
     }
 
     private val purchasesUpdatedListener = PurchasesUpdatedListener { result, purchases ->
@@ -63,7 +63,7 @@ class BillingService(context: Context) {
                 scope.launch { _events.emit(BillingEvent.UserCancelled) }
 
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
-                Timber.Forest.w("User attempted to buy, but Play Store account already owns it.")
+                Timber.w("User attempted to buy, but Play Store account already owns it.")
                 scope.launch {
                     _events.emit(
                         BillingEvent.Error(
@@ -74,7 +74,7 @@ class BillingService(context: Context) {
             }
 
             else -> {
-                Timber.Forest.e("Purchase error [${result.responseCode}]: ${result.debugMessage}")
+                Timber.e("Purchase error [${result.responseCode}]: ${result.debugMessage}")
                 val errorMessage = result.debugMessage.ifBlank {
                     "An error occurred with Google Play. Please try again."
                 }
@@ -94,7 +94,7 @@ class BillingService(context: Context) {
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(result: BillingResult) {
                 if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                    Timber.Forest.d("BillingClient connected")
+                    Timber.d("BillingClient connected")
                     scope.launch {
                         querySubProducts()
                         queryTipProducts()
@@ -102,12 +102,12 @@ class BillingService(context: Context) {
                         currentUserId?.let { restorePurchases(it) }
                     }
                 } else {
-                    Timber.Forest.e("BillingClient setup failed: ${result.debugMessage}")
+                    Timber.e("BillingClient setup failed: ${result.debugMessage}")
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                Timber.Forest.w("BillingClient disconnected")
+                Timber.w("BillingClient disconnected")
             }
         })
     }
@@ -255,7 +255,7 @@ class BillingService(context: Context) {
 
             return hasPro
         }
-        Timber.Forest.w("Failed to query purchases. Code: ${result.responseCode}")
+        Timber.w("Failed to query purchases. Code: ${result.responseCode}")
         return null
     }
 
@@ -270,7 +270,7 @@ class BillingService(context: Context) {
     private suspend fun handleSubscription(purchase: Purchase) {
         val belongsToUser = purchase.accountIdentifiers?.obfuscatedAccountId == currentUserId
         if (!belongsToUser) {
-            Timber.Forest.w("Subscription owned by different account. Access denied.")
+            Timber.w("Subscription owned by different account. Access denied.")
             return
         }
 

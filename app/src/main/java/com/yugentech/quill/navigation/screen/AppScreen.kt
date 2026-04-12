@@ -22,7 +22,7 @@ sealed class AppScreen(val route: String) {
     data object Storage : AppScreen("storage")
     data object About : AppScreen("about")
     data object AboutAira : AppScreen("about_aira")
-    data object Contributors : AppScreen("contributors")
+    data object MoreApps : AppScreen("more_apps")
     data object Licenses : AppScreen("licenses")
     data object Insights : AppScreen("insights")
     data object EditProfileScreen : AppScreen("edit_profile")

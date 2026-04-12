@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.ui.sources.standardScreen.components.StandardBookItem
+import com.yugentech.quill.ui.sources.standard.components.StandardBookItem
 
 @Composable
 fun BooksGrid(

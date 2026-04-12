@@ -3,7 +3,7 @@ package com.yugentech.quill.user.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.database.model.UserData
-import com.yugentech.quill.insghts.InsightsRepository
+import com.yugentech.quill.insghts.repository.InsightsRepository
 import com.yugentech.quill.user.repository.UserRepository
 import com.yugentech.quill.user.state.UserUiState
 import kotlinx.coroutines.flow.MutableStateFlow

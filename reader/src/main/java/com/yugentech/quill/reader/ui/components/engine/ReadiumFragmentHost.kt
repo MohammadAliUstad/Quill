@@ -36,7 +36,6 @@ import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
 import androidx.core.view.size
 import androidx.core.view.get
-import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import kotlinx.coroutines.delay
 
 private class ReadiumWrapperView @JvmOverloads constructor(

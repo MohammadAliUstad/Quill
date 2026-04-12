@@ -5,7 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.ui.sources.gutenberg.parent.GutenbergScreen
-import com.yugentech.quill.ui.sources.standardScreen.parent.StandardScreen
+import com.yugentech.quill.ui.sources.standard.parent.StandardScreen
 import org.koin.androidx.compose.koinViewModel
 
 fun NavGraphBuilder.sourceGraph(

@@ -1,6 +1,6 @@
 package com.yugentech.quill.di.modules.core
 
-import com.yugentech.quill.cloud.CloudSyncService
+import com.yugentech.quill.cloud.service.CloudSyncService
 import com.yugentech.quill.cloud.repository.CloudSyncRepository
 import com.yugentech.quill.cloud.repository.CloudSyncRepositoryImpl
 import org.koin.dsl.module
