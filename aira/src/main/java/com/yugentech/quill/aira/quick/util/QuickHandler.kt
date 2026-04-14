@@ -12,10 +12,10 @@ import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
 class QuickHandler(
-    private val functions: FirebaseFunctions,
-    private val ragRetriever: RagRetriever,
     private val bookDao: BookDao,
-    private val bookChunkDao: BookChunkDao
+    private val bookChunkDao: BookChunkDao,
+    private val functions: FirebaseFunctions,
+    private val ragRetriever: RagRetriever
 ) {
     fun handle(bookId: String, quickPrompt: QuickPrompt): Flow<AiraResponse> = flow {
         val book = bookDao.getBookEntity(bookId)

@@ -21,7 +21,9 @@ data class ChapterText(
     val text: String
 )
 
-class EpubTextExtractor(private val context: Context) {
+class EpubTextExtractor(
+    private val context: Context
+) {
 
     companion object {
         private const val MIN_CHAPTER_LENGTH = 50

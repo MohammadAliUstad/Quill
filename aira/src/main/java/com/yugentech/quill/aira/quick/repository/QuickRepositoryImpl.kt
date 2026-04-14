@@ -18,14 +18,14 @@ class QuickRepositoryImpl(
 
     private val handler by lazy {
         QuickHandler(
-            functions = functions,
-            ragRetriever = ragRetriever,
             bookDao = bookDao,
-            bookChunkDao = bookChunkDao
+            bookChunkDao = bookChunkDao,
+            functions = functions,
+            ragRetriever = ragRetriever
         )
     }
 
-    override suspend fun handle(bookId: String, quickPrompt: QuickPrompt): Flow<AiraResponse> {
+    override suspend fun ask(bookId: String, quickPrompt: QuickPrompt): Flow<AiraResponse> {
         return handler.handle(bookId, quickPrompt)
     }
 }

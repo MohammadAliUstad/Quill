@@ -87,7 +87,7 @@ class QuickViewModel(
         activeJob = viewModelScope.launch {
             var hasConsumedQuota = false
             try {
-                quickRepository.handle(bookId, intent).collect { response ->
+                quickRepository.ask(bookId, intent).collect { response ->
                     handleResponseStream(response) {
                         if (!hasConsumedQuota) {
                             hasConsumedQuota = true
