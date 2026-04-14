@@ -43,7 +43,7 @@ Quill reimagines what a reading app can be. Built for readers who want more than
 - **On-Device RAG Pipeline:** A hybrid retrieval system combining BGE semantic embeddings (ONNX Runtime) and FTS4 keyword search, merged via Reciprocal Rank Fusion, surfaces the most relevant passages from your book before answering
 - **Asymmetric Retrieval:** For character and event queries, FTS acts as a boolean filter to narrow the vector search corpus, eliminating name-density bias and surfacing the right scenes even in long novels
 - **Query Expansion:** Each question is rewritten into multiple semantic variations with entity extraction and keyword boosting, dramatically improving retrieval precision
-- **Spoiler Lock:** Aira only discusses content you've already read — it won't reveal what happens next
+- **Spoiler Lock:** Aira only discusses content you've already read it won't reveal what happens next
 - **Conversation History:** Full multi-turn conversation with history-aware responses, dead-end filtering, and persistent storage per book
 - **Quick Actions:** One-tap prompts to summarize a chapter, identify characters, explore themes, look up words, explain passages, and more
 
