@@ -55,15 +55,8 @@ class RagRetriever(
         candidatesPerQuery: Int = 20
     ): List<RetrievedChunk> {
         return try {
-            Timber.d("[RagRetriever] Starting retrieval | queries: ${queries.size} | topPassages: $topPassages | candidatesPerQuery: $candidatesPerQuery | boostedKeywords: $boostedKeywords")
-
             val book = bookDao.getBookEntity(bookId)
-            val allCandidates = getCandidates(bookId, book, spoilerLockEnabled) ?: run {
-                Timber.w("[RagRetriever] No candidates returned — spoiler lock may have filtered everything")
-                return emptyList()
-            }
-
-            Timber.d("[RagRetriever] Candidate pool size: ${allCandidates.size} chunks")
+            val allCandidates = getCandidates(bookId, book, spoilerLockEnabled) ?: return emptyList()
 
             val candidates = if (entities.isNotEmpty()) {
                 val ftsPositions = resolveFtsPositions(bookId, entities, boostedKeywords)
@@ -71,45 +64,20 @@ class RagRetriever(
                     val filtered = allCandidates.filter {
                         (it.chapterIndex to it.chunkIndex) in ftsPositions
                     }
-                    Timber.d("[RagRetriever] Path A (entity): FTS filtered ${allCandidates.size} → ${filtered.size} candidates")
-                    filtered.ifEmpty {
-                        Timber.w("[RagRetriever] FTS filter returned empty subset, falling back to full corpus")
-                        allCandidates
-                    }
+                    filtered.ifEmpty { allCandidates }
                 } else {
-                    Timber.w("[RagRetriever] FTS returned no positions, falling back to full corpus")
                     allCandidates
                 }
             } else {
-                Timber.d("[RagRetriever] Path B (thematic): no entities, using full corpus of ${allCandidates.size} chunks")
                 allCandidates
             }
 
             val mergedMap = mutableMapOf<Pair<Int, Int>, Float>()
 
-            for ((index, query) in queries.withIndex()) {
-                Timber.d(
-                    "[RagRetriever] Processing query ${index + 1}/${queries.size}: \"${
-                        query.take(
-                            80
-                        )
-                    }\""
-                )
-
-                val queryEmbedding = embedQuery(query) ?: run {
-                    Timber.w("[RagRetriever] Embedding failed for query ${index + 1}, skipping")
-                    continue
-                }
+            for ((_, query) in queries.withIndex()) {
+                val queryEmbedding = embedQuery(query) ?: continue
 
                 val scored = scoreVectorOnly(candidates, queryEmbedding)
-
-                Timber.d(
-                    "[RagRetriever] Query ${index + 1} scored ${scored.size} chunks | top 5: ${
-                        scored.take(
-                            5
-                        ).map { "ch${it.first.first}(%.4f)".format(it.second) }
-                    }"
-                )
 
                 scored.take(candidatesPerQuery).forEach { (pos, score) ->
                     val existing = mergedMap[pos]
@@ -119,17 +87,7 @@ class RagRetriever(
                 }
             }
 
-            Timber.d(
-                "[RagRetriever] Merged map size: ${mergedMap.size} | top 5: ${
-                    mergedMap.entries.sortedByDescending { it.value }.take(5)
-                        .map { "ch${it.key.first}(%.4f)".format(it.value) }
-                }"
-            )
-
-            if (mergedMap.isEmpty()) {
-                Timber.w("[RagRetriever] Merged map is empty — no chunks survived scoring")
-                return emptyList()
-            }
+            if (mergedMap.isEmpty()) return emptyList()
 
             retrieveAsPassages(bookId, mergedMap.toList(), topPassages)
         } catch (e: Exception) {
@@ -149,7 +107,7 @@ class RagRetriever(
             val ftsTerms = allTerms.mapNotNull { keyword ->
                 val tokens = keyword.trim().lowercase()
                     .split("\\s+".toRegex())
-                    .filter { it.length > 2 }
+                    .filter { it.length > 2 && it !in STOP_WORDS }
                 when {
                     tokens.size > 1 -> tokens.joinToString(" NEAR/5 ") { "$it*" }
                     tokens.size == 1 -> "${tokens[0]}*"
@@ -160,15 +118,7 @@ class RagRetriever(
             if (ftsTerms.isEmpty()) return emptySet()
 
             val ftsQuery = ftsTerms.joinToString(" OR ")
-            Timber.d("[RagRetriever] FTS boolean filter query: \"$ftsQuery\"")
-
             val results = chunkDao.searchFts(bookId, ftsQuery)
-            Timber.d(
-                "[RagRetriever] FTS positions: ${results.size} chunks | chapters: ${
-                    results.map { "ch${it.chapterIndex}" }.distinct()
-                }"
-            )
-
             results.map { it.chapterIndex to it.chunkIndex }.toSet()
         } catch (e: Exception) {
             Timber.e(e, "FTS position resolution failed")
@@ -180,22 +130,13 @@ class RagRetriever(
         candidates: List<ChunkVectorTuple>,
         queryEmbedding: FloatArray
     ): List<Pair<Pair<Int, Int>, Float>> {
-        val results = candidates.mapNotNull { chunk ->
+        return candidates.mapNotNull { chunk ->
             if (chunk.embedding.size != queryEmbedding.size) return@mapNotNull null
             val sim = EmbeddingEngine.cosineSimilarity(queryEmbedding, chunk.embedding)
             if (sim >= ANCHOR_MIN_SCORE) {
                 (chunk.chapterIndex to chunk.chunkIndex) to sim
             } else null
         }.sortedByDescending { it.second }
-
-        Timber.d(
-            "[RagRetriever] Vector search: ${results.size} chunks above ANCHOR_MIN_SCORE($ANCHOR_MIN_SCORE) | top 5: ${
-                results.take(
-                    5
-                ).map { "ch${it.first.first}(%.4f)".format(it.second) }
-            }"
-        )
-        return results
     }
 
     private suspend fun retrieveAsPassages(
@@ -219,16 +160,6 @@ class RagRetriever(
                 usedPositions.add(pos.first to (pos.second + offset))
             }
         }
-
-        Timber.d(
-            "[RagRetriever] Anchors selected: ${
-                anchors.map {
-                    "ch${it.first.first}/chunk${it.first.second}(%.4f)".format(
-                        it.second
-                    )
-                }
-            }"
-        )
 
         if (anchors.isEmpty()) return emptyList()
 
@@ -261,9 +192,7 @@ class RagRetriever(
             }
         }
 
-        val result = expanded.sortedWith(compareBy({ it.chapterIndex }, { it.chunkIndex }))
-        Timber.d("[RagRetriever] Final chunks returned: ${result.map { "ch${it.chapterIndex}" }}")
-        return result
+        return expanded.sortedWith(compareBy({ it.chapterIndex }, { it.chunkIndex }))
     }
 
     private suspend fun getCandidates(
@@ -274,37 +203,24 @@ class RagRetriever(
         return try {
             val allChunks = cacheMutex.withLock {
                 if (cachedBookId == bookId && cachedVectors.isNotEmpty()) {
-                    Timber.d("[RagRetriever] Using cached vectors for bookId: $bookId (${cachedVectors.size} chunks)")
                     cachedVectors
                 } else {
-                    Timber.d("[RagRetriever] Loading vectors from DB for bookId: $bookId")
                     val fromDb = chunkDao.getCandidateVectors(bookId, Int.MAX_VALUE)
                     cachedBookId = bookId
                     cachedVectors = fromDb
-                    Timber.d("[RagRetriever] Loaded ${fromDb.size} chunks from DB")
                     fromDb
                 }
             }
 
-            if (allChunks.isEmpty()) {
-                Timber.w("[RagRetriever] No chunks in DB for bookId: $bookId")
-                return null
-            }
+            if (allChunks.isEmpty()) return null
 
-            if (!spoilerLockEnabled) {
-                Timber.d("[RagRetriever] Spoiler lock disabled — using all ${allChunks.size} chunks")
-                return allChunks
-            }
+            if (!spoilerLockEnabled) return allChunks
 
             val progressCeiling = book?.progressPercent ?: 0f
-            if (progressCeiling == 0f) {
-                Timber.w("[RagRetriever] Progress is 0% — spoiler lock blocking all chunks")
-                return null
-            }
+            if (progressCeiling == 0f) return null
 
             val maxChapterIndex = (book?.lastChapterIndex ?: 0) + 1
             val filtered = allChunks.filter { it.chapterIndex <= maxChapterIndex }
-            Timber.d("[RagRetriever] Spoiler lock active | maxChapterIndex: $maxChapterIndex | filtered to ${filtered.size} chunks")
 
             filtered.ifEmpty { null }
 
@@ -324,9 +240,7 @@ class RagRetriever(
                 .trim()
 
             val queryWithPrefix = "${EmbeddingEngine.BGE_QUERY_PREFIX}$cleanQuery"
-            val embedding = embeddingEngine.embed(queryWithPrefix)
-            Timber.d("[RagRetriever] Embedded query: \"${cleanQuery.take(60)}\" → ${embedding?.size ?: 0} dims")
-            embedding
+            embeddingEngine.embed(queryWithPrefix)
         } catch (e: Exception) {
             Timber.e(e, "Failed to embed query: $query")
             null
@@ -339,7 +253,6 @@ class RagRetriever(
         private const val PASSAGE_WINDOW_AFTER = 1
         private const val ANCHOR_MIN_SCORE = 0.40f
         private const val RRF_MIN_SCORE = 0.015f
-
 
         private val STOP_WORDS = setOf(
             "the", "and", "for", "that", "this", "with", "you", "not", "are", "from",

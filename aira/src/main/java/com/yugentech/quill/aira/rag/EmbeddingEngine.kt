@@ -27,18 +27,6 @@ class EmbeddingEngine(
 
     private val initMutex = Mutex()
 
-    companion object {
-        private const val MODEL_FILE = "model.onnx"
-        const val BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
-
-        fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {
-            if (a.size != b.size) return 0f
-            var dot = 0f
-            for (i in a.indices) dot += a[i] * b[i]
-            return dot
-        }
-    }
-
     suspend fun init() = withContext(Dispatchers.IO) {
         if (ortSession != null) return@withContext
 
@@ -118,6 +106,13 @@ class EmbeddingEngine(
         }
     }
 
+    fun close() {
+        ortSession?.close()
+        ortEnv?.close()
+        ortSession = null
+        ortEnv = null
+    }
+
     private fun normalize(v: FloatArray): FloatArray {
         var sumSq = 0f
         for (x in v) sumSq += x * x
@@ -126,10 +121,15 @@ class EmbeddingEngine(
         return FloatArray(v.size) { i -> v[i] / norm }
     }
 
-    fun close() {
-        ortSession?.close()
-        ortEnv?.close()
-        ortSession = null
-        ortEnv = null
+    companion object {
+        private const val MODEL_FILE = "model.onnx"
+        const val BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
+
+        fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {
+            if (a.size != b.size) return 0f
+            var dot = 0f
+            for (i in a.indices) dot += a[i] * b[i]
+            return dot
+        }
     }
 }
