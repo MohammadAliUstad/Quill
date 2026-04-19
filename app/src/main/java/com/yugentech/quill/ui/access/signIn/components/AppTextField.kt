@@ -75,7 +75,6 @@ fun AppTextField(
                         onClick = { passwordVisible = !passwordVisible },
                         modifier = Modifier.size(MaterialTheme.components.buttonSmall)
                     ) {
-                        // REPLACED THE STATIC ICON WITH THE ANIMATED ONE
                         AnimatedEyeIcon(
                             isVisible = passwordVisible,
                             modifier = Modifier.size(MaterialTheme.icons.medium)
