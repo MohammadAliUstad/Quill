@@ -49,7 +49,7 @@ class BookEmbeddingWorker(
             setProgress(workDataOf(KEY_PHASE to PHASE_PROCESSING, KEY_PROGRESS to 5))
 
             val chunkChannel = Channel<ChunkingStrategy.TextChunk>(100)
-            val entityChannel = Channel<BookChunkEntity>(50)
+            val entityChannel = Channel<BookChunkEntity>(100)
             val concurrencyLevel = Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
 
             val totalChapters = withContext(Dispatchers.IO) {

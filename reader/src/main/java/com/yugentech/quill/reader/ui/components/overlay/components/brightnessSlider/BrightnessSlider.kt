@@ -1,6 +1,7 @@
 package com.yugentech.quill.reader.ui.components.overlay.components.brightnessSlider
 
 import android.app.Activity
+import android.provider.Settings
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -49,7 +50,24 @@ fun BrightnessSlider(
     val initialBrightness = remember {
         val window = (context as? Activity)?.window
         val current = window?.attributes?.screenBrightness ?: -1f
-        if (current < 0f) 0.5f else current
+
+        if (current < 0f) {
+            // Window is using system default, so fetch the actual device brightness
+            try {
+                val systemBrightness = Settings.System.getInt(
+                    context.contentResolver,
+                    Settings.System.SCREEN_BRIGHTNESS
+                )
+                // Normalize the 0-255 system value to a 0.0f-1.0f float
+                systemBrightness / 255f
+            } catch (e: Settings.SettingNotFoundException) {
+                // Safe fallback in case the setting cannot be read
+                0.5f
+            }
+        } else {
+            // Window already has a custom brightness applied
+            current
+        }
     }
 
     val sliderState = rememberSliderState(
