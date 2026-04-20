@@ -87,24 +87,6 @@ class BookDetailsRepositoryImpl(
         cloudSyncRepository.scheduleBackgroundSync()
     }
 
-    override suspend fun indexAllDownloadedBooks() {
-        val downloadedBooks = bookDao.getUnindexedDownloadedBooks()
-
-        downloadedBooks.forEach { book ->
-            val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
-                .setInputData(workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to book.id))
-                .addTag("index_${book.id}")
-                .addTag("AI_INDEXING")
-                .build()
-
-            workManager.enqueueUniqueWork(
-                "global_book_processing_queue",
-                ExistingWorkPolicy.APPEND_OR_REPLACE,
-                indexRequest
-            )
-        }
-    }
-
     override suspend fun removeDownload(bookId: String) {
         val book = bookDao.getBookEntity(bookId)
         book?.localFilePath?.let { File(it).takeIf { f -> f.exists() }?.delete() }
