@@ -81,9 +81,7 @@ fun BookDescriptionSection(
     val showExpandToggle = fullLineCount > 3 || (processedDescription?.length ?: 0) > 150
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(bottom = if (isExpanded) 24.dp else 8.dp)
+        modifier = modifier.fillMaxWidth()
     ) {
         Text(
             text = "Description",
