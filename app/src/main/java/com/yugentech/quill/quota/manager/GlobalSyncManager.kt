@@ -26,7 +26,7 @@ class GlobalSyncManager(
 
     private fun startObserving() {
         applicationScope.launch {
-            Timber.Forest.d("Starting Global Sync for Billing & Quota...")
+            Timber.d("Starting Global Sync for Billing & Quota...")
 
             authRepository.authState.collectLatest { user ->
                 if (user != null) {
@@ -40,7 +40,7 @@ class GlobalSyncManager(
 
                         if (verifiedStatus != null) {
                             userRepository.updateProStatus(user.uid, verifiedStatus)
-                            Timber.Forest.d("Global Sync: Pro status verified as $verifiedStatus")
+                            Timber.d("Global Sync: Pro status verified as $verifiedStatus")
                         }
                     }
 

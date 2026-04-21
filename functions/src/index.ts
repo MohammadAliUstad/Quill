@@ -2,6 +2,7 @@ import { setGlobalOptions } from "firebase-functions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { initializeApp } from "firebase-admin/app";
 import { defineSecret } from "firebase-functions/params";
+import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 
 initializeApp();
 setGlobalOptions({ maxInstances: 10 });
@@ -160,5 +161,48 @@ export const airaRoute = onCall(
     }
 
     return { response: text.trim() };
+  }
+);
+
+const ttsClient = new TextToSpeechClient();
+
+export const airaTts = onCall(
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Login required");
+    }
+
+    const { text, accentCode } = request.data;
+
+    if (!text || typeof text !== "string") {
+      throw new HttpsError("invalid-argument", "Text is required");
+    }
+
+    if (text.length > 5000) {
+      throw new HttpsError("invalid-argument", "Text too long. Maximum 5000 characters.");
+    }
+
+    const languageCode = accentCode ?? "en-US";
+
+    const [response] = await ttsClient.synthesizeSpeech({
+      input: { text },
+      voice: {
+        languageCode,
+        name: `${languageCode}-Wavenet-F`,
+      },
+      audioConfig: {
+        audioEncoding: "MP3",
+        speakingRate: 0.95,
+        pitch: 0.0,
+      },
+    });
+
+    if (!response.audioContent) {
+      throw new HttpsError("internal", "No audio generated");
+    }
+
+    const audioBase64 = Buffer.from(response.audioContent as Uint8Array).toString("base64");
+
+    return { audio: audioBase64 };
   }
 );
