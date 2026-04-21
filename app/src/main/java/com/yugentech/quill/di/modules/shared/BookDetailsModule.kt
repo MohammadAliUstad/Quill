@@ -3,6 +3,7 @@ package com.yugentech.quill.di.modules.shared
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepositoryImpl
 import com.yugentech.quill.bookDetails.viewmodel.BookDetailsViewModel
+import com.yugentech.quill.ui.shared.bookDetails.parent.NotesViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -23,6 +24,12 @@ val bookDetailsModule = module {
             repository = get(),
             savedStateHandle = get(),
             billingRepository = get()
+        )
+    }
+
+    viewModel {
+        NotesViewModel(
+            repository = get()
         )
     }
 }
