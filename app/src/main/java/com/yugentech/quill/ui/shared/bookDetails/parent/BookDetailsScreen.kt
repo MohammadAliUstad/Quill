@@ -53,6 +53,7 @@ import com.yugentech.quill.ui.shared.bookDetails.components.chaptersListSection
 @Composable
 fun BookDetailsScreen(
     onBackClick: () -> Unit,
+    onNotesClick: (bookId: String) -> Unit,
     onReadClick: (String, String?) -> Unit,
     onAiraClick: (String) -> Unit,
     bookDetailsViewModel: BookDetailsViewModel
@@ -125,7 +126,8 @@ fun BookDetailsScreen(
                 onFavoriteClick = { bookDetailsViewModel.onFavoriteToggle() },
                 onDeleteClick = { showDeleteDialog = true },
                 onResetProgressClick = { showResetDialog = true },
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                onNotesClick = { onNotesClick(book.id) }
             )
         },
         floatingActionButton = {
@@ -190,10 +192,14 @@ fun BookDetailsScreen(
 
                 if (!uiState.isLoading) {
                     item {
+                        val bottomPadding = if (isDescriptionExpanded && chapters.isEmpty()) 40.dp else 8.dp
+
                         BookDescriptionSection(
                             description = book.description,
                             subjects = book.subjects,
-                            modifier = Modifier.padding(horizontal = 24.dp),
+                            modifier = Modifier
+                                .padding(horizontal = 24.dp)
+                                .padding(bottom = bottomPadding),
                             isExpanded = isDescriptionExpanded,
                             onExpandedChange = { bookDetailsViewModel.onToggleDescription() },
                             isGutenberg = isGutenberg

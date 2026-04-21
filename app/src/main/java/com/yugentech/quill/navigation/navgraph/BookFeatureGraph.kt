@@ -12,6 +12,7 @@ import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.reader.ReaderActivity
 import com.yugentech.quill.ui.shared.airaChat.parent.AiraChatScreen
 import com.yugentech.quill.ui.shared.bookDetails.parent.BookDetailsScreen
+import com.yugentech.quill.ui.shared.bookDetails.parent.NotesScreen
 import com.yugentech.theme.tokens.AppConstants.EMPTY
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -35,7 +36,24 @@ fun NavGraphBuilder.bookFeatureGraph(
                 navController.navigate(AppScreen.Aira.route + "/$bookId") {
                     launchSingleTop = true
                 }
+            },
+            onNotesClick = { bookId ->
+                navController.navigate(AppScreen.NotesScreen.route + "/$bookId") {
+                    launchSingleTop = true
+                }
             }
+        )
+    }
+
+    composable(
+        route = AppScreen.NotesScreen.route + "/{bookId}", // 1. Added the placeholder here
+        arguments = listOf(navArgument("bookId") { type = NavType.StringType }) // 2. Declared the argument
+    ) { backStackEntry ->
+        val bookId = backStackEntry.arguments?.getString("bookId") ?: return@composable
+
+        NotesScreen(
+            bookId = bookId,
+            onBackClick = { navController.popBackStack() }
         )
     }
 

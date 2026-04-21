@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Restore
@@ -52,6 +53,7 @@ fun BookDetailsTopBar(
     isFavorite: Boolean,
     onBackClick: () -> Unit,
     onFavoriteClick: () -> Unit,
+    onNotesClick: () -> Unit, // NEW: Added callback for the Notes option
     onResetProgressClick: () -> Unit,
     onDeleteClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior
@@ -136,6 +138,30 @@ fun BookDetailsTopBar(
                         tonalElevation = 8.dp,
                         shadowElevation = 8.dp
                     ) {
+
+                        // NEW: Notes Option Added Here
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = "Notes & Highlights",
+                                    fontWeight = FontWeight.Medium
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = "Notes & Highlights")
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                onNotesClick()
+                            },
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
                         DropdownMenuItem(
                             text = {
                                 Text(

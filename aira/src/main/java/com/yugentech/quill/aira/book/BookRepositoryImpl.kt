@@ -1,6 +1,10 @@
 package com.yugentech.quill.aira.book
 
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.yugentech.quill.aira.rag.BookEmbeddingWorker
 import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.dao.BookIndexingStateDao
@@ -32,5 +36,23 @@ class BookRepositoryImpl(
 
     override suspend fun setSpoilerLock(bookId: String, enabled: Boolean) {
         bookDao.updateSpoilerLock(bookId, enabled)
+    }
+
+    override suspend fun getUnindexedDownloadedBooks(): List<BookEntity> {
+        return bookDao.getUnindexedDownloadedBooks()
+    }
+
+    override suspend fun enqueueIndexing(bookId: String) {
+        val request = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
+            .setInputData(workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId))
+            .addTag("index_$bookId")
+            .addTag("AI_INDEXING")
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "global_book_processing_queue",
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            request
+        )
     }
 }
