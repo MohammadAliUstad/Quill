@@ -1,13 +1,6 @@
 package com.yugentech.quill.reader.ui.components.engine
 
-import android.content.Context
-import android.graphics.Rect
-import android.util.AttributeSet
-import android.view.ActionMode
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
-import android.widget.FrameLayout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -19,10 +12,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
-import com.yugentech.theme.tokens.AppConstants.ASKAIRA
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.readium.r2.navigator.epub.EpubNavigatorFactory
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
@@ -34,86 +26,6 @@ import org.readium.r2.navigator.preferences.FontFamily
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
-import androidx.core.view.size
-import androidx.core.view.get
-import kotlinx.coroutines.delay
-
-private class ReadiumWrapperView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null
-) : FrameLayout(context, attrs) {
-
-    var onAskAira: (String) -> Unit = {}
-    var currentSelectedText: String? = null
-    var isPro: Boolean = false
-
-    val container = FragmentContainerView(context).also { addView(it) }
-
-    override fun startActionModeForChild(
-        originalView: View,
-        callback: ActionMode.Callback,
-        type: Int
-    ): ActionMode? {
-        val wrapped = if (callback is ActionMode.Callback2) {
-            WrappedCallback2(callback, onAskAira, isPro) { currentSelectedText }
-        } else {
-            WrappedCallback(callback, onAskAira, isPro) { currentSelectedText }
-        }
-        return super.startActionModeForChild(originalView, wrapped, type)
-    }
-}
-
-private class WrappedCallback(
-    private val original: ActionMode.Callback,
-    private val onAskAira: (String) -> Unit,
-    private val isPro: Boolean,
-    private val getSelectedText: () -> String?
-) : ActionMode.Callback {
-    override fun onCreateActionMode(mode: ActionMode, menu: Menu) = original.onCreateActionMode(mode, menu)
-
-    override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
-        original.onPrepareActionMode(mode, menu)
-
-        for (i in menu.size - 1 downTo 0) {
-            val title = menu[i].title.toString()
-            if (title.contains("read aloud", true) || title.contains("define", true)) {
-                menu.removeItem(menu[i].itemId)
-            }
-        }
-
-        if (isPro && menu.findItem(ASKAIRA) == null) {
-            menu.add(Menu.NONE, ASKAIRA, Menu.NONE, "Ask Aira")
-                .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
-        }
-        return true
-    }
-
-    override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-        if (item.itemId == ASKAIRA) {
-            onAskAira(getSelectedText() ?: "Processing selection...")
-            mode.finish()
-            return true
-        }
-        return original.onActionItemClicked(mode, item)
-    }
-
-    override fun onDestroyActionMode(mode: ActionMode) = original.onDestroyActionMode(mode)
-}
-
-private class WrappedCallback2(
-    private val original: ActionMode.Callback2,
-    onAskAira: (String) -> Unit,
-    isPro: Boolean,
-    getSelectedText: () -> String?
-) : ActionMode.Callback2() {
-    private val delegate = WrappedCallback(original, onAskAira, isPro, getSelectedText)
-
-    override fun onCreateActionMode(mode: ActionMode, menu: Menu) = delegate.onCreateActionMode(mode, menu)
-    override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = delegate.onPrepareActionMode(mode, menu)
-    override fun onActionItemClicked(mode: ActionMode, item: MenuItem) = delegate.onActionItemClicked(mode, item)
-    override fun onDestroyActionMode(mode: ActionMode) = delegate.onDestroyActionMode(mode)
-    override fun onGetContentRect(mode: ActionMode, view: View, outRect: Rect) = original.onGetContentRect(mode, view, outRect)
-}
 
 @OptIn(ExperimentalReadiumApi::class)
 @Composable
@@ -124,14 +36,18 @@ fun ReadiumFragmentHost(
     preferences: EpubPreferences,
     onTap: () -> Unit,
     isPro: Boolean = false,
+    isAiraReady: Boolean = false,
     onAskAira: (selectedText: String) -> Unit = {},
+    onHighlightRequest: (Locator) -> Unit = {},
     onNavigatorReady: (EpubNavigatorFragment) -> Unit
 ) {
     val context = LocalContext.current
     val currentOnTap by rememberUpdatedState(onTap)
     val currentOnNavigatorReady by rememberUpdatedState(onNavigatorReady)
     val currentOnAskAira by rememberUpdatedState(onAskAira)
+    val currentOnHighlightRequest by rememberUpdatedState(onHighlightRequest)
     val currentIsPro by rememberUpdatedState(isPro)
+    val currentIsAiraReady by rememberUpdatedState(isAiraReady)
 
     AndroidView(
         modifier = Modifier.fillMaxSize(),
@@ -141,6 +57,7 @@ fun ReadiumFragmentHost(
                 clipToPadding = false
                 fitsSystemWindows = false
                 this.isPro = currentIsPro
+                this.isAiraReady = currentIsAiraReady
                 ViewCompat.setOnApplyWindowInsetsListener(this) { _, _ -> WindowInsetsCompat.CONSUMED }
 
                 addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
@@ -159,13 +76,16 @@ fun ReadiumFragmentHost(
                         )
                         removeOnAttachStateChangeListener(this)
                     }
+
                     override fun onViewDetachedFromWindow(v: View) = Unit
                 })
             }
         },
         update = { view ->
             view.onAskAira = currentOnAskAira
+            view.onHighlightRequest = currentOnHighlightRequest
             view.isPro = currentIsPro
+            view.isAiraReady = currentIsAiraReady
         }
     )
 
@@ -178,76 +98,4 @@ fun ReadiumFragmentHost(
             }
         }
     }
-}
-
-@OptIn(ExperimentalReadiumApi::class)
-private fun attachNavigator(
-    activity: FragmentActivity,
-    wrapperView: ReadiumWrapperView,
-    containerId: Int,
-    fragmentTag: String,
-    publication: Publication,
-    initialLocation: Locator?,
-    preferences: EpubPreferences,
-    onTap: () -> Unit,
-    onNavigatorReady: (EpubNavigatorFragment) -> Unit
-) {
-    val fm = activity.supportFragmentManager
-
-    var fragment = fm.findFragmentByTag(fragmentTag) as? EpubNavigatorFragment
-
-    if (fragment == null) {
-        val factory = EpubNavigatorFactory(publication).createFragmentFactory(
-            initialLocator = initialLocation,
-            initialPreferences = preferences,
-            configuration = buildNavigatorConfig()
-        )
-
-        fm.fragmentFactory = factory
-        fragment = fm.fragmentFactory.instantiate(
-            activity.classLoader,
-            EpubNavigatorFragment::class.java.name
-        ) as EpubNavigatorFragment
-
-        fm.commitNow { replace(containerId, fragment, fragmentTag) }
-    }
-
-    fragment.addInputListener(object : InputListener {
-        override fun onTap(event: TapEvent): Boolean {
-            onTap()
-            return true
-        }
-    })
-
-    onNavigatorReady(fragment)
-
-    activity.lifecycleScope.launch {
-        while (true) {
-            val selection = fragment.currentSelection()
-            wrapperView.currentSelectedText = selection?.locator?.text?.highlight
-
-            delay(200)
-        }
-    }
-}
-
-@OptIn(ExperimentalReadiumApi::class)
-private fun buildNavigatorConfig() = EpubNavigatorFragment.Configuration().apply {
-    servedAssets = servedAssets + "font/.*"
-    shouldApplyInsetsPadding = false
-    registerFonts(this)
-}
-
-@OptIn(ExperimentalReadiumApi::class)
-private fun registerFonts(config: EpubNavigatorFragment.Configuration) {
-    fun addFont(family: FontFamily, file: String) {
-        config.addFontFamilyDeclaration(family) {
-            addFontFace { addSource("font/$file", preload = true); setFontStyle(FontStyle.NORMAL) }
-        }
-    }
-
-    addFont(ReaderDefaults.FONT_GOOGLE_SANS, "google_sans_flex.ttf")
-    addFont(ReaderDefaults.FONT_LITERATA, "literata.ttf")
-    addFont(ReaderDefaults.FONT_GOUDY, "goudy.ttf")
-    addFont(ReaderDefaults.FONT_GARAMOND, "eb_garamond.ttf")
 }
