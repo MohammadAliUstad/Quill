@@ -1,6 +1,9 @@
 package com.yugentech.quill.ui.shared.airaChat.parent
 
-import com.yugentech.quill.ui.shared.airaChat.components.StatusBanner
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -35,6 +38,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,16 +47,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import androidx.core.content.ContextCompat
+
+// --- NEW IMPORTS FOR FIREBASE & TTS ---
+import com.google.firebase.Firebase
+import com.google.firebase.functions.functions
+import com.yugentech.quill.aira.aira.util.VoiceOutputManager
+// --------------------------------------
+
+import com.yugentech.quill.aira.aira.util.VoiceInputManager
 import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
 import com.yugentech.quill.ui.shared.airaChat.components.AiraChatHistory
 import com.yugentech.quill.ui.shared.airaChat.components.AiraEmptyState
+import com.yugentech.quill.ui.shared.airaChat.components.AiraResetDialog
 import com.yugentech.quill.ui.shared.airaChat.components.InputBar
 import com.yugentech.quill.ui.shared.airaChat.components.QuotaLimitBar
-import com.yugentech.quill.ui.shared.airaChat.components.AiraResetDialog
+import com.yugentech.quill.ui.shared.airaChat.components.StatusBanner
 import com.yugentech.theme.tokens.AppConstants.EMPTY
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -67,6 +83,62 @@ fun AiraChatScreen(
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     var showResetDialog by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    var isListening by remember { mutableStateOf(false) }
+
+    // --- VOICE INPUT INITIALIZATION ---
+    val voiceInputManager = remember {
+        VoiceInputManager(
+            context = context,
+            onPartialResult = { text -> inputText = text },
+            onFinalResult = { text -> inputText = text },
+            onError = { /* Handle error silently or show toast */ },
+            onStateChange = { listening -> isListening = listening }
+        )
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { voiceInputManager.destroy() }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) voiceInputManager.startListening()
+    }
+
+    val onMicToggle = {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasPermission) {
+            if (isListening) voiceInputManager.stopListening() else voiceInputManager.startListening()
+        } else {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
+    // --- NEW: VOICE OUTPUT (TTS) INITIALIZATION ---
+    val functions = remember { Firebase.functions }
+    val voiceOutputManager = remember { VoiceOutputManager(context, functions) }
+
+    DisposableEffect(Unit) {
+        onDispose { voiceOutputManager.destroy() }
+    }
+
+    // --- NEW: WATCH FOR NEW MESSAGES TO TRIGGER TTS ---
+    LaunchedEffect(uiState.messages, uiState.isStreaming) {
+        val lastMessage = uiState.messages.lastOrNull()
+
+        // Ensure the message exists, is from Aira, and streaming has fully completed
+        if (lastMessage != null && lastMessage.role.name == "AIRA" && !uiState.isStreaming) {
+            voiceOutputManager.speak(lastMessage.content)
+        }
+    }
+    // ----------------------------------------------
 
     if (showResetDialog) {
         AiraResetDialog(
@@ -139,7 +211,6 @@ fun AiraChatScreen(
             val kbFraction = (imeBottom / 300.dp).coerceIn(0f, 1f)
             val bottomClearance = lerp(100.dp, 76.dp, kbFraction)
 
-            // Chat content
             AnimatedContent(
                 targetState = isChatEmpty,
                 transitionSpec = {
@@ -219,13 +290,24 @@ fun AiraChatScreen(
                             onInputChange = { inputText = it },
                             isEnabled = !uiState.isLoading && uiState.isReady,
                             isStreaming = uiState.isStreaming || uiState.isLoading,
+                            isListening = isListening,
+                            // --- NEW: INTERRUPT AUDIO WHEN USER INTERACTS ---
+                            onMicClick = {
+                                voiceOutputManager.stop()
+                                onMicToggle()
+                            },
                             onSend = {
                                 if (inputText.isNotBlank()) {
+                                    if (isListening) voiceInputManager.stopListening()
                                     viewModel.ask(inputText)
                                     inputText = EMPTY
                                 }
                             },
-                            onStop = { viewModel.stopGeneration() }
+                            onStop = {
+                                voiceOutputManager.stop()
+                                viewModel.stopGeneration()
+                            }
+                            // ------------------------------------------------
                         )
                     }
                 } else {

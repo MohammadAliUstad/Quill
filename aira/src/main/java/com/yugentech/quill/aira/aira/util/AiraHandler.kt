@@ -82,7 +82,8 @@ class AiraHandler(
                         AiraMessageEntity(
                             bookId = bookId,
                             role = AiraMessageRole.AIRA,
-                            content = response.text.trim()
+                            content = response.text.trim(),
+                            sources = response.sources
                         )
                     )
                 }
