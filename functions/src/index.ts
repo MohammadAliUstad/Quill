@@ -172,7 +172,8 @@ export const airaTts = onCall(
       throw new HttpsError("unauthenticated", "Login required");
     }
 
-    const { text, accentCode } = request.data;
+    // Removed accentCode from here
+    const { text } = request.data;
 
     if (!text || typeof text !== "string") {
       throw new HttpsError("invalid-argument", "Text is required");
@@ -182,18 +183,16 @@ export const airaTts = onCall(
       throw new HttpsError("invalid-argument", "Text too long. Maximum 5000 characters.");
     }
 
-    const languageCode = accentCode ?? "en-US";
+    // Removed the unused languageCode variable entirely
 
     const [response] = await ttsClient.synthesizeSpeech({
       input: { text },
       voice: {
-        languageCode,
-        name: `${languageCode}-Wavenet-F`,
+        languageCode: "en-US",
+        name: "en-US-Studio-O",
       },
       audioConfig: {
         audioEncoding: "MP3",
-        speakingRate: 0.95,
-        pitch: 0.0,
       },
     });
 

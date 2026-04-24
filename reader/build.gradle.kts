@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.yugentech.quill.reader"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 26
@@ -51,6 +51,7 @@ dependencies {
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.firebase.functions.ktx)
     implementation(libs.readium.shared)
     implementation(libs.readium.streamer)
     implementation(libs.readium.navigator)

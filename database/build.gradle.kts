@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.yugentech.quill.database"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 26

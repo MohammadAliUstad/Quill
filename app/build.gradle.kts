@@ -22,15 +22,15 @@ if (localPropertiesFile.exists()) {
 
 android {
     namespace = "com.yugentech.quill"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.yugentech.quill"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
 
-        versionCode = 10
-        versionName = "3.1.0"
+        versionCode = 11
+        versionName = "3.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val webClientId = localProperties.getProperty("WEB_CLIENT_ID") ?: ""
