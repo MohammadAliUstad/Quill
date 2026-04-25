@@ -41,7 +41,8 @@ class AiraChatRepositoryImpl(
                         AiraMessageRole.AIRA -> AiraMessage.Role.AIRA
                     },
                     content = entity.content,
-                    timestamp = entity.timestamp
+                    timestamp = entity.timestamp,
+                    sources = entity.sources
                 )
             }
         }

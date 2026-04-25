@@ -25,7 +25,8 @@ fun AiraChatHistory(
     uiState: AiraUiState,
     listState: LazyListState,
     bottomPadding: Dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSpeakClick: (String) -> Unit = {} // <-- ADDED: Accept callback
 ) {
     var isVisuallyTyping by remember { mutableStateOf(false) }
 
@@ -46,7 +47,7 @@ fun AiraChatHistory(
                 start = 16.dp,
                 end = 16.dp,
                 top = 100.dp,
-                bottom = bottomPadding
+                bottom = bottomPadding + 8.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -67,13 +68,15 @@ fun AiraChatHistory(
                             text = message.content,
                             isFromAira = isAira,
                             isNew = isLiveGeneration,
-                            stableKey = "${uiState.messages.size - index}_${message.role}"
+                            stableKey = "${uiState.messages.size - index}_${message.role}",
+                            sources = message.sources
                         ),
                         onTypingStateChange = { isTyping ->
                             if (index == 0 && isAira) {
                                 isVisuallyTyping = isTyping
                             }
-                        }
+                        },
+                        onSpeakClick = onSpeakClick // <-- ADDED: Pass callback down
                     )
                 }
             }
