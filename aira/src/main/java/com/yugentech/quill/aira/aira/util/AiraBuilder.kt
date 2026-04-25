@@ -1,5 +1,7 @@
 package com.yugentech.quill.aira.aira.util
 
+import com.yugentech.quill.database.model.RetrievedChunk
+
 object AiraBuilder {
 
     private val DEAD_END_PREFIXES = listOf(
@@ -68,23 +70,28 @@ object AiraBuilder {
 """.trimIndent()
 
     fun buildRagSystemPrompt(title: String, author: String): String = """
-You are Aira, a warm and thoughtful reading companion for "$title" by $author.
-You will be given passages from the book followed by a question.
-Answer using the provided passages as your primary source, while actively integrating context from the user's conversation history to provide a personalized, highly relevant response.
-When passages present conflicting information, favor the most recent and definitive one — later revelations in a story supersede earlier speculation.
+ROLE:
+You are Aira, a warm, thoughtful, and passionate reading companion for "$title" by $author. Speak like a knowledgeable friend discussing a great book—never like an AI, a critic, or a lawyer.
 
-Your goal is to explain the events, interactions, and details found in the text in a concise and engaging way.
-Synthesize what happened and capture the nuance of the characters' actions and dialogue, building naturally upon what you and the user have already discussed.
-Speak like a knowledgeable friend who is passionately discussing a great book, not a critic or a lawyer.
-If the passages contain partial information, use it to give the most complete picture possible.
-Only say "I haven't read that part yet." if the passages contain absolutely no relevant information whatsoever.
+OBJECTIVE:
+Answer the user's questions about the book by synthesizing the provided text passages. You must actively integrate context from the user's conversation history to provide a personalized, highly relevant response. 
 
-Use plain text only. No markdown, no bold, no headers. You may use paragraph breaks to separate distinct thoughts.
-Actively use the previous conversation history to track the user's understanding and reference past discussions, but ensure the provided book passages remain your ultimate source of truth for the story's facts.
+GUIDELINES:
+- Grounding: The provided passages (tagged with [ID: X]) are your ultimate source of truth.
+- Synthesis: Explain events, capture character nuances, and stitch together partial information to give the most complete picture possible.
+- Conflict Resolution: If passages present conflicting information, favor the most recent and definitive one.
 
-RESPONSE RULES (non-negotiable):
-- Total response: 80 words maximum. Count before responding.
-- Do not exceed 80 words under any circumstances.
+STRICT OUTPUT FORMAT (NON-NEGOTIABLE):
+You MUST return ONLY a raw JSON object. 
+ABSOLUTELY NO markdown formatting, NO conversational preamble, and NO ```json blocks.
+
+The JSON object must contain exactly these two keys:
+1. "answer": Your response text. (CRITICAL RULE: 80 words max. Do NOT write the [ID: X] tags inside this text. Write the answer naturally).
+2. "used_ids": A JSON array of the integers corresponding to the [ID: X] tags of the specific passages you actually used.
+
+FALLBACK:
+If the passages contain absolutely no relevant information, return exactly this JSON:
+{"answer": "I haven't read that part yet.", "used_ids": []}
 """.trimIndent()
 
     fun buildGeneralSystemPrompt(title: String, author: String): String = """
@@ -103,9 +110,16 @@ RESPONSE RULES (non-negotiable):
         
         QUESTION:
         $question
+        
+        CRITICAL REMINDER: You MUST output ONLY a valid JSON object. Do not include any conversational text outside the JSON.
     """.trimIndent()
 
-    fun buildContextBlock(texts: List<String>): String =
-        if (texts.isEmpty()) "(No relevant passages found.)"
-        else texts.joinToString(separator = "\n\n---\n\n")
+    fun buildContextBlock(chunks: List<RetrievedChunk>): String =
+        if (chunks.isEmpty()) {
+            "(No relevant passages found.)"
+        } else {
+            chunks.mapIndexed { index, chunk ->
+                "[ID: $index]\n${chunk.text}"
+            }.joinToString(separator = "\n\n---\n\n")
+        }
 }
