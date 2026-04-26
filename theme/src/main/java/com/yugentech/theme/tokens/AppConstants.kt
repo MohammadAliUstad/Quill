@@ -4,6 +4,7 @@ object AppConstants {
     private const val APP_PACKAGE_NAME = "com.yugentech.quill"
     const val EMPTY = ""
     const val ASKAIRA = 1001
+    const val HIGHLIGHT = 999
     const val FIVE = 5000L
     const val SHELF = "Shelf"
     const val FAVOURITES = "Favourites"
