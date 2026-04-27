@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.dp
 import com.yugentech.quill.ui.config.appearance.components.AmoledThemeSelector
 import com.yugentech.quill.ui.config.appearance.components.FontSelector
 import com.yugentech.quill.ui.config.appearance.components.ThemeColorSelector
@@ -72,7 +73,7 @@ fun AppearanceScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = paddingValues.calculateTopPadding(),
-                bottom = paddingValues.calculateBottomPadding(),
+                bottom = paddingValues.calculateBottomPadding()+ 8.dp,
                 start = MaterialTheme.spacing.m,
                 end = MaterialTheme.spacing.m
             ),
