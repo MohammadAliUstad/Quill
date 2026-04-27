@@ -48,7 +48,8 @@ fun PeekResponseArea(
     showLimitReached: Boolean,
     selectedText: String? = null,
     activeChips: List<Pair<String, QuickPrompt>> = emptyList(),
-    onChipClick: (QuickPrompt) -> Unit = {}
+    onChipClick: (QuickPrompt) -> Unit = {},
+    onGreetingSelected: (String) -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -168,6 +169,10 @@ fun PeekResponseArea(
 
             else -> {
                 val greeting = remember { idleMessages.random() }
+
+                LaunchedEffect(greeting) {
+                    onGreetingSelected(greeting)
+                }
 
                 Column(modifier = Modifier.padding(vertical = 16.dp)) {
                     Spacer(Modifier.height(4.dp))

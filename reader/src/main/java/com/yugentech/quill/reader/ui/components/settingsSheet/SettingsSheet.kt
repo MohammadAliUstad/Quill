@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -378,9 +379,11 @@ fun SettingsSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .graphicsLayer { alpha = nonSliderAlpha },
-                        horizontalAlignment = Alignment.End
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Button(onClick = { showResetDialog = true }) {
+                        Button(
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            onClick = { showResetDialog = true }) {
                             Text("Reset to Defaults")
                         }
                     }
