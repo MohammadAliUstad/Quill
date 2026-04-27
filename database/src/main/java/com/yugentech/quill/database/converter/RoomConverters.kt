@@ -4,6 +4,7 @@ import androidx.room.TypeConverter
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.quill.database.model.RetrievedChunk
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -74,5 +75,19 @@ class RoomConverters {
         val floats = FloatArray(value.size / Float.SIZE_BYTES)
         buffer.asFloatBuffer().get(floats)
         return floats
+    }
+
+    @TypeConverter
+    fun fromRetrievedChunkList(value: List<RetrievedChunk>): String {
+        return AppJson.encodeToString(value)
+    }
+
+    @TypeConverter
+    fun toRetrievedChunkList(value: String): List<RetrievedChunk> {
+        return try {
+            AppJson.decodeFromString(value)
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 }

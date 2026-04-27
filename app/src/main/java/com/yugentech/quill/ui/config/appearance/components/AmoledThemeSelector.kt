@@ -31,13 +31,12 @@ import com.yugentech.theme.models.ThemeMode
 import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AmoledThemeSelector(
     modifier: Modifier = Modifier,
-    viewModel: ThemeViewModel = koinViewModel()
+    viewModel: ThemeViewModel
 ) {
     val themeConfig by viewModel.themeConfiguration.collectAsStateWithLifecycle()
     val isSystemDark = isSystemInDarkTheme()

@@ -4,7 +4,6 @@ import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.tasks.await
 import org.json.JSONArray
 import org.json.JSONObject
-import timber.log.Timber
 
 enum class QueryIntent {
     CHARACTER_INFO,
@@ -13,21 +12,23 @@ enum class QueryIntent {
     QUOTE_LOOKUP,
     GENERAL;
 
-    val topPassages: Int get() = when (this) {
-        CHARACTER_INFO -> 5
-        RELATIONSHIP -> 5
-        PLOT_EVENT -> 4
-        QUOTE_LOOKUP -> 3
-        GENERAL -> 4
-    }
+    val topPassages: Int
+        get() = when (this) {
+            CHARACTER_INFO -> 5
+            RELATIONSHIP -> 5
+            PLOT_EVENT -> 4
+            QUOTE_LOOKUP -> 3
+            GENERAL -> 4
+        }
 
-    val candidatesPerQuery: Int get() = when (this) {
-        CHARACTER_INFO -> 40
-        RELATIONSHIP -> 80
-        PLOT_EVENT -> 30
-        QUOTE_LOOKUP -> 20
-        GENERAL -> 30
-    }
+    val candidatesPerQuery: Int
+        get() = when (this) {
+            CHARACTER_INFO -> 40
+            RELATIONSHIP -> 80
+            PLOT_EVENT -> 30
+            QUOTE_LOOKUP -> 20
+            GENERAL -> 30
+        }
 }
 
 sealed class QueryRoute {
@@ -37,6 +38,7 @@ sealed class QueryRoute {
         val keywords: List<String>,
         val intent: QueryIntent
     ) : QueryRoute()
+
     object NoRagRequired : QueryRoute()
 }
 
@@ -57,7 +59,6 @@ class QueryRouter(
             val raw = (result.getData() as? Map<*, *>)?.get("response") as? String
                 ?: return fallback(question)
 
-            Timber.d("[AiraRouter] Raw JSON: $raw")
 
             val cleaned = raw
                 .replace("```json", "")
@@ -73,8 +74,6 @@ class QueryRouter(
                 val keywords = parseStringArray(json.optJSONArray("keywords"))
                 val intent = parseIntent(json.optString("queryIntent", "general"))
 
-                Timber.d("[AiraRouter] Entities: $entities | Keywords: $keywords | Intent: $intent")
-
                 if (variations.isEmpty()) return fallback(question)
 
                 QueryRoute.RagRequired(
@@ -88,7 +87,6 @@ class QueryRouter(
             }
 
         } catch (e: Exception) {
-            Timber.w(e, "[AiraRouter] Falling back to RAG with original question")
             fallback(question)
         }
     }
