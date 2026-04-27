@@ -15,12 +15,10 @@ class ReadiumWrapperView @JvmOverloads constructor(
 
     var onAskAira: (String) -> Unit = {}
     var onHighlightRequest: (Locator) -> Unit = {}
-
     var currentSelectedText: String? = null
     var currentSelectionLocator: Locator? = null
     var isPro: Boolean = false
     var isAiraReady: Boolean = false
-
     val container = FragmentContainerView(context).also { addView(it) }
 
     override fun startActionModeForChild(
@@ -33,8 +31,8 @@ class ReadiumWrapperView @JvmOverloads constructor(
                 callback,
                 onAskAira,
                 onHighlightRequest,
-                { isPro },
-                { isAiraReady },
+                isPro,
+                isAiraReady,
                 { currentSelectedText },
                 { currentSelectionLocator }
             )
@@ -43,8 +41,8 @@ class ReadiumWrapperView @JvmOverloads constructor(
                 callback,
                 onAskAira,
                 onHighlightRequest,
-                { isPro },
-                { isAiraReady },
+                isPro,
+                isAiraReady,
                 { currentSelectedText },
                 { currentSelectionLocator }
             )
