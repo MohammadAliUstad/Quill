@@ -26,7 +26,6 @@ import com.yugentech.quill.aira.quick.state.QuickUiState
 import com.yugentech.quill.reader.ui.components.aira.AiraPeekBar
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.ReaderBottomControls
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.button.AskAiraButton
-import com.yugentech.quill.reader.ui.components.overlay.components.brightnessSlider.BrightnessSlider
 import com.yugentech.quill.reader.ui.components.overlay.components.topBar.ReaderTopBar
 import kotlin.math.roundToInt
 
@@ -70,13 +69,6 @@ fun ReaderMenuOverlay(
                 onSettingsClick = { onAction(ReaderAction.OnSettingsClick) }
             )
         }
-
-        BrightnessSlider(
-            isVisible = isVisible && !showAiraPeek,
-            onDragStart = { onAction(ReaderAction.OnBrightnessInteraction(true)) },
-            onDragEnd = { onAction(ReaderAction.OnBrightnessInteraction(false)) },
-            modifier = Modifier.align(Alignment.CenterEnd)
-        )
 
         AiraPeekBar(
             isVisible = showAiraPeek,

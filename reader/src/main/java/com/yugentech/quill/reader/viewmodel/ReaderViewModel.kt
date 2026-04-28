@@ -3,6 +3,7 @@ package com.yugentech.quill.reader.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.yugentech.quill.database.entity.HighlightEntity
 import com.yugentech.quill.reader.pref.repository.ReaderPrefRepository
 import com.yugentech.quill.reader.repository.ReaderRepository
 import com.yugentech.quill.reader.session.ReadingSessionRepository
@@ -31,6 +32,7 @@ import org.readium.r2.shared.util.http.DefaultHttpClient
 import org.readium.r2.streamer.PublicationOpener
 import org.readium.r2.streamer.parser.DefaultPublicationParser
 import java.io.File
+import java.util.UUID
 
 class ReaderViewModel(
     application: Application,
@@ -42,6 +44,9 @@ class ReaderViewModel(
     private val _uiState = MutableStateFlow<ReaderUiState>(ReaderUiState.Idle)
     val uiState = _uiState.asStateFlow()
 
+    private val _highlights = MutableStateFlow<List<HighlightEntity>>(emptyList())
+    val highlights = _highlights.asStateFlow()
+
     val readerPreferences = preferencesRepository.readerPreferences.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -50,11 +55,12 @@ class ReaderViewModel(
 
     private var publication: Publication? = null
     private var saveJob: Job? = null
+    private var highlightsJob: Job? = null
     private var tocMap: Map<String, String> = emptyMap()
 
     private var sessionStartTime: Long = 0L
 
-    fun loadBook(bookId: String, initialHref: String?) {
+    fun loadBook(bookId: String, initialHref: String?, locatorJson: String? = null) {
         viewModelScope.launch {
             _uiState.value = ReaderUiState.Idle
 
@@ -87,6 +93,14 @@ class ReaderViewModel(
                     val positions = pub.positions()
                     tocMap = flattenToc(pub.tableOfContents)
 
+                    val targetLocator = locatorJson?.let { jsonStr ->
+                        try {
+                            Locator.fromJSON(JSONObject(jsonStr))
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
+
                     val explicitLocator = initialHref?.let { href ->
                         Url.Companion(href)?.let { url ->
                             pub.linkWithHref(url)?.let { link ->
@@ -103,7 +117,7 @@ class ReaderViewModel(
                         }
                     }
 
-                    val finalLocator = explicitLocator ?: savedLocator
+                    val finalLocator = targetLocator ?: explicitLocator ?: savedLocator
 
                     sessionStartTime = System.currentTimeMillis()
 
@@ -115,10 +129,44 @@ class ReaderViewModel(
                         initialLocator = finalLocator
                     )
 
+                    observeHighlights(bookId)
+
                 } catch (e: Exception) {
                     _uiState.value = ReaderUiState.Error(e.message ?: "Failed to open book")
                 }
             }
+        }
+    }
+
+    private fun observeHighlights(bookId: String) {
+        highlightsJob?.cancel()
+        highlightsJob = viewModelScope.launch {
+            readerRepository.getHighlights(bookId).collect { highlightList ->
+                _highlights.value = highlightList
+            }
+        }
+    }
+
+    fun addHighlight(
+        bookId: String,
+        locatorJson: String,
+        colorInt: Int,
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val newEntity = HighlightEntity(
+                id = UUID.randomUUID().toString(),
+                bookId = bookId,
+                locatorJson = locatorJson,
+                colorInt = colorInt,
+                createdAt = System.currentTimeMillis()
+            )
+            readerRepository.saveHighlight(newEntity)
+        }
+    }
+
+    fun deleteHighlight(highlightId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            readerRepository.deleteHighlight(highlightId)
         }
     }
 

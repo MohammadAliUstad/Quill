@@ -4,11 +4,18 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,8 +27,11 @@ import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderMenuOverlay
 import com.yugentech.quill.reader.ui.components.settingsSheet.SettingsSheet
 import com.yugentech.quill.reader.ui.components.tocSheet.TocSheet
 import com.yugentech.quill.reader.viewmodel.ReaderUiState
+import com.yugentech.quill.reader.viewmodel.ReaderViewModel
 import kotlinx.coroutines.delay
+import org.json.JSONObject
 import org.koin.androidx.compose.koinViewModel
+import org.readium.r2.navigator.Decoration
 import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.publication.Locator
@@ -29,6 +39,7 @@ import org.readium.r2.shared.publication.Locator
 @OptIn(ExperimentalReadiumApi::class)
 @Composable
 fun ReaderScreen(
+    viewModel: ReaderViewModel,
     uiState: ReaderUiState,
     onBackClick: () -> Unit,
     preferences: EpubPreferences,
@@ -45,6 +56,7 @@ fun ReaderScreen(
         }
 
         is ReaderUiState.Success -> ReaderSuccess(
+            viewModel = viewModel,
             state = uiState,
             onBackClick = onBackClick,
             preferences = preferences,
@@ -55,9 +67,10 @@ fun ReaderScreen(
     }
 }
 
-@OptIn(ExperimentalReadiumApi::class)
+@OptIn(ExperimentalReadiumApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun ReaderSuccess(
+    viewModel: ReaderViewModel,
     state: ReaderUiState.Success,
     onBackClick: () -> Unit,
     preferences: EpubPreferences,
@@ -68,6 +81,7 @@ private fun ReaderSuccess(
     val quickViewModel: QuickViewModel = koinViewModel()
     val airaUiState by quickViewModel.uiState.collectAsState()
     val isPro = airaUiState.isPro
+    val isReady = airaUiState.isReady
 
     val screenState = rememberReaderScreenState(
         publication = state.publication,
@@ -75,6 +89,29 @@ private fun ReaderSuccess(
         totalPages = state.totalPages,
         initialLocator = state.initialLocator
     )
+
+    val dbHighlights by viewModel.highlights.collectAsState()
+
+    val activeDecorations = remember(dbHighlights) {
+        dbHighlights.mapNotNull { entity ->
+            try {
+                Locator.fromJSON(JSONObject(entity.locatorJson))?.let { locator ->
+                    Decoration(
+                        id = entity.id,
+                        locator = locator,
+                        style = Decoration.Style.Highlight(tint = entity.colorInt)
+                    )
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    var pendingHighlightLocator by remember { mutableStateOf<Locator?>(null) }
+    val sheetState = rememberModalBottomSheetState()
+
+    var highlightToDelete by remember { mutableStateOf<Decoration?>(null) }
 
     LaunchedEffect(state.bookId) {
         quickViewModel.observeIndexingStatus(state.bookId)
@@ -112,18 +149,25 @@ private fun ReaderSuccess(
         ReadiumEngine(
             publication = state.publication,
             bookId = state.bookId,
-            isPro = isPro,
             initialLocation = state.initialLocator,
             targetJumpHref = screenState.targetJumpHref,
             targetSeekProgress = screenState.pendingSeekProgress,
             targetLocator = screenState.targetLocator,
             allPositions = state.allPositions,
             preferences = preferences,
-            isAiraReady = airaUiState.isReady,
+            isPro = isPro,
+            isAiraReady = isReady,
+            decorations = activeDecorations,
             onTap = { screenState.toggleMenu() },
             onAskAira = { text ->
                 screenState.showAira(text)
                 quickViewModel.clearResponse()
+            },
+            onSelectionAction = { locator ->
+                pendingHighlightLocator = locator
+            },
+            onDecorationTapped = { tappedDecoration ->
+                highlightToDelete = tappedDecoration
             },
             onJumpComplete = { screenState.targetJumpHref = null },
             onSeekComplete = { screenState.pendingSeekProgress = null },
@@ -135,8 +179,8 @@ private fun ReaderSuccess(
         )
 
         ReaderMenuOverlay(
-            isVisible = screenState.isMenuVisible || screenState.showAiraPeek,
             isPro = isPro,
+            isVisible = screenState.isMenuVisible || screenState.showAiraPeek,
             showBottomControls = !screenState.showAiraPeek,
             showAiraPeek = screenState.showAiraPeek,
             readerOverlayState = screenState.overlayState,
@@ -148,26 +192,89 @@ private fun ReaderSuccess(
                         screenState.isMenuVisible = false
                         screenState.showSettingsSheet = true
                     }
+
                     is ReaderAction.OnTocClick -> {
                         screenState.isMenuVisible = false
                         screenState.showTocSheet = true
                     }
+
                     is ReaderAction.OnSeek -> {
                         screenState.isExplicitJump = true
                         screenState.pendingSeekProgress = action.progress.toDouble()
                     }
+
                     is ReaderAction.OnScrubStart -> screenState.isScrubbing = true
                     is ReaderAction.OnScrubEnd -> screenState.isScrubbing = false
-                    is ReaderAction.OnBrightnessInteraction -> screenState.isBrightnessInteracting = action.isInteracting
+                    is ReaderAction.OnBrightnessInteraction -> screenState.isBrightnessInteracting =
+                        action.isInteracting
+
                     is ReaderAction.OnAskAiraClick -> screenState.showAira(null)
                     is ReaderAction.OnAiraDismiss -> {
                         screenState.dismissAira()
                         quickViewModel.clearResponse()
                     }
+
                     is ReaderAction.OnAiraSend -> quickViewModel.ask(state.bookId, action.question)
-                    is ReaderAction.OnQuickAction -> quickViewModel.handleQuickPrompt(state.bookId, action.prompt)
+                    is ReaderAction.OnQuickAction -> quickViewModel.handleQuickPrompt(
+                        state.bookId,
+                        action.prompt
+                    )
+
                     is ReaderAction.OnStopGeneration -> quickViewModel.stopGeneration()
                     is ReaderAction.OnClearSelection -> screenState.selectedText = null
+                }
+            }
+        )
+    }
+
+    if (pendingHighlightLocator != null) {
+        HighlightSheet(
+            sheetState = sheetState,
+            onDismiss = { pendingHighlightLocator = null },
+            onSave = { colorInt ->
+                val locator = pendingHighlightLocator!!
+
+                viewModel.addHighlight(
+                    bookId = state.bookId,
+                    locatorJson = locator.toJSON().toString(),
+                    colorInt = colorInt
+                )
+
+                pendingHighlightLocator = null
+            }
+        )
+    }
+
+    if (highlightToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { highlightToDelete = null },
+            title = {
+                Text(
+                    text = "Delete Annotation",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to remove this annotation? This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        viewModel.deleteHighlight(highlightToDelete!!.id)
+                        highlightToDelete = null
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = { highlightToDelete = null }
+                ) {
+                    Text("Cancel")
                 }
             }
         )

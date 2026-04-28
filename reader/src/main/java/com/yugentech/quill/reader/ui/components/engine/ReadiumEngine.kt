@@ -16,6 +16,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import org.readium.r2.navigator.DecorableNavigator
+import org.readium.r2.navigator.Decoration
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.shared.ExperimentalReadiumApi
@@ -23,6 +25,13 @@ import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
 import org.readium.r2.shared.util.Url
 import kotlin.math.roundToInt
+
+private fun Color.toCssRgba(): String {
+    val r = (red * 255).roundToInt()
+    val g = (green * 255).roundToInt()
+    val b = (blue * 255).roundToInt()
+    return "rgba($r, $g, $b, $alpha)"
+}
 
 @OptIn(ExperimentalReadiumApi::class)
 @Composable
@@ -37,8 +46,11 @@ fun ReadiumEngine(
     allPositions: List<Locator>,
     preferences: EpubPreferences,
     isAiraReady: Boolean = false,
+    decorations: List<Decoration> = emptyList(),
     onTap: () -> Unit,
     onAskAira: (String) -> Unit = {},
+    onSelectionAction: (Locator) -> Unit = {},
+    onDecorationTapped: (Decoration) -> Unit = {},
     onJumpComplete: () -> Unit,
     onSeekComplete: () -> Unit,
     onTargetLocatorComplete: () -> Unit = {},
@@ -59,18 +71,36 @@ fun ReadiumEngine(
             initialLocation = initialLocation,
             preferences = preferences,
             isPro = isPro,
+            isAiraReady = isAiraReady,
             onTap = onTap,
             onAskAira = onAskAira,
+            onHighlightRequest = { locator ->
+                onSelectionAction(locator)
+            },
             onNavigatorReady = { nav ->
                 navigator = nav
+
+                (nav as? DecorableNavigator)?.addDecorationListener(
+                    "user_highlights",
+                    object : DecorableNavigator.Listener {
+                        override fun onDecorationActivated(event: DecorableNavigator.OnActivatedEvent): Boolean {
+                            onDecorationTapped(event.decoration)
+                            return true
+                        }
+                    }
+                )
             }
         )
+    }
+
+    LaunchedEffect(decorations, navigator) {
+        val decorableNav = navigator as? DecorableNavigator
+        decorableNav?.applyDecorations(decorations, "user_highlights")
     }
 
     LaunchedEffect(targetLocator, navigator) {
         val nav = navigator ?: return@LaunchedEffect
         targetLocator?.let { loc ->
-
             val smoothScrollJs = """
                 (function() {
                     document.documentElement.style.scrollBehavior = 'smooth';
@@ -81,9 +111,7 @@ fun ReadiumEngine(
             try { nav.evaluateJavascript(smoothScrollJs) } catch (e: Exception) {}
 
             delay(50)
-
             nav.go(loc, animated = false)
-
             delay(400)
 
             val resetJs = """
@@ -100,7 +128,7 @@ fun ReadiumEngine(
     }
 
     LaunchedEffect(preferences, navigator) {
-        navigator?.submitPreferences(preferences)
+        navigator?.submitPreferences(preferences.copy(scroll = true))
     }
 
     LaunchedEffect(targetJumpHref, navigator) {
@@ -132,18 +160,24 @@ fun ReadiumEngine(
     LaunchedEffect(navigator, cssColorString) {
         val nav = navigator ?: return@LaunchedEffect
 
-        suspend fun injectSelectionColor() {
+        suspend fun injectSelectionStyles() {
             val js = """
                 (function() {
-                    var id = 'quill-selection-fix';
+                    var id = 'quill-selection-style';
                     var existing = document.getElementById(id);
                     if (existing) existing.remove();
                     var s = document.createElement('style');
                     s.id = id;
-                    s.textContent = '::selection { background-color: $cssColorString !important; color: inherit !important; }';
+                    s.textContent = `
+                        ::selection { 
+                            background-color: $cssColorString !important; 
+                            color: inherit !important; 
+                        }
+                    `;
                     document.head.appendChild(s);
                 })();
-            """
+            """.trimIndent()
+
             try {
                 nav.evaluateJavascript(js)
             } catch (e: Exception) {
@@ -151,20 +185,13 @@ fun ReadiumEngine(
             }
         }
 
-        injectSelectionColor()
+        injectSelectionStyles()
 
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             nav.currentLocator.collectLatest { locator ->
-                injectSelectionColor()
+                injectSelectionStyles()
                 onLocatorChange(locator)
             }
         }
     }
-}
-
-private fun Color.toCssRgba(): String {
-    val r = (red * 255).roundToInt()
-    val g = (green * 255).roundToInt()
-    val b = (blue * 255).roundToInt()
-    return "rgba($r, $g, $b, $alpha)"
 }

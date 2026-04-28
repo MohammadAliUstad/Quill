@@ -12,17 +12,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.fragment.app.commitNow
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import org.readium.r2.navigator.epub.EpubNavigatorFactory
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.epub.EpubPreferences
-import org.readium.r2.navigator.epub.css.FontStyle
-import org.readium.r2.navigator.input.InputListener
-import org.readium.r2.navigator.input.TapEvent
-import org.readium.r2.navigator.preferences.FontFamily
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
@@ -41,6 +32,7 @@ fun ReadiumFragmentHost(
     onHighlightRequest: (Locator) -> Unit = {},
     onNavigatorReady: (EpubNavigatorFragment) -> Unit
 ) {
+
     val context = LocalContext.current
     val currentOnTap by rememberUpdatedState(onTap)
     val currentOnNavigatorReady by rememberUpdatedState(onNavigatorReady)
@@ -58,6 +50,7 @@ fun ReadiumFragmentHost(
                 fitsSystemWindows = false
                 this.isPro = currentIsPro
                 this.isAiraReady = currentIsAiraReady
+
                 ViewCompat.setOnApplyWindowInsetsListener(this) { _, _ -> WindowInsetsCompat.CONSUMED }
 
                 addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
@@ -82,10 +75,10 @@ fun ReadiumFragmentHost(
             }
         },
         update = { view ->
-            view.onAskAira = currentOnAskAira
-            view.onHighlightRequest = currentOnHighlightRequest
             view.isPro = currentIsPro
             view.isAiraReady = currentIsAiraReady
+            view.onAskAira = currentOnAskAira
+            view.onHighlightRequest = currentOnHighlightRequest
         }
     )
 
