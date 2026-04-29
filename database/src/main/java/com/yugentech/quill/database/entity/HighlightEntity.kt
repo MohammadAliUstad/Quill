@@ -24,6 +24,5 @@ data class HighlightEntity(
     val locatorJson: String,
     val colorInt: Int,
     val note: String? = null,
-    val style: String = "HIGHLIGHT",
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -1,5 +1,6 @@
 package com.yugentech.quill.reader.repository
 
+import com.yugentech.quill.database.entity.HighlightEntity
 import kotlinx.coroutines.flow.Flow
 
 interface ReaderRepository {
@@ -11,6 +12,9 @@ interface ReaderRepository {
         chapterIndex: Int,
         locatorJson: String?
     )
+    fun getHighlights(bookId: String): Flow<List<HighlightEntity>>
+    suspend fun saveHighlight(highlight: HighlightEntity)
+    suspend fun deleteHighlight(highlightId: String)
 }
 
 data class ReaderBookData(
