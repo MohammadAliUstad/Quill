@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.model
+package com.yugentech.quill.reader.ui.components.engine
 
 import org.json.JSONObject
 import org.readium.r2.shared.publication.Locator
@@ -8,8 +8,7 @@ data class HighlightRecord(
     val bookId: String,
     val locatorJson: String,
     val colorInt: Int,
-    val note: String? = null,
-    val style: String = "HIGHLIGHT"
+    val note: String? = null
 ) {
     fun getLocator(): Locator? {
         return try {

@@ -1,11 +1,14 @@
 package com.yugentech.quill.reader.repository
 
 import com.yugentech.quill.database.dao.BookDao
+import com.yugentech.quill.database.dao.HighlightDao
+import com.yugentech.quill.database.entity.HighlightEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class ReaderRepositoryImpl(
-    private val bookDao: BookDao
+    private val bookDao: BookDao,
+    private val highlightDao: HighlightDao
 ) : ReaderRepository {
 
     override fun getBook(bookId: String): Flow<ReaderBookData?> =
@@ -34,5 +37,17 @@ class ReaderRepositoryImpl(
             locatorJson = locatorJson,
             readTime = System.currentTimeMillis()
         )
+    }
+
+    override fun getHighlights(bookId: String): Flow<List<HighlightEntity>> {
+        return highlightDao.getHighlightsForBookFlow(bookId)
+    }
+
+    override suspend fun saveHighlight(highlight: HighlightEntity) {
+        highlightDao.insertHighlight(highlight)
+    }
+
+    override suspend fun deleteHighlight(highlightId: String) {
+        highlightDao.deleteHighlight(highlightId)
     }
 }
