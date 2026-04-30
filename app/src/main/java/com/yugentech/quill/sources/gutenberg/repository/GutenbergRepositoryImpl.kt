@@ -24,9 +24,8 @@ class GutenbergRepositoryImpl(
         }
     }
 
-    override suspend fun syncPopularFeed(): Result<String?> = runCatching {
+    override suspend fun syncPopularFeed(): Result<String?> = try {
         val json = apiService.getPopularBooks(page = 1)
-
         val result = GutenbergMapper.parseFeed(json)
 
         if (result.books.isNotEmpty()) {
@@ -36,16 +35,24 @@ class GutenbergRepositoryImpl(
             catalogDao.deleteStaleBooks(FEED_KEY, newIds.toList())
         }
 
-        result.nextPageUrl
-    }.also { if (it.isFailure) Timber.e(it.exceptionOrNull(), "Gutenberg feed sync failed") }
+        Result.success(result.nextPageUrl)
+    } catch (e: Exception) {
+        if (e is kotlinx.coroutines.CancellationException) throw e
+        Timber.e(e, "Gutenberg feed sync failed")
+        Result.failure(e)
+    }
 
-    override suspend fun getNextPage(nextUrl: String): Result<GutenbergFeedResult> =
-        runCatching {
-            GutenbergMapper.parseFeed(apiService.getNextPage(nextUrl))
-        }
+    override suspend fun getNextPage(nextUrl: String): Result<GutenbergFeedResult> = try {
+        Result.success(GutenbergMapper.parseFeed(apiService.getNextPage(nextUrl)))
+    } catch (e: Exception) {
+        if (e is kotlinx.coroutines.CancellationException) throw e
+        Result.failure(e)
+    }
 
-    override suspend fun searchBooks(query: String, page: Int): Result<GutenbergFeedResult> =
-        runCatching {
-            GutenbergMapper.parseFeed(apiService.searchBooks(query, page))
-        }
+    override suspend fun searchBooks(query: String, page: Int): Result<GutenbergFeedResult> = try {
+        Result.success(GutenbergMapper.parseFeed(apiService.searchBooks(query, page)))
+    } catch (e: Exception) {
+        if (e is kotlinx.coroutines.CancellationException) throw e
+        Result.failure(e)
+    }
 }

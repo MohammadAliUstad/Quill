@@ -1,9 +1,11 @@
 package com.yugentech.quill.ui.sources.gutenberg.parent
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -35,25 +37,31 @@ import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergNavigationEvent
 import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel
 import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
+import com.yugentech.quill.ui.sources.standard.components.SourceEmptyState
 import com.yugentech.quill.ui.sources.gutenberg.components.GutenbergScreenHeader
-import com.yugentech.quill.ui.sources.standard.components.AnimatedSearchIcon
-import com.yugentech.quill.ui.sources.standard.components.SearchSuggestions
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
+
+private enum class SourceScreenState {
+    Loading, Empty, Content
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun GutenbergScreen(
-    onBackClick: () -> Unit,
+    onNavigateById: (String) -> Unit,
     onNavigateByContent: (Book) -> Unit,
     viewModel: GutenbergViewModel = koinViewModel()
 ) {
     val books by viewModel.booksState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val displayTitle by viewModel.displayTitle.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.navigationEvent.collectLatest { event ->
             when (event) {
+                is GutenbergNavigationEvent.NavigateById -> onNavigateById(event.id)
                 is GutenbergNavigationEvent.NavigateByContent -> onNavigateByContent(event.book)
             }
         }
@@ -62,6 +70,13 @@ fun GutenbergScreen(
     var searchText by rememberSaveable { mutableStateOf("") }
     var searchActive by rememberSaveable { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+
+    val updateSearchActive = { active: Boolean ->
+        searchActive = active
+        if (!active && searchText.isEmpty()) {
+            viewModel.onSearchQuery("")
+        }
+    }
 
     val density = LocalDensity.current
     val windowInfo = LocalWindowInfo.current
@@ -74,9 +89,7 @@ fun GutenbergScreen(
     val gridTopPadding = statusBarHeight + 80.dp
 
     BackHandler(enabled = searchActive) {
-        searchActive = false
-        searchText = ""
-        viewModel.onSearchQuery("")
+        updateSearchActive(false)
     }
 
     Scaffold(
@@ -89,24 +102,40 @@ fun GutenbergScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // LAYER 1: GRID
-            AnimatedVisibility(
-                visible = books.isNotEmpty() || isLoading,
-                enter = fadeIn(animationSpec = tween(durationMillis = 300))
-            ) {
-                BooksGrid(
-                    books = books,
-                    topPadding = gridTopPadding,
-                    bottomPadding = navBarHeight,
-                    onBookClick = { book -> viewModel.onBookClick(book) },
-                    onLoadMore = { viewModel.loadNextPage() }
-                )
-            }
-
-            if (isLoading && books.isEmpty()) {
-                CircularWavyProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
+            AnimatedContent(
+                targetState = when {
+                    isLoading && books.isEmpty() -> SourceScreenState.Loading
+                    !isLoading && books.isEmpty() -> SourceScreenState.Empty
+                    else -> SourceScreenState.Content
+                },
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                },
+                label = "GutenbergContentAnimation"
+            ) { state ->
+                when (state) {
+                    SourceScreenState.Loading -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularWavyProgressIndicator()
+                        }
+                    }
+                    SourceScreenState.Empty -> {
+                        SourceEmptyState(
+                            title = displayTitle,
+                            message = error,
+                            modifier = Modifier.padding(top = gridTopPadding)
+                        )
+                    }
+                    SourceScreenState.Content -> {
+                        BooksGrid(
+                            books = books,
+                            topPadding = gridTopPadding,
+                            bottomPadding = navBarHeight,
+                            onBookClick = { book -> viewModel.onBookClick(book) },
+                            onLoadMore = { viewModel.loadNextPage() }
+                        )
+                    }
+                }
             }
 
             GutenbergScreenHeader(
@@ -119,30 +148,13 @@ fun GutenbergScreen(
                     searchActive = false
                     focusManager.clearFocus()
                 },
-                onSearchActiveChange = { searchActive = it },
+                onSearchActiveChange = { updateSearchActive(it) },
                 onSearchClear = {
                     searchText = ""
                     viewModel.onSearchQuery("")
                 },
                 onBackOrClose = {
-                    if (searchActive) {
-                        searchActive = false
-                        searchText = ""
-                        viewModel.onSearchQuery("")
-                    } else {
-                        onBackClick()
-                    }
-                },
-                leadingIcon = { AnimatedSearchIcon(isSearchActive = searchActive) },
-                searchContent = {
-                    SearchSuggestions(
-                        onSuggestionClick = { suggestion ->
-                            searchText = suggestion
-                            viewModel.onSearchQuery(suggestion)
-                            searchActive = false
-                            focusManager.clearFocus()
-                        }
-                    )
+                    updateSearchActive(!searchActive)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
