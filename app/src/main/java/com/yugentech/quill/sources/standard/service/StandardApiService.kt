@@ -23,7 +23,7 @@ class StandardApiService(
     }
 
     suspend fun searchBooks(query: String): String {
-        return httpClient.get("$BASE_URL/opds/search") {
+        return httpClient.get("$BASE_URL/opds/all") {
             header(HttpHeaders.UserAgent, USER_AGENT)
             header(HttpHeaders.Accept, "application/atom+xml")
             parameter("query", query)
@@ -32,6 +32,13 @@ class StandardApiService(
 
     suspend fun getCategories(): String {
         return httpClient.get("$BASE_URL/opds/subjects") {
+            header(HttpHeaders.UserAgent, USER_AGENT)
+            header(HttpHeaders.Accept, "application/atom+xml")
+        }.bodyAsText()
+    }
+
+    suspend fun getTopicFeed(topic: String): String {
+        return httpClient.get("$BASE_URL/opds/subjects/$topic") {
             header(HttpHeaders.UserAgent, USER_AGENT)
             header(HttpHeaders.Accept, "application/atom+xml")
         }.bodyAsText()
@@ -57,7 +64,7 @@ class StandardApiService(
     }
 
     suspend fun getBooksByAuthor(authorName: String): String {
-        return httpClient.get("$BASE_URL/opds/search") {
+        return httpClient.get("$BASE_URL/opds/all") {
             header(HttpHeaders.UserAgent, USER_AGENT)
             header(HttpHeaders.Accept, "application/atom+xml")
             parameter("query", "author:\"$authorName\"")

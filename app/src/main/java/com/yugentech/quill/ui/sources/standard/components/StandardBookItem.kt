@@ -46,7 +46,6 @@ fun StandardBookItem(
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        // Placeholder fills the card immediately — no pop-in
         AsyncImage(
             model = book.coverUrl,
             contentDescription = "Cover of ${book.title}",
