@@ -15,6 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import org.readium.r2.navigator.DecorableNavigator
 import org.readium.r2.navigator.Decoration
@@ -24,6 +25,7 @@ import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
 import org.readium.r2.shared.util.Url
+import com.yugentech.quill.reader.viewmodel.ReaderCommand
 import kotlin.math.roundToInt
 
 private fun Color.toCssRgba(): String {
@@ -36,6 +38,7 @@ private fun Color.toCssRgba(): String {
 @OptIn(ExperimentalReadiumApi::class)
 @Composable
 fun ReadiumEngine(
+    modifier: Modifier = Modifier,
     publication: Publication,
     bookId: String,
     isPro: Boolean = false,
@@ -47,6 +50,7 @@ fun ReadiumEngine(
     preferences: EpubPreferences,
     isAiraReady: Boolean = false,
     decorations: List<Decoration> = emptyList(),
+    commands: Flow<ReaderCommand>? = null,
     onTap: () -> Unit,
     onAskAira: (String) -> Unit = {},
     onSelectionAction: (Locator) -> Unit = {},
@@ -57,14 +61,17 @@ fun ReadiumEngine(
     onLocatorChange: (Locator) -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
-    val fragmentTag = remember(bookId) { "readium_$bookId" }
+    // FIX: Include scroll mode in tag to allow concurrent fragments during crossfade
+    val fragmentTag = remember(bookId, preferences.scroll) {
+        "readium_${bookId}_${if (preferences.scroll == true) "scroll" else "paged"}"
+    }
 
     val selectionColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
     val cssColorString = remember(selectionColor) { selectionColor.toCssRgba() }
 
     var navigator by remember { mutableStateOf<EpubNavigatorFragment?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         ReadiumFragmentHost(
             publication = publication,
             fragmentTag = fragmentTag,
@@ -98,6 +105,16 @@ fun ReadiumEngine(
         decorableNav?.applyDecorations(decorations, "user_highlights")
     }
 
+    LaunchedEffect(commands, navigator) {
+        val nav = navigator ?: return@LaunchedEffect
+        commands?.collect { command ->
+            when (command) {
+                ReaderCommand.NextPage -> nav.goForward(animated = true)
+                ReaderCommand.PreviousPage -> nav.goBackward(animated = true)
+            }
+        }
+    }
+
     LaunchedEffect(targetLocator, navigator) {
         val nav = navigator ?: return@LaunchedEffect
         targetLocator?.let { loc ->
@@ -128,7 +145,7 @@ fun ReadiumEngine(
     }
 
     LaunchedEffect(preferences, navigator) {
-        navigator?.submitPreferences(preferences.copy(scroll = true))
+        navigator?.submitPreferences(preferences)
     }
 
     LaunchedEffect(targetJumpHref, navigator) {

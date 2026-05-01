@@ -28,8 +28,10 @@ fun SearchPrompt(
             .fillMaxSize()
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
+        Spacer(modifier = Modifier.weight(0.3f))
+
         Icon(
             imageVector = Icons.Rounded.AutoStories,
             contentDescription = null,
@@ -50,10 +52,14 @@ fun SearchPrompt(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Search through over 70,000 free public domain books from Project Gutenberg.",
+            text = "Search through over 70,000 free public domain\nbooks from Project Gutenberg.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            minLines = 2,
+            maxLines = 2
         )
+
+        Spacer(modifier = Modifier.weight(0.7f))
     }
 }
