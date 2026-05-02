@@ -21,6 +21,7 @@ class ReaderScreenState(
     var isMenuVisible by mutableStateOf(false)
     var showSettingsSheet by mutableStateOf(false)
     var showTocSheet by mutableStateOf(false)
+    var showSoundSheet by mutableStateOf(false)
     var isBrightnessInteracting by mutableStateOf(false)
     var showAiraPeek by mutableStateOf(false)
     var selectedText by mutableStateOf<String?>(null)

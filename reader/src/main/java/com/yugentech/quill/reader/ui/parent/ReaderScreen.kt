@@ -1,9 +1,16 @@
 package com.yugentech.quill.reader.ui.parent
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -19,12 +26,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.yugentech.quill.aira.quick.viewmodel.QuickViewModel
+import com.yugentech.quill.reader.pref.model.QuillPreferences
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.ui.components.engine.ReadiumEngine
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderAction
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderMenuOverlay
 import com.yugentech.quill.reader.ui.components.settingsSheet.SettingsSheet
+import com.yugentech.quill.reader.ui.components.soundSheet.SoundSelectionSheet
 import com.yugentech.quill.reader.ui.components.tocSheet.TocSheet
 import com.yugentech.quill.reader.viewmodel.ReaderUiState
 import com.yugentech.quill.reader.viewmodel.ReaderViewModel
@@ -42,7 +54,8 @@ fun ReaderScreen(
     viewModel: ReaderViewModel,
     uiState: ReaderUiState,
     onBackClick: () -> Unit,
-    preferences: EpubPreferences,
+    preferences: QuillPreferences,
+    statusBarHeight: Dp = 0.dp,
     onPreferencesChange: (EpubPreferences) -> Unit,
     onLocatorChange: (Locator) -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit = {}
@@ -60,6 +73,7 @@ fun ReaderScreen(
             state = uiState,
             onBackClick = onBackClick,
             preferences = preferences,
+            statusBarHeight = statusBarHeight,
             onPreferencesChange = onPreferencesChange,
             onLocatorChange = onLocatorChange,
             onMenuVisibilityChange = onMenuVisibilityChange
@@ -73,7 +87,8 @@ private fun ReaderSuccess(
     viewModel: ReaderViewModel,
     state: ReaderUiState.Success,
     onBackClick: () -> Unit,
-    preferences: EpubPreferences,
+    preferences: QuillPreferences,
+    statusBarHeight: Dp,
     onPreferencesChange: (EpubPreferences) -> Unit,
     onLocatorChange: (Locator) -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit
@@ -135,7 +150,7 @@ private fun ReaderSuccess(
 
     val animatedBgColor by animateColorAsState(
         targetValue = Color(
-            preferences.backgroundColor?.int
+            preferences.epub.backgroundColor?.int
                 ?: ReaderDefaults.getPreferences().backgroundColor!!.int
         ),
         label = "ReaderBg"
@@ -146,37 +161,61 @@ private fun ReaderSuccess(
             .fillMaxSize()
             .background(animatedBgColor)
     ) {
-        ReadiumEngine(
-            publication = state.publication,
-            bookId = state.bookId,
-            initialLocation = state.initialLocator,
-            targetJumpHref = screenState.targetJumpHref,
-            targetSeekProgress = screenState.pendingSeekProgress,
-            targetLocator = screenState.targetLocator,
-            allPositions = state.allPositions,
-            preferences = preferences,
-            isPro = isPro,
-            isAiraReady = isReady,
-            decorations = activeDecorations,
-            onTap = { screenState.toggleMenu() },
-            onAskAira = { text ->
-                screenState.showAira(text)
-                quickViewModel.clearResponse()
+        val isPagedMode = preferences.epub.scroll == false
+        // Use a fixed padding in Paged mode to avoid shifting when system bars are toggled
+        val engineModifier = if (isPagedMode) Modifier.padding(top = statusBarHeight) else Modifier
+
+        AnimatedContent(
+            targetState = preferences.epub.scroll ?: true,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(500)).togetherWith(fadeOut(animationSpec = tween(500)))
             },
-            onSelectionAction = { locator ->
-                pendingHighlightLocator = locator
-            },
-            onDecorationTapped = { tappedDecoration ->
-                highlightToDelete = tappedDecoration
-            },
-            onJumpComplete = { screenState.targetJumpHref = null },
-            onSeekComplete = { screenState.pendingSeekProgress = null },
-            onTargetLocatorComplete = { screenState.targetLocator = null },
-            onLocatorChange = { newLocator ->
-                screenState.handleLocatorChange(newLocator)
-                onLocatorChange(newLocator)
-            }
-        )
+            label = "ReaderModeTransition"
+        ) { targetScroll ->
+            ReadiumEngine(
+                modifier = engineModifier,
+                publication = state.publication,
+                bookId = state.bookId,
+                initialLocation = screenState.currentLocator ?: state.initialLocator,
+                targetJumpHref = screenState.targetJumpHref,
+                targetSeekProgress = screenState.pendingSeekProgress,
+                targetLocator = screenState.targetLocator,
+                allPositions = state.allPositions,
+                preferences = preferences.epub.copy(scroll = targetScroll),
+                commands = viewModel.commands,
+                isPro = isPro,
+                isAiraReady = isReady,
+                decorations = activeDecorations,
+                onTap = { screenState.toggleMenu() },
+                onAskAira = { text ->
+                    screenState.showAira(text)
+                    quickViewModel.clearResponse()
+                },
+                onSelectionAction = { locator ->
+                    pendingHighlightLocator = locator
+                },
+                onDecorationTapped = { tappedDecoration ->
+                    highlightToDelete = tappedDecoration
+                },
+                onJumpComplete = { screenState.targetJumpHref = null },
+                onSeekComplete = { screenState.pendingSeekProgress = null },
+                onTargetLocatorComplete = { screenState.targetLocator = null },
+                onLocatorChange = { newLocator ->
+                    screenState.handleLocatorChange(newLocator)
+                    onLocatorChange(newLocator)
+                }
+            )
+        }
+
+        // --- NIGHT LIGHT OVERLAY ---
+        if (preferences.nightLight) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFE58F00).copy(alpha = 0.15f))
+                    .zIndex(0.5f)
+            )
+        }
 
         ReaderMenuOverlay(
             isPro = isPro,
@@ -196,6 +235,11 @@ private fun ReaderSuccess(
                     is ReaderAction.OnTocClick -> {
                         screenState.isMenuVisible = false
                         screenState.showTocSheet = true
+                    }
+
+                    is ReaderAction.OnSoundClick -> {
+                        screenState.isMenuVisible = false
+                        screenState.showSoundSheet = true
                     }
 
                     is ReaderAction.OnSeek -> {
@@ -293,12 +337,27 @@ private fun ReaderSuccess(
         )
     }
 
+    if (screenState.showSoundSheet) {
+        val activeSound by viewModel.activeSound.collectAsState()
+        val volume by viewModel.soundVolume.collectAsState()
+
+        SoundSelectionSheet(
+            activeSound = activeSound,
+            volume = volume,
+            onSoundToggle = { viewModel.toggleBackgroundSound(it) },
+            onVolumeChange = { viewModel.updateSoundVolume(it) },
+            onDismiss = { screenState.showSoundSheet = false }
+        )
+    }
+
     if (screenState.showSettingsSheet) {
         SettingsSheet(
             preferences = preferences,
             onPreferencesChange = {
                 onPreferencesChange(it.copy(publisherStyles = false))
             },
+            onVolumeNavigationChange = { viewModel.updateVolumeNavigation(it) },
+            onNightLightChange = { viewModel.updateNightLight(it) },
             onDismiss = { screenState.showSettingsSheet = false }
         )
     }
