@@ -66,6 +66,7 @@ fun ReaderMenuOverlay(
                 bookTitle = readerOverlayState.bookTitle,
                 onBackClick = { onAction(ReaderAction.OnBackClick) },
                 onTocClick = { onAction(ReaderAction.OnTocClick) },
+                onSoundClick = { onAction(ReaderAction.OnSoundClick) },
                 onSettingsClick = { onAction(ReaderAction.OnSettingsClick) }
             )
         }
