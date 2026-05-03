@@ -14,12 +14,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface BookDao {
 
-    @Query("""
+    @Query(
+        """
         SELECT b.* FROM books b 
         LEFT JOIN book_indexing_state i ON b.id = i.bookId
         WHERE b.downloadStatus = 'DOWNLOADED' 
         AND (i.isComplete IS NULL OR i.isComplete = 0)
-    """)
+    """
+    )
     suspend fun getUnindexedDownloadedBooks(): List<BookEntity>
 
     @Query("SELECT * FROM books")
@@ -45,6 +47,9 @@ interface BookDao {
 
     @Query("SELECT * FROM library_view WHERE lastReadTime > 0 ORDER BY lastReadTime DESC LIMIT 1")
     fun getLastReadBook(): Flow<LibraryBookView?>
+
+    @Query("UPDATE books SET lastReadTime = 0, isSynced = 0 WHERE id = :bookId")
+    suspend fun removeFromRecent(bookId: String)
 
     @Query("SELECT * FROM library_view WHERE lastReadTime > 0 ORDER BY lastReadTime DESC")
     fun getReadingHistory(): Flow<List<LibraryBookView>>
@@ -116,7 +121,8 @@ interface BookDao {
     @Query("SELECT * FROM books WHERE downloadStatus = 'DOWNLOADED' ORDER BY fileSizeBytes DESC")
     fun getDownloadedBooksBySize(): Flow<List<BookEntity>>
 
-    @Query("""
+    @Query(
+        """
     SELECT
         b.id                            AS bookId,
         b.fileSizeBytes                 AS fileSizeBytes,
@@ -133,6 +139,7 @@ interface BookDao {
     ) msg ON msg.bookId = b.id
     WHERE b.downloadStatus = 'DOWNLOADED'
     GROUP BY b.id
-""")
+"""
+    )
     fun getBookStorageBreakdown(): Flow<List<BookStorageBreakdown>>
 }

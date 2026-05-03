@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.yugentech.quill.database.model.RetrievedChunk
 
 @Entity(
     tableName = "aira_messages",
@@ -22,7 +23,8 @@ data class AiraMessageEntity(
     val bookId: String,
     val role: AiraMessageRole,
     val content: String,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val sources: List<RetrievedChunk> = emptyList()
 )
 
 enum class AiraMessageRole {

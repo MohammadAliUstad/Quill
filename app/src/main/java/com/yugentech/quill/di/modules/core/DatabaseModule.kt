@@ -2,6 +2,7 @@ package com.yugentech.quill.di.modules.core
 
 import androidx.room.Room
 import com.yugentech.quill.database.database.AppDatabase
+import com.yugentech.quill.database.database.MIGRATION_1_2
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -13,6 +14,7 @@ val databaseModule = module {
             AppDatabase::class.java,
             "quill_database"
         )
+            .addMigrations(MIGRATION_1_2)
             .fallbackToDestructiveMigration(false)
             .build()
     }
@@ -55,5 +57,9 @@ val databaseModule = module {
 
     single {
         get<AppDatabase>().bookIndexingStateDao()
+    }
+
+    single {
+        get<AppDatabase>().highlightDao()
     }
 }
