@@ -6,6 +6,7 @@ sealed interface ReaderAction {
     data object OnBackClick : ReaderAction
     data object OnSettingsClick : ReaderAction
     data object OnTocClick : ReaderAction
+    data object OnSoundClick : ReaderAction
     data object OnScrubStart : ReaderAction
     data object OnScrubEnd : ReaderAction
     data object OnAskAiraClick : ReaderAction

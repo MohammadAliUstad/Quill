@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,6 +23,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
+import com.yugentech.theme.service.HapticService
+import org.koin.compose.koinInject
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderTopBar(
@@ -29,8 +33,11 @@ fun ReaderTopBar(
     bookTitle: String,
     onBackClick: () -> Unit,
     onTocClick: () -> Unit,
+    onSoundClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
+    val haptic = koinInject<HapticService>()
+
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(
@@ -57,7 +64,10 @@ fun ReaderTopBar(
                 },
                 navigationIcon = {
                     IconButton(
-                        onClick = onBackClick
+                        onClick = {
+                            haptic.performHaptic()
+                            onBackClick()
+                        }
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -67,7 +77,22 @@ fun ReaderTopBar(
                 },
                 actions = {
                     IconButton(
-                        onClick = onTocClick
+                        onClick = {
+                            haptic.performHaptic()
+                            onSoundClick()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = "Ambient Sounds"
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            haptic.performHaptic()
+                            onTocClick()
+                        }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Menu,
@@ -76,7 +101,10 @@ fun ReaderTopBar(
                     }
 
                     IconButton(
-                        onClick = onSettingsClick
+                        onClick = {
+                            haptic.performHaptic()
+                            onSettingsClick()
+                        }
                     ) {
                         Icon(
                             imageVector = Icons.Default.FormatSize,
