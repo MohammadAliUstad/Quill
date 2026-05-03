@@ -6,6 +6,7 @@ import com.yugentech.quill.reader.pref.repository.ReaderPrefRepository
 import com.yugentech.quill.reader.pref.repository.ReaderPrefRepositoryImpl
 import com.yugentech.quill.reader.repository.ReaderRepository
 import com.yugentech.quill.reader.repository.ReaderRepositoryImpl
+import com.yugentech.quill.reader.service.BackgroundSoundService
 import com.yugentech.quill.reader.session.ReadingSessionRepository
 import com.yugentech.quill.reader.session.ReadingSessionRepositoryImpl
 import com.yugentech.quill.reader.viewmodel.ReaderViewModel
@@ -41,12 +42,20 @@ val readerModule = module {
         )
     }
 
+    single {
+        BackgroundSoundService(
+            context = androidContext()
+        )
+    }
+
     viewModel {
         ReaderViewModel(
             application = androidContext() as Application,
             readerRepository = get(),
             sessionRepository = get(),
-            preferencesRepository = get()
+            preferencesRepository = get(),
+            backgroundSoundService = get(),
+            hapticService = get()
         )
     }
 }
