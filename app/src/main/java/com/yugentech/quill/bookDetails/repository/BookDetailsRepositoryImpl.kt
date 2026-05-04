@@ -4,16 +4,15 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.bookDetails.worker.BookDownloadWorker
+import com.yugentech.quill.cloud.repository.CloudSyncRepository
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.dao.CategoryDao
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.entity.CategoryEntity
 import com.yugentech.quill.database.mapper.toEntity
+import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.DownloadStatus
-import com.yugentech.quill.bookDetails.worker.BookDownloadWorker
-import com.yugentech.quill.aira.rag.BookEmbeddingWorker
-import com.yugentech.quill.cloud.repository.CloudSyncRepository
 import com.yugentech.theme.tokens.AppConstants.SHELF
 import kotlinx.coroutines.flow.Flow
 import java.io.File
@@ -146,5 +145,9 @@ class BookDetailsRepositoryImpl(
     override suspend fun resetReadingProgress(bookId: String) {
         bookDao.resetReadingProgress(bookId)
         cloudSyncRepository.scheduleBackgroundSync()
+    }
+
+    override suspend fun removeFromRecent(bookId: String) {
+        bookDao.removeFromRecent(bookId)
     }
 }

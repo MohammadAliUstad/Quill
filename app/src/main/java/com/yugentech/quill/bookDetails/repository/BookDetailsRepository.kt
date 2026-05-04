@@ -1,8 +1,8 @@
 package com.yugentech.quill.bookDetails.repository
 
-import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.entity.CategoryEntity
+import com.yugentech.quill.database.model.Book
 import kotlinx.coroutines.flow.Flow
 
 interface BookDetailsRepository {
@@ -17,4 +17,5 @@ interface BookDetailsRepository {
     suspend fun updateFavorite(book: Book, isFavorite: Boolean)
     suspend fun updateProgress(bookId: String, progressPercent: Float, chapterIndex: Int)
     suspend fun resetReadingProgress(bookId: String)
+    suspend fun removeFromRecent(bookId: String)
 }

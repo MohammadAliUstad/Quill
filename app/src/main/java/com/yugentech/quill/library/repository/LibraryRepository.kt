@@ -1,7 +1,7 @@
 package com.yugentech.quill.library.repository
 
-import com.yugentech.quill.database.view.LibraryBookView
 import com.yugentech.quill.database.entity.BookEntity
+import com.yugentech.quill.database.view.LibraryBookView
 import kotlinx.coroutines.flow.Flow
 
 interface LibraryRepository {
