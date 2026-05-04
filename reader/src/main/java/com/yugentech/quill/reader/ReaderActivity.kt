@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -35,6 +36,11 @@ class ReaderActivity : AppCompatActivity() {
         setupWindow()
         viewModel.loadBook(bookId, initialChapterHref, locatorJson)
 
+        val statusBarHeightPx = run {
+            val id = resources.getIdentifier("status_bar_height", "dimen", "android")
+            if (id > 0) resources.getDimensionPixelSize(id) else 0
+        }
+
         setContent {
             val uiState by viewModel.uiState.collectAsState()
             val preferences by viewModel.readerPreferences.collectAsState()
@@ -42,18 +48,38 @@ class ReaderActivity : AppCompatActivity() {
                 initial = ThemeConfiguration()
             )
 
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val statusBarHeightDp = with(density) { statusBarHeightPx.toDp() }
+
             QuillTheme(themeConfiguration = currentThemeConfig) {
                 ReaderScreen(
                     viewModel = viewModel,
                     uiState = uiState,
                     onBackClick = { finish() },
                     preferences = preferences,
-                    onPreferencesChange = { viewModel.updatePreferences(it) },
+                    statusBarHeight = statusBarHeightDp,
+                    onPreferencesChange = { viewModel.updateEpubPreferences(it) },
                     onLocatorChange = { locator -> viewModel.saveProgress(bookId, locator) },
                     onMenuVisibilityChange = { visible -> setSystemBarsVisible(visible) }
                 )
             }
         }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (viewModel.readerPreferences.value.volumeNavigation) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_VOLUME_UP -> {
+                    viewModel.onVolumeUp()
+                    return true
+                }
+                KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                    viewModel.onVolumeDown()
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     private fun setupWindow() {

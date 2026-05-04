@@ -4,18 +4,24 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.database.entity.HighlightEntity
+import com.yugentech.quill.reader.pref.model.QuillPreferences
 import com.yugentech.quill.reader.pref.repository.ReaderPrefRepository
 import com.yugentech.quill.reader.repository.ReaderRepository
+import com.yugentech.quill.reader.service.BackgroundSoundService
 import com.yugentech.quill.reader.session.ReadingSessionRepository
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
+import com.yugentech.quill.reader.model.BackgroundSound
+import com.yugentech.theme.service.HapticService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -34,11 +40,18 @@ import org.readium.r2.streamer.parser.DefaultPublicationParser
 import java.io.File
 import java.util.UUID
 
+sealed class ReaderCommand {
+    object NextPage : ReaderCommand()
+    object PreviousPage : ReaderCommand()
+}
+
 class ReaderViewModel(
     application: Application,
     private val readerRepository: ReaderRepository,
     private val sessionRepository: ReadingSessionRepository,
-    private val preferencesRepository: ReaderPrefRepository
+    private val preferencesRepository: ReaderPrefRepository,
+    private val backgroundSoundService: BackgroundSoundService,
+    private val hapticService: HapticService
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<ReaderUiState>(ReaderUiState.Idle)
@@ -47,11 +60,20 @@ class ReaderViewModel(
     private val _highlights = MutableStateFlow<List<HighlightEntity>>(emptyList())
     val highlights = _highlights.asStateFlow()
 
-    val readerPreferences = preferencesRepository.readerPreferences.stateIn(
+    private val _activeSound = MutableStateFlow<BackgroundSound>(BackgroundSound.NONE)
+    val activeSound = _activeSound.asStateFlow()
+
+    private val _soundVolume = MutableStateFlow(1.0f)
+    val soundVolume = _soundVolume.asStateFlow()
+
+    val readerPreferences = preferencesRepository.quillPreferences.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ReaderDefaults.getPreferences()
+        initialValue = QuillPreferences(ReaderDefaults.getPreferences())
     )
+
+    private val _commands = Channel<ReaderCommand>(Channel.BUFFERED)
+    val commands = _commands.receiveAsFlow()
 
     private var publication: Publication? = null
     private var saveJob: Job? = null
@@ -200,10 +222,53 @@ class ReaderViewModel(
         }
     }
 
-    fun updatePreferences(newPreferences: EpubPreferences) {
+    fun updateEpubPreferences(newPreferences: EpubPreferences) {
         viewModelScope.launch {
-            preferencesRepository.savePreferences(newPreferences)
+            preferencesRepository.saveEpubPreferences(newPreferences)
         }
+    }
+
+    fun updateVolumeNavigation(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.saveVolumeNavigation(enabled)
+        }
+    }
+
+    fun updateNightLight(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.saveNightLight(enabled)
+        }
+    }
+
+    fun onVolumeUp() {
+        viewModelScope.launch {
+            _commands.send(ReaderCommand.PreviousPage)
+        }
+    }
+
+    fun onVolumeDown() {
+        viewModelScope.launch {
+            _commands.send(ReaderCommand.NextPage)
+        }
+    }
+
+    fun toggleBackgroundSound(sound: BackgroundSound) {
+        hapticService.performHaptic()
+        if (_activeSound.value == sound) {
+            backgroundSoundService.stop()
+            _activeSound.value = BackgroundSound.NONE
+        } else {
+            backgroundSoundService.play(sound, _soundVolume.value)
+            _activeSound.value = sound
+        }
+    }
+
+    fun updateSoundVolume(volume: Float) {
+        if (Math.abs(_soundVolume.value - volume) > 0.05f) {
+            hapticService.performHaptic()
+        }
+        _soundVolume.value = volume
+        backgroundSoundService.setVolume(volume)
     }
 
     private fun flattenToc(links: List<Link>): Map<String, String> {
@@ -222,6 +287,7 @@ class ReaderViewModel(
 
     override fun onCleared() {
         saveReadingSession()
+        backgroundSoundService.release()
         super.onCleared()
         publication?.close()
     }
