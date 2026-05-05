@@ -38,8 +38,7 @@ fun StandardScreenHeader(
     onSearchActiveChange: (Boolean) -> Unit,
     onSearchClear: () -> Unit,
     onBackOrClose: () -> Unit,
-    leadingIcon: @Composable () -> Unit,
-    searchContent: @Composable () -> Unit,
+    onSuggestionClick: (String) -> Unit,
     categories: List<String>,
     selectedCategory: String,
     onCategorySelected: (String) -> Unit,
@@ -62,7 +61,7 @@ fun StandardScreenHeader(
                     placeholder = { Text("Search Standard Ebooks") },
                     leadingIcon = {
                         IconButton(onClick = onBackOrClose) {
-                            leadingIcon()
+                            AnimatedSearchIcon(isSearchActive = searchActive)
                         }
                     },
                     trailingIcon = {
@@ -71,7 +70,7 @@ fun StandardScreenHeader(
                                 Icon(Icons.Default.Close, contentDescription = "Clear")
                             }
                         }
-                    }
+                    },
                 )
             },
             expanded = searchActive,
@@ -79,7 +78,7 @@ fun StandardScreenHeader(
             modifier = Modifier.widthIn(min = dockedWidth),
             windowInsets = SearchBarDefaults.windowInsets
         ) {
-            searchContent()
+            SearchSuggestions(onSuggestionClick = onSuggestionClick)
         }
 
         LazyRow(
