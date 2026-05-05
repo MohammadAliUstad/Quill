@@ -42,6 +42,7 @@ class StandardRepositoryImpl(
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.w(e, "Background sync failed. UI will just continue showing cached data.")
             Result.failure(e)
         }
@@ -78,7 +79,7 @@ class StandardRepositoryImpl(
 
     override suspend fun syncTopicBooks(topic: String): Result<Unit> {
         return try {
-            val xml = standardApi.searchBooks("subject:\"$topic\"")
+            val xml = standardApi.getTopicFeed(topic)
             val result = StandardMapper.parseOpdsToBooks(xml)
 
             if (result.books.isNotEmpty()) {
@@ -91,6 +92,7 @@ class StandardRepositoryImpl(
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.w(e, "Topic sync failed for: $topic")
             Result.failure(e)
         }
@@ -100,6 +102,7 @@ class StandardRepositoryImpl(
         return try {
             Result.success(StandardMapper.parseOpdsToBooks(standardApi.searchBooks(query)))
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Result.failure(e)
         }
     }
