@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.sources.standard.repository.StandardRepository
+import com.yugentech.quill.util.toUserFriendlyMessage
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +33,7 @@ class StandardViewModel(
     val isLoading = _isLoading.asStateFlow()
 
     private val _displayTitle = MutableStateFlow("")
+    val displayTitle = _displayTitle.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
@@ -93,7 +95,9 @@ class StandardViewModel(
     }
 
     private fun loadCategory(category: String) {
-        sessionCache[category]?.let { cachedBooks ->
+        val slug = category.toSlug()
+
+        sessionCache[slug]?.let { cachedBooks ->
             _booksState.value = cachedBooks
             _displayTitle.value = category
             return
@@ -102,7 +106,7 @@ class StandardViewModel(
         contentJob = viewModelScope.launch {
             _error.value = null
 
-            val cached = standardRepository.getTopicBooksFlow(category).firstOrNull() ?: emptyList()
+            val cached = standardRepository.getTopicBooksFlow(slug).firstOrNull() ?: emptyList()
             _booksState.value = cached
 
             if (cached.isEmpty()) {
@@ -112,11 +116,12 @@ class StandardViewModel(
                 _displayTitle.value = category
             }
 
-            standardRepository.searchBooks("subject:\"$category\"")
-                .onSuccess { result ->
-                    _booksState.value = result.books
-                    _displayTitle.value = if (result.books.isEmpty()) "No books found" else category
-                    sessionCache[category] = result.books
+            standardRepository.syncTopicBooks(slug)
+                .onSuccess {
+                    val freshBooks = standardRepository.getTopicBooksFlow(slug).firstOrNull() ?: emptyList()
+                    _booksState.value = freshBooks
+                    _displayTitle.value = if (freshBooks.isEmpty()) "No books found" else category
+                    sessionCache[slug] = freshBooks
                 }
                 .onFailure { handleError(it) }
 
@@ -192,7 +197,16 @@ class StandardViewModel(
     }
 
     private fun handleError(e: Throwable) {
-        _error.value = e.localizedMessage
+        if (e is kotlinx.coroutines.CancellationException) return
+        _error.value = e.toUserFriendlyMessage()
         _displayTitle.value = "Something went wrong"
     }
+}
+
+private fun String.toSlug(): String {
+    return this.lowercase()
+        .replace(Regex("[^a-z0-9\\s-]"), "")
+        .replace(Regex("\\s+"), "-")
+        .replace(Regex("-+"), "-")
+        .trim('-')
 }
