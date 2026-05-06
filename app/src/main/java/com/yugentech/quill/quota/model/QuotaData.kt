@@ -6,11 +6,10 @@ import java.util.Date
 data class QuotaData(
     val queriesUsed: Int,
     val queriesLimit: Int,
-    val resetAt: Timestamp?,
-    val isLifetime: Boolean = false
+    val resetAt: Timestamp?
 ) {
     val isExpired: Boolean
-        get() = !isLifetime && resetAt != null && resetAt.toDate().before(Date())
+        get() = resetAt != null && resetAt.toDate().before(Date())
 
     val hasQuota: Boolean
         get() = queriesUsed < queriesLimit
