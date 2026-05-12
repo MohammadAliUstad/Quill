@@ -4,17 +4,11 @@ import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.dao.ChunkVectorTuple
 import com.yugentech.quill.database.entity.BookEntity
+import com.yugentech.quill.database.model.RetrievedChunk
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.text.Normalizer
-
-data class RetrievedChunk(
-    val text: String,
-    val chapterIndex: Int,
-    val chunkIndex: Int,
-    val score: Float
-)
 
 class RagRetriever(
     private val chunkDao: BookChunkDao,
@@ -181,6 +175,7 @@ class RagRetriever(
                             RetrievedChunk(
                                 text = chunk.text,
                                 chapterIndex = chunk.chapterIndex,
+                                chapterTitle = chunk.chapterTitle,
                                 chunkIndex = chunk.chunkIndex,
                                 score = score
                             )

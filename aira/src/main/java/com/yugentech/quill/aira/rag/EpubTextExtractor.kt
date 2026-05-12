@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import org.readium.r2.shared.publication.Link
 import org.readium.r2.shared.util.asset.AssetRetriever
 import org.readium.r2.shared.util.getOrElse
 import org.readium.r2.shared.util.http.DefaultHttpClient
@@ -27,10 +28,18 @@ class EpubTextExtractor(
 
     companion object {
         private const val MIN_CHAPTER_LENGTH = 50
-        private val SCRIPT_REGEX = Regex("<script[^>]*>[\\s\\S]*?</script>", RegexOption.IGNORE_CASE)
+        private val SCRIPT_REGEX =
+            Regex("<script[^>]*>[\\s\\S]*?</script>", RegexOption.IGNORE_CASE)
         private val STYLE_REGEX = Regex("<style[^>]*>[\\s\\S]*?</style>", RegexOption.IGNORE_CASE)
         private val WHITESPACE_REGEX = Regex("[ \\t]+")
         private val NEWLINE_REGEX = Regex("\\n{3,}")
+
+        private val IGNORED_TITLES = setOf(
+            "titlepage", "imprint", "colophon", "uncopyright",
+            "dedication", "epigraph", "endnotes", "bibliography",
+            "index", "list of illustrations", "cover", "table of contents",
+            "preface", "acknowledgments", "introduction", "loi"
+        )
     }
 
     fun extractStream(filePath: String): Flow<ChapterText> = flow {
@@ -57,8 +66,31 @@ class EpubTextExtractor(
                     return@flow
                 }
 
+            val allTocLinks = flattenLinks(publication.tableOfContents)
+            val hrefToTitleMap = allTocLinks.mapNotNull { link ->
+                val title = link.title?.trim()
+                if (title.isNullOrBlank()) {
+                    null
+                } else {
+                    link.href.toString().substringBefore("#") to title
+                }
+            }.toMap()
+
+            var validChapterCount = 0
+
             publication.readingOrder.forEachIndexed { index, link ->
-                val title = link.title ?: "spine[$index]"
+                val cleanHref = link.href.toString().substringBefore("#")
+                val rawTitle = hrefToTitleMap[cleanHref] ?: link.title?.trim() ?: ""
+                val lowerTitle = rawTitle.lowercase()
+                val isJunk = IGNORED_TITLES.contains(lowerTitle) || lowerTitle.startsWith("spine[")
+
+                if (isJunk) {
+                    return@forEachIndexed
+                }
+
+                validChapterCount++
+                val finalTitle = rawTitle.ifBlank { "Chapter $validChapterCount" }
+
                 try {
                     val resource = publication.get(link) ?: return@forEachIndexed
 
@@ -72,13 +104,13 @@ class EpubTextExtractor(
                         emit(
                             ChapterText(
                                 chapterIndex = index,
-                                chapterTitle = title,
+                                chapterTitle = finalTitle,
                                 text = plainText
                             )
                         )
                     }
                 } catch (e: Exception) {
-                    Timber.w(e, "Error parsing chapter $index ('$title')")
+                    Timber.w(e, "Error parsing chapter $index ('$finalTitle')")
                 }
             }
 
@@ -120,4 +152,15 @@ class EpubTextExtractor(
             .replace(WHITESPACE_REGEX, " ")
             .replace(NEWLINE_REGEX, "\n\n")
             .trim()
+
+    private fun flattenLinks(links: List<Link>): List<Link> {
+        val flatList = mutableListOf<Link>()
+        for (link in links) {
+            flatList.add(link)
+            if (link.children.isNotEmpty()) {
+                flatList.addAll(flattenLinks(link.children))
+            }
+        }
+        return flatList
+    }
 }
