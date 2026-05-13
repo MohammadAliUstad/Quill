@@ -33,12 +33,16 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -55,6 +59,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yugentech.quill.reader.pref.model.QuillPreferences
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.CustomSettingsSlider
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.FontChip
@@ -76,10 +81,13 @@ import org.readium.r2.navigator.preferences.TextAlign as R2TextAlign
 )
 @Composable
 fun SettingsSheet(
-    preferences: EpubPreferences,
+    preferences: QuillPreferences,
     onPreferencesChange: (EpubPreferences) -> Unit,
+    onVolumeNavigationChange: (Boolean) -> Unit,
+    onNightLightChange: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val epub = preferences.epub
     val fontOptions = remember {
         listOf(
             "Literata" to ReaderDefaults.FONT_LITERATA,
@@ -200,6 +208,26 @@ fun SettingsSheet(
                     )
                 }
 
+                // --- READING MODE (Paged vs Scroll) ---
+                item {
+                    Column(modifier = Modifier.graphicsLayer { alpha = nonSliderAlpha }) {
+                        SectionLabel(text = "Reading Mode")
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            val isScroll = epub.scroll ?: true
+                            SegmentedButton(
+                                selected = !isScroll,
+                                onClick = { onPreferencesChange(epub.copy(scroll = false)) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                            ) { Text("Paged") }
+                            SegmentedButton(
+                                selected = isScroll,
+                                onClick = { onPreferencesChange(epub.copy(scroll = true)) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                            ) { Text("Scroll") }
+                        }
+                    }
+                }
+
                 item {
                     Column(modifier = Modifier.graphicsLayer { alpha = nonSliderAlpha }) {
                         SectionLabel(text = "Theme")
@@ -208,9 +236,9 @@ fun SettingsSheet(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             themePresets.forEach { preset ->
-                                val isSelected = preferences.theme == preset.theme &&
-                                        preferences.backgroundColor?.int == preset.bgColorInt &&
-                                        preferences.textColor?.int == preset.textColorInt
+                                val isSelected = epub.theme == preset.theme &&
+                                        epub.backgroundColor?.int == preset.bgColorInt &&
+                                        epub.textColor?.int == preset.textColorInt
 
                                 ThemeOption(
                                     modifier = Modifier.weight(1f),
@@ -220,7 +248,7 @@ fun SettingsSheet(
                                     useLightBorder = preset.isDarkBorder
                                 ) {
                                     onPreferencesChange(
-                                        preferences.copy(
+                                        epub.copy(
                                             theme = preset.theme,
                                             backgroundColor = preset.bgColorInt?.let {
                                                 ReadiumColor(
@@ -246,7 +274,7 @@ fun SettingsSheet(
                             items(fontOptions) { (label, font) ->
                                 FontChip(
                                     label = label,
-                                    currentPrefs = preferences,
+                                    currentPrefs = epub,
                                     targetFont = font,
                                     onChange = onPreferencesChange
                                 )
@@ -259,29 +287,29 @@ fun SettingsSheet(
                     Column(modifier = Modifier.graphicsLayer { alpha = nonSliderAlpha }) {
                         SectionLabel("Alignment")
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                            val currentAlign = preferences.textAlign ?: R2TextAlign.START
+                            val currentAlign = epub.textAlign ?: R2TextAlign.START
 
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.LEFT || currentAlign == R2TextAlign.START,
-                                onClick = { onPreferencesChange(preferences.copy(textAlign = R2TextAlign.LEFT)) },
+                                onClick = { onPreferencesChange(epub.copy(textAlign = R2TextAlign.LEFT)) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 4)
                             ) { Icon(Icons.AutoMirrored.Filled.FormatAlignLeft, "Left") }
 
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.CENTER,
-                                onClick = { onPreferencesChange(preferences.copy(textAlign = R2TextAlign.CENTER)) },
+                                onClick = { onPreferencesChange(epub.copy(textAlign = R2TextAlign.CENTER)) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 4)
                             ) { Icon(Icons.Default.FormatAlignCenter, "Center") }
 
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.JUSTIFY,
-                                onClick = { onPreferencesChange(preferences.copy(textAlign = R2TextAlign.JUSTIFY)) },
+                                onClick = { onPreferencesChange(epub.copy(textAlign = R2TextAlign.JUSTIFY)) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 2, count = 4)
                             ) { Icon(Icons.Default.FormatAlignJustify, "Justified") }
 
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.RIGHT,
-                                onClick = { onPreferencesChange(preferences.copy(textAlign = R2TextAlign.RIGHT)) },
+                                onClick = { onPreferencesChange(epub.copy(textAlign = R2TextAlign.RIGHT)) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 3, count = 4)
                             ) { Icon(Icons.AutoMirrored.Filled.FormatAlignRight, "Right") }
                         }
@@ -293,7 +321,7 @@ fun SettingsSheet(
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        val currentFontSize = (preferences.fontSize ?: 1.15).toFloat()
+                        val currentFontSize = (epub.fontSize ?: 1.15).toFloat()
                         val displayFontSize =
                             10 + ((currentFontSize - 0.55f) / 0.15f).roundToInt() * 2
 
@@ -301,7 +329,7 @@ fun SettingsSheet(
                             label = "Font Size",
                             value = currentFontSize,
                             valueString = "$displayFontSize",
-                            onValueChange = { onPreferencesChange(preferences.copy(fontSize = it.toDouble())) },
+                            onValueChange = { onPreferencesChange(epub.copy(fontSize = it.toDouble())) },
                             valueRange = 0.55f..2.65f,
                             steps = 13,
                             activeSlider = activeSlider,
@@ -322,55 +350,120 @@ fun SettingsSheet(
                             }
                         )
 
-                        val currentLineHeight = (preferences.lineHeight ?: 1.5).toFloat()
+                        val currentFontWeight = (epub.fontWeight ?: 1.0).toFloat()
+                        CustomSettingsSlider(
+                            label = "Font Weight",
+                            value = currentFontWeight,
+                            valueString = String.format(Locale.US, "%.1fx", currentFontWeight),
+                            onValueChange = { onPreferencesChange(epub.copy(fontWeight = it.toDouble())) },
+                            valueRange = 0.5f..2.5f,
+                            steps = 9,
+                            activeSlider = activeSlider,
+                            onDraggingChanged = onDraggingChanged
+                        )
+
+                        val currentLineHeight = (epub.lineHeight ?: 1.5).toFloat()
                         CustomSettingsSlider(
                             label = "Line Spacing",
                             value = currentLineHeight,
                             valueString = String.format(Locale.US, "%.2fx", currentLineHeight),
-                            onValueChange = { onPreferencesChange(preferences.copy(lineHeight = it.toDouble())) },
+                            onValueChange = { onPreferencesChange(epub.copy(lineHeight = it.toDouble())) },
                             valueRange = 1.0f..2.5f,
                             steps = 5,
                             activeSlider = activeSlider,
                             onDraggingChanged = onDraggingChanged
                         )
 
-                        val currentMargin = (preferences.pageMargins ?: 1.0).toFloat()
+                        val currentMargin = (epub.pageMargins ?: 1.0).toFloat()
                         CustomSettingsSlider(
                             label = "Page Margins",
                             value = currentMargin,
                             valueString = String.format(Locale.US, "%.2fx", currentMargin),
-                            onValueChange = { onPreferencesChange(preferences.copy(pageMargins = it.toDouble())) },
+                            onValueChange = { onPreferencesChange(epub.copy(pageMargins = it.toDouble())) },
                             valueRange = 0.5f..2.5f,
                             steps = 7,
                             activeSlider = activeSlider,
                             onDraggingChanged = onDraggingChanged
                         )
 
-                        val currentWordSpacing = (preferences.wordSpacing ?: 0.0).toFloat()
+                        val currentWordSpacing = (epub.wordSpacing ?: 0.0).toFloat()
                         CustomSettingsSlider(
                             label = "Word Spacing",
                             value = currentWordSpacing,
                             valueString = if (currentWordSpacing == 0f) "Default"
                             else String.format(Locale.US, "+%.2fx", currentWordSpacing),
-                            onValueChange = { onPreferencesChange(preferences.copy(wordSpacing = it.toDouble())) },
+                            onValueChange = { onPreferencesChange(epub.copy(wordSpacing = it.toDouble())) },
                             valueRange = 0.0f..1.0f,
                             steps = 3,
                             activeSlider = activeSlider,
                             onDraggingChanged = onDraggingChanged
                         )
 
-                        val currentLetterSpacing = (preferences.letterSpacing ?: 0.0).toFloat()
+                        val currentLetterSpacing = (epub.letterSpacing ?: 0.0).toFloat()
                         CustomSettingsSlider(
                             label = "Letter Spacing",
                             value = currentLetterSpacing,
                             valueString = if (currentLetterSpacing == 0f) "Default"
                             else String.format(Locale.US, "+%.2fx", currentLetterSpacing),
-                            onValueChange = { onPreferencesChange(preferences.copy(letterSpacing = it.toDouble())) },
+                            onValueChange = { onPreferencesChange(epub.copy(letterSpacing = it.toDouble())) },
                             valueRange = 0.0f..0.5f,
                             steps = 4,
                             activeSlider = activeSlider,
                             onDraggingChanged = onDraggingChanged
                         )
+                    }
+                }
+
+                // --- SYSTEM & ADVANCED SETTINGS ---
+                item {
+                    Column(
+                        modifier = Modifier.graphicsLayer { alpha = nonSliderAlpha },
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        SectionLabel("System & Advanced")
+
+                        ListItem(
+                            headlineContent = { Text("Night Light") },
+                            supportingContent = { Text("Warm amber tint for eye comfort") },
+                            trailingContent = {
+                                Switch(
+                                    checked = preferences.nightLight,
+                                    onCheckedChange = onNightLightChange,
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                        checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                                    )
+                                )
+                            },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            modifier = Modifier.padding(horizontal = 0.dp)
+                        )
+
+                        ListItem(
+                            headlineContent = { Text("Volume Button Navigation") },
+                            supportingContent = { Text("Turn pages using physical volume keys") },
+                            trailingContent = {
+                                Switch(
+                                    checked = preferences.volumeNavigation,
+                                    onCheckedChange = onVolumeNavigationChange
+                                )
+                            },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            modifier = Modifier.padding(horizontal = 0.dp)
+                        )
+
+/*                        ListItem(
+                            headlineContent = { Text("Hyphenation") },
+                            supportingContent = { Text("Allow breaking words at line ends") },
+                            trailingContent = {
+                                Switch(
+                                    checked = epub.hyphenation ?: false,
+                                    onCheckedChange = { onPreferencesChange(epub.copy(hyphenation = it)) }
+                                )
+                            },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            modifier = Modifier.padding(horizontal = 0.dp)
+                        )*/
                     }
                 }
 
@@ -401,6 +494,8 @@ fun SettingsSheet(
             confirmButton = {
                 TextButton(onClick = {
                     onPreferencesChange(ReaderDefaults.getPreferences())
+                    onVolumeNavigationChange(false)
+                    onNightLightChange(false)
                     showResetDialog = false
                 }) {
                     Text("Reset", color = MaterialTheme.colorScheme.error)
