@@ -51,7 +51,8 @@ val sourcesModule = module {
 
     viewModel {
         GutenbergViewModel(
-            repository = get()
+            gutenbergRepository = get(),
+            bookDetailsRepository = get()
         )
     }
 
