@@ -243,10 +243,14 @@ class AiraViewModel(
             is AiraResponse.Success -> {
                 _uiState.update { airaUiState ->
                     val updatedMessages = airaUiState.messages.toMutableList()
+
                     if (updatedMessages.isNotEmpty() && updatedMessages.last().role == AiraMessage.Role.AIRA) {
-                        updatedMessages[updatedMessages.lastIndex] =
-                            updatedMessages.last().copy(content = response.text)
+                        updatedMessages[updatedMessages.lastIndex] = updatedMessages.last().copy(
+                            content = response.text,
+                            sources = response.sources
+                        )
                     }
+
                     airaUiState.copy(
                         messages = updatedMessages,
                         isLoading = false,

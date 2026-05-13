@@ -7,7 +7,6 @@ import com.yugentech.quill.database.entity.AiraMessageEntity
 import com.yugentech.quill.database.entity.AiraMessageRole
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import timber.log.Timber
 
 class AiraHandler(
     private val queryRouter: QueryRouter,
@@ -18,9 +17,6 @@ class AiraHandler(
 
     fun ask(bookId: String, question: String): Flow<AiraResponse> = flow {
         val book = bookDao.getBookEntity(bookId)!!
-
-        Timber.d("[Aira] User prompt: \"$question\"")
-
         val recentHistory = airaMessageDao.getRecentMessagesForBook(bookId)
         val filteredHistory = recentHistory
             .windowed(size = 2, step = 2, partialWindows = true)
@@ -47,17 +43,6 @@ class AiraHandler(
                 author = book.author
             )
 
-
-            when (route) {
-                is QueryRoute.RagRequired -> Timber.d(
-                    "[Aira] Route: RAG | ${route.queryVariations.size} queries (3 variations + hypothetical):\n${
-                        route.queryVariations.joinToString("\n") { " - $it" }
-                    }"
-                )
-
-                is QueryRoute.NoRagRequired -> Timber.d("[Aira] Route: General (no RAG)")
-            }
-
             val responseFlow = when (route) {
                 is QueryRoute.RagRequired -> airaResponder.respondWithRag(
                     bookId = bookId,
@@ -77,7 +62,6 @@ class AiraHandler(
             responseFlow.collect { response ->
                 emit(response)
                 if (response is AiraResponse.Success) {
-                    Timber.d("[Aira] Response: \"${response.text.take(600)}\"")
                     airaMessageDao.insertMessage(
                         AiraMessageEntity(
                             bookId = bookId,
@@ -90,7 +74,6 @@ class AiraHandler(
             }
 
         } catch (e: Exception) {
-            Timber.e(e, "[Aira] Handler failed for bookId: $bookId")
             emit(AiraResponse.Error(resolveErrorMessage(e)))
         }
     }

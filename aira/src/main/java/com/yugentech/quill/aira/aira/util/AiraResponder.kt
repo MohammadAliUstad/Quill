@@ -9,6 +9,7 @@ import com.yugentech.quill.database.entity.BookEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
+import org.json.JSONObject
 import timber.log.Timber
 
 class AiraResponder(
@@ -34,16 +35,52 @@ class AiraResponder(
             spoilerLockEnabled = book.spoilerLockEnabled
         )
 
-        Timber.d("[AiraResponder] Intent: ${route.intent} | topPassages: ${route.intent.topPassages} | candidates: ${route.intent.candidatesPerQuery}")
-        Timber.d("[AiraResponder] Retrieved ${chunks.size} chunks for ${route.queryVariations.size} variations")
-        Timber.d("[AiraResponder] Chunks: ${chunks.map { "ch${it.chapterIndex}" }}")
 
-        val contextBlock = AiraBuilder.buildContextBlock(chunks.map { it.text })
+        val contextBlock = AiraBuilder.buildContextBlock(chunks)
         val userPrompt = AiraBuilder.buildUserPrompt(question, contextBlock)
         val systemPrompt = AiraBuilder.buildRagSystemPrompt(book.title, book.author)
         val formattedHistory = formatHistory(history)
+        val geminiRawResponse = callGemini(userPrompt, systemPrompt, formattedHistory)
 
-        emit(callGemini(userPrompt, systemPrompt, formattedHistory))
+        try {
+            val cleanJson = geminiRawResponse
+                .replace("```json", "", ignoreCase = true)
+                .replace("```", "")
+                .trim()
+
+            val startIndex = cleanJson.indexOf('{')
+            val endIndex = cleanJson.lastIndexOf('}')
+
+            if (startIndex == -1 || endIndex == -1 || startIndex > endIndex) {
+                throw Exception("Valid JSON object not found in the response.")
+            }
+
+            val finalJsonString = cleanJson.substring(startIndex, endIndex + 1)
+            val jsonObject = JSONObject(finalJsonString)
+
+            val answerText = jsonObject.getString("answer")
+            val usedIdsArray = jsonObject.optJSONArray("used_ids")
+
+            val usedIds = mutableListOf<Int>()
+            if (usedIdsArray != null) {
+                for (i in 0 until usedIdsArray.length()) {
+                    usedIds.add(usedIdsArray.getInt(i))
+                }
+            }
+
+            val accurateSources = if (AiraBuilder.isDeadEnd(answerText)) {
+                emptyList()
+            } else {
+                chunks.filterIndexed { index, _ -> index in usedIds }
+            }
+
+            emit(AiraResponse.Success(text = answerText, sources = accurateSources))
+
+        } catch (e: Exception) {
+            val fallbackSources =
+                if (AiraBuilder.isDeadEnd(geminiRawResponse)) emptyList() else chunks
+            emit(AiraResponse.Success(text = geminiRawResponse, sources = fallbackSources))
+        }
     }
 
     fun respondGeneral(
@@ -53,15 +90,16 @@ class AiraResponder(
     ): Flow<AiraResponse> = flow {
         val systemPrompt = AiraBuilder.buildGeneralSystemPrompt(book.title, book.author)
         val formattedHistory = formatHistory(history)
+        val rawResponse = callGemini(question, systemPrompt, formattedHistory)
 
-        emit(callGemini(question, systemPrompt, formattedHistory))
+        emit(AiraResponse.Success(text = rawResponse))
     }
 
     private suspend fun callGemini(
         prompt: String,
         systemPrompt: String,
         history: List<Map<String, Any>>
-    ): AiraResponse {
+    ): String {
         return try {
             val payload = hashMapOf(
                 "prompt" to prompt,
@@ -74,10 +112,8 @@ class AiraResponder(
                 .call(payload)
                 .await()
 
-            val response = (result.getData() as? Map<*, *>)?.get("response") as? String
+            (result.getData() as? Map<*, *>)?.get("response") as? String
                 ?: throw Exception("Empty response from function")
-
-            AiraResponse.Success(response)
 
         } catch (e: Exception) {
             Timber.e(e, "AiraResponder callGemini failed")
