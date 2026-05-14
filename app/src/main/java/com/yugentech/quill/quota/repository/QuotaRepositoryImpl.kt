@@ -50,7 +50,7 @@ class QuotaRepositoryImpl(
                 networkQuota = quotaService.fetchQuota(userId)
             }
 
-            networkQuota.isExpired && !networkQuota.isLifetime -> {
+            networkQuota.isExpired -> {
                 quotaService.resetQuota(userId)
                 networkQuota = quotaService.fetchQuota(userId)
             }
@@ -61,8 +61,7 @@ class QuotaRepositoryImpl(
                 userId = userId,
                 queriesUsed = networkQuota.queriesUsed,
                 queriesLimit = networkQuota.queriesLimit,
-                resetAtMillis = networkQuota.resetAt?.toDate()?.time ?: 0L,
-                isLifetime = networkQuota.isLifetime
+                resetAtMillis = networkQuota.resetAt?.toDate()?.time ?: 0L
             )
             quotaDao.saveQuota(entity)
         }
@@ -71,7 +70,7 @@ class QuotaRepositoryImpl(
     override suspend fun consumeQuery(userId: String): Boolean {
         var currentQuota = quotaDao.getQuota(userId)
 
-        if (currentQuota?.isExpired == true && !currentQuota.isLifetime) {
+        if (currentQuota?.isExpired == true) {
             val newResetTime = System.currentTimeMillis() + 86400000L
 
             quotaDao.resetUsage(userId, newResetTime)
