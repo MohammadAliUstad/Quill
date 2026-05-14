@@ -8,8 +8,7 @@ data class QuotaEntity(
     @PrimaryKey val userId: String,
     val queriesUsed: Int,
     val queriesLimit: Int,
-    val resetAtMillis: Long,
-    val isLifetime: Boolean = false
+    val resetAtMillis: Long
 ) {
     val remaining: Int
         get() = (queriesLimit - queriesUsed).coerceAtLeast(0)
@@ -18,5 +17,5 @@ data class QuotaEntity(
         get() = remaining > 0
 
     val isExpired: Boolean
-        get() = !isLifetime && System.currentTimeMillis() > resetAtMillis
+        get() = System.currentTimeMillis() > resetAtMillis
 }
