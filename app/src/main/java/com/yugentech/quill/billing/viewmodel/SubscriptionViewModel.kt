@@ -53,6 +53,7 @@ class SubscriptionViewModel(
                 if (event is BillingEvent.SubscriptionActivated) {
                     authRepository.currentUser?.let { uid ->
                         userRepository.updateProStatus(uid, true)
+                        enqueueIndexingForExistingBooks()
                     }
                 }
                 _events.emit(event)
@@ -93,6 +94,7 @@ class SubscriptionViewModel(
             when (wasRestored) {
                 true -> {
                     userRepository.updateProStatus(userId, true)
+                    enqueueIndexingForExistingBooks()
                     _events.emit(BillingEvent.SubscriptionActivated)
                 }
                 false -> {
@@ -104,5 +106,10 @@ class SubscriptionViewModel(
                 }
             }
         }
+    }
+
+    private suspend fun enqueueIndexingForExistingBooks() {
+        bookRepository.getUnindexedDownloadedBooks()
+            .forEach { book -> bookRepository.enqueueIndexing(book.id) }
     }
 }
