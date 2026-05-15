@@ -13,6 +13,7 @@ import com.yugentech.quill.reader.ReaderActivity
 import com.yugentech.quill.ui.shared.airaChat.parent.AiraChatScreen
 import com.yugentech.quill.ui.shared.bookDetails.parent.BookDetailsScreen
 import com.yugentech.quill.ui.shared.bookDetails.parent.NotesScreen
+import com.yugentech.quill.ui.shared.bookDetails.parent.NotesViewModel
 import com.yugentech.theme.tokens.AppConstants.EMPTY
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -30,7 +31,13 @@ fun NavGraphBuilder.bookFeatureGraph(
             bookDetailsViewModel = bookDetailsViewModel,
             onBackClick = { navController.popBackStack() },
             onReadClick = { bookId, chapterHref ->
-                context.startActivity(ReaderActivity.createIntent(context, bookId, chapterHref))
+                context.startActivity(
+                    ReaderActivity.createIntent(
+                        context = context,
+                        bookId = bookId,
+                        initialChapterHref = chapterHref
+                    )
+                )
             },
             onAiraClick = { bookId ->
                 navController.navigate(AppScreen.Aira.route + "/$bookId") {
@@ -47,13 +54,26 @@ fun NavGraphBuilder.bookFeatureGraph(
 
     composable(
         route = AppScreen.NotesScreen.route + "/{bookId}", // 1. Added the placeholder here
-        arguments = listOf(navArgument("bookId") { type = NavType.StringType }) // 2. Declared the argument
+        arguments = listOf(navArgument("bookId") {
+            type = NavType.StringType
+        }) // 2. Declared the argument
     ) { backStackEntry ->
         val bookId = backStackEntry.arguments?.getString("bookId") ?: return@composable
+        val notesViewModel: NotesViewModel = koinViewModel()
 
         NotesScreen(
             bookId = bookId,
-            onBackClick = { navController.popBackStack() }
+            onBackClick = { navController.popBackStack() },
+            onAnnotationClick = { clickedBookId, locatorJson ->
+                context.startActivity(
+                    ReaderActivity.createIntent(
+                        context = context,
+                        bookId = clickedBookId,
+                        locatorJson = locatorJson
+                    )
+                )
+            },
+            viewModel = notesViewModel
         )
     }
 

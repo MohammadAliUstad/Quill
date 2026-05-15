@@ -30,7 +30,8 @@ val readerModule = module {
 
     single<ReaderRepository> {
         ReaderRepositoryImpl(
-            bookDao = get()
+            bookDao = get(),
+            highlightDao = get()
         )
     }
 

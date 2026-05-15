@@ -17,33 +17,25 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.navigation.host.AppNavHost
-import com.yugentech.theme.QuillTheme
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
+import com.yugentech.theme.QuillTheme
 import com.yugentech.theme.models.ThemeMode
 import org.koin.android.ext.android.get
 import org.koin.androidx.compose.koinViewModel
-import timber.log.Timber
 
 class MainActivity : FragmentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
-
         super.onCreate(savedInstanceState)
-        Timber.v("MainActivity onCreate: App launching")
-
         val authViewModel: AuthViewModel = get()
-
         splashScreen.setKeepOnScreenCondition {
             authViewModel.authState.value.isInitializing
         }
 
         setContent {
             val navController = rememberNavController()
-
             val themeViewModel: ThemeViewModel = koinViewModel()
             val themeConfiguration by themeViewModel.themeConfiguration.collectAsStateWithLifecycle()
-
             val darkTheme = when (themeConfiguration.themeMode) {
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
@@ -63,7 +55,9 @@ class MainActivity : FragmentActivity() {
                 }
             )
 
-            QuillTheme(themeConfiguration = themeConfiguration) {
+            QuillTheme(
+                themeConfiguration = themeConfiguration
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
