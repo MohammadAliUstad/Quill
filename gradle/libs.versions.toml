@@ -51,6 +51,7 @@ koinAndroid = "4.2.0"
 koinAndroidxCompose = "4.2.0"
 koinAndroidxWorkmanager = "4.2.0"
 coilCompose = "2.7.0"
+media3 = "1.5.1"
 billingKtx = "8.3.0"
 readiumNavigator = "3.1.2"
 readiumShared = "3.1.2"
@@ -121,6 +122,8 @@ koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndr
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinAndroidxCompose" }
 koin-androidx-workmanager = { module = "io.insert-koin:koin-androidx-workmanager", version.ref = "koinAndroidxWorkmanager" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
+androidx-media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3" }
 billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billingKtx" }
 readium-navigator = { module = "org.readium.kotlin-toolkit:readium-navigator", version.ref = "readiumNavigator" }
 readium-shared = { module = "org.readium.kotlin-toolkit:readium-shared", version.ref = "readiumShared" }

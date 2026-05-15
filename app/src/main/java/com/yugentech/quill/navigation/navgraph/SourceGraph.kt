@@ -4,6 +4,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.yugentech.quill.navigation.screen.AppScreen
+import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel
+import com.yugentech.quill.sources.standard.viewmodel.StandardViewModel
 import com.yugentech.quill.ui.sources.gutenberg.parent.GutenbergScreen
 import com.yugentech.quill.ui.sources.standard.parent.StandardScreen
 import org.koin.androidx.compose.koinViewModel
@@ -12,10 +14,9 @@ fun NavGraphBuilder.sourceGraph(
     navController: NavHostController
 ) {
     composable(AppScreen.StandardEbooks.route) {
-        val standardViewModel: com.yugentech.quill.sources.standard.viewmodel.StandardViewModel = koinViewModel()
+        val standardViewModel: StandardViewModel = koinViewModel()
         StandardScreen(
-            standardViewModel = standardViewModel,
-            onBackClick = { navController.popBackStack() },
+            viewModel = standardViewModel,
             onNavigateById = { bookId ->
                 navController.navigate(AppScreen.BookDetailsScreen.createRoute(bookId = bookId)) {
                     launchSingleTop = true
@@ -30,10 +31,14 @@ fun NavGraphBuilder.sourceGraph(
     }
 
     composable(AppScreen.Gutenberg.route) {
-        val gutenbergViewModel: com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel = koinViewModel()
+        val gutenbergViewModel: GutenbergViewModel = koinViewModel()
         GutenbergScreen(
             viewModel = gutenbergViewModel,
-            onBackClick = { navController.popBackStack() },
+            onNavigateById = { bookId ->
+                navController.navigate(AppScreen.BookDetailsScreen.createRoute(bookId = bookId)) {
+                    launchSingleTop = true
+                }
+            },
             onNavigateByContent = { book ->
                 navController.navigate(AppScreen.BookDetailsScreen.createRoute(book = book)) {
                     launchSingleTop = true
