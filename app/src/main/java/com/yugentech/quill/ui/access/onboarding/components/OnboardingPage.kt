@@ -123,7 +123,7 @@ fun OnboardingPage(page: Int, isVisible: Boolean) {
     ) {
         Spacer(modifier = Modifier.height(spacing.l))
 
-        AnimatedVisibility(
+        androidx.compose.animation.AnimatedVisibility(
             visibleState = titleState,
             enter = fadeIn(tween(AppAnimations.Durations.Complex)) +
                     slideInVertically(tween(AppAnimations.Durations.Complex)) { AppAnimations.Durations.Micro },
@@ -141,7 +141,7 @@ fun OnboardingPage(page: Int, isVisible: Boolean) {
 
         Spacer(modifier = Modifier.height(spacing.sm))
 
-        AnimatedVisibility(
+        androidx.compose.animation.AnimatedVisibility(
             visibleState = textState,
             enter = fadeIn(tween(AppAnimations.Durations.Complex)) +
                     slideInVertically(tween(AppAnimations.Durations.Complex)) { AppAnimations.Durations.Micro },
@@ -163,7 +163,7 @@ fun OnboardingPage(page: Int, isVisible: Boolean) {
                 .weight(1f),
             contentAlignment = Alignment.Center
         ) {
-            AnimatedVisibility(
+            androidx.compose.animation.AnimatedVisibility(
                 visibleState = imageState,
                 enter = scaleIn(
                     tween(
@@ -182,7 +182,7 @@ fun OnboardingPage(page: Int, isVisible: Boolean) {
             }
 
 
-            AnimatedVisibility(
+            androidx.compose.animation.AnimatedVisibility(
                 visibleState = imageState,
                 enter = fadeIn(tween(AppAnimations.Durations.Complex)) + scaleIn(tween(AppAnimations.Durations.Complex)),
                 exit = fadeOut(),
@@ -199,7 +199,7 @@ fun OnboardingPage(page: Int, isVisible: Boolean) {
 
         Spacer(modifier = Modifier.height(spacing.l))
 
-        AnimatedVisibility(
+        androidx.compose.animation.AnimatedVisibility(
             visibleState = highlightsState,
             enter = fadeIn(tween(AppAnimations.Durations.Complex)) + slideInVertically(tween(AppAnimations.Durations.Complex)) { AppAnimations.Durations.Micro },
             exit = fadeOut()

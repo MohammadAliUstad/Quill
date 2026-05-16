@@ -36,17 +36,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.yugentech.quill.ui.access.onboarding.components.OnboardingPage
+import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.dimensions.AppAnimations
 import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OnboardingScreen(
     onFinish: () -> Unit
 ) {
+    val haptic = koinInject<HapticService>()
     val pagerState = rememberPagerState(pageCount = { 3 })
     val scope = rememberCoroutineScope()
     val spacing = MaterialTheme.spacing
@@ -68,7 +71,10 @@ fun OnboardingScreen(
                     exit = fadeOut()
                 ) {
                     TextButton(
-                        onClick = onFinish,
+                        onClick = {
+                            haptic.performHaptic()
+                            onFinish()
+                        },
                         shape = MaterialTheme.shapes.extraLarge
                     ) {
                         Text("Skip", style = MaterialTheme.typography.labelLarge)
@@ -79,6 +85,7 @@ fun OnboardingScreen(
 
                 Button(
                     onClick = {
+                        haptic.performHaptic()
                         scope.launch {
                             if (pagerState.currentPage < 2) {
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
