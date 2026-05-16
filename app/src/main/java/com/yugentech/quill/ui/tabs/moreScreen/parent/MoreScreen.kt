@@ -173,7 +173,7 @@ fun MoreScreen(
             item {
                 SettingsListItem(
                     title = "About Quill",
-                    subtitle = "Version 3.1.0",
+                    subtitle = "Version 3.2.0",
                     index = 0,
                     totalCount = 1,
                     onClick = onAbout,

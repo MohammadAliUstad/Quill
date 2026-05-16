@@ -17,9 +17,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.quill.ui.main.components.SectionHeader
 import com.yugentech.theme.AppFont
-import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.theme.builder.getFontFamily
 import com.yugentech.theme.tokens.spacing
 

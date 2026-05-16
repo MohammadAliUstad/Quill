@@ -12,19 +12,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.yugentech.quill.R
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.quill.ui.main.components.SectionHeader
 import com.yugentech.theme.tokens.spacing
-import org.koin.androidx.compose.koinViewModel
-import kotlin.collections.chunked
 
 @Composable
 fun ThemeColorSelector(
     modifier: Modifier = Modifier,
-    viewModel: ThemeViewModel = koinViewModel()
+    viewModel: ThemeViewModel
 ) {
     val themeConfig by viewModel.themeConfiguration.collectAsStateWithLifecycle()
     val currentPrimary = MaterialTheme.colorScheme.primary
@@ -42,7 +38,7 @@ fun ThemeColorSelector(
     ) {
         SectionHeader(
             icon = Icons.Default.Palette,
-            title = stringResource(R.string.color_theme)
+            title = ("Color Theme")
         )
 
         Column(

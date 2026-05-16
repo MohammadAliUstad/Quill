@@ -35,7 +35,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ThemeModeSelector(
     modifier: Modifier = Modifier,
-    themeViewModel: ThemeViewModel = koinViewModel()
+    themeViewModel: ThemeViewModel
 ) {
     val themeConfig by themeViewModel.themeConfiguration.collectAsStateWithLifecycle()
 
