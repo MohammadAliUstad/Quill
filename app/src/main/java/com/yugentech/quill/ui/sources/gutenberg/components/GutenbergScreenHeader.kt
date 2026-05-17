@@ -88,10 +88,6 @@ fun GutenbergScreenHeader(
             modifier = Modifier.widthIn(min = dockedWidth),
             windowInsets = SearchBarDefaults.windowInsets
         ) {
-            // --- SECOND FIX ---
-            // Removed the manual `Box` with `navigationBarsPadding()`.
-            // Because we are using `SearchBarDefaults.windowInsets` above, Compose
-            // natively pads the content inside the suggestions list so it doesn't get cut off.
             searchContent()
         }
     }

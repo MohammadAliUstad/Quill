@@ -28,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
-// 1. Define a simple data class to hold the category name and its icon
 data class CategorySuggestion(
     val name: String,
     val icon: ImageVector
@@ -40,18 +39,8 @@ fun SearchSuggestions(
 ) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp) // Slightly increased spacing for touch targets
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item {
-            Text(
-                text = "Categories",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
-
-        // 2. Pair each category with a relevant Material Icon
         val categories = listOf(
             CategorySuggestion("Science Fiction", Icons.Default.RocketLaunch),
             CategorySuggestion("Mystery", Icons.Default.Search),
@@ -72,7 +61,6 @@ fun SearchSuggestions(
     }
 }
 
-// 3. Updated Item Composable to display the Icon next to the Text
 @Composable
 fun CategorySuggestionItem(
     category: CategorySuggestion,
@@ -87,7 +75,7 @@ fun CategorySuggestionItem(
     ) {
         Icon(
             imageVector = category.icon,
-            contentDescription = null, // decorative
+            contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
 

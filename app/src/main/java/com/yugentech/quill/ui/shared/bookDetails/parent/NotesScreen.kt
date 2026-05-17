@@ -1,15 +1,18 @@
 package com.yugentech.quill.ui.shared.bookDetails.parent
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,33 +21,40 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Notes
-import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.R
+import com.yugentech.quill.database.entity.HighlightEntity
 import org.json.JSONObject
 import org.koin.androidx.compose.koinViewModel
-import com.yugentech.quill.database.entity.HighlightEntity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -53,21 +63,34 @@ import java.util.Locale
 @Composable
 fun NotesScreen(
     bookId: String,
+    onAnnotationClick: (String, String) -> Unit,
     onBackClick: () -> Unit,
     viewModel: NotesViewModel = koinViewModel()
 ) {
-    // Tell the ViewModel to fetch annotations for this specific book
+
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    var annotationToDelete by remember { mutableStateOf<HighlightEntity?>(null) }
+
     LaunchedEffect(bookId) {
         viewModel.loadAnnotations(bookId)
     }
 
-    // Observe the list of annotations from the DB
     val annotations by viewModel.annotations.collectAsState()
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = { Text("Notes & Highlights", style = MaterialTheme.typography.titleMedium) },
+            LargeTopAppBar(
+                title = {
+                    Column {
+                        Text("Notes")
+                        Text(
+                            text = "Review your annotations",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -78,102 +101,140 @@ fun NotesScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
-                )
+                ),
+                scrollBehavior = scrollBehavior
             )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier = Modifier.fillMaxSize()
         ) {
             if (annotations.isEmpty()) {
-                // --- EMPTY STATE ---
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Notes,
-                        contentDescription = "No Notes",
-                        modifier = Modifier.size(72.dp),
-                        tint = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "No notes or highlights yet",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Annotations you make while reading will appear here.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.offset(y = (-50).dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.empty_notes),
+                            contentDescription = "No notes",
+                            modifier = Modifier.size(240.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = "No notes or highlights yet",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Annotations you make while reading\nwill appear here.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             } else {
-                // --- POPULATED STATE ---
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = paddingValues.calculateTopPadding() + 8.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 8.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(
                         items = annotations,
-                        key = { it.id } // Using id as key improves LazyColumn performance
+                        key = { it.id }
                     ) { annotation ->
                         AnnotationCard(
+                            modifier = Modifier.animateItem(),
                             annotation = annotation,
-                            onDeleteClick = { viewModel.deleteAnnotation(annotation.id) }
+                            onCardClick = {
+                                onAnnotationClick(bookId, annotation.locatorJson)
+                            },
+                            onDeleteClick = {
+                                annotationToDelete = annotation
+                            }
                         )
                     }
                 }
             }
         }
     }
+
+    annotationToDelete?.let { annotation ->
+        DeleteAnnotationDialog(
+            onDismiss = { annotationToDelete = null },
+            onConfirm = {
+                viewModel.deleteAnnotation(annotation.id)
+                annotationToDelete = null
+            }
+        )
+    }
 }
 
 @Composable
 fun AnnotationCard(
+    modifier: Modifier = Modifier,
     annotation: HighlightEntity,
+    onCardClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    // Safely parse the Readium locator JSON to extract the highlighted text
-    val highlightText = remember(annotation.locatorJson) {
+    val parsedData = remember(annotation.locatorJson) {
         try {
             val json = JSONObject(annotation.locatorJson)
-            json.optJSONObject("text")?.optString("highlight") ?: "Content unreadable"
+            val text = json.optJSONObject("text")?.optString("highlight") ?: "Content unreadable"
+
+            val chapter = json.optString("title").let { it.ifBlank { "Unknown Chapter" } }
+            val position = json.optJSONObject("locations")?.optInt("position", -1) ?: -1
+            val location = if (position > 0) "$chapter • Page $position" else chapter
+
+            text to location
         } catch (e: Exception) {
-            "Error parsing highlight"
+            "Error parsing highlight" to "Unknown Location"
         }
     }
 
-    // Format the creation timestamp
+    val highlightText = parsedData.first
+    val locationInfo = parsedData.second
+
     val dateString = remember(annotation.createdAt) {
         val formatter = SimpleDateFormat("MMM dd, yyyy • h:mm a", Locale.getDefault())
         formatter.format(Date(annotation.createdAt))
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
+        onClick = onCardClick,
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            // Left color stripe to indicate the highlight color
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Box(
                 modifier = Modifier
                     .width(6.dp)
-                    .height(IntrinsicSize.Min) // Matches the height of the card content
+                    .height(IntrinsicSize.Min)
                     .background(Color(annotation.colorInt))
             )
 
@@ -182,17 +243,20 @@ fun AnnotationCard(
                     .weight(1f)
                     .padding(16.dp)
             ) {
-                // The actual highlighted text
+                Text(
+                    text = locationInfo,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+
                 Text(
                     text = "\"$highlightText\"",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontStyle = FontStyle.Italic,
-                    maxLines = 5,
-                    overflow = TextOverflow.Ellipsis
+                    fontStyle = FontStyle.Italic
                 )
 
-                // Optional note section (if you added notes later)
                 if (!annotation.note.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Box(
@@ -212,7 +276,6 @@ fun AnnotationCard(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Footer: Date + Style indicator + Delete button
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -225,21 +288,24 @@ fun AnnotationCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = if (annotation.style == "UNDERLINE") "Underline" else "Highlight",
+                            text = "Highlight",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
                     }
 
-                    IconButton(
+                    FilledIconButton(
                         onClick = onDeleteClick,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     ) {
                         Icon(
-                            imageVector = Icons.Default.DeleteOutline,
+                            imageVector = Icons.Filled.Delete,
                             contentDescription = "Delete annotation",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }

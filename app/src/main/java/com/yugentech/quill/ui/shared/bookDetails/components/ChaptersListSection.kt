@@ -67,8 +67,6 @@ fun LazyListScope.chaptersListSection(
             )
         }
     }
-
-    item { Spacer(modifier = Modifier.height(24.dp)) }
 }
 
 @Composable

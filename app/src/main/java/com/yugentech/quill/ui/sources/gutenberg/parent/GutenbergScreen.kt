@@ -68,7 +68,6 @@ fun GutenbergScreen(
     val screenWidth = with(density) { windowInfo.containerSize.width.toDp() }
     val dockedWidth = screenWidth - 32.dp
 
-    // Only needed for the grid offset
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 

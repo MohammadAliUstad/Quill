@@ -3,12 +3,9 @@ package com.yugentech.quill.ui.shared.bookDetails.parent
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
@@ -37,12 +34,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.bookDetails.viewmodel.BookDetailsViewModel
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.DownloadStatus
-import com.yugentech.quill.ui.shared.bookDetails.components.FloatingActionButton
 import com.yugentech.quill.ui.shared.bookDetails.components.BookDescriptionSection
 import com.yugentech.quill.ui.shared.bookDetails.components.BookDetailsTopBar
 import com.yugentech.quill.ui.shared.bookDetails.components.BookHeaderContent
 import com.yugentech.quill.ui.shared.bookDetails.components.BookParallaxBackground
 import com.yugentech.quill.ui.shared.bookDetails.components.CategorySelectionDialog
+import com.yugentech.quill.ui.shared.bookDetails.components.FloatingActionButton
 import com.yugentech.quill.ui.shared.bookDetails.components.ReadingProgressSection
 import com.yugentech.quill.ui.shared.bookDetails.components.chaptersListSection
 
@@ -62,7 +59,6 @@ fun BookDetailsScreen(
     val categories by bookDetailsViewModel.categories.collectAsStateWithLifecycle()
 
     val book = uiState.book ?: return
-    val isGutenberg = book.source == BookSource.GUTENBERG
     val chapters = uiState.chapters
     val isDescriptionExpanded = uiState.isDescriptionExpanded
     val downloadStatus = book.downloadStatus
@@ -84,11 +80,9 @@ fun BookDetailsScreen(
         }
     }
 
-    // 1. Replaced ScrollState with LazyListState
     val lazyListState = rememberLazyListState()
     val density = LocalDensity.current
 
-    // 2. Updated TopBar trigger logic for LazyColumn
     val showTopBarTitle by remember {
         derivedStateOf {
             lazyListState.firstVisibleItemIndex > 0 ||
@@ -96,13 +90,12 @@ fun BookDetailsScreen(
         }
     }
 
-    // 3. Extracted integer scroll offset to feed into your Parallax background safely
     val parallaxScrollOffset by remember {
         derivedStateOf {
             if (lazyListState.firstVisibleItemIndex == 0) {
                 lazyListState.firstVisibleItemScrollOffset
             } else {
-                10000 // Safely off-screen so the parallax stops calculating
+                10000
             }
         }
     }
@@ -114,7 +107,6 @@ fun BookDetailsScreen(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .nestedScroll(fabNestedScrollConnection),
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             BookDetailsTopBar(
@@ -132,34 +124,31 @@ fun BookDetailsScreen(
         },
         floatingActionButton = {
             if (downloadStatus == DownloadStatus.DOWNLOADED && uiState.isPro) {
-                Box(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
-                    FloatingActionButton(
-                        currentTabHasFab = true,
-                        isScrollingDown = isScrollingDown,
-                        onClick = { onAiraClick(book.id) }
-                    )
-                }
+                FloatingActionButton(
+                    currentTabHasFab = true,
+                    isScrollingDown = isScrollingDown,
+                    onClick = { onAiraClick(book.id) }
+                )
             }
         }
     ) { innerPadding ->
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding())
+            modifier = Modifier.fillMaxSize()
         ) {
 
-            // Note: We pass the extracted integer offset here now
             BookParallaxBackground(
                 book = book,
                 scrollState = parallaxScrollOffset,
                 headerHeight = 550.dp
             )
 
-            // 4. Converted Column to LazyColumn
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.fillMaxSize(),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    bottom = innerPadding.calculateBottomPadding() + 8.dp
+                ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
@@ -192,22 +181,17 @@ fun BookDetailsScreen(
 
                 if (!uiState.isLoading) {
                     item {
-                        val bottomPadding = if (isDescriptionExpanded && chapters.isEmpty()) 40.dp else 8.dp
-
                         BookDescriptionSection(
                             description = book.description,
                             subjects = book.subjects,
                             modifier = Modifier
-                                .padding(horizontal = 24.dp)
-                                .padding(bottom = bottomPadding),
+                                .padding(horizontal = 24.dp),
                             isExpanded = isDescriptionExpanded,
-                            onExpandedChange = { bookDetailsViewModel.onToggleDescription() },
-                            isGutenberg = isGutenberg
+                            onExpandedChange = { bookDetailsViewModel.onToggleDescription() }
                         )
                     }
                 }
 
-                // 5. Deconstructed ChaptersListSection into Lazy rendering
                 if (chapters.isNotEmpty()) {
                     chaptersListSection(
                         chapters = chapters,
@@ -219,7 +203,6 @@ fun BookDetailsScreen(
         }
     }
 
-    // --- DIALOGS (Unchanged) ---
     if (showCategoryDialog) {
         CategorySelectionDialog(
             categories = categories,
@@ -248,10 +231,17 @@ fun BookDetailsScreen(
             title = { Text("Delete Book File?") },
             text = { Text("The downloaded book file will be deleted, but your reading progress and bookmarks will be kept completely safe.") },
             confirmButton = {
-                TextButton(onClick = {
-                    bookDetailsViewModel.deleteBook()
-                    showDeleteDialog = false
-                }) {
+                TextButton(
+                    onClick = {
+                        if (book.source == BookSource.USER_IMPORTED) {
+                            bookDetailsViewModel.removeFromLibrary()
+                            onBackClick()
+                        } else {
+                            bookDetailsViewModel.deleteBook()
+                        }
+
+                        showDeleteDialog = false
+                    }) {
                     Text("Delete File", color = MaterialTheme.colorScheme.error)
                 }
             },

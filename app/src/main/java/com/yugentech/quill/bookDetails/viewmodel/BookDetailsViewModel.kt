@@ -91,6 +91,7 @@ class BookDetailsViewModel(
         userExpandedOverride.value = true
         viewModelScope.launch {
             repository.removeDownload(targetBookId)
+            repository.removeFromRecent(targetBookId)
         }
     }
 
