@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +19,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,7 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.reader.ui.components.aira.components.ThinkingIndicator
@@ -39,11 +45,13 @@ import com.yugentech.quill.reader.ui.components.aira.components.ThinkingIndicato
 @Composable
 fun MessageItem(
     message: ChatMessage,
-    onTypingStateChange: (Boolean) -> Unit = {}
+    onTypingStateChange: (Boolean) -> Unit = {},
+    onSpeakClick: (String) -> Unit = {}
 ) {
     val isAira = message.isFromAira
     val containerWidth = LocalWindowInfo.current.containerSize.width
     val maxWidth = (containerWidth * 0.78f).dp
+    val clipboardManager = LocalClipboardManager.current
 
     if (isAira) {
         val isThinking = message.isNew && message.text.isBlank()
@@ -95,30 +103,79 @@ fun MessageItem(
 
             Spacer(Modifier.width(10.dp))
 
-            if (isThinking) {
-                Box(
-                    modifier = Modifier.height(28.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    ThinkingIndicator()
+            Column(modifier = Modifier.widthIn(max = maxWidth)) {
+                if (isThinking) {
+                    Box(
+                        modifier = Modifier.height(28.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        ThinkingIndicator()
+                    }
+                } else {
+                    Text(
+                        text = displayedText,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            lineHeight = 24.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+
+                    // Show Sources and Actions only when typing finishes
+                    if (textLength.value.toInt() == message.text.length) {
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            // Left side: Sources Card
+                            Box(modifier = Modifier.weight(1f)) {
+                                if (message.sources.isNotEmpty()) {
+                                    SourcesCard(sources = message.sources)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            // Right side: Action Buttons
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                // Speak Button
+                                IconButton(
+                                    onClick = { onSpeakClick(message.text) },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.VolumeUp,
+                                        contentDescription = "Read Aloud",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+
+                                // Copy Button
+                                IconButton(
+                                    onClick = { clipboardManager.setText(AnnotatedString(message.text)) },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ContentCopy,
+                                        contentDescription = "Copy Text",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
-            } else {
-                Text(
-                    text = displayedText,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        lineHeight = 24.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .widthIn(max = maxWidth)
-                        .padding(top = 4.dp)
-                )
             }
         }
     } else {
-        var visible by remember(message.stableKey) {
-            mutableStateOf(!message.isNew)
-        }
+        var visible by remember(message.stableKey) { mutableStateOf(!message.isNew) }
         LaunchedEffect(message.stableKey) { visible = true }
 
         AnimatedVisibility(
@@ -142,9 +199,7 @@ fun MessageItem(
                 ) {
                     Text(
                         text = message.text,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            lineHeight = 24.sp
-                        ),
+                        style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                     )

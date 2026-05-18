@@ -39,11 +39,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,14 +53,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.core.content.ContextCompat
-
-// --- NEW IMPORTS FOR FIREBASE & TTS ---
 import com.google.firebase.Firebase
 import com.google.firebase.functions.functions
-import com.yugentech.quill.aira.aira.util.VoiceOutputManager
-// --------------------------------------
-
 import com.yugentech.quill.aira.aira.util.VoiceInputManager
+import com.yugentech.quill.aira.aira.util.VoiceOutputManager
 import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
 import com.yugentech.quill.ui.shared.airaChat.components.AiraChatHistory
 import com.yugentech.quill.ui.shared.airaChat.components.AiraEmptyState
@@ -69,6 +65,7 @@ import com.yugentech.quill.ui.shared.airaChat.components.InputBar
 import com.yugentech.quill.ui.shared.airaChat.components.QuotaLimitBar
 import com.yugentech.quill.ui.shared.airaChat.components.StatusBanner
 import com.yugentech.theme.tokens.AppConstants.EMPTY
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -84,16 +81,17 @@ fun AiraChatScreen(
     val listState = rememberLazyListState()
     var showResetDialog by remember { mutableStateOf(false) }
 
+    val coroutineScope = rememberCoroutineScope()
+
     val context = LocalContext.current
     var isListening by remember { mutableStateOf(false) }
 
-    // --- VOICE INPUT INITIALIZATION ---
     val voiceInputManager = remember {
         VoiceInputManager(
             context = context,
             onPartialResult = { text -> inputText = text },
             onFinalResult = { text -> inputText = text },
-            onError = { /* Handle error silently or show toast */ },
+            onError = {},
             onStateChange = { listening -> isListening = listening }
         )
     }
@@ -121,24 +119,12 @@ fun AiraChatScreen(
         }
     }
 
-    // --- NEW: VOICE OUTPUT (TTS) INITIALIZATION ---
     val functions = remember { Firebase.functions }
     val voiceOutputManager = remember { VoiceOutputManager(context, functions) }
 
     DisposableEffect(Unit) {
         onDispose { voiceOutputManager.destroy() }
     }
-
-    // --- NEW: WATCH FOR NEW MESSAGES TO TRIGGER TTS ---
-    LaunchedEffect(uiState.messages, uiState.isStreaming) {
-        val lastMessage = uiState.messages.lastOrNull()
-
-        // Ensure the message exists, is from Aira, and streaming has fully completed
-        if (lastMessage != null && lastMessage.role.name == "AIRA" && !uiState.isStreaming) {
-            voiceOutputManager.speak(lastMessage.content)
-        }
-    }
-    // ----------------------------------------------
 
     if (showResetDialog) {
         AiraResetDialog(
@@ -242,7 +228,10 @@ fun AiraChatScreen(
                         uiState = uiState,
                         listState = listState,
                         bottomPadding = bottomClearance,
-                        modifier = Modifier.imePadding()
+                        modifier = Modifier.imePadding(),
+                        onSpeakClick = { text ->
+                            coroutineScope.launch { voiceOutputManager.speak(text) }
+                        }
                     )
                 }
             }
@@ -291,7 +280,6 @@ fun AiraChatScreen(
                             isEnabled = !uiState.isLoading && uiState.isReady,
                             isStreaming = uiState.isStreaming || uiState.isLoading,
                             isListening = isListening,
-                            // --- NEW: INTERRUPT AUDIO WHEN USER INTERACTS ---
                             onMicClick = {
                                 voiceOutputManager.stop()
                                 onMicToggle()
@@ -307,7 +295,6 @@ fun AiraChatScreen(
                                 voiceOutputManager.stop()
                                 viewModel.stopGeneration()
                             }
-                            // ------------------------------------------------
                         )
                     }
                 } else {
