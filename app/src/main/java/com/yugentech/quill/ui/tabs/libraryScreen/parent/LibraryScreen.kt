@@ -67,6 +67,7 @@ fun LibraryScreen(
     val favoriteBooks by viewModel.favoriteBooks.collectAsState()
     val bookShelf by viewModel.bookShelf.collectAsState()
     val userCategories by viewModel.userCategories.collectAsState()
+    val isInitializing by viewModel.isInitializing.collectAsState()
 
     val scrollState = rememberScrollState()
 
@@ -96,7 +97,8 @@ fun LibraryScreen(
         booksFlow.collectAsState().value
     }
 
-    val isEmpty = lastReadBook == null &&
+    val isEmpty = !isInitializing &&
+            lastReadBook == null &&
             historyBooks.isEmpty() &&
             favoriteBooks.isEmpty() &&
             bookShelf.isEmpty() &&
