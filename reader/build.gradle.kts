@@ -51,6 +51,8 @@ dependencies {
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.common)
     implementation(libs.firebase.functions.ktx)
     implementation(libs.readium.shared)
     implementation(libs.readium.streamer)
