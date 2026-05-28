@@ -18,12 +18,16 @@ import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.Book
 
+import com.yugentech.theme.service.HapticService
+import org.koin.compose.koinInject
+
 @Composable
 fun HeroCarouselCard(
     book: Book,
     onBookClick: (Book) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = koinInject<HapticService>()
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
     val isLoaded = imageState is AsyncImagePainter.State.Success
 
@@ -62,7 +66,10 @@ fun HeroCarouselCard(
             onState = { imageState = it },
             modifier = Modifier
                 .fillMaxSize()
-                .clickable { onBookClick(book) }
+                .clickable {
+                    haptic.performHaptic()
+                    onBookClick(book)
+                }
                 .graphicsLayer {
                     alpha = imageAlpha
                     shadowElevation = 16.dp.toPx()
