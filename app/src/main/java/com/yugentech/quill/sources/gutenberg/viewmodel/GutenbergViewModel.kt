@@ -2,8 +2,10 @@ package com.yugentech.quill.sources.gutenberg.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
+import com.yugentech.quill.util.toUserFriendlyMessage
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,11 +15,13 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 sealed class GutenbergNavigationEvent {
+    data class NavigateById(val id: String) : GutenbergNavigationEvent()
     data class NavigateByContent(val book: Book) : GutenbergNavigationEvent()
 }
 
 class GutenbergViewModel(
-    private val repository: GutenbergRepository
+    private val gutenbergRepository: GutenbergRepository,
+    private val bookDetailsRepository: BookDetailsRepository
 ) : ViewModel() {
 
     private val _booksState = MutableStateFlow<List<Book>>(emptyList())
@@ -47,7 +51,7 @@ class GutenbergViewModel(
 
     init {
         viewModelScope.launch {
-            repository.getPopularBooksFlow().collect { cachedBooks ->
+            gutenbergRepository.getPopularBooksFlow().collect { cachedBooks ->
                 cachedPopularBooks = cachedBooks
                 if (_displayTitle.value == "Popular Books") {
                     _booksState.value = cachedBooks + paginatedMemoryCache
@@ -59,7 +63,12 @@ class GutenbergViewModel(
 
     fun onBookClick(book: Book) {
         viewModelScope.launch {
-            _navigationEvent.emit(GutenbergNavigationEvent.NavigateByContent(book))
+            val isLocal = bookDetailsRepository.isBookInLibrary(book.id)
+            if (isLocal) {
+                _navigationEvent.emit(GutenbergNavigationEvent.NavigateById(book.id))
+            } else {
+                _navigationEvent.emit(GutenbergNavigationEvent.NavigateByContent(book))
+            }
         }
     }
 
@@ -82,7 +91,7 @@ class GutenbergViewModel(
             _isLoading.value = true
             _displayTitle.value = "Searching for '$query'..."
 
-            repository.searchBooks(query)
+            gutenbergRepository.searchBooks(query)
                 .onSuccess { result ->
                     Timber.d("Search success — ${result.books.size} books, nextUrl=${result.nextPageUrl}")
                     _booksState.value = result.books
@@ -103,7 +112,7 @@ class GutenbergViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             Timber.d("syncPopularFeed() started")
-            repository.syncPopularFeed()
+            gutenbergRepository.syncPopularFeed()
                 .onSuccess { url ->
                     nextPageUrl = url
                     Timber.d("syncPopularFeed() succeeded — nextPageUrl=$url")
@@ -126,7 +135,7 @@ class GutenbergViewModel(
             _isPaginating.value = true
             Timber.d("Paginating — fetching next page from: $url")
 
-            repository.getNextPage(url)
+            gutenbergRepository.getNextPage(url)
                 .onSuccess { result ->
                     Timber.d("Pagination success — got ${result.books.size} books, nextUrl=${result.nextPageUrl}")
                     paginatedMemoryCache.addAll(result.books)
@@ -142,7 +151,8 @@ class GutenbergViewModel(
     }
 
     private fun handleError(e: Throwable) {
-        _error.value = e.localizedMessage
+        if (e is kotlinx.coroutines.CancellationException) return
+        _error.value = e.toUserFriendlyMessage()
         _displayTitle.value = "Something went wrong"
         _isLoading.value = false
     }
