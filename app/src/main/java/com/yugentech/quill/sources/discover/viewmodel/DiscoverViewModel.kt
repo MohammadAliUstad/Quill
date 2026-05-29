@@ -49,27 +49,39 @@ class DiscoverViewModel(
             if (!hasSelectedCategories) {
                 hasSelectedCategories = true
 
-                val genrePool = listOf(
-                    "Philosophy", "Mystery", "Fantasy", "Adventure", "Science Fiction",
-                    "Horror", "Comedy", "Drama", "Biography", "Poetry",
-                    "Satire", "Memoir", "Autobiography", "Spirituality"
+                val genrePool = mapOf(
+                    "Philosophy" to "philosophy",
+                    "Mystery" to "mystery",
+                    "Fantasy" to "fantasy",
+                    "Adventure" to "adventure",
+                    "Science Fiction" to "science-fiction",
+                    "Horror" to "horror",
+                    "Comedy" to "comedy",
+                    "Drama" to "drama",
+                    "Biography" to "biography",
+                    "Poetry" to "poetry",
+                    "Satire" to "satire",
+                    "Memoir" to "memoir",
+                    "Autobiography" to "autobiography",
+                    "Spirituality" to "spirituality"
                 )
 
-                val displayCategories = genrePool.shuffled().take(5)
+                val displayCategories = genrePool.keys.shuffled().take(5)
 
                 _uiState.update { state ->
                     state.copy(categoryRows = displayCategories.associateWith { emptyList() })
                 }
 
-                displayCategories.forEach { category ->
-                    launch { standardRepository.syncTopicBooks(category) }
+                displayCategories.forEach { categoryName ->
+                    val slug = genrePool[categoryName] ?: categoryName.lowercase()
+                    launch { standardRepository.syncTopicBooks(slug) }
 
                     launch {
-                        standardRepository.getTopicBooksFlow(category).collect { categoryBooks ->
-                            if (categoryBooks.isNotEmpty() && _uiState.value.categoryRows[category].isNullOrEmpty()) {
+                        standardRepository.getTopicBooksFlow(slug).collect { categoryBooks ->
+                            if (categoryBooks.isNotEmpty() && _uiState.value.categoryRows[categoryName].isNullOrEmpty()) {
                                 _uiState.update { state ->
                                     val updatedMap = LinkedHashMap(state.categoryRows)
-                                    updatedMap[category] = categoryBooks.take(15)
+                                    updatedMap[categoryName] = categoryBooks.take(15)
                                     state.copy(categoryRows = updatedMap)
                                 }
                             }
