@@ -9,11 +9,11 @@ import java.net.UnknownHostException
 fun Throwable.toUserFriendlyMessage(): String {
     return when (this) {
         is UnknownHostException, is ConnectException -> 
-            "No internet connection. Please check your network."
+            "No internet connection.\nPlease check your network."
         is SocketTimeoutException, is HttpRequestTimeoutException -> 
-            "Connection timed out. Please try again."
+            "Connection timed out.\nPlease try again."
         is ResponseException -> 
-            "The server is having trouble. Please try again later."
-        else -> "Something went wrong. Please try again."
+            "The server is having trouble.\nPlease try again later."
+        else -> "Something went wrong.\nPlease try again."
     }
 }
