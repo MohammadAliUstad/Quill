@@ -25,12 +25,16 @@ import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.Book
 
+import com.yugentech.theme.service.HapticService
+import org.koin.compose.koinInject
+
 @Composable
 fun DiscoverBookCard(
     book: Book,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = koinInject<HapticService>()
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
     val isLoaded = imageState is AsyncImagePainter.State.Success
     val imageAlpha by animateFloatAsState(
@@ -54,7 +58,10 @@ fun DiscoverBookCard(
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f)
                 .clip(coverShape)
-                .clickable(onClick = onClick)
+                .clickable {
+                    haptic.performHaptic()
+                    onClick()
+                }
         ) {
             Box(
                 modifier = Modifier
