@@ -6,7 +6,6 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.view.animation.LinearEasing
 import android.view.animation.LinearInterpolator
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
