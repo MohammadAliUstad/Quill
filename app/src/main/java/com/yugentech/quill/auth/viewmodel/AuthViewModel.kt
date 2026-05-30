@@ -14,10 +14,14 @@ import com.yugentech.quill.ui.access.signIn.state.ForgotPasswordState
 import com.yugentech.quill.user.repository.UserRepository
 import com.yugentech.quill.user.result.UserResult
 import com.yugentech.quill.user.service.SyncDataStore
+import com.yugentech.quill.user.datastore.UserDataStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -26,11 +30,20 @@ class AuthViewModel(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
     private val cloudSyncRepository: CloudSyncRepository,
-    private val syncDataStore: SyncDataStore
+    private val syncDataStore: SyncDataStore,
+    private val userDataStore: UserDataStore
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow(AuthState(isInitializing = true))
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
+
+    val showOnboarding = userDataStore.isOnboardingCompleted
+        .map { !it }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
 
     private val _forgotPasswordState =
         MutableStateFlow<ForgotPasswordState>(ForgotPasswordState.Idle)
@@ -112,6 +125,12 @@ class AuthViewModel(
                     _authState.update { it.copy(isLoading = false, error = result.message) }
                 }
             }
+        }
+    }
+
+    fun completeOnboarding() {
+        viewModelScope.launch {
+            userDataStore.saveOnboardingCompleted(true)
         }
     }
 
