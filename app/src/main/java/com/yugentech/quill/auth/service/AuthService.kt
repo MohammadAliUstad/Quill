@@ -1,4 +1,4 @@
-package com.yugentech.sessions.auth.service
+package com.yugentech.quill.auth.service
 
 import android.app.PendingIntent
 import android.content.Intent
