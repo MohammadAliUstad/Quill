@@ -44,6 +44,8 @@ import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.quill.database.view.LibraryBookView
 import com.yugentech.quill.ui.tabs.discoverScreen.components.shimmerEffect
+import com.yugentech.theme.service.HapticService
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -53,7 +55,7 @@ fun BookItem(
     needsTwoLines: Boolean = false,
     onClick: () -> Unit
 ) {
-
+    val haptic = koinInject<HapticService>()
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
     val isLoaded = imageState is AsyncImagePainter.State.Success
     val imageAlpha by animateFloatAsState(
@@ -71,7 +73,10 @@ fun BookItem(
         modifier = modifier
             .width(115.dp)
             .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+            .clickable {
+                haptic.performHaptic()
+                onClick()
+            }
             .padding(2.dp)
     ) {
         Card(
