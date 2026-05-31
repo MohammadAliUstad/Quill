@@ -5,7 +5,7 @@ import android.content.Intent
 import com.google.firebase.auth.FirebaseUser
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.AuthResult
-import com.yugentech.sessions.auth.service.AuthService
+import com.yugentech.quill.auth.service.AuthService
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 
