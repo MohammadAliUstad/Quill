@@ -18,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.yugentech.quill.auth.state.AuthState
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
 import com.yugentech.quill.navigation.navgraph.aboutGraph
@@ -28,6 +30,7 @@ import com.yugentech.quill.navigation.navgraph.mainGraph
 import com.yugentech.quill.navigation.navgraph.settingsGraph
 import com.yugentech.quill.navigation.navgraph.sourceGraph
 import com.yugentech.quill.navigation.screen.AppScreen
+import com.yugentech.quill.ui.access.onboarding.OnboardingScreen
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 
@@ -35,18 +38,22 @@ import timber.log.Timber
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    webClientId: String
+    webClientId: String,
+    authViewModel: AuthViewModel,
+    showOnboarding: Boolean,
+    onOnboardingComplete: () -> Unit,
+    shouldNavigateToHome: Boolean = false,
+    onNavigatedToHome: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val authViewModel: AuthViewModel = koinViewModel()
-    val subscriptionViewModel: SubscriptionViewModel = koinViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
+    val subscriptionViewModel: SubscriptionViewModel = koinViewModel()
 
     val startDestination = remember {
-        if (authState.isUserLoggedIn && authState.userId != null) {
-            AppScreen.Main.route
-        } else {
-            AppScreen.SignIn.route
+        when {
+            showOnboarding -> AppScreen.Onboarding.route
+            authState.isUserLoggedIn && authState.userId != null -> AppScreen.Main.route
+            else -> AppScreen.SignIn.route
         }
     }
 
@@ -69,11 +76,20 @@ fun AppNavHost(
         }
     }
 
-    LaunchedEffect(authState.isUserLoggedIn, authState.userId) {
+    LaunchedEffect(authState.isUserLoggedIn, authState.userId, showOnboarding) {
         if (!authState.isLoading && !authState.isInitializing) {
             val currentRoute = navController.currentDestination?.route
 
             when {
+                showOnboarding -> {
+                    if (currentRoute != AppScreen.Onboarding.route) {
+                        navController.navigate(AppScreen.Onboarding.route) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+
                 authState.isUserLoggedIn && authState.userId != null -> {
                     if (currentRoute != AppScreen.Main.route) {
                         navController.navigate(AppScreen.Main.route) {
@@ -92,6 +108,14 @@ fun AppNavHost(
                     }
                 }
             }
+        }
+    }
+
+    LaunchedEffect(shouldNavigateToHome) {
+        if (shouldNavigateToHome) {
+            Timber.d("Popping back to Main screen")
+            navController.popBackStack(AppScreen.Main.route, inclusive = false)
+            onNavigatedToHome()
         }
     }
 
@@ -123,6 +147,12 @@ fun AppNavHost(
             ) + fadeOut(animationSpec = tween(250))
         }
     ) {
+        composable(AppScreen.Onboarding.route) {
+            OnboardingScreen(
+                onFinish = onOnboardingComplete
+            )
+        }
+
         authGraph(
             navController = navController,
             authViewModel = authViewModel,

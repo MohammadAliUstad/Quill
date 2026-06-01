@@ -1,4 +1,4 @@
-package com.yugentech.sessions.ui.auth.components.buttons
+package com.yugentech.quill.ui.access.signIn.components.buttons
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
