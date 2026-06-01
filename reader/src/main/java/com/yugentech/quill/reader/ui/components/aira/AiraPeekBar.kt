@@ -63,7 +63,9 @@ import com.yugentech.quill.reader.ui.components.aira.components.InputBar
 import com.yugentech.quill.reader.ui.components.aira.components.PeekResponseArea
 import com.yugentech.quill.reader.ui.components.aira.components.QuotaLimitBar
 import com.yugentech.quill.reader.ui.components.aira.components.resolveChips
+import com.yugentech.theme.service.HapticService
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -79,6 +81,7 @@ fun AiraPeekBar(
     onStop: () -> Unit,
     onUpgradeClick: () -> Unit = {}
 ) {
+    val haptic = koinInject<HapticService>()
     var inputText by remember { mutableStateOf("") }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -226,17 +229,22 @@ fun AiraPeekBar(
                         AiraPeekHeader(
                             isLoading = airaUiState.isLoading,
                             onDismiss = {
+                                haptic.performHaptic()
                                 voiceOutputManager.stop()
                                 onDismiss()
                             },
                             onSpeak = {
+                                haptic.performHaptic()
                                 if (contentToActUpon.isNotEmpty()) {
                                     coroutineScope.launch {
                                         voiceOutputManager.speak(contentToActUpon)
                                     }
                                 }
                             },
-                            onCopy = onCopyResponse
+                            onCopy = {
+                                haptic.performHaptic()
+                                onCopyResponse()
+                            }
                         )
 
                         PeekResponseArea(
@@ -245,6 +253,7 @@ fun AiraPeekBar(
                             selectedText = selectedText,
                             activeChips = activeChips,
                             onChipClick = { intent ->
+                                haptic.performHaptic()
                                 if (isListening) voiceInputManager.stopListening()
                                 voiceOutputManager.stop()
                                 onQuickAction(intent)
@@ -272,6 +281,7 @@ fun AiraPeekBar(
                                     canSend = canSend,
                                     isListening = isListening,
                                     onMicClick = {
+                                        haptic.performHaptic()
                                         voiceOutputManager.stop()
                                         onMicToggle()
                                     },
@@ -280,8 +290,12 @@ fun AiraPeekBar(
                                     horizontalPadding = horizontalPadding,
                                     focusRequester = focusRequester,
                                     onFocusChanged = { isFocused = it },
-                                    onSend = ::send,
+                                    onSend = {
+                                        haptic.performHaptic()
+                                        send(it)
+                                    },
                                     onStop = {
+                                        haptic.performHaptic()
                                         voiceOutputManager.stop()
                                         onStop()
                                     }
@@ -289,7 +303,10 @@ fun AiraPeekBar(
                             } else {
                                 QuotaLimitBar(
                                     isPro = airaUiState.isPro,
-                                    onUpgradeClick = onUpgradeClick
+                                    onUpgradeClick = {
+                                        haptic.performHaptic()
+                                        onUpgradeClick()
+                                    }
                                 )
                             }
                         }
