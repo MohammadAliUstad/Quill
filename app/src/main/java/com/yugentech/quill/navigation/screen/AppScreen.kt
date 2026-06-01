@@ -9,6 +9,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 sealed class AppScreen(val route: String) {
+    data object Onboarding : AppScreen("onboarding")
     data object SignIn : AppScreen("sign_in")
     data object SignUp : AppScreen("sign_up")
     data object Main : AppScreen("main")
