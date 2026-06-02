@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.aira.aira.message.AiraMessage
-import com.yugentech.quill.aira.aira.state.AiraUiState
+import com.yugentech.quill.ui.shared.airaChat.state.AiraUiState
 
 @Composable
 fun AiraChatHistory(
@@ -26,7 +26,7 @@ fun AiraChatHistory(
     listState: LazyListState,
     bottomPadding: Dp,
     modifier: Modifier = Modifier,
-    onSpeakClick: (String) -> Unit = {} // <-- ADDED: Accept callback
+    onSpeakClick: (String) -> Unit = {}
 ) {
     var isVisuallyTyping by remember { mutableStateOf(false) }
 
@@ -59,7 +59,8 @@ fun AiraChatHistory(
                 }
             ) { index, message ->
                 val isAira = message.role == AiraMessage.Role.AIRA
-                val isLiveGeneration = index == 0 && isAira && (uiState.isLoading || uiState.isStreaming)
+                val isLiveGeneration =
+                    index == 0 && isAira && (uiState.isLoading || uiState.isStreaming)
                 val shouldRender = message.content.isNotBlank() || isLiveGeneration
 
                 if (shouldRender) {
@@ -68,15 +69,14 @@ fun AiraChatHistory(
                             text = message.content,
                             isFromAira = isAira,
                             isNew = isLiveGeneration,
-                            stableKey = "${uiState.messages.size - index}_${message.role}",
-                            sources = message.sources
+                            stableKey = "${uiState.messages.size - index}_${message.role}"
                         ),
                         onTypingStateChange = { isTyping ->
                             if (index == 0 && isAira) {
                                 isVisuallyTyping = isTyping
                             }
                         },
-                        onSpeakClick = onSpeakClick // <-- ADDED: Pass callback down
+                        onSpeakClick = onSpeakClick
                     )
                 }
             }
