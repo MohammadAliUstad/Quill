@@ -1,5 +1,9 @@
 package com.yugentech.quill.aira.aira.util
 
+import com.yugentech.quill.aira.bookChat.handler.BookChatHandler
+import com.yugentech.quill.aira.generalChat.handler.GeneralChatHandler
+import com.yugentech.quill.aira.intentDetection.model.Intent
+import com.yugentech.quill.aira.intentDetection.repository.IntentDetectionRepository
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.database.dao.AiraMessageDao
 import com.yugentech.quill.database.dao.BookDao
@@ -9,8 +13,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 class AiraHandler(
-    private val queryRouter: QueryRouter,
-    private val airaResponder: AiraResponder,
+    private val intentDetectionRepository: IntentDetectionRepository,
+    private val generalChatHandler: GeneralChatHandler,
+    private val bookChatHandler: BookChatHandler,
     private val bookDao: BookDao,
     private val airaMessageDao: AiraMessageDao
 ) {
@@ -28,31 +33,22 @@ class AiraHandler(
             }
             .flatten()
 
-        airaMessageDao.insertMessage(
-            AiraMessageEntity(
-                bookId = bookId,
-                role = AiraMessageRole.USER,
-                content = question.trim()
-            )
-        )
-
         try {
-            val route = queryRouter.routeQuery(
+            val intent = intentDetectionRepository.detectIntent(
                 question = question,
                 title = book.title,
                 author = book.author
             )
 
-            val responseFlow = when (route) {
-                is QueryRoute.RagRequired -> airaResponder.respondWithRag(
-                    bookId = bookId,
+            val responseFlow = when (intent) {
+                is Intent.BookRelated -> bookChatHandler.handle(
                     question = question,
-                    route = route,
+                    route = intent,
                     history = filteredHistory,
                     book = book
                 )
 
-                is QueryRoute.NoRagRequired -> airaResponder.respondGeneral(
+                is Intent.General -> generalChatHandler.handle(
                     question = question,
                     history = filteredHistory,
                     book = book
@@ -62,12 +58,20 @@ class AiraHandler(
             responseFlow.collect { response ->
                 emit(response)
                 if (response is AiraResponse.Success) {
+                    // Save User message
+                    airaMessageDao.insertMessage(
+                        AiraMessageEntity(
+                            bookId = bookId,
+                            role = AiraMessageRole.USER,
+                            content = question.trim()
+                        )
+                    )
+                    // Save Aira message
                     airaMessageDao.insertMessage(
                         AiraMessageEntity(
                             bookId = bookId,
                             role = AiraMessageRole.AIRA,
-                            content = response.text.trim(),
-                            sources = response.sources
+                            content = response.text.trim()
                         )
                     )
                 }
