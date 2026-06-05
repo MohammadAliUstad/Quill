@@ -1,4 +1,4 @@
-package com.yugentech.quill.aira.aira.repository
+package com.yugentech.quill.aira.repository
 
 import com.yugentech.quill.aira.aira.message.AiraMessage
 import com.yugentech.quill.aira.aira.util.AiraHandler
