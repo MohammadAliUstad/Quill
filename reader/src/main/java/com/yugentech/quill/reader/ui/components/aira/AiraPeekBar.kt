@@ -1,12 +1,8 @@
 package com.yugentech.quill.reader.ui.components.aira
 
-import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -36,12 +32,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,20 +45,14 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import androidx.core.content.ContextCompat
-import com.google.firebase.Firebase
-import com.google.firebase.functions.functions
-import com.yugentech.quill.aira.aira.util.VoiceInputManager
-import com.yugentech.quill.aira.aira.util.VoiceOutputManager
 import com.yugentech.quill.aira.quick.prompt.QuickPrompt
-import com.yugentech.quill.aira.quick.state.QuickUiState
+import com.yugentech.quill.reader.state.QuickUiState
 import com.yugentech.quill.reader.ui.components.aira.components.AiraPeekHeader
 import com.yugentech.quill.reader.ui.components.aira.components.InputBar
 import com.yugentech.quill.reader.ui.components.aira.components.PeekResponseArea
 import com.yugentech.quill.reader.ui.components.aira.components.QuotaLimitBar
 import com.yugentech.quill.reader.ui.components.aira.components.resolveChips
 import com.yugentech.theme.service.HapticService
-import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -86,50 +74,9 @@ fun AiraPeekBar(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
-    val coroutineScope = rememberCoroutineScope()
 
-    var isListening by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
     var currentGreeting by remember { mutableStateOf("") }
-
-    val voiceInputManager = remember {
-        VoiceInputManager(
-            context = context,
-            onPartialResult = { text -> inputText = text },
-            onFinalResult = { text -> inputText = text },
-            onError = {},
-            onStateChange = { listening -> isListening = listening }
-        )
-    }
-
-    val functions = remember { Firebase.functions }
-    val voiceOutputManager = remember { VoiceOutputManager(context, functions) }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            voiceInputManager.destroy()
-            voiceOutputManager.destroy()
-        }
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) voiceInputManager.startListening()
-    }
-
-    val onMicToggle = {
-        val hasPermission = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (hasPermission) {
-            if (isListening) voiceInputManager.stopListening() else voiceInputManager.startListening()
-        } else {
-            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-        }
-    }
 
     val contentToActUpon = remember(airaUiState.response, airaUiState.error, currentGreeting) {
         airaUiState.error ?: airaUiState.response ?: currentGreeting
@@ -154,8 +101,6 @@ fun AiraPeekBar(
             enforceLimitUi = !airaUiState.canSendQuery
         } else {
             inputText = ""
-            voiceOutputManager.stop()
-            if (isListening) voiceInputManager.stopListening()
         }
     }
 
@@ -185,8 +130,6 @@ fun AiraPeekBar(
 
     fun send(text: String) {
         if (text.isBlank()) return
-        if (isListening) voiceInputManager.stopListening()
-        voiceOutputManager.stop()
         onSendMessage(text)
         inputText = ""
         focusManager.clearFocus()
@@ -230,16 +173,10 @@ fun AiraPeekBar(
                             isLoading = airaUiState.isLoading,
                             onDismiss = {
                                 haptic.performHaptic()
-                                voiceOutputManager.stop()
                                 onDismiss()
                             },
                             onSpeak = {
-                                haptic.performHaptic()
-                                if (contentToActUpon.isNotEmpty()) {
-                                    coroutineScope.launch {
-                                        voiceOutputManager.speak(contentToActUpon)
-                                    }
-                                }
+                                // REMOVED: Speech logic
                             },
                             onCopy = {
                                 haptic.performHaptic()
@@ -254,8 +191,6 @@ fun AiraPeekBar(
                             activeChips = activeChips,
                             onChipClick = { intent ->
                                 haptic.performHaptic()
-                                if (isListening) voiceInputManager.stopListening()
-                                voiceOutputManager.stop()
                                 onQuickAction(intent)
                                 inputText = ""
                                 focusManager.clearFocus()
@@ -279,12 +214,6 @@ fun AiraPeekBar(
                                     onInputChange = { inputText = it },
                                     airaUiState = airaUiState,
                                     canSend = canSend,
-                                    isListening = isListening,
-                                    onMicClick = {
-                                        haptic.performHaptic()
-                                        voiceOutputManager.stop()
-                                        onMicToggle()
-                                    },
                                     buttonContainerColor = buttonContainerColor,
                                     buttonContentColor = buttonContentColor,
                                     horizontalPadding = horizontalPadding,
@@ -296,7 +225,6 @@ fun AiraPeekBar(
                                     },
                                     onStop = {
                                         haptic.performHaptic()
-                                        voiceOutputManager.stop()
                                         onStop()
                                     }
                                 )
