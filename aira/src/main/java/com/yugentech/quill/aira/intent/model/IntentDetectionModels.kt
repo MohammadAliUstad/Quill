@@ -1,4 +1,4 @@
-package com.yugentech.quill.aira.aira.intentDetection.model
+package com.yugentech.quill.aira.intent.model
 
 import org.json.JSONArray
 import org.json.JSONObject
