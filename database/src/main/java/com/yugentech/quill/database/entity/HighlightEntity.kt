@@ -5,6 +5,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+import com.yugentech.quill.database.model.HighlightStyle
+
 @Entity(
     tableName = "highlights",
     foreignKeys = [
@@ -23,6 +25,7 @@ data class HighlightEntity(
     val bookId: String,
     val locatorJson: String,
     val colorInt: Int,
+    val style: HighlightStyle = HighlightStyle.HIGHLIGHT,
     val note: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )
