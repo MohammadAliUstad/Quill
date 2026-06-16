@@ -1,7 +1,7 @@
-package com.yugentech.quill.aira.aira.bookChat.model
+package com.yugentech.quill.aira.chat.bookChat.payload
 
 data class BookChatPayload(
-    val prompt: String,
+    val query: String,
     val context: String,
     val bookTitle: String,
     val bookAuthor: String,
@@ -9,7 +9,7 @@ data class BookChatPayload(
 ) {
     fun toMap(): HashMap<String, Any> {
         return hashMapOf(
-            "prompt" to prompt,
+            "query" to query,
             "context" to context,
             "bookTitle" to bookTitle,
             "bookAuthor" to bookAuthor,
