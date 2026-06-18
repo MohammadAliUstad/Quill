@@ -16,6 +16,7 @@ data class Book(
     val localFilePath: String? = null,
     val isFavorite: Boolean = false,
     val downloadStatus: DownloadStatus = DownloadStatus.NOT_DOWNLOADED,
+    val downloadError: String? = null,
     val userCategory: String? = null,
     val progressPercent: Float = 0f,
     val totalPages: Int = 0,

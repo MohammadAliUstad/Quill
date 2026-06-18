@@ -19,6 +19,7 @@ data class BookEntity(
     val isFavorite: Boolean = false,
     val userCategory: String = "Shelf",
     val addedAt: Long = System.currentTimeMillis(),
+    val downloadError: String? = null,
     val progressPercent: Float = 0f,
     val totalPages: Int = 0,
     val lastChapterTitle: String? = null,

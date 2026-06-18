@@ -8,7 +8,7 @@ import com.yugentech.quill.database.model.DownloadStatus
     value = """
         SELECT id, title, author, coverUrl, downloadStatus, isFavorite, 
                userCategory, progressPercent, lastReadTime, addedAt,
-               totalPages, lastChapterTitle 
+               totalPages, lastChapterTitle, downloadError 
         FROM books
     """
 )
@@ -24,5 +24,6 @@ data class LibraryBookView(
     val lastReadTime: Long,
     val addedAt: Long,
     val totalPages: Int,
-    val lastChapterTitle: String?
+    val lastChapterTitle: String?,
+    val downloadError: String?
 )

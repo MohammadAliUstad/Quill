@@ -9,7 +9,8 @@ import com.yugentech.quill.database.view.LibraryBookView
 fun Book.toEntity(
     isFavorite: Boolean = this.isFavorite,
     category: String = this.userCategory ?: "Shelf",
-    status: DownloadStatus = this.downloadStatus
+    status: DownloadStatus = this.downloadStatus,
+    error: String? = this.downloadError
 ): BookEntity {
     return BookEntity(
         id = this.id,
@@ -22,6 +23,7 @@ fun Book.toEntity(
         subjects = this.subjects,
         language = this.language,
         downloadStatus = status,
+        downloadError = error,
         isFavorite = isFavorite,
         userCategory = category,
         addedAt = System.currentTimeMillis(),
@@ -51,6 +53,7 @@ fun BookEntity.toDomainModel(): Book {
         localFilePath = this.localFilePath,
         isFavorite = this.isFavorite,
         downloadStatus = this.downloadStatus,
+        downloadError = this.downloadError,
         userCategory = this.userCategory,
         progressPercent = this.progressPercent,
         totalPages = this.totalPages,
@@ -75,6 +78,7 @@ fun LibraryBookView.toBook(): Book {
         source = BookSource.STANDARD_EBOOKS,
         isFavorite = this.isFavorite,
         downloadStatus = this.downloadStatus,
+        downloadError = this.downloadError,
         userCategory = this.userCategory,
         progressPercent = this.progressPercent,
         totalPages = this.totalPages,

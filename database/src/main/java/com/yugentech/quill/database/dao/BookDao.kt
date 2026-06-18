@@ -78,8 +78,8 @@ interface BookDao {
     @Query("UPDATE books SET userCategory = :category, isSynced = 0 WHERE id = :bookId")
     suspend fun updateCategory(bookId: String, category: String)
 
-    @Query("UPDATE books SET downloadStatus = :status WHERE id = :bookId")
-    suspend fun updateDownloadStatus(bookId: String, status: DownloadStatus)
+    @Query("UPDATE books SET downloadStatus = :status, downloadError = :error WHERE id = :bookId")
+    suspend fun updateDownloadStatus(bookId: String, status: DownloadStatus, error: String? = null)
 
     @Query("UPDATE books SET spoilerLockEnabled = :enabled WHERE id = :bookId")
     suspend fun updateSpoilerLock(bookId: String, enabled: Boolean)
