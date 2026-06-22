@@ -4,6 +4,7 @@ import androidx.room.TypeConverter
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.quill.database.model.HighlightStyle
 import com.yugentech.quill.database.model.RetrievedChunk
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -89,5 +90,15 @@ class RoomConverters {
         } catch (_: Exception) {
             emptyList()
         }
+    }
+
+    @TypeConverter
+    fun fromHighlightStyle(style: HighlightStyle): String = style.name
+
+    @TypeConverter
+    fun toHighlightStyle(value: String): HighlightStyle = try {
+        HighlightStyle.valueOf(value)
+    } catch (_: Exception) {
+        HighlightStyle.HIGHLIGHT
     }
 }

@@ -47,7 +47,7 @@ import com.yugentech.quill.database.entity.HighlightEntity
     views = [
         LibraryBookView::class
     ],
-    version = 4,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(RoomConverters::class)
