@@ -135,6 +135,7 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
     implementation(libs.coil.compose)
+    implementation(libs.haze)
     implementation(libs.timber)
     implementation(libs.reorderable)
     testImplementation(libs.junit)

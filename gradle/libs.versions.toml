@@ -60,6 +60,7 @@ generativeai = "0.9.0"
 onnxruntimeAndroid = "1.24.3"
 timber = "5.0.1"
 reorderable = "3.0.0"
+haze = "1.7.2"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
@@ -133,6 +134,7 @@ onnxruntime-android = { module = "com.microsoft.onnxruntime:onnxruntime-android"
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
+haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
