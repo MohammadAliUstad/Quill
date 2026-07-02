@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,10 +22,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.HazeDefaults
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +38,8 @@ fun GutenbergScreenHeader(
     searchText: String,
     searchActive: Boolean,
     dockedWidth: Dp,
+    hazeState: HazeState,
+    statusBarHeight: Dp,
     onSearchTextChange: (String) -> Unit,
     onSearchSubmit: (String) -> Unit,
     onSearchActiveChange: (Boolean) -> Unit,
@@ -45,7 +52,7 @@ fun GutenbergScreenHeader(
         targetValue = if (searchActive) {
             MaterialTheme.colorScheme.surfaceContainer
         } else {
-            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f)
+            Color.Transparent
         },
         label = "container_color"
     )
@@ -74,7 +81,33 @@ fun GutenbergScreenHeader(
             .padding(bottom = if (searchActive) 0.dp else 16.dp),
         contentAlignment = Alignment.TopCenter
     ) {
+        if (!searchActive) {
+            Box(
+                modifier = Modifier
+                    .padding(top = statusBarHeight + 8.dp)
+                    .widthIn(min = dockedWidth)
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .hazeEffect(
+                        state = hazeState,
+                        style = HazeDefaults.style(
+                            backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f),
+                            blurRadius = 20.dp,
+                            noiseFactor = 0.05f
+                        )
+                    )
+            )
+        }
+
         SearchBar(
+            modifier = Modifier.widthIn(min = dockedWidth),
+            colors = SearchBarDefaults.colors(
+                containerColor = animatedContainerColor,
+                dividerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            ),
+            expanded = searchActive,
+            onExpandedChange = onSearchActiveChange,
+            windowInsets = SearchBarDefaults.windowInsets,
             inputField = {
                 SearchBarDefaults.InputField(
                     query = searchText,
@@ -102,14 +135,6 @@ fun GutenbergScreenHeader(
                     )
                 )
             },
-            expanded = searchActive,
-            onExpandedChange = onSearchActiveChange,
-            modifier = Modifier.widthIn(min = dockedWidth),
-            colors = SearchBarDefaults.colors(
-                containerColor = animatedContainerColor,
-                dividerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-            ),
-            windowInsets = SearchBarDefaults.windowInsets
         ) {
             if (searchText.isEmpty()) {
                 SearchPrompt()

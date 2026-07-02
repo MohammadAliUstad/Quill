@@ -24,8 +24,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -55,6 +58,7 @@ fun GutenbergScreen(
 ) {
     val books by viewModel.booksState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isPaginating by viewModel.isPaginating.collectAsState()
     val displayTitle by viewModel.displayTitle.collectAsState()
     val error by viewModel.error.collectAsState()
 
@@ -85,6 +89,7 @@ fun GutenbergScreen(
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val hazeState = remember { HazeState() }
 
     val gridTopPadding = statusBarHeight + 80.dp
 
@@ -102,38 +107,41 @@ fun GutenbergScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            AnimatedContent(
-                targetState = when {
-                    isLoading && books.isEmpty() -> SourceScreenState.Loading
-                    !isLoading && books.isEmpty() -> SourceScreenState.Empty
-                    else -> SourceScreenState.Content
-                },
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
-                },
-                label = "GutenbergContentAnimation"
-            ) { state ->
-                when (state) {
-                    SourceScreenState.Loading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularWavyProgressIndicator()
+            Box(modifier = Modifier.fillMaxSize().hazeSource(hazeState)) {
+                AnimatedContent(
+                    targetState = when {
+                        isLoading && books.isEmpty() -> SourceScreenState.Loading
+                        !isLoading && books.isEmpty() -> SourceScreenState.Empty
+                        else -> SourceScreenState.Content
+                    },
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                    },
+                    label = "GutenbergContentAnimation"
+                ) { state ->
+                    when (state) {
+                        SourceScreenState.Loading -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularWavyProgressIndicator()
+                            }
                         }
-                    }
-                    SourceScreenState.Empty -> {
-                        SourceEmptyState(
-                            title = displayTitle,
-                            message = error,
-                            modifier = Modifier.padding(top = gridTopPadding)
-                        )
-                    }
-                    SourceScreenState.Content -> {
-                        BooksGrid(
-                            books = books,
-                            topPadding = gridTopPadding,
-                            bottomPadding = navBarHeight,
-                            onBookClick = { book -> viewModel.onBookClick(book) },
-                            onLoadMore = { viewModel.loadNextPage() }
-                        )
+                        SourceScreenState.Empty -> {
+                            SourceEmptyState(
+                                title = displayTitle,
+                                message = error,
+                                modifier = Modifier.padding(top = gridTopPadding)
+                            )
+                        }
+                        SourceScreenState.Content -> {
+                            BooksGrid(
+                                books = books,
+                                topPadding = gridTopPadding,
+                                bottomPadding = navBarHeight,
+                                isPaginating = isPaginating,
+                                onBookClick = { book -> viewModel.onBookClick(book) },
+                                onLoadMore = { viewModel.loadNextPage() }
+                            )
+                        }
                     }
                 }
             }
@@ -142,6 +150,8 @@ fun GutenbergScreen(
                 searchText = searchText,
                 searchActive = searchActive,
                 dockedWidth = dockedWidth,
+                hazeState = hazeState,
+                statusBarHeight = statusBarHeight,
                 onSearchTextChange = { searchText = it },
                 onSearchSubmit = { query ->
                     viewModel.onSearchQuery(query)
