@@ -15,6 +15,7 @@
   "main": "lib/index.js",
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.0",
+    "@google/generative-ai": "^0.21.0",
     "firebase-admin": "^13.7.0",
     "firebase-functions": "^7.2.5"
   },

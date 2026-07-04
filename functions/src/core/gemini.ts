@@ -1,33 +1,48 @@
+import { GoogleGenerativeAI, Content } from "@google/generative-ai";
 import { HttpsError } from "firebase-functions/v2/https";
 
-const GEMINI_ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
-
-export const callGemini = async (key: string, payload: any): Promise<string> => {
-  const response = await fetch(`${GEMINI_ENDPOINT}?key=${key}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+export const callGemini = async (
+  key: string,
+  modelName: string,
+  contents: Content[],
+  systemInstruction?: string,
+  temperature = 0.4,
+  maxOutputTokens = 4096
+): Promise<string> => {
+  const genAI = new GoogleGenerativeAI(key);
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    systemInstruction: systemInstruction,
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    console.error("Gemini API Error:", JSON.stringify(errorData));
-    if (response.status === 429) {
+  try {
+    const result = await model.generateContent({
+      contents,
+      generationConfig: {
+        temperature,
+        maxOutputTokens,
+      },
+    });
+
+    const response = await result.response;
+    const text = response.text();
+
+    if (!text) {
+      throw new HttpsError("internal", "No text content in Gemini response");
+    }
+
+    return text;
+  } catch (error: any) {
+    console.error("Gemini SDK Error:", error);
+
+    // Check for quota or other specific errors if possible via SDK error objects
+    if (error.message?.includes("429") || error.status === 429) {
       throw new HttpsError("resource-exhausted", "Gemini API quota exceeded");
     }
+
     throw new HttpsError(
       "internal",
-      `Gemini API failed: ${errorData.error?.message || response.statusText}`
+      `Gemini API failed: ${error.message || "Unknown SDK error"}`
     );
   }
-
-  const data = await response.json();
-  const text: string | undefined = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!text) {
-    throw new HttpsError("internal", "No text content in Gemini response");
-  }
-
-  return text;
 };
