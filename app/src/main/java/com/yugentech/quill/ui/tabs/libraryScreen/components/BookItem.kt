@@ -165,13 +165,13 @@ fun BookItem(
                     }
                 } else if (book.downloadStatus == DownloadStatus.FAILED) {
                     Surface(
-                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f),
                         modifier = Modifier.fillMaxSize()
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Error,
-                                contentDescription = null,
+                                contentDescription = "Download Failed",
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(28.dp)
                             )

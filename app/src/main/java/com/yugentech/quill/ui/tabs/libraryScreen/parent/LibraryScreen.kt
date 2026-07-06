@@ -31,6 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -105,6 +107,7 @@ fun LibraryScreen(
             allCategoryBooks.all { it.isEmpty() }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val hazeState = remember { HazeState() }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -210,11 +213,13 @@ fun LibraryScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     if (parallaxCoverUrl != null) {
-                        LibraryParallaxBackground(
-                            coverUrl = parallaxCoverUrl,
-                            scrollOffset = scrollState.value,
-                            headerHeight = headerHeight
-                        )
+                        Box(modifier = Modifier.fillMaxSize().hazeSource(hazeState)) {
+                            LibraryParallaxBackground(
+                                coverUrl = parallaxCoverUrl,
+                                scrollOffset = scrollState.value,
+                                headerHeight = headerHeight
+                            )
+                        }
                     }
 
                     Column(
@@ -237,6 +242,7 @@ fun LibraryScreen(
                                 )
                                 LastReadBookCard(
                                     book = lastReadBook!!,
+                                    hazeState = hazeState,
                                     onCardClick = { onResumeClick(lastReadBook!!.toBook()) },
                                     onCoverClick = { onLibraryBookClick(it.toBook()) }
                                 )
