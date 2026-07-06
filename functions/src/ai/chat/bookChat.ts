@@ -37,16 +37,19 @@ export const bookChat = onCall(
     }
 
     const systemPrompt = buildSystemPrompt(bookTitle, bookAuthor);
-    const userQuery = buildUserQuery(context, query);
+    const userQueryText = buildUserQuery(context, query);
 
-    const text = await callGemini(geminiKey.value(), {
-      contents: [
+    const text = await callGemini(
+      geminiKey.value(),
+      "gemini-2.5-flash-lite",
+      [
         ...(history ?? []),
-        { role: "user", parts: [{ text: userQuery }] },
+        { role: "user", parts: [{ text: userQueryText }] },
       ],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 4096 },
-      system_instruction: { parts: [{ text: systemPrompt }] },
-    });
+      systemPrompt,
+      0.4,
+      4096
+    );
 
     return { response: text };
   }
