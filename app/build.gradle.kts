@@ -74,6 +74,13 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        force("androidx.concurrent:concurrent-futures:1.2.0")
+        force("androidx.concurrent:concurrent-futures-ktx:1.2.0")
+    }
+}
+
 dependencies {
     implementation(project(":database"))
     implementation(project(":aira"))
