@@ -102,7 +102,7 @@ export const quickChat = onCall(
 
     const systemPrompt = promptBuilder(bookTitle, bookAuthor, query);
 
-    const finalQuery = `
+    const finalQueryText = `
       CONTEXT:
       ${context}
 
@@ -110,11 +110,14 @@ export const quickChat = onCall(
       ${query || "Process the context above based on your instructions."}
     `.trim();
 
-    const text = await callGemini(geminiKey.value(), {
-      contents: [{ role: "user", parts: [{ text: finalQuery }] }],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
-      system_instruction: { parts: [{ text: systemPrompt }] },
-    });
+    const text = await callGemini(
+      geminiKey.value(),
+      "gemini-2.5-flash-lite",
+      [{ role: "user", parts: [{ text: finalQueryText }] }],
+      systemPrompt,
+      0.4,
+      1024
+    );
 
     return { response: text.trim() };
   }

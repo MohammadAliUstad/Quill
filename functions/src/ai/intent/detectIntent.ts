@@ -70,10 +70,14 @@ export const detectIntent = onCall(
 
     const routerPrompt = buildRouterPrompt(bookTitle, bookAuthor, query);
 
-    const text = await callGemini(geminiKey.value(), {
-      contents: [{ role: "user", parts: [{ text: routerPrompt }] }],
-      generationConfig: { temperature: 0.1, maxOutputTokens: 256 },
-    });
+    const text = await callGemini(
+      geminiKey.value(),
+      "gemini-2.5-flash-lite",
+      [{ role: "user", parts: [{ text: routerPrompt }] }],
+      undefined, // No system instruction needed for this specific one
+      0.1,
+      256
+    );
 
     return { response: text.trim() };
   }
