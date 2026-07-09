@@ -1,22 +1,35 @@
-# Walkthrough - Ambient Sound UI Cleanup
+# Walkthrough - Haptic Feedback Integration
 
-I have simplified the ambient sound selection sheet by removing the experimental slider icon and updating the "None" button for better clarity.
+I have integrated tactile feedback across all major interaction points in the e-reader's settings and tools. This adds a physical dimension to the user interface, making the app feel more responsive and premium.
 
 ## Changes
 
-### Slider Simplification
+### Tactile Settings & Options
+
+#### [SettingsSheet.kt](file:///C:/Users/Moham/AndroidStudioProjects/Quill/reader/src/main/java/com/yugentech/quill/reader/ui/components/settingsSheet/SettingsSheet.kt) & Components
+- **Segmented Buttons**: Added haptics when switching between "Paged" and "Scroll" modes, or changing text alignment.
+- **Theme Selection**: Every theme preset now provides a subtle pulse when selected.
+- **Font Selection**: Swiping through and tapping different font chips now triggers haptic feedback.
+- **Sliders**: The Font Size, Weight, and Spacing sliders now "click" as they snap to value points during adjustment.
+- **Toggles**: Night Light and Volume Navigation switches now feel physical when toggled.
+- **Reset**: Tapping "Reset to Defaults" provides a clear tactile confirmation.
+
+### Immersive Ambient Sounds
 
 #### [SoundSelectionSheet.kt](file:///C:/Users/Moham/AndroidStudioProjects/Quill/reader/src/main/java/com/yugentech/quill/reader/ui/components/soundSheet/SoundSelectionSheet.kt)
-- **Removed Track Icon**: Removed the manually added `MusicNote` icon from the volume slider track. The slider now uses the official Material 3 Expressive styling with its standard vertical drag handle and gap, providing a cleaner look that doesn't conflict with the track background.
+- **Sound Cards**: Switching between different background environments (Forest, Rain, etc.) now provides immediate haptic feedback.
+- **Volume Control**: The volume slider now provides a tactile sensation as it is adjusted, matching the behavior of the settings sliders.
 
-### "None" Button Update
+### Responsive Tools
 
-#### [SoundSelectionSheet.kt](file:///C:/Users/Moham/AndroidStudioProjects/Quill/reader/src/main/java/com/yugentech/quill/reader/ui/components/soundSheet/SoundSelectionSheet.kt)
-- **New Icon**: Updated the "None" background sound option to use the `Icons.Rounded.Block` icon. This provides a more distinct visual "stop" or "disabled" signal compared to the previous volume-muted icon, making it easier to identify in the grid.
+#### [SelectionToolbar.kt](file:///C:/Users/Moham/AndroidStudioProjects/Quill/reader/src/main/java/com/yugentech/quill/reader/ui/components/engine/SelectionToolbar.kt)
+- **Ask Aira**: The primary AI button now triggers a satisfying haptic pulse when clicked.
+- **Action Buttons**: Highlight, Copy, and Share buttons also provide consistent tactile responses.
 
 ## Verification Results
 
 ### Manual Verification
-1.  **Slider**: Verified the volume slider is back to its clean, expressive state with the vertical handle and no internal icons.
-2.  **None Button**: Verified the "None" card now shows the block icon.
-3.  **Layout**: Confirmed all components are rendering correctly without errors.
+- **Settings Interactivity**: Confirmed that all buttons, chips, and toggles in the Display Settings provide a distinct haptic response.
+- **Slider Granularity**: Verified that sliders provide feedback only when the value actually changes, preventing excessive vibration.
+- **Sound Switching**: Confirmed that selecting "None" or any ambient sound provides a tactile "click".
+- **Toolbar Responsiveness**: Verified that the floating selection menu feels snappier and more interactive with the added haptics.

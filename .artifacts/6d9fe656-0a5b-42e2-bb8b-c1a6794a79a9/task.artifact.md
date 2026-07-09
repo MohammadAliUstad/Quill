@@ -1,4 +1,8 @@
-- [x] Implement dynamic volume icon logic
-- [x] Add `Crossfade` for icon transitions
-- [x] Embed tone icon inside the volume slider track
-- [x] Verify visual appearance and interaction
+- [x] Add haptics to `SoundSelectionSheet.kt`
+- [x] Add haptics to `SettingsSheet.kt`
+- [x] Add haptics to `CustomSettingsSlider.kt`
+- [x] Add haptics to `SettingsSwitchItem.kt`
+- [x] Add haptics to `FontChip.kt`
+- [x] Add haptics to `ThemeOption.kt`
+- [x] Add haptics to `SelectionToolbar.kt`
+- [x] Verify haptic feedback across all components
