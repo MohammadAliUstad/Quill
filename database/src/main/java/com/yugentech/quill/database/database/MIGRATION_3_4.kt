@@ -9,7 +9,7 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `aira_messages_new` (
-                `id` INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL, 
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
                 `bookId` TEXT NOT NULL, 
                 `role` TEXT NOT NULL, 
                 `content` TEXT NOT NULL, 
