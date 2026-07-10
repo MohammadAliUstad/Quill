@@ -46,6 +46,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -65,6 +66,10 @@ import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfSkeleton
 import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarousel
 import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarouselSkeleton
 import com.yugentech.quill.ui.tabs.libraryScreen.components.LibraryParallaxBackground
+import dev.chrisbanes.haze.HazeDefaults
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import getSubtitleForCategory
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
@@ -92,6 +97,8 @@ fun DiscoverScreen(
     val dockedWidth = screenWidth - 32.dp
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
+    val hazeState = remember { HazeState() }
 
     val listState = rememberLazyListState()
     val scrollAlpha by remember {
@@ -156,7 +163,9 @@ fun DiscoverScreen(
         // --- THE SCROLLING CONTENT ---
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSource(hazeState),
             contentPadding = PaddingValues(
                 top = statusBarHeight + 80.dp,
                 bottom = contentPadding.calculateBottomPadding()
@@ -240,9 +249,9 @@ fun DiscoverScreen(
 
             val animatedContainerColor by animateColorAsState(
                 targetValue = if (searchExpanded) {
-                    MaterialTheme.colorScheme.surfaceContainer // Solid when active
+                    MaterialTheme.colorScheme.surfaceContainer
                 } else {
-                    MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f) // Glass when closed
+                    Color.Transparent
                 },
                 label = "container_color"
             )
@@ -255,6 +264,24 @@ fun DiscoverScreen(
                 },
                 label = "border_color"
             )
+
+            if (!searchExpanded) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = statusBarHeight + 8.dp)
+                        .widthIn(min = dockedWidth)
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .hazeEffect(
+                            state = hazeState,
+                            style = HazeDefaults.style(
+                                backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f),
+                                blurRadius = 20.dp,
+                                noiseFactor = 0.05f
+                            )
+                        )
+                )
+            }
 
             SearchBar(
                 inputField = {
@@ -296,7 +323,6 @@ fun DiscoverScreen(
                                 }
                             }
                         },
-                        // 1. ADD THE BORDER HERE to the InputField
                         modifier = Modifier.border(
                             width = 1.dp,
                             color = animatedBorderColor,
