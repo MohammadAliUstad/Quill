@@ -1,19 +1,22 @@
 package com.yugentech.quill.di.modules.shared
 
-import com.yugentech.quill.aira.aira.util.AiraHandler
-import com.yugentech.quill.aira.bookChat.handler.BookChatHandler
-import com.yugentech.quill.aira.bookChat.service.BookChatService
-import com.yugentech.quill.aira.generalChat.handler.GeneralChatHandler
-import com.yugentech.quill.aira.generalChat.service.GeneralChatService
-import com.yugentech.quill.aira.intentDetection.repository.IntentDetectionRepository
-import com.yugentech.quill.aira.intentDetection.service.IntentDetectionService
-import com.yugentech.quill.aira.quick.repository.QuickRepository
-import com.yugentech.quill.aira.quick.repository.QuickRepositoryImpl
-import com.yugentech.quill.aira.quick.service.QuickActionService
+import com.yugentech.quill.aira.service.AiraChatService
+import com.yugentech.quill.aira.chat.bookChat.repository.BookChatRepository
+import com.yugentech.quill.aira.chat.bookChat.repository.BookChatRepositoryImpl
+import com.yugentech.quill.aira.chat.bookChat.service.BookChatService
+import com.yugentech.quill.aira.chat.generalChat.repository.GeneralChatRepository
+import com.yugentech.quill.aira.chat.generalChat.repository.GeneralChatRepositoryImpl
+import com.yugentech.quill.aira.chat.generalChat.service.GeneralChatService
+import com.yugentech.quill.aira.chat.quickChat.repository.QuickChatRepository
+import com.yugentech.quill.aira.chat.quickChat.repository.QuickChatRepositoryImpl
+import com.yugentech.quill.aira.chat.quickChat.service.QuickChatService
+import com.yugentech.quill.aira.intent.repository.IntentDetectionRepository
+import com.yugentech.quill.aira.intent.service.IntentDetectionService
 import com.yugentech.quill.aira.rag.EmbeddingEngine
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.repository.AiraChatRepository
 import com.yugentech.quill.aira.repository.AiraChatRepositoryImpl
+import com.yugentech.quill.aira.util.VoiceOutputManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -33,24 +36,50 @@ val airaModule = module {
         )
     }
 
+    single {
+        VoiceOutputManager(
+            functions = get(),
+            cacheDir = androidContext().cacheDir
+        )
+    }
+
     // --- Intent Detection ---
     single { IntentDetectionService(functions = get()) }
     single { IntentDetectionRepository(detectionService = get()) }
 
-    // --- Chat Flows ---
+    // --- Services ---
     single { GeneralChatService(functions = get()) }
-    single { GeneralChatHandler(chatService = get()) }
     single { BookChatService(functions = get()) }
-    single { BookChatHandler(chatService = get(), ragRetriever = get()) }
+    single { QuickChatService(functions = get()) }
 
-    // --- Quick Action ---
-    single { QuickActionService(functions = get()) }
+    // --- Repositories ---
+    single<BookChatRepository> { 
+        BookChatRepositoryImpl(
+            chatService = get(),
+            ragRetriever = get()
+        ) 
+    }
+    
+    single<GeneralChatRepository> { 
+        GeneralChatRepositoryImpl(
+            chatService = get()
+        ) 
+    }
+    
+    single<QuickChatRepository> {
+        QuickChatRepositoryImpl(
+            bookDao = get(),
+            bookChunkDao = get(),
+            actionService = get(),
+            ragRetriever = get()
+        )
+    }
 
     single {
-        AiraHandler(
+        AiraChatService(
             intentDetectionRepository = get(),
-            generalChatHandler = get(),
-            bookChatHandler = get(),
+            generalChatRepository = get(),
+            bookChatRepository = get(),
             bookDao = get(),
             airaMessageDao = get()
         )
@@ -58,17 +87,8 @@ val airaModule = module {
 
     single<AiraChatRepository> {
         AiraChatRepositoryImpl(
-            airaHandler = get(),
+            airaService = get(),
             airaMessageDao = get()
-        )
-    }
-
-    single<QuickRepository> {
-        QuickRepositoryImpl(
-            quickActionService = get(),
-            ragRetriever = get(),
-            bookChunkDao = get(),
-            bookDao = get()
         )
     }
 }
