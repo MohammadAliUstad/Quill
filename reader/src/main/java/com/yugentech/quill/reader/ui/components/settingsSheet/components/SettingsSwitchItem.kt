@@ -18,7 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.spacing
+import org.koin.compose.koinInject
 
 @Composable
 fun SettingsSwitchItem(
@@ -31,6 +33,7 @@ fun SettingsSwitchItem(
     onCheckedChange: (Boolean) -> Unit,
     onClick: (() -> Unit)? = null
 ) {
+    val haptic = koinInject<HapticService>()
     val shape = itemShape(index, totalCount)
 
     ListItem(
@@ -60,7 +63,10 @@ fun SettingsSwitchItem(
         trailingContent = {
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange,
+                onCheckedChange = {
+                    haptic.performHaptic()
+                    onCheckedChange(it)
+                },
                 enabled = enabled,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.onPrimaryContainer,

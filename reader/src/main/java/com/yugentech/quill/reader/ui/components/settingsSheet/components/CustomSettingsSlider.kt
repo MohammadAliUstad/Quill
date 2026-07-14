@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yugentech.theme.service.HapticService
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +46,7 @@ fun CustomSettingsSlider(
     leadingContent: @Composable (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
+    val haptic = koinInject<HapticService>()
     val interactionSource = remember { MutableInteractionSource() }
     val isDragged by interactionSource.collectIsDraggedAsState()
 
@@ -108,7 +111,12 @@ fun CustomSettingsSlider(
             if (leadingContent != null) leadingContent()
             Slider(
                 value = value,
-                onValueChange = onValueChange,
+                onValueChange = {
+                    if (it != value) {
+                        haptic.performHaptic()
+                    }
+                    onValueChange(it)
+                },
                 valueRange = valueRange,
                 steps = steps,
                 interactionSource = interactionSource,

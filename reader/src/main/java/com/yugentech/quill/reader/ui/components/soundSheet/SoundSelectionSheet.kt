@@ -54,8 +54,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.model.BackgroundSound
+import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -66,7 +68,8 @@ fun SoundSelectionSheet(
     onVolumeChange: (Float) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val haptic = koinInject<HapticService>()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     
     val cornerRadius by animateDpAsState(
         targetValue = if (sheetState.targetValue == SheetValue.Expanded) 0.dp else 28.dp,
@@ -141,7 +144,10 @@ fun SoundSelectionSheet(
                             SoundToggleCard(
                                 option = option,
                                 isSelected = activeSound == option.sound,
-                                onClick = { onSoundToggle(option.sound) },
+                                onClick = {
+                                    haptic.performHaptic()
+                                    onSoundToggle(option.sound)
+                                },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -151,7 +157,10 @@ fun SoundSelectionSheet(
                 SoundToggleCard(
                     option = noneOption,
                     isSelected = activeSound == noneOption.sound,
-                    onClick = { onSoundToggle(noneOption.sound) },
+                    onClick = {
+                        haptic.performHaptic()
+                        onSoundToggle(noneOption.sound)
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -181,7 +190,12 @@ fun SoundSelectionSheet(
                 
                 androidx.compose.material3.Slider(
                     value = volume,
-                    onValueChange = onVolumeChange,
+                    onValueChange = {
+                        if ((it * 100).toInt() != (volume * 100).toInt()) {
+                            haptic.performHaptic()
+                        }
+                        onVolumeChange(it)
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .height(44.dp),

@@ -63,7 +63,9 @@ import com.yugentech.quill.reader.ui.components.settingsSheet.components.Section
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.SettingsSwitchItem
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.ThemeOption
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.ThemePreset
+import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.spacing
+import org.koin.compose.koinInject
 import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.navigator.preferences.Theme
 import org.readium.r2.shared.ExperimentalReadiumApi
@@ -85,6 +87,7 @@ fun SettingsSheet(
     onNightLightChange: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val haptic = koinInject<HapticService>()
     val epub = preferences.epub
     val fontOptions = remember {
         listOf(
@@ -211,15 +214,21 @@ fun SettingsSheet(
                     Column(modifier = Modifier.graphicsLayer { alpha = nonSliderAlpha }) {
                         SectionLabel(text = "Reading Mode")
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                            val isScroll = epub.scroll ?: true
+                            val isScroll = epub.scroll ?: false
                             SegmentedButton(
                                 selected = !isScroll,
-                                onClick = { onPreferencesChange(epub.copy(scroll = false)) },
+                                onClick = {
+                                    haptic.performHaptic()
+                                    onPreferencesChange(epub.copy(scroll = false))
+                                },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
                             ) { Text("Paged") }
                             SegmentedButton(
                                 selected = isScroll,
-                                onClick = { onPreferencesChange(epub.copy(scroll = true)) },
+                                onClick = {
+                                    haptic.performHaptic()
+                                    onPreferencesChange(epub.copy(scroll = true))
+                                },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
                             ) { Text("Scroll") }
                         }
@@ -245,6 +254,7 @@ fun SettingsSheet(
                                     isSelected = isSelected,
                                     useLightBorder = preset.isDarkBorder
                                 ) {
+                                    haptic.performHaptic()
                                     onPreferencesChange(
                                         epub.copy(
                                             theme = preset.theme,
@@ -289,25 +299,37 @@ fun SettingsSheet(
 
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.LEFT || currentAlign == R2TextAlign.START,
-                                onClick = { onPreferencesChange(epub.copy(textAlign = R2TextAlign.LEFT)) },
+                                onClick = {
+                                    haptic.performHaptic()
+                                    onPreferencesChange(epub.copy(textAlign = R2TextAlign.LEFT))
+                                },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 4)
                             ) { Icon(Icons.AutoMirrored.Filled.FormatAlignLeft, "Left") }
 
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.CENTER,
-                                onClick = { onPreferencesChange(epub.copy(textAlign = R2TextAlign.CENTER)) },
+                                onClick = {
+                                    haptic.performHaptic()
+                                    onPreferencesChange(epub.copy(textAlign = R2TextAlign.CENTER))
+                                },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 4)
                             ) { Icon(Icons.Default.FormatAlignCenter, "Center") }
 
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.JUSTIFY,
-                                onClick = { onPreferencesChange(epub.copy(textAlign = R2TextAlign.JUSTIFY)) },
+                                onClick = {
+                                    haptic.performHaptic()
+                                    onPreferencesChange(epub.copy(textAlign = R2TextAlign.JUSTIFY))
+                                },
                                 shape = SegmentedButtonDefaults.itemShape(index = 2, count = 4)
                             ) { Icon(Icons.Default.FormatAlignJustify, "Justified") }
 
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.RIGHT,
-                                onClick = { onPreferencesChange(epub.copy(textAlign = R2TextAlign.RIGHT)) },
+                                onClick = {
+                                    haptic.performHaptic()
+                                    onPreferencesChange(epub.copy(textAlign = R2TextAlign.RIGHT))
+                                },
                                 shape = SegmentedButtonDefaults.itemShape(index = 3, count = 4)
                             ) { Icon(Icons.AutoMirrored.Filled.FormatAlignRight, "Right") }
                         }
@@ -449,7 +471,10 @@ fun SettingsSheet(
                     ) {
                         Button(
                             modifier = Modifier.fillMaxWidth().height(50.dp),
-                            onClick = { showResetDialog = true }) {
+                            onClick = {
+                                haptic.performHaptic()
+                                showResetDialog = true
+                            }) {
                             Text("Reset to Defaults")
                         }
                     }

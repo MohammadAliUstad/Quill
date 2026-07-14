@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.yugentech.theme.service.HapticService
+import org.koin.compose.koinInject
 
 @Composable
 fun ThemeOption(
@@ -32,12 +34,16 @@ fun ThemeOption(
     useLightBorder: Boolean,
     onClick: () -> Unit
 ) {
+    val haptic = koinInject<HapticService>()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .clickable {
+                haptic.performHaptic()
+                onClick()
+            }
             .padding(vertical = 12.dp, horizontal = 2.dp)
     ) {
         val borderColor = if (isSelected) {
