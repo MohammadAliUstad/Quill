@@ -29,7 +29,7 @@ sealed class AppScreen(val route: String) {
     data object Insights : AppScreen("insights")
     data object EditProfileScreen : AppScreen("edit_profile")
     data object Subscriptions : AppScreen("subscriptions")
-    data object NotesScreen : AppScreen("notes")
+    data object HighlightsScreen : AppScreen("highlights")
 
     data object BookDetailsScreen : AppScreen("bookDetailsScreen") {
 
