@@ -10,6 +10,7 @@ import com.yugentech.quill.reader.service.BackgroundSoundService
 import com.yugentech.quill.reader.session.ReadingSessionRepository
 import com.yugentech.quill.reader.session.ReadingSessionRepositoryImpl
 import com.yugentech.quill.reader.viewmodel.ReaderViewModel
+import com.yugentech.quill.reader.viewmodel.QuickViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -32,7 +33,8 @@ val readerModule = module {
     single<ReaderRepository> {
         ReaderRepositoryImpl(
             bookDao = get(),
-            highlightDao = get()
+            highlightDao = get(),
+            indexingStateDao = get()
         )
     }
 
@@ -56,6 +58,17 @@ val readerModule = module {
             preferencesRepository = get(),
             backgroundSoundService = get(),
             hapticService = get()
+        )
+    }
+
+    viewModel {
+        QuickViewModel(
+            airaChatRepository = get(),
+            quickRepository = get(),
+            quotaRepository = get(),
+            authRepository = get(),
+            readerRepository = get(),
+            billingRepository = get()
         )
     }
 }
