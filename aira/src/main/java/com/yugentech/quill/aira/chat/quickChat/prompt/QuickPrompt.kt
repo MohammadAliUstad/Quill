@@ -11,4 +11,5 @@ sealed class QuickPrompt {
     data class WhatIsThis(val word: String) : QuickPrompt()
     data class SimplifyThis(val text: String) : QuickPrompt()
     data class ExplainThis(val text: String) : QuickPrompt()
+    data class CustomQuestion(val selectedText: String, val query: String) : QuickPrompt()
 }

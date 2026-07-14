@@ -10,7 +10,8 @@ enum class QuickChatType {
     SIMPLIFY_THIS,
     EXPLAIN_THIS,
     WHAT_SIGNIFICANCE,
-    WHO_IS_SPEAKING
+    WHO_IS_SPEAKING,
+    CUSTOM_QUESTION
 }
 
 data class QuickChatPayload(
