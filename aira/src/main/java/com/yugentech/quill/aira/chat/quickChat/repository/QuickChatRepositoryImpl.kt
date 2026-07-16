@@ -49,7 +49,7 @@ class QuickChatRepositoryImpl(
                 val retrieved = ragRetriever.retrieve(
                     bookId = bookId,
                     query = "characters people names persons introduced",
-                    spoilerLockEnabled = book.spoilerLockEnabled
+                    spoilerLockEnabled = true
                 )
                 QuickChatPayload(
                     actionType = QuickChatType.WHO_ARE_CHARACTERS,
@@ -83,7 +83,7 @@ class QuickChatRepositoryImpl(
                 val retrieved = ragRetriever.retrieve(
                     bookId = bookId,
                     query = "theme meaning symbolism motif central idea",
-                    spoilerLockEnabled = book.spoilerLockEnabled
+                    spoilerLockEnabled = true
                 )
                 QuickChatPayload(
                     actionType = QuickChatType.WHAT_ARE_THEMES,
@@ -127,7 +127,7 @@ class QuickChatRepositoryImpl(
                 val retrieved = ragRetriever.retrieve(
                     bookId = bookId,
                     query = quickPrompt.text,
-                    spoilerLockEnabled = book.spoilerLockEnabled
+                    spoilerLockEnabled = true
                 )
                 QuickChatPayload(
                     actionType = QuickChatType.WHAT_SIGNIFICANCE,
@@ -141,13 +141,28 @@ class QuickChatRepositoryImpl(
                 val retrieved = ragRetriever.retrieve(
                     bookId = bookId,
                     query = quickPrompt.text,
-                    spoilerLockEnabled = book.spoilerLockEnabled
+                    spoilerLockEnabled = true
                 )
                 QuickChatPayload(
                     actionType = QuickChatType.WHO_IS_SPEAKING,
                     bookTitle = book.title,
                     bookAuthor = book.author,
                     context = "HIGHLIGHTED:\n${quickPrompt.text}\n\nSURROUNDING CONTEXT:\n${QuickBuilder.buildContextBlock(retrieved.map { it.text })}"
+                )
+            }
+
+            is QuickPrompt.CustomQuestion -> {
+                val retrieved = ragRetriever.retrieve(
+                    bookId = bookId,
+                    query = "${quickPrompt.selectedText} ${quickPrompt.query}",
+                    spoilerLockEnabled = true
+                )
+                QuickChatPayload(
+                    actionType = QuickChatType.CUSTOM_QUESTION,
+                    bookTitle = book.title,
+                    bookAuthor = book.author,
+                    context = "HIGHLIGHTED:\n${quickPrompt.selectedText}\n\nSURROUNDING CONTEXT:\n${QuickBuilder.buildContextBlock(retrieved.map { it.text })}",
+                    query = quickPrompt.query
                 )
             }
         }
