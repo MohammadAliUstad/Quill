@@ -4,6 +4,7 @@ import androidx.room.Room
 import com.yugentech.quill.database.database.AppDatabase
 import com.yugentech.quill.database.database.MIGRATION_1_2
 import com.yugentech.quill.database.database.MIGRATION_2_3
+import com.yugentech.quill.database.database.MIGRATION_3_4
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -15,7 +16,7 @@ val databaseModule = module {
             AppDatabase::class.java,
             "quill_database"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .fallbackToDestructiveMigration(true)
             .build()
     }
