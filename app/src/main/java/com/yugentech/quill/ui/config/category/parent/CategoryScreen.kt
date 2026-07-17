@@ -83,7 +83,7 @@ fun CategoryScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Collections")
+                        Text("Categories")
                         Text(
                             text = "Organize your library",
                             style = MaterialTheme.typography.bodySmall,
@@ -164,7 +164,7 @@ fun CategoryScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "No collections yet",
+                        text = "No categories yet",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -172,7 +172,7 @@ fun CategoryScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Tap the button below to create\nyour first collection",
+                        text = "Tap the button below to create\nyour first category",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
