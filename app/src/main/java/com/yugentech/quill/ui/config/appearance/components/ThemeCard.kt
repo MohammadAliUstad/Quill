@@ -24,11 +24,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.yugentech.quill.R
+import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -37,9 +40,15 @@ fun ThemeCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val haptic = koinInject<HapticService>()
+    val view = LocalView.current
+
     ToggleButton(
         checked = isSelected,
-        onCheckedChange = { onClick() },
+        onCheckedChange = {
+            haptic.performHaptic(view)
+            onClick()
+        },
         modifier = Modifier.fillMaxWidth(),
         shapes = ToggleButtonShapes(
             shape = ToggleButtonDefaults.squareShape,

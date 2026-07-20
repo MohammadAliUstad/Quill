@@ -24,12 +24,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.quill.ui.main.components.SectionHeader
 import com.yugentech.quill.ui.main.components.itemShape
 import com.yugentech.theme.models.ThemeMode
+import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.spacing
+import org.koin.compose.koinInject
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -37,6 +40,8 @@ fun ThemeModeSelector(
     modifier: Modifier = Modifier,
     themeViewModel: ThemeViewModel
 ) {
+    val haptic = koinInject<HapticService>()
+    val view = LocalView.current
     val themeConfig by themeViewModel.themeConfiguration.collectAsStateWithLifecycle()
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -79,6 +84,7 @@ fun ThemeModeSelector(
                     index = index,
                     totalCount = modes.size,
                     onClick = {
+                        haptic.performHaptic(view)
                         val newConfig = themeConfig.copy(themeMode = themeMode)
                         themeViewModel.updateTheme(newConfig)
                     }
