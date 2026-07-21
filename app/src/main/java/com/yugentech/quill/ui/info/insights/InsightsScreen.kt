@@ -239,7 +239,7 @@ fun InsightsScreen(
                             Column(Modifier.padding(MaterialTheme.spacing.m)) {
                                 InsightSectionHeader(
                                     title = "With Aira",
-                                    subtitle = "Your AI reading companion activity"
+                                    subtitle = "Your reading assistant activity"
                                 )
                                 Spacer(Modifier.height(MaterialTheme.spacing.m))
                                 AiraEngagementCard(
