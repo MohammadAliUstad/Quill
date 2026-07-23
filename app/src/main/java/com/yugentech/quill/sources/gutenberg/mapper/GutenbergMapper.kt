@@ -70,7 +70,7 @@ object GutenbergMapper {
         val downloadUrl = formats?.let {
             it.optString("application/epub+zip").takeIf { u -> u.isNotBlank() && u != "null" }
                 ?: it.optString("application/epub").takeIf { u -> u.isNotBlank() && u != "null" }
-        } ?: ""
+        } ?: return null
 
         val summariesArray = entry.optJSONArray("summaries")
         val description = summariesArray?.let {
