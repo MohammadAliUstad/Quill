@@ -16,8 +16,11 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.UnknownHostException
+import java.net.ConnectException
 
 class BookDownloadWorker(
     context: Context,
@@ -31,24 +34,28 @@ class BookDownloadWorker(
         val bookTitle = inputData.getString("BOOK_TITLE") ?: "Unknown"
 
         val fileName = "$bookId.epub"
-
         val booksDir = File(applicationContext.filesDir, "books")
-        if (!booksDir.exists()) {
-            booksDir.mkdirs()
-        }
+        if (!booksDir.exists()) booksDir.mkdirs()
+        val file = File(booksDir, fileName)
 
         try {
-            bookDao.updateDownloadStatus(bookId, DownloadStatus.DOWNLOADING)
-
-            val file = File(booksDir, fileName)
-            if (file.exists()) file.delete()
+            bookDao.updateDownloadStatus(bookId, DownloadStatus.DOWNLOADING, null)
 
             val url = URL(downloadUrl)
             val connection = url.openConnection() as HttpURLConnection
+            connection.connectTimeout = 15000
+            connection.readTimeout = 15000
             connection.connect()
 
             if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                throw Exception("Server returned HTTP ${connection.responseCode}")
+                val errorMsg = when (connection.responseCode) {
+                    HttpURLConnection.HTTP_NOT_FOUND -> "Book file not found on server."
+                    HttpURLConnection.HTTP_FORBIDDEN -> "Access to book file denied."
+                    HttpURLConnection.HTTP_UNAVAILABLE -> "Server is currently unavailable. Please try again later."
+                    else -> "Server error (HTTP ${connection.responseCode})"
+                }
+                bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, errorMsg)
+                return@withContext Result.failure()
             }
 
             val totalBytes = connection.contentLength.toLong()
@@ -85,23 +92,15 @@ class BookDownloadWorker(
                 }
             }
 
-            setProgress(
-                workDataOf(
-                    "PROGRESS_PERCENT" to 100f,
-                    "BYTES_DOWNLOADED" to bytesDownloaded,
-                    "TOTAL_BYTES" to totalBytes
-                )
-            )
-
             val parser = EpubParser(applicationContext)
             val parsedData = parser.parse(file.absolutePath, bookTitle)
 
             val existingBook = bookDao.getBookEntity(bookId)
-
             if (existingBook != null) {
                 val updatedBook = existingBook.copy(
                     localFilePath = file.absolutePath,
                     downloadStatus = DownloadStatus.DOWNLOADED,
+                    downloadError = null,
                     fileSizeBytes = file.length(),
                     chapters = parsedData.chapters,
                     totalPages = parsedData.totalPages
@@ -123,18 +122,33 @@ class BookDownloadWorker(
 
                 Result.success()
             } else {
-                Timber.e("Book not found in DB: $bookId")
                 Result.failure()
             }
 
         } catch (e: Exception) {
-            Timber.e(e, "Download failed")
-
-            val file = File(booksDir, fileName)
+            Timber.e(e, "Download failed for $bookId")
+            
             if (file.exists()) file.delete()
 
-            bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED)
-            Result.failure()
+            return@withContext when (e) {
+                is UnknownHostException, is ConnectException -> {
+                    // Network issue, let WorkManager retry
+                    bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, "No internet connection. Waiting for network...")
+                    Result.retry()
+                }
+                is IOException -> {
+                    if (e.message?.contains("ENOSPC", ignoreCase = true) == true) {
+                        bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, "Insufficient storage space on device.")
+                    } else {
+                        bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, "A network error occurred. Please try again.")
+                    }
+                    Result.failure()
+                }
+                else -> {
+                    bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, "An unexpected error occurred during download.")
+                    Result.failure()
+                }
+            }
         }
     }
 }

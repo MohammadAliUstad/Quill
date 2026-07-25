@@ -147,7 +147,7 @@ fun BookDetailsScreen(
                 state = lazyListState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    bottom = innerPadding.calculateBottomPadding() + 8.dp
+                    bottom = innerPadding.calculateBottomPadding()
                 ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

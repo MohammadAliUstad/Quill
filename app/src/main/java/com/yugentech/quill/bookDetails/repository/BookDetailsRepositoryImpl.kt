@@ -1,5 +1,6 @@
 package com.yugentech.quill.bookDetails.repository
 
+import androidx.work.BackoffPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -80,6 +81,11 @@ class BookDetailsRepositoryImpl(
                 )
             )
             .addTag("download_${book.id}")
+            .setBackoffCriteria(
+                BackoffPolicy.EXPONENTIAL,
+                java.util.concurrent.TimeUnit.SECONDS.toMillis(30),
+                java.util.concurrent.TimeUnit.MILLISECONDS
+            )
             .build()
 
         workManager.enqueueUniqueWork(

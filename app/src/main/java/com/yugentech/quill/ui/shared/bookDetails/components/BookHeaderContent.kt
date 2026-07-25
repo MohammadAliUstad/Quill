@@ -27,8 +27,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.LibraryAdd
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -71,7 +73,6 @@ fun BookHeaderContent(
     onReadClick: () -> Unit
 ) {
     var wasDownloading by remember { mutableStateOf(false) }
-
     var showCoverDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(book.downloadStatus) {
@@ -116,9 +117,7 @@ fun BookHeaderContent(
         ) {
             // A. Metadata
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-
                 SmartMarqueeTitle(title = book.title)
-
                 Text(
                     modifier = Modifier.basicMarquee(),
                     text = book.author,
@@ -131,9 +130,30 @@ fun BookHeaderContent(
             }
 
             Column {
+                if (book.downloadStatus == DownloadStatus.FAILED && book.downloadError != null) {
+                    Row(
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Error, 
+                            contentDescription = null, 
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = book.downloadError!!,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
                 val categoryLabel = book.userCategory ?: "Add to Library"
-                val categoryIcon =
-                    if (isSaved) Icons.Default.FolderOpen else Icons.Default.LibraryAdd
+                val categoryIcon = if (isSaved) Icons.Default.FolderOpen else Icons.Default.LibraryAdd
 
                 ActionButton(
                     icon = categoryIcon,
@@ -145,13 +165,14 @@ fun BookHeaderContent(
                 Spacer(modifier = Modifier.height(2.dp))
 
                 ActionButton(
-                    icon = Icons.Default.Download,
+                    icon = if (book.downloadStatus == DownloadStatus.FAILED) Icons.Default.Refresh else Icons.Default.Download,
                     label = when (book.downloadStatus) {
                         DownloadStatus.DOWNLOADED -> "Downloaded"
                         DownloadStatus.DOWNLOADING -> "Downloading"
+                        DownloadStatus.FAILED -> "Retry Download"
                         else -> "Download"
                     },
-                    onClick = { if (isDownloadEnabled) onDownloadClick() },
+                    onClick = { if (isDownloadEnabled || book.downloadStatus == DownloadStatus.FAILED) onDownloadClick() },
                     isTop = false,
                     customIcon = {
                         when (book.downloadStatus) {
@@ -161,7 +182,6 @@ fun BookHeaderContent(
                                     modifier = Modifier.size(32.dp)
                                 )
                             }
-
                             DownloadStatus.DOWNLOADED -> {
                                 if (wasDownloading) {
                                     AnimatedDownloadIcon(
@@ -176,7 +196,6 @@ fun BookHeaderContent(
                                     )
                                 }
                             }
-
                             else -> null
                         }
                     }
@@ -233,8 +252,6 @@ fun CoverImageDialog(
                 ),
             contentAlignment = Alignment.Center
         ) {
-
-            // High-Res Image
             AsyncImage(
                 model = coverUrl,
                 contentDescription = "Full Book Cover",
