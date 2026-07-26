@@ -53,7 +53,7 @@ fun BookDetailsTopBar(
     isFavorite: Boolean,
     onBackClick: () -> Unit,
     onFavoriteClick: () -> Unit,
-    onNotesClick: () -> Unit, // NEW: Added callback for the Notes option
+    onHighlightsClick: () -> Unit,
     onResetProgressClick: () -> Unit,
     onDeleteClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior
@@ -139,20 +139,19 @@ fun BookDetailsTopBar(
                         shadowElevation = 8.dp
                     ) {
 
-                        // NEW: Notes Option Added Here
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    text = "Notes & Highlights",
+                                    text = "Highlights",
                                     fontWeight = FontWeight.Medium
                                 )
                             },
                             leadingIcon = {
-                                Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = "Notes & Highlights")
+                                Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = "Highlights")
                             },
                             onClick = {
                                 menuExpanded = false
-                                onNotesClick()
+                                onHighlightsClick()
                             },
                             modifier = Modifier
                                 .padding(horizontal = 8.dp)

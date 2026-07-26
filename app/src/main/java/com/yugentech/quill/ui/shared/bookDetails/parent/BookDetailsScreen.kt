@@ -50,7 +50,7 @@ import com.yugentech.quill.ui.shared.bookDetails.components.chaptersListSection
 @Composable
 fun BookDetailsScreen(
     onBackClick: () -> Unit,
-    onNotesClick: (bookId: String) -> Unit,
+    onHighlightsClick: (bookId: String) -> Unit,
     onReadClick: (String, String?) -> Unit,
     onAiraClick: (String) -> Unit,
     bookDetailsViewModel: BookDetailsViewModel
@@ -119,7 +119,7 @@ fun BookDetailsScreen(
                 onDeleteClick = { showDeleteDialog = true },
                 onResetProgressClick = { showResetDialog = true },
                 scrollBehavior = scrollBehavior,
-                onNotesClick = { onNotesClick(book.id) }
+                onHighlightsClick = { onHighlightsClick(book.id) }
             )
         },
         floatingActionButton = {

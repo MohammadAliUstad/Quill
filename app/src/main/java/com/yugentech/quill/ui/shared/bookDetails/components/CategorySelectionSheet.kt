@@ -53,7 +53,12 @@ fun CategorySelectionSheet(
     onRemoveClick: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
-    
+
+    val allCategories = remember(categories) {
+        val shelf = CategoryEntity(name = SHELF, sortOrder = -1, isSystem = true)
+        if (categories.none { it.name == SHELF }) listOf(shelf) + categories else categories
+    }
+
     val cornerRadius by animateDpAsState(
         targetValue = if (sheetState.targetValue == SheetValue.Expanded) 0.dp else 28.dp,
         label = "sheetCornerRadius"
@@ -106,7 +111,7 @@ fun CategorySelectionSheet(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                items(categories) { category ->
+                items(allCategories) { category ->
                     val isSelected = category.name == currentCategory
                     
                     Row(
