@@ -7,15 +7,16 @@ fun CategoryEntity.toDomainModel(): Category {
     return Category(
         id = this.id,
         name = this.name,
-        sortOrder = this.sortOrder
+        sortOrder = this.sortOrder,
+        isSystem = this.isSystem
     )
 }
 
-fun Category.toEntity(isSystem: Boolean = false): CategoryEntity {
+fun Category.toEntity(): CategoryEntity {
     return CategoryEntity(
         id = this.id,
         name = this.name,
         sortOrder = this.sortOrder,
-        isSystem = isSystem
+        isSystem = this.isSystem
     )
 }

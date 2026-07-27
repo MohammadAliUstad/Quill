@@ -17,7 +17,7 @@ class CategoryViewModel(
     private val repository: CategoryRepository,
 ) : ViewModel() {
 
-    val categories: StateFlow<List<Category>> = repository.getUserCategories()
+    val categories: StateFlow<List<Category>> = repository.getAllCategories()
         .map { entities ->
             entities.map { categoryEntity ->
                 categoryEntity.toDomainModel()
