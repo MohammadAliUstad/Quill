@@ -21,11 +21,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,17 +34,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.corners
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,13 +58,25 @@ fun RenameCategoryDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var text by remember { mutableStateOf(initialName) }
+    val haptic = koinInject<HapticService>()
+    val view = LocalView.current
+
+    var textFieldValue by remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = initialName,
+                selection = TextRange(initialName.length)
+            )
+        )
+    }
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val focusRequester = remember { FocusRequester() }
 
-    val isReserved = text.equals("Shelf", ignoreCase = true) ||
-            text.equals("Favorites", ignoreCase = true)
-    val isInvalid = text.isBlank() || isReserved
+    val currentText = textFieldValue.text
+    val isReserved = currentText.equals("Shelf", ignoreCase = true) ||
+            currentText.equals("Favorites", ignoreCase = true)
+    val isInvalid = currentText.isBlank() || isReserved
 
     LaunchedEffect(Unit) {
         snapshotFlow { sheetState.currentValue }
@@ -111,8 +128,8 @@ fun RenameCategoryDialog(
             )
 
             TextField(
-                value = text,
-                onValueChange = { text = it },
+                value = textFieldValue,
+                onValueChange = { textFieldValue = it },
                 label = { Text("New Name") },
                 isError = isReserved,
                 supportingText = if (isReserved) {
@@ -133,7 +150,12 @@ fun RenameCategoryDialog(
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(
-                    onDone = { if (!isInvalid && text != initialName) onConfirm(text.trim()) }
+                    onDone = {
+                        if (!isInvalid && currentText != initialName) {
+                            haptic.performHaptic(view)
+                            onConfirm(currentText.trim())
+                        }
+                    }
                 )
             )
 
@@ -142,11 +164,19 @@ fun RenameCategoryDialog(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                TextButton(
+                    onClick = {
+                        haptic.performHaptic(view)
+                        onDismiss()
+                    }
+                ) { Text("Cancel") }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
-                    onClick = { onConfirm(text.trim()) },
-                    enabled = !isInvalid && text != initialName
+                    onClick = {
+                        haptic.performHaptic(view)
+                        onConfirm(currentText.trim())
+                    },
+                    enabled = !isInvalid && currentText != initialName
                 ) { Text("Save") }
             }
         }
