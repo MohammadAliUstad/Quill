@@ -17,19 +17,33 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+private val loadingSubtitles = listOf(
+    "Reading between the lines…",
+    "Gathering thoughts…",
+    "Turning the pages…",
+    "Deep in thought…",
+    "Connecting the dots…"
+)
+
 @Composable
 fun AiraPeekHeader(
     isLoading: Boolean,
+    hasResponse: Boolean,
     onDismiss: () -> Unit,
     onSpeak: () -> Unit,
     onCopy: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val loadingSubtitle = remember(isLoading) {
+        if (isLoading) loadingSubtitles.random() else ""
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -49,7 +63,7 @@ fun AiraPeekHeader(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = if (isLoading) "Thinking..." else "Reading Assistant",
+                    text = if (isLoading) loadingSubtitle else "Reading Assistant",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -57,12 +71,12 @@ fun AiraPeekHeader(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (!isLoading) {
+            if (!isLoading && hasResponse) {
                 IconButton(onClick = onCopy) {
                     Icon(
                         imageVector = Icons.Default.ContentCopy,
                         contentDescription = "Copy response",
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -70,7 +84,7 @@ fun AiraPeekHeader(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                         contentDescription = "Speak response",
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -80,7 +94,7 @@ fun AiraPeekHeader(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Dismiss",
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(20.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

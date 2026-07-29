@@ -199,7 +199,7 @@ private fun SimpleTocItem(
 
         if (item.pageNumber != null) {
             Text(
-                text = "page ${item.pageNumber}",
+                text = "Page ${item.pageNumber}",
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                 color = contentColor.copy(alpha = 0.6f),
                 fontWeight = FontWeight.Normal,

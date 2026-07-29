@@ -123,7 +123,7 @@ fun AiraPeekBar(
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val liftDp = (imeBottom - navBottom).coerceAtLeast(0.dp)
     val kbFraction = (imeBottom / 300.dp).coerceIn(0f, 1f)
-    val horizontalPadding = lerp(24.dp, 8.dp, kbFraction)
+    val horizontalPadding = lerp(16.dp, 8.dp, kbFraction)
 
     val canSend = inputText.isNotBlank() && !airaUiState.isLoading
 
@@ -183,6 +183,7 @@ fun AiraPeekBar(
                     ) {
                         AiraPeekHeader(
                             isLoading = airaUiState.isLoading,
+                            hasResponse = airaUiState.response != null,
                             onDismiss = {
                                 haptic.performHaptic()
                                 onDismiss()
