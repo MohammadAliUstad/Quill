@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -55,13 +56,19 @@ import com.yugentech.quill.ui.config.category.components.CategoryDialogType
 import com.yugentech.quill.ui.config.category.components.DeleteCategoryDialog
 import com.yugentech.quill.ui.config.category.components.DragDropList
 import com.yugentech.quill.ui.config.category.components.RenameCategoryDialog
+import com.yugentech.theme.service.HapticService
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
     onBack: () -> Unit,
-    categoryViewModel: CategoryViewModel
+    categoryViewModel: CategoryViewModel,
+    openAddSheetOnEntry: Boolean = false
 ) {
+    val haptic = koinInject<HapticService>()
+    val view = LocalView.current
+
     val categories by categoryViewModel.categories.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -69,7 +76,7 @@ fun CategoryScreen(
         derivedStateOf { scrollBehavior.state.collapsedFraction < 0.5f }
     }
 
-    var activeDialog by remember { mutableStateOf(CategoryDialogType.None) }
+    var activeDialog by remember { mutableStateOf(if (openAddSheetOnEntry) CategoryDialogType.Add else CategoryDialogType.None) }
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
 
     val closeDialog = {
@@ -92,7 +99,12 @@ fun CategoryScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = {
+                            haptic.performHaptic(view)
+                            onBack()
+                        }
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -101,7 +113,10 @@ fun CategoryScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { activeDialog = CategoryDialogType.Add },
+                onClick = {
+                    haptic.performHaptic(view)
+                    activeDialog = CategoryDialogType.Add
+                },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 elevation = FloatingActionButtonDefaults.elevation(0.dp),
@@ -143,7 +158,7 @@ fun CategoryScreen(
             }
         }
     ) { innerPadding ->
-        if (categories.isEmpty()) {
+        if (categories.none { !it.isSystem }) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -191,13 +206,11 @@ fun CategoryScreen(
                 },
                 onRename = { category ->
                     selectedCategory = category
-                    activeDialog =
-                        CategoryDialogType.Rename
+                    activeDialog = CategoryDialogType.Rename
                 },
                 onDelete = { category ->
                     selectedCategory = category
-                    activeDialog =
-                        CategoryDialogType.Delete
+                    activeDialog = CategoryDialogType.Delete
                 }
             )
         }

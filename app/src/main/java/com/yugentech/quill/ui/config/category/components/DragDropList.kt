@@ -7,14 +7,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,9 +32,13 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Category
 import com.yugentech.quill.ui.main.components.itemShape
+import com.yugentech.theme.service.HapticService
+import org.koin.compose.koinInject
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -47,6 +51,9 @@ fun DragDropList(
     onRename: (Category) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    val hapticService = koinInject<HapticService>()
+    val view = LocalView.current
+
     val lazyListState = rememberLazyListState()
     val localList = remember { mutableStateListOf<Category>() }
 
@@ -58,10 +65,14 @@ fun DragDropList(
     val reorderableLazyListState = rememberReorderableLazyListState(
         lazyListState = lazyListState,
         onMove = { from, to ->
-            localList.apply {
-                add(to.index, removeAt(from.index))
+            val fromItem = localList.getOrNull(from.index)
+            val toItem = localList.getOrNull(to.index)
+            if (fromItem != null && toItem != null && !fromItem.isSystem && !toItem.isSystem) {
+                localList.apply {
+                    add(to.index, removeAt(from.index))
+                }
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
     )
 
@@ -95,49 +106,78 @@ fun DragDropList(
                 ) {
                     ListItem(
                         headlineContent = {
-                            Text(text = category.name)
+                            Text(
+                                text = category.name,
+                                fontWeight = if (category.isSystem) FontWeight.SemiBold else FontWeight.Normal
+                            )
                         },
                         trailingContent = {
-                            Row {
-                                IconButton(onClick = { onRename(category) }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Rename",
-                                        tint = MaterialTheme.colorScheme.primary
+                            if (category.isSystem) {
+                                Box(
+                                    modifier = Modifier
+                                        .padding(end = 8.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+                                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = "DEFAULT",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        fontWeight = FontWeight.Bold
                                     )
                                 }
-                                IconButton(onClick = { onDelete(category) }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                            } else {
+                                Row {
+                                    IconButton(
+                                        onClick = {
+                                            hapticService.performHaptic(view)
+                                            onRename(category)
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Rename",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            hapticService.performHaptic(view)
+                                            onDelete(category)
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
                             }
                         },
-                        leadingContent = {
-                            IconButton(
-                                onClick = {},
-                                modifier = Modifier.draggableHandle(
-                                    onDragStarted = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    },
-                                    onDragStopped = {
-                                        val updatedOrder = localList.mapIndexed { i, cat ->
-                                            cat.copy(sortOrder = i)
+                        leadingContent = if (category.isSystem) null else {
+                            {
+                                IconButton(
+                                    onClick = {},
+                                    modifier = Modifier.draggableHandle(
+                                        onDragStarted = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        },
+                                        onDragStopped = {
+                                            val updatedOrder = localList.mapIndexed { i, cat ->
+                                                cat.copy(sortOrder = i)
+                                            }
+                                            onReorderFinished(updatedOrder)
                                         }
-                                        onReorderFinished(updatedOrder)
-                                    }
-                                )
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(width = 32.dp, height = 6.dp)
-                                        .background(
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                                            shape = CircleShape
-                                        )
-                                )
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.DragHandle,
+                                        contentDescription = "Reorder",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent)
