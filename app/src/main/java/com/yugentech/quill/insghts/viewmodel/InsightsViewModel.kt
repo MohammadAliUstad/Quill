@@ -14,9 +14,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 import java.util.Calendar
 
 class InsightsViewModel(
@@ -51,7 +48,6 @@ class InsightsViewModel(
             val (sessions, streak, finishedCount) = sessionData
             val (books, totalQuestions, questionsPerBook) = libraryData
 
-            val heatmapData = mutableMapOf<LocalDate, Int>()
             val hourlyCounts = IntArray(24)
             var totalTime = 0L
 
@@ -59,11 +55,6 @@ class InsightsViewModel(
                 totalTime += session.durationMillis
                 val cal = Calendar.getInstance().apply { timeInMillis = session.startTime }
                 hourlyCounts[cal.get(Calendar.HOUR_OF_DAY)]++
-
-                val date = Instant.ofEpochMilli(session.startTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-                heatmapData[date] = (heatmapData[date] ?: 0) + 1
             }
 
             val peakHourIndex = hourlyCounts.indices.maxByOrNull { hourlyCounts[it] }
@@ -79,7 +70,6 @@ class InsightsViewModel(
                 streakCount = streak,
                 finishedBooksCount = finishedCount,
                 peakHour = validPeakHour,
-                heatmapHistory = heatmapData,
                 topAuthors = books.filter { it.author.isNotBlank() }
                     .groupingBy { it.author }
                     .eachCount()

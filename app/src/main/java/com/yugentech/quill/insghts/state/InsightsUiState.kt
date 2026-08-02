@@ -1,14 +1,11 @@
 package com.yugentech.quill.insghts.state
 
-import java.time.LocalDate
-
 data class InsightsUiState(
     val totalReadingTimeMillis: Long = 0L,
     val streakCount: Int = 0,
     val finishedBooksCount: Int = 0,
     val peakHour: Int? = null,
     val dailyVolume: Map<Int, Long> = emptyMap(),
-    val heatmapHistory: Map<LocalDate, Int> = emptyMap(),
     val genreDistribution: Map<String, Int> = emptyMap(),
     val topAuthors: Map<String, Int> = emptyMap(),
     val progressBrackets: ProgressBrackets = ProgressBrackets(),
