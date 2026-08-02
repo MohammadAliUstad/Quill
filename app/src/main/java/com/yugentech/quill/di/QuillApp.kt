@@ -12,7 +12,9 @@ import com.yugentech.quill.di.modules.books.sourcesModule
 import com.yugentech.quill.di.modules.books.storageModule
 import com.yugentech.quill.di.modules.config.categoryModule
 import com.yugentech.quill.di.modules.config.themeModule
+import com.yugentech.quill.di.modules.config.settingsModule
 import com.yugentech.quill.di.modules.core.cloudModule
+import com.yugentech.quill.di.modules.notification.notificationModule
 import com.yugentech.quill.di.modules.core.dataStoreModule
 import com.yugentech.quill.di.modules.core.databaseModule
 import com.yugentech.quill.di.modules.core.firebaseModule
@@ -59,7 +61,9 @@ class QuillApp : Application(), Configuration.Provider {
                 workerModule,
                 airaModule,
                 bookDetailsModule,
-                readerModule
+                readerModule,
+                notificationModule,
+                settingsModule
             )
         }
     }
