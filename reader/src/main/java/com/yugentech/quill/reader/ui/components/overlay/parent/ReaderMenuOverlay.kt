@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
@@ -22,10 +23,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.state.QuickUiState
+import com.yugentech.quill.reader.model.BackgroundSound
 import com.yugentech.quill.reader.ui.components.aira.AiraPeekBar
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.ReaderBottomControls
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.button.AskAiraButton
+import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.button.SoundToggleButton
 import com.yugentech.quill.reader.ui.components.overlay.components.topBar.ReaderTopBar
 import kotlin.math.roundToInt
 
@@ -39,6 +43,8 @@ fun ReaderMenuOverlay(
     showAiraPeek: Boolean = false,
     readerOverlayState: ReaderOverlayState,
     airaUiState: QuickUiState = QuickUiState(),
+    currentSound: BackgroundSound = BackgroundSound.NONE,
+    lastSelectedSound: BackgroundSound = BackgroundSound.RAIN,
     onAction: (ReaderAction) -> Unit
 ) {
     var sliderPosition by remember { mutableFloatStateOf(readerOverlayState.progress) }
@@ -101,7 +107,17 @@ fun ReaderMenuOverlay(
                     animationSpec = tween(250, easing = FastOutSlowInEasing)
                 ) + fadeOut()
             ) {
-                AskAiraButton(onClick = { onAction(ReaderAction.OnAskAiraClick) })
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    SoundToggleButton(
+                        currentSound = currentSound,
+                        lastSelectedSound = lastSelectedSound,
+                        onClick = { onAction(ReaderAction.OnSoundQuickToggle) }
+                    )
+                    AskAiraButton(onClick = { onAction(ReaderAction.OnAskAiraClick) })
+                }
             }
 
             ReaderBottomControls(

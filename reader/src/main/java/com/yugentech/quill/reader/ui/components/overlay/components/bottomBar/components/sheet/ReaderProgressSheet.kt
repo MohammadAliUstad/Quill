@@ -14,11 +14,19 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.sheet.components.BookProgressFooter
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.sheet.components.ChapterProgressHeader
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
+import com.yugentech.theme.service.HapticService
+import org.koin.compose.koinInject
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +37,9 @@ fun ReaderProgressSheet(
     currentPage: Int,
     onSeek: (Float) -> Unit
 ) {
+    val haptic = koinInject<HapticService>()
+    val view = LocalView.current
+
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
@@ -48,9 +59,19 @@ fun ReaderProgressSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Track the last page that triggered a haptic to prevent double-firing
+            var lastHapticPage by remember { mutableIntStateOf(currentPage) }
+
             Slider(
                 value = sliderPosition,
-                onValueChange = { newPos -> onSeek(newPos) },
+                onValueChange = { newPos -> 
+                    val newPage = (newPos * (readerOverlayState.totalPages - 1)).roundToInt() + 1
+                    if (newPage != lastHapticPage) {
+                        haptic.performTickHaptic(view)
+                        lastHapticPage = newPage
+                    }
+                    onSeek(newPos) 
+                },
                 interactionSource = interactionSource,
                 modifier = Modifier.fillMaxWidth(),
                 colors = SliderDefaults.colors(

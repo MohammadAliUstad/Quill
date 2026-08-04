@@ -56,7 +56,7 @@ fun SoundToggleButton(
             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
-        modifier = Modifier.padding(end = 8.dp, bottom = 2.dp)
+        modifier = Modifier.padding(end = 8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(

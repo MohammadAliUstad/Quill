@@ -20,6 +20,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
@@ -37,6 +38,7 @@ fun ReaderTopBar(
     onSettingsClick: () -> Unit
 ) {
     val haptic = koinInject<HapticService>()
+    val view = LocalView.current
 
     AnimatedVisibility(
         visible = isVisible,
@@ -65,7 +67,7 @@ fun ReaderTopBar(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            haptic.performHaptic()
+                            haptic.performHaptic(view)
                             onBackClick()
                         }
                     ) {
@@ -78,7 +80,7 @@ fun ReaderTopBar(
                 actions = {
                     IconButton(
                         onClick = {
-                            haptic.performHaptic()
+                            haptic.performHaptic(view)
                             onTocClick()
                         }
                     ) {
@@ -90,7 +92,7 @@ fun ReaderTopBar(
 
                     IconButton(
                         onClick = {
-                            haptic.performHaptic()
+                            haptic.performHaptic(view)
                             onSoundClick()
                         }
                     ) {
@@ -102,7 +104,7 @@ fun ReaderTopBar(
 
                     IconButton(
                         onClick = {
-                            haptic.performHaptic()
+                            haptic.performHaptic(view)
                             onSettingsClick()
                         }
                     ) {

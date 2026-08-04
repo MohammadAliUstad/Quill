@@ -13,6 +13,7 @@ sealed interface ReaderAction {
     data object OnAiraDismiss : ReaderAction
     data object OnStopGeneration : ReaderAction
     data object OnClearSelection : ReaderAction
+    data object OnSoundQuickToggle : ReaderAction
     data class OnSeek(val progress: Float) : ReaderAction
     data class OnAiraSend(val question: String) : ReaderAction
     data class OnQuickAction(val prompt: QuickPrompt) : ReaderAction
