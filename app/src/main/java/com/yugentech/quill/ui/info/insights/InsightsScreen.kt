@@ -49,7 +49,6 @@ import com.yugentech.quill.ui.info.insights.components.InsightSectionHeader
 import com.yugentech.quill.ui.info.insights.components.PeakHourCard
 import com.yugentech.quill.ui.info.insights.components.ProgressBracketsCard
 import com.yugentech.quill.ui.info.insights.components.TopAuthorsCard
-import com.yugentech.quill.ui.info.insights.components.heatMap.Heatmap
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
@@ -250,17 +249,6 @@ fun InsightsScreen(
                         }
                     }
 
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = sectionShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
-                            )
-                        ) {
-                            Heatmap(data = uiState.heatmapHistory)
-                        }
-                    }
                 }
             }
         }
