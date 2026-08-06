@@ -1,8 +1,12 @@
 package com.yugentech.quill.ui.shared.bookDetails.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -51,6 +56,8 @@ fun BookDetailsTopBar(
     bookAuthor: String,
     isVisible: Boolean,
     isFavorite: Boolean,
+    isDownloaded: Boolean = true,
+    hasProgress: Boolean = false,
     onBackClick: () -> Unit,
     onFavoriteClick: () -> Unit,
     onHighlightsClick: () -> Unit,
@@ -121,92 +128,100 @@ fun BookDetailsTopBar(
                     )
                 }
 
-                Box {
-                    IconButton(onClick = { menuExpanded = true }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More Options",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                AnimatedVisibility(
+                    visible = isDownloaded,
+                    enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start) + slideInHorizontally(initialOffsetX = { it }),
+                    exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start) + slideOutHorizontally(targetOffsetX = { it })
+                ) {
+                    Box {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "More Options",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
 
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false },
-                        shape = RoundedCornerShape(24.dp),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        tonalElevation = 8.dp,
-                        shadowElevation = 8.dp
-                    ) {
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                            shape = RoundedCornerShape(24.dp),
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            tonalElevation = 8.dp,
+                            shadowElevation = 8.dp
+                        ) {
 
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = "Highlights",
-                                    fontWeight = FontWeight.Medium
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Highlights",
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = "Highlights")
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onHighlightsClick()
+                                },
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                            )
+
+                            if (hasProgress) {
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = "Reset Progress",
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Restore, contentDescription = "Reset Progress")
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onResetProgressClick()
+                                    },
+                                    modifier = Modifier
+                                        .padding(horizontal = 8.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                                 )
-                            },
-                            leadingIcon = {
-                                Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = "Highlights")
-                            },
-                            onClick = {
-                                menuExpanded = false
-                                onHighlightsClick()
-                            },
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                        )
+                            }
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
 
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = "Reset Progress",
-                                    fontWeight = FontWeight.Medium
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.Restore, contentDescription = "Reset Progress")
-                            },
-                            onClick = {
-                                menuExpanded = false
-                                onResetProgressClick()
-                            },
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = "Delete Book",
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete Book",
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            },
-                            onClick = {
-                                menuExpanded = false
-                                onDeleteClick()
-                            },
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
-                        )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Delete Book",
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete Book",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onDeleteClick()
+                                },
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
+                            )
+                        }
                     }
                 }
             },

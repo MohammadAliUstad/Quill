@@ -43,6 +43,9 @@ class BookDetailsRepositoryImpl(
         bookDao.getBookEntity(bookId)
 
     override suspend fun startDownload(book: Book, isPro: Boolean) {
+        workManager.cancelAllWorkByTag("index_${book.id}")
+        indexingStateDao.deleteState(book.id)
+
         val existingBook = bookDao.getBookEntity(book.id)
 
         val newEntity = BookEntity(
@@ -100,12 +103,16 @@ class BookDetailsRepositoryImpl(
     override suspend fun removeDownload(bookId: String) {
         val book = bookDao.getBookEntity(bookId)
         book?.localFilePath?.let { File(it).takeIf { f -> f.exists() }?.delete() }
+        workManager.cancelAllWorkByTag("index_$bookId")
+        indexingStateDao.deleteState(bookId)
         bookDao.removeDownload(bookId)
     }
 
     override suspend fun deleteBook(bookId: String) {
         val book = bookDao.getBookEntity(bookId)
         book?.localFilePath?.let { File(it).takeIf { f -> f.exists() }?.delete() }
+        workManager.cancelAllWorkByTag("index_$bookId")
+        indexingStateDao.deleteState(bookId)
         bookDao.deleteBook(bookId)
         cloudSyncRepository.deleteBookFromCloud(bookId)
     }
