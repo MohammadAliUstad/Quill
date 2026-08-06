@@ -6,11 +6,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.yugentech.quill.aira.aira.viewmodel.AiraViewModel
 import com.yugentech.quill.bookDetails.viewmodel.BookDetailsViewModel
 import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.reader.ReaderActivity
 import com.yugentech.quill.ui.shared.airaChat.parent.AiraChatScreen
+import com.yugentech.quill.ui.shared.airaChat.viewmodel.AiraViewModel
 import com.yugentech.quill.ui.shared.bookDetails.parent.BookDetailsScreen
 import com.yugentech.quill.ui.shared.bookDetails.parent.NotesScreen
 import com.yugentech.quill.ui.shared.bookDetails.parent.NotesViewModel

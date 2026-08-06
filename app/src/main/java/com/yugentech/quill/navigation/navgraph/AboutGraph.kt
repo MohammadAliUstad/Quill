@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.ui.about.aira.parent.AiraAboutScreen
+import com.yugentech.quill.ui.about.whatsNew.parent.WhatsNewScreen
 import com.yugentech.quill.ui.about.about.parent.AboutScreen
 import com.yugentech.quill.ui.about.about.parent.AboutViewModel
 import com.yugentech.quill.ui.about.attributions.parent.AttributionsScreen
@@ -42,6 +43,12 @@ fun NavGraphBuilder.aboutGraph(
 
     composable(AppScreen.Licenses.route) {
         AttributionsScreen(
+            onNavigateBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(AppScreen.WhatsNew.route) {
+        WhatsNewScreen(
             onNavigateBack = { navController.popBackStack() }
         )
     }

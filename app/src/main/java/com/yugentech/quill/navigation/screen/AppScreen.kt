@@ -25,6 +25,7 @@ sealed class AppScreen(val route: String) {
     data object AboutAira : AppScreen("about_aira")
     data object MoreApps : AppScreen("more_apps")
     data object Licenses : AppScreen("licenses")
+    data object WhatsNew : AppScreen("whats_new")
     data object Insights : AppScreen("insights")
     data object EditProfileScreen : AppScreen("edit_profile")
     data object Subscriptions : AppScreen("subscriptions")

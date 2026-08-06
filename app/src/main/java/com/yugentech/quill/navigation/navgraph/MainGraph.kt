@@ -91,6 +91,9 @@ fun NavGraphBuilder.mainGraph(
             onViewIndexingQueue = {
                 navController.navigate(AppScreen.Queue.route) { launchSingleTop = true }
             },
+            onWhatsNew = {
+                navController.navigate(AppScreen.WhatsNew.route) { launchSingleTop = true }
+            },
         )
     }
 
