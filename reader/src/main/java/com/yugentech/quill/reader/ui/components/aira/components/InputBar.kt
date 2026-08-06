@@ -37,6 +37,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.reader.state.QuickUiState
 
+private val loadingPlaceholders = listOf(
+    "Finding the right words…",
+    "Your answer is taking shape…",
+    "Something thoughtful is coming…",
+    "Distilling an answer…",
+    "Almost there…"
+)
+
 @Composable
 fun InputBar(
     inputText: String,
@@ -52,6 +60,9 @@ fun InputBar(
     onStop: () -> Unit
 ) {
     val isStreamingOrLoading = airaUiState.isStreaming || airaUiState.isLoading
+    val loadingPlaceholder = remember(airaUiState.isLoading) {
+        if (airaUiState.isLoading) loadingPlaceholders.random() else ""
+    }
 
     Row(
         modifier = Modifier
@@ -65,7 +76,7 @@ fun InputBar(
             enabled = !airaUiState.isLoading,
             placeholder = {
                 Text(
-                    text = if (!airaUiState.isLoading) "Ask Aira anything…" else "Aira is thinking…",
+                    text = if (!airaUiState.isLoading) "Ask me anything…" else loadingPlaceholder,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
@@ -88,7 +99,7 @@ fun InputBar(
                 Box(
                     modifier = Modifier
                         .padding(end = 8.dp)
-                        .size(width = 44.dp, height = 40.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
                         .background(
                             if (isStreamingOrLoading) MaterialTheme.colorScheme.errorContainer

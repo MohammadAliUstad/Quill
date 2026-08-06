@@ -156,7 +156,7 @@ fun InputBar(
                     Box(
                         modifier = Modifier
                             .padding(end = 8.dp)
-                            .size(width = 44.dp, height = 40.dp)
+                            .size(40.dp)
                             .clip(CircleShape)
                             .background(buttonContainerColor)
                             .clickable(enabled = canSend || isStreaming) {
