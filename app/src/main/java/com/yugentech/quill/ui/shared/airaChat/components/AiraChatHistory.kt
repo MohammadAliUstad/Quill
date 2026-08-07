@@ -17,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.aira.aira.message.AiraMessage
+import com.yugentech.quill.aira.message.AiraMessage
 import com.yugentech.quill.ui.shared.airaChat.state.AiraUiState
 
 @Composable
