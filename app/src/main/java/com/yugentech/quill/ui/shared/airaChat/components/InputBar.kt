@@ -20,15 +20,10 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -61,8 +56,6 @@ fun InputBar(
     onInputChange: (String) -> Unit,
     isEnabled: Boolean,
     isStreaming: Boolean,
-    isListening: Boolean = false, // <-- NEW
-    onMicClick: () -> Unit = {},  // <-- NEW
     onSend: () -> Unit,
     onStop: () -> Unit,
 ) {
@@ -76,21 +69,6 @@ fun InputBar(
 
     LaunchedEffect(isImeVisible) {
         if (!isImeVisible) focusManager.clearFocus()
-    }
-
-    // Local state to drive the pulse animation
-    var pulseState by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isListening) {
-        if (isListening) {
-            pulseState = true // Start in the 'filled' state
-            while (true) {
-                kotlinx.coroutines.delay(700) // Adjust this to match your AVD transition duration!
-                pulseState = !pulseState
-            }
-        } else {
-            pulseState = false
-        }
     }
 
     val collapsedHPadding = 32.dp
@@ -125,12 +103,6 @@ fun InputBar(
         label = "buttonContentColor"
     )
 
-    // NEW: Animate mic icon color to visually indicate listening state
-    val micTintColor by animateColorAsState(
-        targetValue = if (isListening) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-        label = "micTintColor"
-    )
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -158,14 +130,10 @@ fun InputBar(
             TextField(
                 value = inputText,
                 onValueChange = { onInputChange(it) },
-                enabled = isEnabled || isListening, // Keep enabled while listening so partial text shows
+                enabled = isEnabled,
                 placeholder = {
                     Text(
-                        text = when {
-                            isListening -> "Listening…"
-                            isEnabled -> "Ask Aira anything…"
-                            else -> "Aira is thinking…"
-                        },
+                        text = if (isEnabled) "Ask Aira anything…" else "Aira is thinking…",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
@@ -185,70 +153,33 @@ fun InputBar(
                     }
                 },
                 trailingIcon = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(end = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(2.dp) // 2dp gap between hemispheres
-                    ) {
-                        // --- MIC HEMISPHERE (LEFT) ---
-                        Box(
-                            modifier = Modifier
-                                .size(width = 44.dp, height = 40.dp)
-                                .clip(RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                                .clickable(enabled = isEnabled || isListening) {
-                                    onMicClick()
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            AnimatedContent(
-                                targetState = isListening,
-                                label = "MicToRadioSwap"
-                            ) { listening ->
-                                if (listening) {
-                                    AnimatedRadioButton(
-                                        isSelected = pulseState,
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(width = 44.dp, height = 40.dp)
+                            .clip(CircleShape)
+                            .background(buttonContainerColor)
+                            .clickable(enabled = canSend || isStreaming) {
+                                if (isStreaming) {
+                                    onStop()
                                 } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Mic,
-                                        contentDescription = "Voice Input",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                                    onSend()
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
                                 }
-                            }
-                        }
-
-                        // --- SEND/STOP HEMISPHERE (RIGHT) ---
-                        Box(
-                            modifier = Modifier
-                                .size(width = 44.dp, height = 40.dp)
-                                .clip(RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp))
-                                .background(buttonContainerColor)
-                                .clickable(enabled = canSend || isStreaming) {
-                                    if (isStreaming) {
-                                        onStop()
-                                    } else {
-                                        onSend()
-                                        keyboardController?.hide()
-                                        focusManager.clearFocus()
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            AnimatedContent(
-                                targetState = isStreaming,
-                                label = "SendStopIcon"
-                            ) { streaming ->
-                                Icon(
-                                    imageVector = if (streaming) Icons.Default.Stop else Icons.Default.ArrowUpward,
-                                    contentDescription = if (streaming) "Stop" else "Send",
-                                    tint = buttonContentColor,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AnimatedContent(
+                            targetState = isStreaming,
+                            label = "SendStopIcon"
+                        ) { streaming ->
+                            Icon(
+                                imageVector = if (streaming) Icons.Default.Stop else Icons.Default.ArrowUpward,
+                                contentDescription = if (streaming) "Stop" else "Send",
+                                tint = buttonContentColor,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 },

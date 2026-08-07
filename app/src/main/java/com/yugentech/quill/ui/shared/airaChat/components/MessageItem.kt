@@ -121,24 +121,14 @@ fun MessageItem(
                         modifier = Modifier.padding(top = 4.dp)
                     )
 
-                    // Show Sources and Actions only when typing finishes
                     if (textLength.value.toInt() == message.text.length) {
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.End
                         ) {
-                            // Left side: Sources Card
-                            Box(modifier = Modifier.weight(1f)) {
-                                if (message.sources.isNotEmpty()) {
-                                    SourcesCard(sources = message.sources)
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
                             // Right side: Action Buttons
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
