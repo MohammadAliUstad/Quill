@@ -192,12 +192,26 @@ fun MoreScreen(
             }
             item {
                 SettingsSwitchItem(
+                    title = "Playful Reminders",
+                    subtitle = "Occasional friendly nudges to keep your reading habit alive",
+                    checked = notificationConfig.playfulRemindersEnabled,
+                    enabled = notificationConfig.notificationsEnabled,
+                    index = 1,
+                    totalCount = 3,
+                    onCheckedChange = {
+                        notificationViewModel.setPlayfulRemindersEnabled(it)
+                        hapticService.performHaptic(view)
+                    }
+                )
+            }
+            item {
+                SettingsSwitchItem(
                     title = "Daily Reading Reminder",
                     subtitle = notificationViewModel.formatReminderTime(),
                     checked = notificationConfig.readingRemindersEnabled,
                     enabled = notificationConfig.notificationsEnabled,
-                    index = 1,
-                    totalCount = 2,
+                    index = 2,
+                    totalCount = 3,
                     onCheckedChange = { isChecked ->
                         if (isChecked) {
                             if (notificationViewModel.canEnableReminders()) {

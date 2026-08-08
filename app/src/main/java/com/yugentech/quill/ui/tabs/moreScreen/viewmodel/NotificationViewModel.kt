@@ -51,8 +51,14 @@ class NotificationViewModel(
             userDataStore.setNotificationsEnabled(enabled)
             if (!enabled) {
                 notificationManager.cancelReminders()
-            } else if (notificationConfig.value.readingRemindersEnabled) {
-                updateAlarms()
+                notificationManager.cancelPlayfulReminders()
+            } else {
+                if (notificationConfig.value.readingRemindersEnabled) {
+                    updateAlarms()
+                }
+                if (notificationConfig.value.playfulRemindersEnabled) {
+                    notificationManager.schedulePlayfulReminders()
+                }
             }
         }
     }
@@ -66,6 +72,19 @@ class NotificationViewModel(
                 }
             } else {
                 notificationManager.cancelReminders()
+            }
+        }
+    }
+
+    fun setPlayfulRemindersEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            userDataStore.setPlayfulRemindersEnabled(enabled)
+            if (enabled) {
+                if (notificationConfig.value.notificationsEnabled) {
+                    notificationManager.schedulePlayfulReminders()
+                }
+            } else {
+                notificationManager.cancelPlayfulReminders()
             }
         }
     }

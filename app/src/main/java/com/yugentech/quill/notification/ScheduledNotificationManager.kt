@@ -5,9 +5,13 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.core.net.toUri
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.yugentech.quill.notification.worker.PlayfulReminderWorker
 import timber.log.Timber
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 class ScheduledNotificationManager(private val context: Context) {
 
@@ -15,6 +19,7 @@ class ScheduledNotificationManager(private val context: Context) {
 
     companion object {
         private const val DAILY_REMINDER_REQUEST_CODE = 2000
+        private const val PLAYFUL_REMINDERS_WORK_NAME = "playful_reminders_work"
     }
 
     fun scheduleReminder(hour: Int, minute: Int) {
@@ -80,5 +85,25 @@ class ScheduledNotificationManager(private val context: Context) {
         } else {
             true
         }
+    }
+
+    fun schedulePlayfulReminders() {
+        Timber.i("Scheduling playful reminders via WorkManager")
+        val workRequest = PeriodicWorkRequestBuilder<PlayfulReminderWorker>(
+            12, TimeUnit.HOURS
+        ).setInitialDelay(6, TimeUnit.HOURS)
+            .addTag(PLAYFUL_REMINDERS_WORK_NAME)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            PLAYFUL_REMINDERS_WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
+    }
+
+    fun cancelPlayfulReminders() {
+        Timber.i("Cancelling playful reminders")
+        WorkManager.getInstance(context).cancelUniqueWork(PLAYFUL_REMINDERS_WORK_NAME)
     }
 }
