@@ -1,6 +1,6 @@
 package com.yugentech.quill.ui.shared.airaChat.state
 
-import com.yugentech.quill.aira.aira.message.AiraMessage
+import com.yugentech.quill.aira.message.AiraMessage
 import com.yugentech.quill.quota.model.QuotaLimits
 import com.yugentech.theme.tokens.AppConstants.EMPTY
 

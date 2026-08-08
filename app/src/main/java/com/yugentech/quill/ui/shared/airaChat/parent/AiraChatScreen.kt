@@ -33,11 +33,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import com.yugentech.quill.aira.util.VoiceOutputManager
 import com.yugentech.quill.ui.shared.airaChat.viewmodel.AiraViewModel
 import com.yugentech.quill.ui.shared.airaChat.components.AiraChatHistory
 import com.yugentech.quill.ui.shared.airaChat.components.AiraEmptyState
@@ -53,6 +56,8 @@ import com.yugentech.quill.ui.shared.airaChat.components.InputBar
 import com.yugentech.quill.ui.shared.airaChat.components.QuotaLimitBar
 import com.yugentech.quill.ui.shared.airaChat.components.StatusBanner
 import com.yugentech.theme.tokens.AppConstants.EMPTY
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -61,7 +66,15 @@ fun AiraChatScreen(
     onBackClick: () -> Unit,
     navigateToSubscriptions: () -> Unit
 ) {
+    val voiceOutputManager: VoiceOutputManager = koinInject()
+    val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
+
+    DisposableEffect(Unit) {
+        onDispose {
+            voiceOutputManager.stop()
+        }
+    }
     val isChatEmpty = uiState.messages.isEmpty()
 
     var inputText by remember { mutableStateOf("") }
@@ -170,6 +183,9 @@ fun AiraChatScreen(
                         uiState = uiState,
                         listState = listState,
                         bottomPadding = bottomClearance,
+                        onSpeakClick = { text ->
+                            scope.launch { voiceOutputManager.speak(text) }
+                        },
                         modifier = Modifier.imePadding()
                     )
                 }

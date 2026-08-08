@@ -5,7 +5,7 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import com.yugentech.quill.aira.aira.message.AiraMessage
+import com.yugentech.quill.aira.message.AiraMessage
 import com.yugentech.quill.aira.repository.AiraChatRepository
 import com.yugentech.quill.ui.shared.airaChat.state.AiraUiState
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
@@ -161,7 +161,7 @@ class AiraViewModel(
             var hasConsumedQuota = false
 
             try {
-                airaChatRepository.ask(bookId = bookId, question = question).collect { response ->
+                airaChatRepository.ask(bookId = bookId, query = question).collect { response ->
 
                     if (!hasConsumedQuota && response is AiraResponse.Success) {
                         hasConsumedQuota = true
