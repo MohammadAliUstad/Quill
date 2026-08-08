@@ -7,8 +7,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -391,7 +389,7 @@ fun ActionButton(
             AnimatedContent(
                 targetState = label,
                 transitionSpec = {
-                    (fadeIn() + slideInVertically { it / 2 }).togetherWith(fadeOut() + slideOutVertically { -it / 2 })
+                    fadeIn().togetherWith(fadeOut())
                 },
                 label = "ActionButtonLabel"
             ) { targetLabel ->
