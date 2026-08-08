@@ -12,10 +12,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,7 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yugentech.quill.aira.quick.state.QuickUiState
+import com.yugentech.quill.reader.state.QuickUiState
 
 @Composable
 fun InputBar(
@@ -46,8 +43,6 @@ fun InputBar(
     onInputChange: (String) -> Unit,
     airaUiState: QuickUiState,
     canSend: Boolean,
-    isListening: Boolean,
-    onMicClick: () -> Unit,
     buttonContainerColor: Color,
     buttonContentColor: Color,
     horizontalPadding: Dp,
@@ -57,19 +52,6 @@ fun InputBar(
     onStop: () -> Unit
 ) {
     val isStreamingOrLoading = airaUiState.isStreaming || airaUiState.isLoading
-    var pulseState by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isListening) {
-        if (isListening) {
-            pulseState = true
-            while (true) {
-                kotlinx.coroutines.delay(700)
-                pulseState = !pulseState
-            }
-        } else {
-            pulseState = false
-        }
-    }
 
     Row(
         modifier = Modifier
@@ -80,14 +62,10 @@ fun InputBar(
         TextField(
             value = inputText,
             onValueChange = onInputChange,
-            enabled = !airaUiState.isLoading || isListening,
+            enabled = !airaUiState.isLoading,
             placeholder = {
                 Text(
-                    text = when {
-                        isListening -> "Listening…"
-                        !airaUiState.isLoading -> "Ask Aira anything…"
-                        else -> "Aira is thinking…"
-                    },
+                    text = if (!airaUiState.isLoading) "Ask Aira anything…" else "Aira is thinking…",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
@@ -107,60 +85,27 @@ fun InputBar(
                 }
             },
             trailingIcon = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(end = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                Box(
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(width = 44.dp, height = 40.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isStreamingOrLoading) MaterialTheme.colorScheme.errorContainer
+                            else buttonContainerColor
+                        )
+                        .clickable(enabled = canSend || isStreamingOrLoading) {
+                            if (isStreamingOrLoading) onStop() else onSend(inputText)
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(width = 44.dp, height = 40.dp)
-                            .clip(RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                            .clickable { onMicClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        AnimatedContent(
-                            targetState = isListening,
-                            label = "MicToRadioSwap"
-                        ) { listening ->
-                            if (listening) {
-                                AnimatedRadioButton(
-                                    isSelected = pulseState,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.Mic,
-                                    contentDescription = "Voice Input",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(width = 44.dp, height = 40.dp)
-                            .clip(RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp))
-                            .background(
-                                if (isStreamingOrLoading) MaterialTheme.colorScheme.errorContainer
-                                else buttonContainerColor
-                            )
-                            .clickable(enabled = canSend || isStreamingOrLoading) {
-                                if (isStreamingOrLoading) onStop() else onSend(inputText)
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        AnimatedContent(targetState = isStreamingOrLoading, label = "SendStopIcon") { loading ->
-                            Icon(
-                                imageVector = if (loading) Icons.Default.Stop else Icons.Default.ArrowUpward,
-                                contentDescription = if (loading) "Stop" else "Send",
-                                tint = if (loading) MaterialTheme.colorScheme.onErrorContainer else buttonContentColor,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                    AnimatedContent(targetState = isStreamingOrLoading, label = "SendStopIcon") { loading ->
+                        Icon(
+                            imageVector = if (loading) Icons.Default.Stop else Icons.Default.ArrowUpward,
+                            contentDescription = if (loading) "Stop" else "Send",
+                            tint = if (loading) MaterialTheme.colorScheme.onErrorContainer else buttonContentColor,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             },

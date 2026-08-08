@@ -32,10 +32,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +47,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import com.yugentech.quill.aira.quick.prompt.QuickPrompt
+import com.yugentech.quill.aira.chat.quickChat.prompt.QuickPrompt
+import com.yugentech.quill.aira.util.VoiceOutputManager
 import com.yugentech.quill.reader.state.QuickUiState
 import com.yugentech.quill.reader.ui.components.aira.components.AiraPeekHeader
 import com.yugentech.quill.reader.ui.components.aira.components.InputBar
@@ -53,6 +56,7 @@ import com.yugentech.quill.reader.ui.components.aira.components.PeekResponseArea
 import com.yugentech.quill.reader.ui.components.aira.components.QuotaLimitBar
 import com.yugentech.quill.reader.ui.components.aira.components.resolveChips
 import com.yugentech.theme.service.HapticService
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -70,7 +74,15 @@ fun AiraPeekBar(
     onUpgradeClick: () -> Unit = {}
 ) {
     val haptic = koinInject<HapticService>()
+    val voiceOutputManager: VoiceOutputManager = koinInject()
+    val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            voiceOutputManager.stop()
+        }
+    }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
@@ -176,7 +188,11 @@ fun AiraPeekBar(
                                 onDismiss()
                             },
                             onSpeak = {
-                                // REMOVED: Speech logic
+                                contentToActUpon.let { text ->
+                                    if (text.isNotBlank()) {
+                                        scope.launch { voiceOutputManager.speak(text) }
+                                    }
+                                }
                             },
                             onCopy = {
                                 haptic.performHaptic()
