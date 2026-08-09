@@ -1,6 +1,6 @@
 package com.yugentech.quill.reader.ui.components.overlay.parent
 
-import com.yugentech.quill.aira.quick.prompt.QuickPrompt
+import com.yugentech.quill.aira.chat.quickChat.prompt.QuickPrompt
 
 sealed interface ReaderAction {
     data object OnBackClick : ReaderAction

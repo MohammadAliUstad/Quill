@@ -79,24 +79,24 @@ fun ReaderTopBar(
                     IconButton(
                         onClick = {
                             haptic.performHaptic()
-                            onSoundClick()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MusicNote,
-                            contentDescription = "Ambient Sounds"
-                        )
-                    }
-
-                    IconButton(
-                        onClick = {
-                            haptic.performHaptic()
                             onTocClick()
                         }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Menu,
                             contentDescription = "TOC"
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            haptic.performHaptic()
+                            onSoundClick()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = "Ambient Sounds"
                         )
                     }
 

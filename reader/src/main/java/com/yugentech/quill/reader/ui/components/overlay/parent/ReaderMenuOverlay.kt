@@ -22,7 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.yugentech.quill.aira.quick.state.QuickUiState
+import com.yugentech.quill.reader.state.QuickUiState
 import com.yugentech.quill.reader.ui.components.aira.AiraPeekBar
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.ReaderBottomControls
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.button.AskAiraButton
@@ -32,6 +32,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderMenuOverlay(
+    modifier: Modifier = Modifier,
     isVisible: Boolean,
     isPro: Boolean,
     showBottomControls: Boolean = true,
@@ -59,7 +60,7 @@ fun ReaderMenuOverlay(
         ) + 1
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         Box(modifier = Modifier.align(Alignment.TopCenter)) {
             ReaderTopBar(
                 isVisible = isVisible && !showAiraPeek,
@@ -90,7 +91,7 @@ fun ReaderMenuOverlay(
             horizontalAlignment = Alignment.End
         ) {
             AnimatedVisibility(
-                visible = isVisible && showBottomControls && airaUiState.isReady && isPro,
+                visible = isVisible && showBottomControls && airaUiState.isReady,
                 enter = slideInVertically(
                     initialOffsetY = { it },
                     animationSpec = tween(300, easing = FastOutSlowInEasing)
