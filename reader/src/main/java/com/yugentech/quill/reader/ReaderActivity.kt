@@ -15,7 +15,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.yugentech.quill.reader.ui.parent.ReaderScreen
-import com.yugentech.quill.reader.viewmodel.ReaderViewModel
+import com.yugentech.quill.reader.viewmodel.reader.ReaderViewModel
 import com.yugentech.theme.QuillTheme
 import com.yugentech.theme.ThemeRepository
 import com.yugentech.theme.models.ThemeConfiguration

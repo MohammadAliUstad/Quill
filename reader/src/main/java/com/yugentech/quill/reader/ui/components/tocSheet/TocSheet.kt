@@ -43,9 +43,7 @@ import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
 
 private data class TocDisplayItem(
-    val link: Link,
-    val depth: Int,
-    val pageNumber: String? = null
+    val link: Link, val depth: Int, val pageNumber: String? = null
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,8 +80,7 @@ fun TocSheet(
             onDismissRequest = onDismiss,
             sheetState = sheetState,
             shape = RoundedCornerShape(
-                topStart = cornerRadius,
-                topEnd = cornerRadius
+                topStart = cornerRadius, topEnd = cornerRadius
             ),
             modifier = Modifier.fillMaxHeight(),
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -94,8 +91,7 @@ fun TocSheet(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = {}
-                        )
+                            onClick = {})
                         .padding(vertical = 22.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -108,8 +104,7 @@ fun TocSheet(
                             )
                     )
                 }
-            }
-        ) {
+            }) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxWidth(),
@@ -128,9 +123,7 @@ fun TocSheet(
                 itemsIndexed(flattenedToc) { index, item ->
                     val isActive = index == activeIndex
                     SimpleTocItem(
-                        item = item,
-                        isActive = isActive,
-                        onClick = onTocItemClick
+                        item = item, isActive = isActive, onClick = onTocItemClick
                     )
                 }
 
@@ -141,10 +134,7 @@ fun TocSheet(
 }
 
 private fun flattenToc(
-    publication: Publication,
-    allPositions: List<Locator>,
-    links: List<Link>,
-    depth: Int = 0
+    publication: Publication, allPositions: List<Locator>, links: List<Link>, depth: Int = 0
 ): List<TocDisplayItem> {
     val result = mutableListOf<TocDisplayItem>()
     for (link in links) {
@@ -165,12 +155,12 @@ private fun flattenToc(
 
 @Composable
 private fun SimpleTocItem(
-    item: TocDisplayItem,
-    isActive: Boolean,
-    onClick: (String) -> Unit
+    item: TocDisplayItem, isActive: Boolean, onClick: (String) -> Unit
 ) {
-    val containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-    val contentColor = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+    val containerColor =
+        if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+    val contentColor =
+        if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
     val textWeight = if (isActive) FontWeight.Bold else FontWeight.Medium
 
     Row(
@@ -181,8 +171,7 @@ private fun SimpleTocItem(
             .background(containerColor)
             .clickable { onClick(item.link.href.toString()) }
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+        verticalAlignment = Alignment.CenterVertically) {
         if (item.depth > 0) {
             Spacer(modifier = Modifier.width((item.depth * 16).dp))
         }

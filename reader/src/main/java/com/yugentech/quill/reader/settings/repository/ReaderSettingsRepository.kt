@@ -1,12 +1,12 @@
-package com.yugentech.quill.reader.pref.repository
+package com.yugentech.quill.reader.settings.repository
 
-import com.yugentech.quill.reader.model.BackgroundSound
-import com.yugentech.quill.reader.pref.model.QuillPreferences
+import com.yugentech.quill.reader.sound.model.BackgroundSound
+import com.yugentech.quill.reader.settings.model.ReaderSettings
 import kotlinx.coroutines.flow.Flow
 import org.readium.r2.navigator.epub.EpubPreferences
 
-interface ReaderPrefRepository {
-    val quillPreferences: Flow<QuillPreferences>
+interface ReaderSettingsRepository {
+    val readerSettings: Flow<ReaderSettings>
     suspend fun saveEpubPreferences(preferences: EpubPreferences)
     suspend fun saveVolumeNavigation(enabled: Boolean)
     suspend fun saveNightLight(enabled: Boolean)

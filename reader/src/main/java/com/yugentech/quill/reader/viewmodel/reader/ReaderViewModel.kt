@@ -1,16 +1,16 @@
-package com.yugentech.quill.reader.viewmodel
+package com.yugentech.quill.reader.viewmodel.reader
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.database.entity.HighlightEntity
-import com.yugentech.quill.reader.pref.model.QuillPreferences
-import com.yugentech.quill.reader.pref.repository.ReaderPrefRepository
-import com.yugentech.quill.reader.repository.ReaderRepository
-import com.yugentech.quill.reader.service.BackgroundSoundService
-import com.yugentech.quill.reader.session.ReadingSessionRepository
+import com.yugentech.quill.reader.settings.model.ReaderSettings
+import com.yugentech.quill.reader.settings.repository.ReaderSettingsRepository
+import com.yugentech.quill.reader.repository.book.ReaderBookRepository
+import com.yugentech.quill.reader.sound.repository.BackgroundSoundRepository
+import com.yugentech.quill.reader.repository.session.ReadingSessionRepository
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
-import com.yugentech.quill.reader.model.BackgroundSound
+import com.yugentech.quill.reader.sound.model.BackgroundSound
 import com.yugentech.theme.service.HapticService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,10 +48,10 @@ sealed class ReaderCommand {
 
 class ReaderViewModel(
     application: Application,
-    private val readerRepository: ReaderRepository,
+    private val readerRepository: ReaderBookRepository,
     private val sessionRepository: ReadingSessionRepository,
-    private val preferencesRepository: ReaderPrefRepository,
-    private val backgroundSoundService: BackgroundSoundService,
+    private val preferencesRepository: ReaderSettingsRepository,
+    private val backgroundSoundRepository: BackgroundSoundRepository,
     private val hapticService: HapticService
 ) : AndroidViewModel(application) {
 
@@ -67,10 +67,10 @@ class ReaderViewModel(
     private val _soundVolume = MutableStateFlow(1.0f)
     val soundVolume = _soundVolume.asStateFlow()
 
-    val readerPreferences = preferencesRepository.quillPreferences.stateIn(
+    val readerPreferences = preferencesRepository.readerSettings.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = QuillPreferences(ReaderDefaults.getPreferences())
+        initialValue = ReaderSettings(ReaderDefaults.getPreferences())
     )
 
     private val _commands = Channel<ReaderCommand>(Channel.BUFFERED)
@@ -156,7 +156,7 @@ class ReaderViewModel(
 
                     // Auto-play sound if enabled
                     viewModelScope.launch {
-                        val prefs = preferencesRepository.quillPreferences.first()
+                        val prefs = preferencesRepository.readerSettings.first()
                         _soundVolume.value = prefs.soundVolume
                         if (prefs.autoPlaySound && prefs.lastSelectedSound != BackgroundSound.NONE) {
                             playBackgroundSound(prefs.lastSelectedSound)
@@ -277,7 +277,7 @@ class ReaderViewModel(
     }
 
     private fun playBackgroundSound(sound: BackgroundSound) {
-        backgroundSoundService.play(sound, _soundVolume.value)
+        backgroundSoundRepository.play(sound, _soundVolume.value)
         _activeSound.value = sound
         if (sound != BackgroundSound.NONE) {
             viewModelScope.launch {
@@ -287,7 +287,7 @@ class ReaderViewModel(
     }
 
     private fun stopBackgroundSound() {
-        backgroundSoundService.stop()
+        backgroundSoundRepository.stop()
         _activeSound.value = BackgroundSound.NONE
     }
 
@@ -302,7 +302,7 @@ class ReaderViewModel(
 
     fun updateSoundVolume(volume: Float) {
         _soundVolume.value = volume
-        backgroundSoundService.setVolume(volume)
+        backgroundSoundRepository.setVolume(volume)
         viewModelScope.launch {
             preferencesRepository.saveSoundVolume(volume)
         }
@@ -324,7 +324,7 @@ class ReaderViewModel(
 
     override fun onCleared() {
         saveReadingSession()
-        backgroundSoundService.stop()
+        backgroundSoundRepository.stop()
         super.onCleared()
         publication?.close()
     }

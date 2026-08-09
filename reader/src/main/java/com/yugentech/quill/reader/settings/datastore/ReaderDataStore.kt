@@ -1,9 +1,10 @@
-package com.yugentech.quill.reader.pref.datastore
+package com.yugentech.quill.reader.settings.datastore
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -18,7 +19,7 @@ class ReaderDataStore(
         private val NIGHT_LIGHT_KEY = booleanPreferencesKey("night_light")
         private val AUTO_PLAY_SOUND_KEY = booleanPreferencesKey("auto_play_sound")
         private val LAST_SELECTED_SOUND_KEY = stringPreferencesKey("last_selected_sound")
-        private val SOUND_VOLUME_KEY = androidx.datastore.preferences.core.floatPreferencesKey("sound_volume")
+        private val SOUND_VOLUME_KEY = floatPreferencesKey("sound_volume")
     }
 
     val preferencesJsonFlow: Flow<String?> = dataStore.data.map { it[EPUB_PREFS_KEY] }

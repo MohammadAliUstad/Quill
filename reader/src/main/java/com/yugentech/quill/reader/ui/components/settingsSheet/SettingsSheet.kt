@@ -56,7 +56,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yugentech.quill.reader.pref.model.QuillPreferences
+import com.yugentech.quill.reader.settings.model.ReaderSettings
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.CustomSettingsSlider
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.FontChip
@@ -82,7 +82,7 @@ import org.readium.r2.navigator.preferences.TextAlign as R2TextAlign
 )
 @Composable
 fun SettingsSheet(
-    preferences: QuillPreferences,
+    preferences: ReaderSettings,
     onPreferencesChange: (EpubPreferences) -> Unit,
     onVolumeNavigationChange: (Boolean) -> Unit,
     onNightLightChange: (Boolean) -> Unit,

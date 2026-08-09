@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.service
+package com.yugentech.quill.reader.sound.service
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -10,7 +10,7 @@ import android.view.animation.LinearInterpolator
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import com.yugentech.quill.reader.model.BackgroundSound
+import com.yugentech.quill.reader.sound.model.BackgroundSound
 import timber.log.Timber
 import kotlin.math.cos
 import kotlin.math.sin

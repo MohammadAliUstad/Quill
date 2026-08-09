@@ -1,8 +1,8 @@
-package com.yugentech.quill.reader.pref.repository
+package com.yugentech.quill.reader.settings.repository
 
-import com.yugentech.quill.reader.model.BackgroundSound
-import com.yugentech.quill.reader.pref.datastore.ReaderDataStore
-import com.yugentech.quill.reader.pref.model.QuillPreferences
+import com.yugentech.quill.reader.sound.model.BackgroundSound
+import com.yugentech.quill.reader.settings.datastore.ReaderDataStore
+import com.yugentech.quill.reader.settings.model.ReaderSettings
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -10,13 +10,13 @@ import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.navigator.epub.EpubPreferencesSerializer
 import timber.log.Timber
 
-class ReaderPrefRepositoryImpl(
+class ReaderSettingsRepositoryImpl(
     private val readerDataStore: ReaderDataStore
-) : ReaderPrefRepository {
+) : ReaderSettingsRepository {
 
     private val serializer = EpubPreferencesSerializer()
 
-    override val quillPreferences: Flow<QuillPreferences> = combine<Any?, QuillPreferences>(
+    override val readerSettings: Flow<ReaderSettings> = combine<Any?, ReaderSettings>(
         readerDataStore.preferencesJsonFlow,
         readerDataStore.volumeNavFlow,
         readerDataStore.nightLightFlow,
@@ -42,7 +42,7 @@ class ReaderPrefRepositoryImpl(
             ReaderDefaults.getPreferences()
         }
         val lastSound = BackgroundSound.fromId(lastSoundId)
-        QuillPreferences(epub, volumeNav, nightLight, autoPlay, lastSound, volume)
+        ReaderSettings(epub, volumeNav, nightLight, autoPlay, lastSound, volume)
     }
 
     override suspend fun saveEpubPreferences(preferences: EpubPreferences) {

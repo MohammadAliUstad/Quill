@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import com.yugentech.quill.reader.ui.parent.luminance
-import com.yugentech.quill.reader.viewmodel.ReaderCommand
+import com.yugentech.quill.reader.ui.components.highlightSheet.luminance
+import com.yugentech.quill.reader.viewmodel.reader.ReaderCommand
 import com.yugentech.theme.service.HapticService
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource

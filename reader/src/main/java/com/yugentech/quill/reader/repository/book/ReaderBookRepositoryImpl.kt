@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.repository
+package com.yugentech.quill.reader.repository.book
 
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.dao.HighlightDao
@@ -7,11 +7,11 @@ import com.yugentech.quill.database.entity.HighlightEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class ReaderRepositoryImpl(
+class ReaderBookRepositoryImpl(
     private val bookDao: BookDao,
     private val highlightDao: HighlightDao,
     private val indexingStateDao: BookIndexingStateDao
-) : ReaderRepository {
+) : ReaderBookRepository {
 
     override fun getBook(bookId: String): Flow<ReaderBookData?> =
         bookDao.getBookEntityFlow(bookId).map { entity ->

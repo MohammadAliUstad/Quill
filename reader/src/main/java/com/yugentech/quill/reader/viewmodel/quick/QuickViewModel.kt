@@ -1,12 +1,11 @@
-package com.yugentech.quill.reader.viewmodel
+package com.yugentech.quill.reader.viewmodel.quick
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.aira.repository.AiraChatRepository
-import com.yugentech.quill.reader.repository.ReaderRepository
+import com.yugentech.quill.reader.repository.book.ReaderBookRepository
 import com.yugentech.quill.aira.chat.quickChat.prompt.QuickPrompt
 import com.yugentech.quill.aira.chat.quickChat.repository.QuickChatRepository
-import com.yugentech.quill.reader.state.QuickUiState
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.BillingRepository
@@ -24,7 +23,7 @@ class QuickViewModel(
     private val quickRepository: QuickChatRepository,
     private val quotaRepository: QuotaRepository,
     private val authRepository: AuthRepository,
-    private val readerRepository: ReaderRepository,
+    private val readerRepository: ReaderBookRepository,
     private val billingRepository: BillingRepository
 ) : ViewModel() {
 

@@ -26,7 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.aira.chat.quickChat.prompt.QuickPrompt
-import com.yugentech.quill.reader.state.QuickUiState
+import com.yugentech.quill.reader.viewmodel.quick.QuickUiState
 
 @Composable
 fun PeekResponseArea(

@@ -37,7 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yugentech.quill.reader.state.QuickUiState
+import com.yugentech.quill.reader.viewmodel.quick.QuickUiState
 
 private val loadingPlaceholders = listOf(
     "Finding the right words",

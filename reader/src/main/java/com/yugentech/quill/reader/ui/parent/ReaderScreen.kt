@@ -1,18 +1,13 @@
 package com.yugentech.quill.reader.ui.parent
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -32,8 +27,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.yugentech.quill.reader.viewmodel.QuickViewModel
-import com.yugentech.quill.reader.pref.model.QuillPreferences
+import com.yugentech.quill.reader.ui.components.highlightSheet.HighlightSheet
+import com.yugentech.quill.reader.viewmodel.quick.QuickViewModel
+import com.yugentech.quill.reader.settings.model.ReaderSettings
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.ui.components.engine.ReadiumEngine
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderAction
@@ -41,8 +37,8 @@ import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderMenuOverlay
 import com.yugentech.quill.reader.ui.components.settingsSheet.SettingsSheet
 import com.yugentech.quill.reader.ui.components.soundSheet.SoundSelectionSheet
 import com.yugentech.quill.reader.ui.components.tocSheet.TocSheet
-import com.yugentech.quill.reader.viewmodel.ReaderUiState
-import com.yugentech.quill.reader.viewmodel.ReaderViewModel
+import com.yugentech.quill.reader.viewmodel.reader.ReaderUiState
+import com.yugentech.quill.reader.viewmodel.reader.ReaderViewModel
 import kotlinx.coroutines.delay
 import org.json.JSONObject
 import org.koin.androidx.compose.koinViewModel
@@ -57,7 +53,7 @@ fun ReaderScreen(
     viewModel: ReaderViewModel,
     uiState: ReaderUiState,
     onBackClick: () -> Unit,
-    preferences: QuillPreferences,
+    preferences: ReaderSettings,
     statusBarHeight: Dp = 0.dp,
     onPreferencesChange: (EpubPreferences) -> Unit,
     onLocatorChange: (Locator) -> Unit,
@@ -90,7 +86,7 @@ private fun ReaderSuccess(
     viewModel: ReaderViewModel,
     state: ReaderUiState.Success,
     onBackClick: () -> Unit,
-    preferences: QuillPreferences,
+    preferences: ReaderSettings,
     statusBarHeight: Dp,
     onPreferencesChange: (EpubPreferences) -> Unit,
     onLocatorChange: (Locator) -> Unit,

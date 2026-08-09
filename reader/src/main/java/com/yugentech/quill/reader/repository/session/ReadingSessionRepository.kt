@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.session
+package com.yugentech.quill.reader.repository.session
 
 import com.yugentech.quill.database.entity.ReadingSessionEntity
 import kotlinx.coroutines.flow.Flow

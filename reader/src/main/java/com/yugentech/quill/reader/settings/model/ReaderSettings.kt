@@ -1,9 +1,9 @@
-package com.yugentech.quill.reader.pref.model
+package com.yugentech.quill.reader.settings.model
 
-import com.yugentech.quill.reader.model.BackgroundSound
+import com.yugentech.quill.reader.sound.model.BackgroundSound
 import org.readium.r2.navigator.epub.EpubPreferences
 
-data class QuillPreferences(
+data class ReaderSettings(
     val epub: EpubPreferences,
     val volumeNavigation: Boolean = false,
     val nightLight: Boolean = false,

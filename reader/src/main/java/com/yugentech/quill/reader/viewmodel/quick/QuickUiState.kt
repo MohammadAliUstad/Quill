@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.state
+package com.yugentech.quill.reader.viewmodel.quick
 
 data class QuickUiState(
     val isReady: Boolean = false,

@@ -3,13 +3,13 @@ package com.yugentech.quill.ui.shared.bookDetails.parent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.database.entity.HighlightEntity
-import com.yugentech.quill.reader.repository.ReaderRepository
+import com.yugentech.quill.reader.repository.book.ReaderBookRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class HighlightsViewModel(
-    private val repository: ReaderRepository 
+    private val repository: ReaderBookRepository 
 ) : ViewModel() {
 
     private val _highlights = MutableStateFlow<List<HighlightEntity>>(emptyList())

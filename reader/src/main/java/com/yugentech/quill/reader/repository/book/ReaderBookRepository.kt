@@ -1,9 +1,9 @@
-package com.yugentech.quill.reader.repository
+package com.yugentech.quill.reader.repository.book
 
 import com.yugentech.quill.database.entity.HighlightEntity
 import kotlinx.coroutines.flow.Flow
 
-interface ReaderRepository {
+interface ReaderBookRepository {
     fun getBook(bookId: String): Flow<ReaderBookData?>
     suspend fun saveProgress(
         bookId: String,

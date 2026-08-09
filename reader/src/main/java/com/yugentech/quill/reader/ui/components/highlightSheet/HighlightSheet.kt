@@ -1,4 +1,4 @@
-package com.yugentech.quill.reader.ui.parent
+package com.yugentech.quill.reader.ui.components.highlightSheet
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -159,14 +159,9 @@ fun HighlightSheet(
                 onClick = { onSave(selectedColorInt) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = CircleShape
+                    .height(50.dp)
             ) {
-                Text(
-                    text = "Save Highlight",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text("Save Highlight")
             }
         }
     }

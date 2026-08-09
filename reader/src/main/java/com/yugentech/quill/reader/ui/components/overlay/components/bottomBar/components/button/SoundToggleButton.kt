@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.reader.model.BackgroundSound
+import com.yugentech.quill.reader.sound.model.BackgroundSound
 import com.yugentech.theme.service.HapticService
 import org.koin.compose.koinInject
 

@@ -24,8 +24,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.reader.state.QuickUiState
-import com.yugentech.quill.reader.model.BackgroundSound
+import com.yugentech.quill.reader.viewmodel.quick.QuickUiState
+import com.yugentech.quill.reader.sound.model.BackgroundSound
 import com.yugentech.quill.reader.ui.components.aira.AiraPeekBar
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.ReaderBottomControls
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.button.AskAiraButton
