@@ -186,9 +186,9 @@ fun ReadiumEngine(
                     var s = document.createElement('style');
                     s.id = id;
                     s.textContent = `
-                        ::selection { 
-                            background-color: $cssColorString !important; 
-                            color: inherit !important; 
+                        ::selection {
+                            background-color: $cssColorString !important;
+                            color: inherit !important;
                         }
                     `;
                     document.head.appendChild(s);
@@ -202,11 +202,105 @@ fun ReadiumEngine(
             }
         }
 
+        suspend fun injectSelectionHandler() {
+            val isScrollMode = preferences.scroll == true
+
+            // In paged mode, intercept the long-press (contextmenu) before ActionMode appears.
+            // caretRangeFromPoint gives us the character at the VISUAL touch position, so the
+            // word we select is always the one the user actually pressed — never the paragraph
+            // start on the previous page that the browser would otherwise jump to.
+            val contextMenuBlock = if (!isScrollMode) """
+                document.addEventListener('contextmenu', function(e) {
+                    var x = e.clientX, y = e.clientY;
+                    if (x < 0 || x >= window.innerWidth || y < 0 || y >= window.innerHeight) return;
+                    if (!document.caretRangeFromPoint) return;
+                    var cr = document.caretRangeFromPoint(x, y);
+                    if (!cr || cr.startContainer.nodeType !== 3) return;
+                    var nd = cr.startContainer;
+                    var tx = nd.textContent || '';
+                    var s = cr.startOffset, en = cr.startOffset;
+                    while (s > 0 && !/[\s ​]/.test(tx[s - 1])) s--;
+                    while (en < tx.length && !/[\s ​]/.test(tx[en])) en++;
+                    if (s >= en) return;
+                    var wr = document.createRange();
+                    wr.setStart(nd, s);
+                    wr.setEnd(nd, en);
+                    if (wr.getBoundingClientRect().left < 0) return;
+                    e.preventDefault();
+                    _listening = false;
+                    try { var sl = window.getSelection(); sl.removeAllRanges(); sl.addRange(wr); } catch (ex) {}
+                    setTimeout(function() { _listening = true; }, 300);
+                });
+            """.trimIndent() else ""
+
+            val js = """
+                (function() {
+                    if (window.__quillSelHandlerInstalled) return;
+                    window.__quillSelHandlerInstalled = true;
+
+                    var _timer = null;
+                    var _listening = true;
+
+                    function _firstVisible() {
+                        var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+                        var n;
+                        while ((n = w.nextNode())) {
+                            if (!n.textContent.trim()) continue;
+                            var r = document.createRange();
+                            r.selectNodeContents(n);
+                            var rect = r.getBoundingClientRect();
+                            if (rect.left >= 0 && rect.left < window.innerWidth && rect.right > 0) return n;
+                        }
+                        return null;
+                    }
+
+                    function _doClamp() {
+                        if (!_listening) return;
+                        var sel = window.getSelection();
+                        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+                        var range = sel.getRangeAt(0);
+                        var anc = range.startContainer;
+                        var probe = document.createRange();
+                        if (anc.nodeType === 3 && anc.length > 0) {
+                            var off = Math.min(range.startOffset, anc.length - 1);
+                            probe.setStart(anc, off); probe.setEnd(anc, off + 1);
+                        } else {
+                            probe.setStart(anc, range.startOffset); probe.collapse(true);
+                        }
+                        if (probe.getBoundingClientRect().left >= 0) return;
+                        var fn = _firstVisible();
+                        if (!fn) return;
+                        _listening = false;
+                        try { sel.setBaseAndExtent(fn, 0, range.endContainer, range.endOffset); } catch (e) {}
+                        setTimeout(function() { _listening = true; }, 300);
+                    }
+
+                    // Debounced: only clamp 150ms after the last selectionchange.
+                    // Clamping on every event causes a tug-of-war with native selection → flicker.
+                    document.addEventListener('selectionchange', function() {
+                        if (!_listening) return;
+                        clearTimeout(_timer);
+                        _timer = setTimeout(_doClamp, 150);
+                    });
+
+                    $contextMenuBlock
+                })();
+            """.trimIndent()
+
+            try {
+                nav.evaluateJavascript(js)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         injectSelectionStyles()
+        injectSelectionHandler()
 
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             nav.currentLocator.collectLatest { locator ->
                 injectSelectionStyles()
+                injectSelectionHandler()
                 onLocatorChange(locator)
             }
         }

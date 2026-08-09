@@ -40,7 +40,7 @@ class WrappedCallback(
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
         }
 
-        if (isPro && isAiraReady) {
+        if (isAiraReady) {
             if (menu.findItem(ASKAIRA) == null) {
                 menu.add(Menu.NONE, ASKAIRA, 1, "Ask Aira")
                     .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
