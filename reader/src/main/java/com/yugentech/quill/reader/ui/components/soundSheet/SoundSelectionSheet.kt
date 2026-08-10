@@ -1,10 +1,10 @@
 package com.yugentech.quill.reader.ui.components.soundSheet
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,27 +12,39 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.rounded.BlurOn
+import androidx.compose.material.icons.rounded.Forest
+import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.Water
+import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.model.BackgroundSound
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +56,17 @@ fun SoundSelectionSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
-    val sounds = BackgroundSound.entries.filter { it != BackgroundSound.NONE }
+    
+    val options = listOf(
+        SoundOption("Forest", BackgroundSound.FOREST, Icons.Rounded.Forest),
+        SoundOption("Rain", BackgroundSound.RAIN, Icons.Rounded.WaterDrop),
+        SoundOption("Brown Noise", BackgroundSound.BROWN_NOISE, Icons.Rounded.BlurOn),
+        SoundOption("Fireplace", BackgroundSound.FIREPLACE, Icons.Rounded.LocalFireDepartment),
+        SoundOption("Library", BackgroundSound.LIBRARY, Icons.AutoMirrored.Rounded.LibraryBooks),
+        SoundOption("Riverside", BackgroundSound.RIVERSIDE, Icons.Rounded.Water)
+    )
+
+    val noneOption = SoundOption("None", BackgroundSound.NONE, Icons.AutoMirrored.Rounded.VolumeOff)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -66,19 +88,32 @@ fun SoundSelectionSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)
             ) {
-                items(sounds) { sound ->
-                    SoundChip(
-                        sound = sound,
-                        isSelected = activeSound == sound,
-                        onClick = { onSoundToggle(sound) }
-                    )
+                options.chunked(2).forEach { rowOptions ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)
+                    ) {
+                        rowOptions.forEach { option ->
+                            SoundToggleCard(
+                                option = option,
+                                isSelected = activeSound == option.sound,
+                                onClick = { onSoundToggle(option.sound) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
                 }
+                
+                SoundToggleCard(
+                    option = noneOption,
+                    isSelected = activeSound == noneOption.sound,
+                    onClick = { onSoundToggle(noneOption.sound) },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -104,39 +139,65 @@ fun SoundSelectionSheet(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun SoundChip(
-    sound: BackgroundSound,
+private fun SoundToggleCard(
+    option: SoundOption,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val bgColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer 
-                  else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer 
-                       else MaterialTheme.colorScheme.onSurfaceVariant
+    val iconScale by animateFloatAsState(
+        targetValue = if (isSelected) 1.3f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "icon_scale"
+    )
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(bgColor)
-            .clickable { onClick() }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+    ToggleButton(
+        checked = isSelected,
+        onCheckedChange = { onClick() },
+        modifier = modifier,
+        shapes = ToggleButtonShapes(
+            shape = RoundedCornerShape(MaterialTheme.corners.medium),
+            pressedShape = RoundedCornerShape(MaterialTheme.corners.small),
+            checkedShape = CircleShape
+        ),
+        colors = ToggleButtonDefaults.toggleButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
     ) {
-        Icon(
-            imageVector = Icons.Default.MusicNote,
-            contentDescription = null,
-            tint = contentColor,
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = sound.displayName,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = contentColor
-        )
+        Column(
+            modifier = Modifier.padding(vertical = MaterialTheme.spacing.m),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = option.icon,
+                contentDescription = option.label,
+                modifier = Modifier.graphicsLayer {
+                    scaleX = iconScale
+                    scaleY = iconScale
+                }
+            )
+
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.s))
+
+            Text(
+                text = option.label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+            )
+        }
     }
 }
+
+private data class SoundOption(
+    val label: String,
+    val sound: BackgroundSound,
+    val icon: ImageVector
+)
