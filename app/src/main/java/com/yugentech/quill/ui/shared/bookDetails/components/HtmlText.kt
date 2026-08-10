@@ -1,5 +1,6 @@
 package com.yugentech.quill.ui.shared.bookDetails.components
 
+import android.text.StaticLayout
 import android.text.TextUtils
 import android.text.method.LinkMovementMethod
 import android.widget.TextView
@@ -29,24 +30,28 @@ fun HtmlText(
             }
         },
         update = { textView ->
-            textView.text = HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_COMPACT)
-            textView.maxLines = Int.MAX_VALUE // Always measure full height first
+            val spanned = HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_COMPACT)
+            textView.text = spanned
+            textView.maxLines = maxLines
             textView.ellipsize = TextUtils.TruncateAt.END
             textView.setTextColor(textColor.toArgb())
-
             textView.movementMethod = if (maxLines == Int.MAX_VALUE) {
                 LinkMovementMethod.getInstance()
             } else {
                 null
             }
 
-            // Get the actual full line count
             textView.post {
-                val fullLineCount = textView.lineCount
+                val width = textView.width
+                val fullLineCount = if (width > 0) {
+                    StaticLayout.Builder
+                        .obtain(spanned, 0, spanned.length, textView.paint, width)
+                        .build()
+                        .lineCount
+                } else {
+                    textView.lineCount
+                }
                 onLineCountChanged(fullLineCount)
-
-                // Now apply the maxLines constraint after we've measured
-                textView.maxLines = maxLines
             }
         }
     )

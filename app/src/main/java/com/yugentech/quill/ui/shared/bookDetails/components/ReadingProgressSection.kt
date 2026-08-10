@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.database.model.DownloadStatus
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -62,12 +63,15 @@ fun ReadingProgressSection(
         }
     }
 
+    val isDownloaded = book.downloadStatus == DownloadStatus.DOWNLOADED
+
     Card(
         onClick = onContinueClick,
+        enabled = isDownloaded,
         shape = RoundedCornerShape(16.dp),
-        // FIX 1: Styled to match the glassy look of the action buttons
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.45f)
+            containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.45f),
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.45f)
         ),
         border = BorderStroke(
             width = 1.dp,
@@ -94,7 +98,13 @@ fun ReadingProgressSection(
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                if (book.lastReadTime > 0) {
+                if (!isDownloaded) {
+                    Text(
+                        text = "Book deleted",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                } else if (book.lastReadTime > 0) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.AccessTime,
