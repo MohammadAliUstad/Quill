@@ -15,6 +15,7 @@ interface ReaderRepository {
     fun getHighlights(bookId: String): Flow<List<HighlightEntity>>
     suspend fun saveHighlight(highlight: HighlightEntity)
     suspend fun deleteHighlight(highlightId: String)
+    fun observeIsReady(bookId: String): Flow<Boolean>
 }
 
 data class ReaderBookData(

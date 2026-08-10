@@ -29,7 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.yugentech.quill.aira.quick.viewmodel.QuickViewModel
+import com.yugentech.quill.reader.viewmodel.QuickViewModel
 import com.yugentech.quill.reader.pref.model.QuillPreferences
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.ui.components.engine.ReadiumEngine
@@ -218,6 +218,7 @@ private fun ReaderSuccess(
         }
 
         ReaderMenuOverlay(
+            modifier = Modifier.zIndex(1f),
             isPro = isPro,
             isVisible = screenState.isMenuVisible || screenState.showAiraPeek,
             showBottomControls = !screenState.showAiraPeek,

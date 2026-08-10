@@ -2,13 +2,15 @@ package com.yugentech.quill.reader.repository
 
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.dao.HighlightDao
+import com.yugentech.quill.database.dao.BookIndexingStateDao
 import com.yugentech.quill.database.entity.HighlightEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class ReaderRepositoryImpl(
     private val bookDao: BookDao,
-    private val highlightDao: HighlightDao
+    private val highlightDao: HighlightDao,
+    private val indexingStateDao: BookIndexingStateDao
 ) : ReaderRepository {
 
     override fun getBook(bookId: String): Flow<ReaderBookData?> =
@@ -49,5 +51,9 @@ class ReaderRepositoryImpl(
 
     override suspend fun deleteHighlight(highlightId: String) {
         highlightDao.deleteHighlight(highlightId)
+    }
+
+    override fun observeIsReady(bookId: String): Flow<Boolean> {
+        return indexingStateDao.observeIsComplete(bookId)
     }
 }

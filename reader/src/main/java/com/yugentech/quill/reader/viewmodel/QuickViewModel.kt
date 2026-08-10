@@ -2,10 +2,10 @@ package com.yugentech.quill.reader.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.aira.aira.repository.AiraChatRepository
+import com.yugentech.quill.aira.repository.AiraChatRepository
 import com.yugentech.quill.reader.repository.ReaderRepository
-import com.yugentech.quill.aira.quick.prompt.QuickPrompt
-import com.yugentech.quill.aira.quick.repository.QuickRepository
+import com.yugentech.quill.aira.chat.quickChat.prompt.QuickPrompt
+import com.yugentech.quill.aira.chat.quickChat.repository.QuickChatRepository
 import com.yugentech.quill.reader.state.QuickUiState
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.domain.AuthRepository
@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 class QuickViewModel(
     private val airaChatRepository: AiraChatRepository,
-    private val quickRepository: QuickRepository,
+    private val quickRepository: QuickChatRepository,
     private val quotaRepository: QuotaRepository,
     private val authRepository: AuthRepository,
     private val readerRepository: ReaderRepository,
@@ -55,8 +55,8 @@ class QuickViewModel(
         }
     }
 
-    fun ask(bookId: String, question: String) {
-        if (question.isBlank() || _uiState.value.isLoading) return
+    fun ask(bookId: String, query: String) {
+        if (query.isBlank() || _uiState.value.isLoading) return
         if (!checkQuota()) return
 
         prepareForNewQuery()
@@ -64,7 +64,7 @@ class QuickViewModel(
         activeJob = viewModelScope.launch {
             var hasConsumedQuota = false
             try {
-                airaChatRepository.ask(bookId, question).collect { response ->
+                airaChatRepository.ask(bookId, query).collect { response ->
                     handleResponseStream(response) {
                         if (!hasConsumedQuota) {
                             hasConsumedQuota = true
