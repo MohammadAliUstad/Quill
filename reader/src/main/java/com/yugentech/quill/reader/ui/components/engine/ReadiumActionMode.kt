@@ -5,7 +5,6 @@ import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import androidx.core.view.get
 import androidx.core.view.size
 import com.yugentech.theme.tokens.AppConstants.ASKAIRA
 import com.yugentech.theme.tokens.AppConstants.HIGHLIGHT
@@ -22,32 +21,18 @@ class WrappedCallback(
     private val onDestroy: () -> Unit = {}
 ) : ActionMode.Callback {
 
-    override fun onCreateActionMode(mode: ActionMode, menu: Menu) =
-        original.onCreateActionMode(mode, menu)
+    override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+        // Do NOT call original — that would populate Copy/Share/etc into the native menu.
+        // Starting with an empty menu means FloatingActionMode never renders its floating
+        // panel (no items = nothing to show), while the ActionMode itself stays alive so
+        // the system-drawn selection handles remain visible. Our Compose toolbar handles
+        // all actions instead.
+        return true
+    }
 
     override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
-        original.onPrepareActionMode(mode, menu)
-
-        for (i in menu.size - 1 downTo 0) {
-            val title = menu[i].title.toString()
-            if (title.contains("read aloud", true) || title.contains("define", true)) {
-                menu.removeItem(menu[i].itemId)
-            }
-        }
-
-        if (menu.findItem(HIGHLIGHT) == null) {
-            menu.add(Menu.NONE, HIGHLIGHT, 0, "Highlight")
-                .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-        }
-
-        if (isAiraReady) {
-            if (menu.findItem(ASKAIRA) == null) {
-                menu.add(Menu.NONE, ASKAIRA, 1, "Ask Aira")
-                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            }
-        }
-
-        return true
+        // Menu stays empty; return false so the framework skips its invalidation pass.
+        return false
     }
 
     override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {

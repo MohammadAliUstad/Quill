@@ -19,7 +19,7 @@ object ReaderDefaults {
 
     @OptIn(ExperimentalReadiumApi::class)
     fun getPreferences(): EpubPreferences = EpubPreferences(
-        scroll = true,
+        scroll = false,
         fontFamily = FONT_LITERATA,
         fontSize = 1.15,
         lineHeight = 1.5,
