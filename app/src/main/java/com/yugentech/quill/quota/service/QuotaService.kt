@@ -42,9 +42,9 @@ class QuotaService(
                 QuotaFields.RESET_AT to midnightTimestamp()
             )
             quotaDocRef(userId).set(data).await()
-            Timber.Forest.d("Quota initialized for user: $userId isPro=$isPro")
+            Timber.d("Quota initialized for user: $userId isPro=$isPro")
         } catch (e: Exception) {
-            Timber.Forest.e(e, "Failed to init quota for user: $userId")
+            Timber.e(e, "Failed to init quota for user: $userId")
         }
     }
 
@@ -55,9 +55,9 @@ class QuotaService(
                 QuotaFields.RESET_AT to midnightTimestamp()
             )
             quotaDocRef(userId).set(data, SetOptions.merge()).await()
-            Timber.Forest.d("Quota reset for user: $userId")
+            Timber.d("Quota reset for user: $userId")
         } catch (e: Exception) {
-            Timber.Forest.e(e, "Failed to reset quota for user: $userId")
+            Timber.e(e, "Failed to reset quota for user: $userId")
         }
     }
 
@@ -66,9 +66,9 @@ class QuotaService(
             quotaDocRef(userId).update(
                 QuotaFields.QUERIES_USED, FieldValue.increment(1)
             ).await()
-            Timber.Forest.d("Quota incremented for user: $userId")
+            Timber.d("Quota incremented for user: $userId")
         } catch (e: Exception) {
-            Timber.Forest.e(e, "Failed to increment quota for user: $userId")
+            Timber.e(e, "Failed to increment quota for user: $userId")
         }
     }
 
@@ -81,9 +81,9 @@ class QuotaService(
                 ),
                 SetOptions.merge()
             ).await()
-            Timber.Forest.d("Quota limit updated for user: $userId isPro=$isPro limit=$limit")
+            Timber.d("Quota limit updated for user: $userId isPro=$isPro limit=$limit")
         } catch (e: Exception) {
-            Timber.Forest.e(e, "Failed to update quota limit for user: $userId")
+            Timber.e(e, "Failed to update quota limit for user: $userId")
         }
     }
 

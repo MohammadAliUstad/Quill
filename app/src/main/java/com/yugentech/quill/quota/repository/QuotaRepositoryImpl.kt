@@ -4,6 +4,7 @@ import com.yugentech.quill.database.dao.QuotaDao
 import com.yugentech.quill.database.entity.QuotaEntity
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.QuotaRepository
+import com.yugentech.quill.quota.model.QuotaLimits
 import com.yugentech.quill.quota.service.QuotaService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,10 +28,10 @@ class QuotaRepositoryImpl(
     override val remainingQueries: StateFlow<Int> = authRepository.authState
         .map { user -> user?.uid }
         .flatMapLatest { uid ->
-            if (uid != null) quotaDao.observeQuota(uid).map { it?.remaining ?: 10 }
+            if (uid != null) quotaDao.observeQuota(uid).map { it?.remaining ?: QuotaLimits.FREE }
             else flowOf(0)
         }
-        .stateIn(repositoryScope, SharingStarted.Companion.WhileSubscribed(5000), 10)
+        .stateIn(repositoryScope, SharingStarted.Companion.WhileSubscribed(5000), QuotaLimits.FREE)
 
     override val canSendQuery: StateFlow<Boolean> = authRepository.authState
         .map { user -> user?.uid }
