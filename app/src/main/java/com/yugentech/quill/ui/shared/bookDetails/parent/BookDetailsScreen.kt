@@ -1,7 +1,16 @@
 package com.yugentech.quill.ui.shared.bookDetails.parent
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -13,6 +22,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -53,6 +64,7 @@ fun BookDetailsScreen(
     onHighlightsClick: (bookId: String) -> Unit,
     onReadClick: (String, String?) -> Unit,
     onAiraClick: (String) -> Unit,
+    onManageCategoriesClick: () -> Unit,
     bookDetailsViewModel: BookDetailsViewModel
 ) {
     val uiState by bookDetailsViewModel.uiState.collectAsStateWithLifecycle()
@@ -114,6 +126,8 @@ fun BookDetailsScreen(
                 bookAuthor = book.author,
                 isVisible = showTopBarTitle,
                 isFavorite = book.isFavorite,
+                isDownloaded = downloadStatus == DownloadStatus.DOWNLOADED,
+                hasProgress = book.progressPercent > 0f,
                 onBackClick = onBackClick,
                 onFavoriteClick = { bookDetailsViewModel.onFavoriteToggle() },
                 onDeleteClick = { showDeleteDialog = true },
@@ -169,14 +183,28 @@ fun BookDetailsScreen(
 
                 item { Spacer(modifier = Modifier.height(8.dp)) }
 
-                if (book.progressPercent > 0f) {
-                    item {
-                        ReadingProgressSection(
-                            book = book,
-                            onContinueClick = { onReadClick(book.id, null) }
-                        )
+                item {
+                    AnimatedVisibility(
+                        visible = book.progressPercent > 0f,
+                        enter = fadeIn(tween(300, easing = FastOutSlowInEasing)) +
+                                expandVertically(
+                                    animationSpec = tween(350, easing = FastOutSlowInEasing),
+                                    expandFrom = Alignment.Top
+                                ),
+                        exit = fadeOut(tween(100, easing = FastOutLinearInEasing)) +
+                               shrinkVertically(
+                                   animationSpec = tween(220, delayMillis = 100, easing = FastOutSlowInEasing),
+                                   shrinkTowards = Alignment.Top
+                               )
+                    ) {
+                        Column {
+                            ReadingProgressSection(
+                                book = book,
+                                onContinueClick = { onReadClick(book.id, null) }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
-                    item { Spacer(modifier = Modifier.height(8.dp)) }
                 }
 
                 if (!uiState.isLoading) {
@@ -210,7 +238,6 @@ fun BookDetailsScreen(
             onDismiss = { showCategorySheet = false },
             onCategorySelected = { newCat ->
                 bookDetailsViewModel.onCategoryChange(newCat)
-                showCategorySheet = false
             },
             onRemoveClick = {
                 showCategorySheet = false
@@ -220,6 +247,10 @@ fun BookDetailsScreen(
                     bookDetailsViewModel.removeFromLibrary()
                     onBackClick()
                 }
+            },
+            onAddCategoryClick = {
+                showCategorySheet = false
+                onManageCategoriesClick()
             }
         )
     }
@@ -231,7 +262,7 @@ fun BookDetailsScreen(
             title = { Text("Delete Book File?") },
             text = { Text("The downloaded book file will be deleted, but your reading progress and bookmarks will be kept completely safe.") },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         if (book.source == BookSource.USER_IMPORTED) {
                             bookDetailsViewModel.removeFromLibrary()
@@ -241,8 +272,13 @@ fun BookDetailsScreen(
                         }
 
                         showDeleteDialog = false
-                    }) {
-                    Text("Delete File", color = MaterialTheme.colorScheme.error)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Text("Delete File")
                 }
             },
             dismissButton = {
@@ -258,10 +294,16 @@ fun BookDetailsScreen(
             title = { Text("Reset Reading Progress?") },
             text = { Text("Are you sure you want to reset your reading progress? All your current reading stats for this book will be permanently cleared.") },
             confirmButton = {
-                TextButton(onClick = {
-                    bookDetailsViewModel.resetReadingProgress()
-                    showResetDialog = false
-                }) {
+                Button(
+                    onClick = {
+                        bookDetailsViewModel.resetReadingProgress()
+                        showResetDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
                     Text("Reset Progress")
                 }
             },
@@ -278,12 +320,18 @@ fun BookDetailsScreen(
             title = { Text("Remove from Library?") },
             text = { Text("This book is currently downloaded. Removing it from your library will also delete the downloaded file and permanently clear all its data.") },
             confirmButton = {
-                TextButton(onClick = {
-                    bookDetailsViewModel.removeFromLibrary()
-                    showRemoveLibraryWarningDialog = false
-                    onBackClick()
-                }) {
-                    Text("Remove Completely", color = MaterialTheme.colorScheme.error)
+                Button(
+                    onClick = {
+                        bookDetailsViewModel.removeFromLibrary()
+                        showRemoveLibraryWarningDialog = false
+                        onBackClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Text("Remove Completely")
                 }
             },
             dismissButton = {
