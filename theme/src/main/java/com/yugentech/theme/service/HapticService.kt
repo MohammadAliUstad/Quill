@@ -9,12 +9,27 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.view.HapticFeedbackConstants
 import android.view.View
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import timber.log.Timber
 
 // Service for triggering haptic feedback across different Android API levels
 class HapticService(
-    context: Context
+    context: Context,
+    hapticsEnabledFlow: kotlinx.coroutines.flow.Flow<Boolean>
 ) {
+    private val scope = CoroutineScope(Dispatchers.IO)
+    
+    private val hapticsEnabled: StateFlow<Boolean> = hapticsEnabledFlow
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = true
+        )
 
     // Lazy initialization of the correct vibrator service based on Android version
     private val vibrator: Vibrator by lazy {
@@ -27,11 +42,13 @@ class HapticService(
 
     // Triggers feedback: prefers View-based haptics, falls back to raw vibration
     fun performHaptic(view: View? = null) {
+        if (!hapticsEnabled.value) return
         performHapticInternal(view, isSpecial = false)
     }
 
     // Triggers a more noticeable haptic sequence for completion
     fun performCompletionHaptic(view: View? = null) {
+        if (!hapticsEnabled.value) return
         performHapticInternal(view, isSpecial = true)
     }
 

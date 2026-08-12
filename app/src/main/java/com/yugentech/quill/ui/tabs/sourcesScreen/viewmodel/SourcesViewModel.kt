@@ -40,13 +40,9 @@ class SourcesViewModel(
                 uris = uris
             )
 
-            val isProUser = billingRepository.isPro.first()
-
-            if (isProUser) {
-                // Filter only the successfully imported books to be indexed
-                results.filterIsInstance<ImportResult.Success>().forEach { success ->
-                    scheduleBookIndexing(context, success.bookId)
-                }
+            // Filter only the successfully imported books to be indexed
+            results.filterIsInstance<ImportResult.Success>().forEach { success ->
+                scheduleBookIndexing(context, success.bookId)
             }
 
             _importResults.value = results
