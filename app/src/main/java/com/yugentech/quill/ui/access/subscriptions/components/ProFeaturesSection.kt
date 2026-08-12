@@ -33,7 +33,7 @@ fun ProFeaturesSection() {
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
     ) {
-        // Free tier card - NO AI MENTIONED
+        // Free tier card
         QueryTierCard(
             icon = {
                 Icon(
@@ -46,13 +46,13 @@ fun ProFeaturesSection() {
             label = "Current Plan",
             tierName = "Basic Reader",
             subtitle = "Standard Library",
-            description = "Enjoy a beautiful, focused reading environment for your local library. AI companion features are reserved for Pro members.",
+            description = "Enjoy a beautiful, focused reading environment with 5 daily AI companion queries.",
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             borderColor = MaterialTheme.colorScheme.outlineVariant
         )
 
-        // Pro tier card - UNLOCKS AI
+        // Pro tier card
         QueryTierCard(
             icon = {
                 Icon(
@@ -65,7 +65,7 @@ fun ProFeaturesSection() {
             label = "Upgrade to",
             tierName = "Quill Pro",
             subtitle = "AI Reading Companion",
-            description = "Unlock Aira, your personal AI companion. Deeply analyze themes, hidden plots, and character motivations with generous daily access to AI insights.",
+            description = "Supercharge Aira with 50 daily AI companion queries. Deeply analyze themes, hidden plots, and character motivations.",
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)

@@ -125,7 +125,7 @@ fun SubscribedContent(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = "You've unlocked the full reading experience. Aira is ready to help you dive deeper into your library, explore complex themes, and uncover new insights.",
+            text = "You've unlocked the full reading experience. Enjoy 50 daily queries and let Aira help you dive deeper into your library, explore complex themes, and uncover new insights.",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant

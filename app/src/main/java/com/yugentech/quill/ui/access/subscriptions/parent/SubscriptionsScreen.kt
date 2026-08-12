@@ -140,7 +140,7 @@ fun SubscriptionsScreen(
                         Column {
                             Text(text = "Quill Pro")
                             Text(
-                                text = "Unlock Aira the AI Assistant",
+                                text = "Power up Aira with Quill Pro",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

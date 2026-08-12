@@ -3,7 +3,7 @@ package com.yugentech.quill.billing.viewmodel
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.aira.book.BookRepository
+import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.domain.BillingRepository
@@ -21,7 +21,7 @@ class SubscriptionViewModel(
     private val billingRepository: BillingRepository,
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
-    private val bookRepository: BookRepository
+    private val bookRepository: BookDetailsRepository
 ) : ViewModel() {
 
     private val _isPro = MutableStateFlow(false)
