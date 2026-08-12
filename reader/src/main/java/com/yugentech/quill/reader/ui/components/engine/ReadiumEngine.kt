@@ -203,36 +203,6 @@ fun ReadiumEngine(
         }
 
         suspend fun injectSelectionHandler() {
-            val isScrollMode = preferences.scroll == true
-
-            // In paged mode, intercept the long-press (contextmenu) before ActionMode appears.
-            // caretRangeFromPoint gives us the character at the VISUAL touch position, so the
-            // word we select is always the one the user actually pressed — never the paragraph
-            // start on the previous page that the browser would otherwise jump to.
-            val contextMenuBlock = if (!isScrollMode) """
-                document.addEventListener('contextmenu', function(e) {
-                    var x = e.clientX, y = e.clientY;
-                    if (x < 0 || x >= window.innerWidth || y < 0 || y >= window.innerHeight) return;
-                    if (!document.caretRangeFromPoint) return;
-                    var cr = document.caretRangeFromPoint(x, y);
-                    if (!cr || cr.startContainer.nodeType !== 3) return;
-                    var nd = cr.startContainer;
-                    var tx = nd.textContent || '';
-                    var s = cr.startOffset, en = cr.startOffset;
-                    while (s > 0 && !/[\s ​]/.test(tx[s - 1])) s--;
-                    while (en < tx.length && !/[\s ​]/.test(tx[en])) en++;
-                    if (s >= en) return;
-                    var wr = document.createRange();
-                    wr.setStart(nd, s);
-                    wr.setEnd(nd, en);
-                    if (wr.getBoundingClientRect().left < 0) return;
-                    e.preventDefault();
-                    _listening = false;
-                    try { var sl = window.getSelection(); sl.removeAllRanges(); sl.addRange(wr); } catch (ex) {}
-                    setTimeout(function() { _listening = true; }, 300);
-                });
-            """.trimIndent() else ""
-
             val js = """
                 (function() {
                     if (window.__quillSelHandlerInstalled) return;
@@ -282,8 +252,6 @@ fun ReadiumEngine(
                         clearTimeout(_timer);
                         _timer = setTimeout(_doClamp, 150);
                     });
-
-                    $contextMenuBlock
                 })();
             """.trimIndent()
 
