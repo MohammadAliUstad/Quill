@@ -123,7 +123,7 @@ fun BookDetailsScreen(
             )
         },
         floatingActionButton = {
-            if (downloadStatus == DownloadStatus.DOWNLOADED && uiState.isPro) {
+            if (downloadStatus == DownloadStatus.DOWNLOADED) {
                 FloatingActionButton(
                     currentTabHasFab = true,
                     isScrollingDown = isScrollingDown,

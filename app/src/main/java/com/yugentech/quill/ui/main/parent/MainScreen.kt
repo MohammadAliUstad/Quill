@@ -72,6 +72,7 @@ fun MainScreen(
     sourcesViewModel: SourcesViewModel = koinViewModel(),
     onSubscriptions: () -> Unit,
     onViewIndexingQueue: () -> Unit,
+    onWhatsNew: () -> Unit,
     indexingViewModel: IndexingViewModel = koinViewModel()
 ) {
     val userId = remember { FirebaseAuth.getInstance().currentUser?.uid.orEmpty() }
@@ -183,6 +184,7 @@ fun MainScreen(
                             onExit = { showExitDialog = true },
                             isIndexingActive = isIndexingActive,
                             onViewIndexingQueue = onViewIndexingQueue,
+                            onWhatsNew = onWhatsNew,
                         )
                     }
                 }
