@@ -109,20 +109,17 @@ class BookDownloadWorker(
 
                 bookDao.insertBook(updatedBook)
 
-                val isProUser = inputData.getBoolean("IS_PRO_USER", false)
-                if (isProUser) {
-                    val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
-                        .setInputData(workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId))
-                        .addTag("AI_INDEXING")
-                        .addTag("index_${bookId}")
-                        .build()
+                val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
+                    .setInputData(workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId))
+                    .addTag("AI_INDEXING")
+                    .addTag("index_${bookId}")
+                    .build()
 
-                    getInstance(applicationContext).beginUniqueWork(
-                        "BOOK_PROCESSING_QUEUE",
-                        ExistingWorkPolicy.APPEND_OR_REPLACE,
-                        indexRequest
-                    ).enqueue()
-                }
+                getInstance(applicationContext).beginUniqueWork(
+                    "BOOK_PROCESSING_QUEUE",
+                    ExistingWorkPolicy.APPEND_OR_REPLACE,
+                    indexRequest
+                ).enqueue()
 
                 Result.success()
             } else {

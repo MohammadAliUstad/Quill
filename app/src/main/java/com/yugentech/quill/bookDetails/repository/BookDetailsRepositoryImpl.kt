@@ -6,13 +6,16 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.yugentech.quill.bookDetails.worker.BookDownloadWorker
 import com.yugentech.quill.cloud.repository.CloudSyncRepository
+import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
+import com.yugentech.quill.database.dao.BookIndexingStateDao
 import com.yugentech.quill.database.dao.CategoryDao
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.entity.CategoryEntity
 import com.yugentech.quill.database.mapper.toEntity
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.quill.aira.rag.BookEmbeddingWorker
 import com.yugentech.theme.tokens.AppConstants.SHELF
 import kotlinx.coroutines.flow.Flow
 import java.io.File
@@ -20,6 +23,8 @@ import java.io.File
 class BookDetailsRepositoryImpl(
     private val bookDao: BookDao,
     private val categoryDao: CategoryDao,
+    private val chunkDao: BookChunkDao,
+    private val indexingStateDao: BookIndexingStateDao,
     private val workManager: WorkManager,
     private val cloudSyncRepository: CloudSyncRepository
 ) : BookDetailsRepository {
@@ -149,5 +154,39 @@ class BookDetailsRepositoryImpl(
 
     override suspend fun removeFromRecent(bookId: String) {
         bookDao.removeFromRecent(bookId)
+    }
+
+    override fun observeIsReady(bookId: String): Flow<Boolean> {
+        return indexingStateDao.observeIsComplete(bookId)
+    }
+
+    override suspend fun isReady(bookId: String): Boolean {
+        return chunkDao.isBookIndexed(bookId)
+    }
+
+    override suspend fun isSpoilerLockEnabled(bookId: String): Boolean {
+        return bookDao.getBookEntity(bookId)?.spoilerLockEnabled ?: true
+    }
+
+    override suspend fun setSpoilerLock(bookId: String, enabled: Boolean) {
+        bookDao.updateSpoilerLock(bookId, enabled)
+    }
+
+    override suspend fun getUnindexedDownloadedBooks(): List<BookEntity> {
+        return bookDao.getUnindexedDownloadedBooks()
+    }
+
+    override suspend fun enqueueIndexing(bookId: String) {
+        val request = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
+            .setInputData(workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId))
+            .addTag("index_$bookId")
+            .addTag("AI_INDEXING")
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "global_book_processing_queue",
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            request
+        )
     }
 }

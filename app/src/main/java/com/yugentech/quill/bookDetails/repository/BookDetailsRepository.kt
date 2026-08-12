@@ -18,4 +18,12 @@ interface BookDetailsRepository {
     suspend fun updateProgress(bookId: String, progressPercent: Float, chapterIndex: Int)
     suspend fun resetReadingProgress(bookId: String)
     suspend fun removeFromRecent(bookId: String)
+
+    // AI related
+    fun observeIsReady(bookId: String): Flow<Boolean>
+    suspend fun isReady(bookId: String): Boolean
+    suspend fun isSpoilerLockEnabled(bookId: String): Boolean
+    suspend fun setSpoilerLock(bookId: String, enabled: Boolean)
+    suspend fun getUnindexedDownloadedBooks(): List<BookEntity>
+    suspend fun enqueueIndexing(bookId: String)
 }
