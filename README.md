@@ -124,7 +124,7 @@ UI Framework:         Jetpack Compose (Material 3 Expressive)
 Architecture:         MVVM + Clean Architecture (Multi-Module)
 Dependency Injection: Koin
 Local Database:       Room (with FTS4 for full-text search)
-AI Companion:         Gemini 2.5 Flash (Aira) via Firebase Cloud Functions
+AI Assistant:         Gemini 2.5 Flash (Aira) via Firebase Cloud Functions
 Embeddings:           BAAI/bge-small-en-v1.5 (ONNX Runtime, int8 quantized)
 RAG Pipeline:         Hybrid Vector + FTS4 with Asymmetric Retrieval
 Networking:           Ktor (with exponential backoff retry)

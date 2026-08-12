@@ -46,7 +46,7 @@ fun ProFeaturesSection() {
             label = "Current Plan",
             tierName = "Basic Reader",
             subtitle = "Standard Library",
-            description = "Enjoy a beautiful, focused reading environment with 5 daily AI companion queries.",
+            description = "Enjoy a beautiful, focused reading environment with 5 daily AI assistant queries.",
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             borderColor = MaterialTheme.colorScheme.outlineVariant
@@ -65,7 +65,7 @@ fun ProFeaturesSection() {
             label = "Upgrade to",
             tierName = "Quill Pro",
             subtitle = "AI Reading Companion",
-            description = "Supercharge Aira with 50 daily AI companion queries. Deeply analyze themes, hidden plots, and character motivations.",
+            description = "Supercharge Aira with 50 daily AI assistant queries. Deeply analyze themes, hidden plots, and character motivations.",
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
