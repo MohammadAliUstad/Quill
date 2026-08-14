@@ -21,6 +21,7 @@ import org.readium.r2.shared.publication.Publication
 @OptIn(ExperimentalReadiumApi::class)
 @Composable
 fun ReadiumFragmentHost(
+    modifier: Modifier = Modifier,
     publication: Publication,
     fragmentTag: String,
     initialLocation: Locator?,
@@ -45,48 +46,50 @@ fun ReadiumFragmentHost(
     val currentIsPro by rememberUpdatedState(isPro)
     val currentIsAiraReady by rememberUpdatedState(isAiraReady)
 
-    AndroidView(
-        modifier = Modifier.fillMaxSize(),
-        factory = { ctx ->
-            ReadiumWrapperView(ctx).apply {
-                container.id = View.generateViewId()
-                clipToPadding = false
-                fitsSystemWindows = false
-                this.isPro = currentIsPro
-                this.isAiraReady = currentIsAiraReady
+    androidx.compose.runtime.key(fragmentTag) {
+        AndroidView(
+            modifier = modifier.fillMaxSize(),
+            factory = { ctx ->
+                ReadiumWrapperView(ctx).apply {
+                    container.id = View.generateViewId()
+                    clipToPadding = false
+                    fitsSystemWindows = false
+                    this.isPro = currentIsPro
+                    this.isAiraReady = currentIsAiraReady
 
-                ViewCompat.setOnApplyWindowInsetsListener(this) { _, _ -> WindowInsetsCompat.CONSUMED }
+                    ViewCompat.setOnApplyWindowInsetsListener(this) { _, _ -> WindowInsetsCompat.CONSUMED }
 
-                addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-                    override fun onViewAttachedToWindow(v: View) {
-                        val activity = ctx as? FragmentActivity ?: return
-                        attachNavigator(
-                            activity,
-                            this@apply,
-                            container.id,
-                            fragmentTag,
-                            publication,
-                            initialLocation,
-                            preferences,
-                            currentOnTap,
-                            currentOnNavigatorReady
-                        )
-                        removeOnAttachStateChangeListener(this)
-                    }
+                    addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                        override fun onViewAttachedToWindow(v: View) {
+                            val activity = ctx as? FragmentActivity ?: return
+                            attachNavigator(
+                                activity,
+                                this@apply,
+                                container.id,
+                                fragmentTag,
+                                publication,
+                                initialLocation,
+                                preferences,
+                                currentOnTap,
+                                currentOnNavigatorReady
+                            )
+                            removeOnAttachStateChangeListener(this)
+                        }
 
-                    override fun onViewDetachedFromWindow(v: View) = Unit
-                })
+                        override fun onViewDetachedFromWindow(v: View) = Unit
+                    })
+                }
+            },
+            update = { view ->
+                view.isPro = currentIsPro
+                view.isAiraReady = currentIsAiraReady
+                view.onAskAira = currentOnAskAira
+                view.onHighlightRequest = currentOnHighlightRequest
+                view.onSelectionStarted = currentOnSelectionStarted
+                view.onSelectionEnded = currentOnSelectionEnded
             }
-        },
-        update = { view ->
-            view.isPro = currentIsPro
-            view.isAiraReady = currentIsAiraReady
-            view.onAskAira = currentOnAskAira
-            view.onHighlightRequest = currentOnHighlightRequest
-            view.onSelectionStarted = currentOnSelectionStarted
-            view.onSelectionEnded = currentOnSelectionEnded
-        }
-    )
+        )
+    }
 
     DisposableEffect(fragmentTag) {
         onDispose {

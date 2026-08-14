@@ -35,8 +35,6 @@ class ReadiumWrapperView @JvmOverloads constructor(
 
     private val choreographer = Choreographer.getInstance()
 
-    // Layer 3: per-frame enforcement — fires at vsync before every draw.
-    // Catches any scroll the listener missed (e.g. programmatic scrolls inside Readium JS).
     private val scrollLockCallback = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
             if (!isSelectionActive) return
@@ -49,8 +47,6 @@ class ReadiumWrapperView @JvmOverloads constructor(
         }
     }
 
-    // Layer 1: capture the correct scroll position the instant the finger touches down,
-    // before any long-press recognition or browser scroll machinery can fire.
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
             resolveWebView()?.let { wv ->
@@ -61,8 +57,6 @@ class ReadiumWrapperView @JvmOverloads constructor(
         return false
     }
 
-    // Layer 2: direct scroll listener on the WebView — fires synchronously when the
-    // WebView calls onScrollChanged, before the frame is drawn. Corrects immediately.
     private fun attachScrollListenerIfNeeded(wv: WebView) {
         if (scrollListenerAttached) return
         wv.setOnScrollChangeListener { _, scrollX, scrollY, _, _ ->
@@ -78,7 +72,6 @@ class ReadiumWrapperView @JvmOverloads constructor(
         callback: ActionMode.Callback,
         type: Int
     ): ActionMode? {
-        // Use the position saved at touch-down — the browser hasn't had a chance to scroll yet.
         lockedScrollX = touchDownScrollX
         isSelectionActive = true
         onSelectionStarted()

@@ -1,7 +1,14 @@
 package com.yugentech.quill.reader.ui.components.engine
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -13,19 +20,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.yugentech.quill.reader.ui.parent.luminance
 import com.yugentech.quill.reader.viewmodel.ReaderCommand
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -48,8 +56,7 @@ private fun Color.toCssRgba(): String {
     return "rgba($r, $g, $b, $alpha)"
 }
 
-private const val TOOLBAR_HEIGHT_DP = 52f
-private const val TOOLBAR_MARGIN_DP = 8f
+private const val TOOLBAR_HEIGHT_DP = 80f
 
 @OptIn(ExperimentalReadiumApi::class)
 @Composable
@@ -84,22 +91,18 @@ fun ReadiumEngine(
     val selectionColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
     val cssColorString = remember(selectionColor) { selectionColor.toCssRgba() }
 
+    // True when the ebook background is light (white/sepia/cream) so the toolbar can
+    // switch to a more opaque style that stays visible on pale page backgrounds.
+    val readerBgIsLight = remember(preferences.backgroundColor) {
+        (preferences.backgroundColor?.let { Color(it.int) } ?: Color.White).luminance() > 0.5f
+    }
+
     var navigator by remember { mutableStateOf<EpubNavigatorFragment?>(null) }
     var selectionInfo by remember { mutableStateOf<SelectionInfo?>(null) }
     var toolbarY by remember { mutableStateOf(0.dp) }
 
+    val screenHeightDp = LocalConfiguration.current.screenHeightDp.toFloat()
     val scope = rememberCoroutineScope()
-    val isPagedMode = preferences.scroll != true
-
-    // Active selection decoration for flicker-free paged mode
-    val activeSelectionDecoration = remember(selectionInfo) {
-        val loc = selectionInfo?.locator ?: return@remember null
-        Decoration(
-            id = "active_selection",
-            locator = loc,
-            style = Decoration.Style.Highlight(tint = selectionColor.toArgb())
-        )
-    }
 
     suspend fun clearSelection() {
         val nav = navigator ?: return
@@ -119,9 +122,13 @@ fun ReadiumEngine(
         try {
             val obj = JSONObject(jsonStr)
             val text = obj.optString("text")
+                .replace('\n', ' ')
+                .replace('\r', ' ')
+                .replace(Regex("\\s+"), " ")
+                .trim()
             val rects = obj.optJSONArray("rects")
             val locator = nav.currentSelection()?.locator
-            
+
             if (rects != null && rects.length() > 0 && text.isNotEmpty()) {
                 val first = rects.getJSONObject(0)
                 val last = rects.getJSONObject(rects.length() - 1)
@@ -131,17 +138,18 @@ fun ReadiumEngine(
                     rectTop = first.getDouble("top").toFloat(),
                     rectBottom = last.getDouble("bottom").toFloat()
                 )
-                toolbarY = computeToolbarY(selectionInfo!!.rectTop, selectionInfo!!.rectBottom)
+                toolbarY = computeToolbarY(selectionInfo!!.rectTop, selectionInfo!!.rectBottom, screenHeightDp)
             } else {
                 selectionInfo = null
             }
-        } catch (e: Exception) { 
+        } catch (e: Exception) {
             selectionInfo = null
         }
     }
 
-    val density = LocalDensity.current.density
     val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+    val hazeState = remember { HazeState() }
 
     Box(modifier = modifier.fillMaxSize()) {
         ReadiumFragmentHost(
@@ -161,7 +169,11 @@ fun ReadiumEngine(
             },
             onTap = {
                 if (selectionInfo != null) {
-                    scope.launch { clearSelection() }
+                    scope.launch { 
+                        clearSelection()
+                        // Ensure JS fallback is also cleared immediately
+                        navigator?.evaluateJavascript("window.__quillSelData = null;")
+                    }
                 } else {
                     onTap()
                 }
@@ -178,44 +190,62 @@ fun ReadiumEngine(
                         }
                     }
                 )
-            }
+            },
+            modifier = Modifier.hazeSource(hazeState)
         )
-    }
 
-    val currentSelection = selectionInfo
-    if (currentSelection != null) {
-        Popup(
-            alignment = Alignment.TopCenter,
-            offset = IntOffset(0, (toolbarY.value * density).roundToInt()),
-            properties = PopupProperties(focusable = false)
+        val currentSelection = selectionInfo
+
+        // Keep last non-null selection/position so the exit animation has content to render.
+        var exitSelection by remember { mutableStateOf<SelectionInfo?>(null) }
+        var exitToolbarY by remember { mutableStateOf(0.dp) }
+        if (currentSelection != null) {
+            exitSelection = currentSelection
+            exitToolbarY = toolbarY
+        }
+
+        AnimatedVisibility(
+            visible = currentSelection != null,
+            enter = fadeIn(tween(180)) + scaleIn(tween(180), initialScale = 0.88f),
+            exit = fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.88f),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset { IntOffset(0, exitToolbarY.roundToPx()) }
         ) {
-            SelectionToolbar(
-                selectionInfo = currentSelection,
-                isAiraReady = isAiraReady,
-                onHighlight = {
-                    currentSelection.locator?.let { onSelectionAction(it) }
-                    scope.launch { clearSelection() }
-                },
-                onAskAira = { text ->
-                    onAskAira(text)
-                    scope.launch { clearSelection() }
-                },
-                onCopy = { text ->
-                    clipboardManager.setText(AnnotatedString(text))
-                    scope.launch { clearSelection() }
-                }
-            )
+            exitSelection?.let { sel ->
+                SelectionToolbar(
+                    selectionInfo = sel,
+                    isAiraReady = isAiraReady,
+                    hazeState = hazeState,
+                    readerBgIsLight = readerBgIsLight,
+                    onHighlight = {
+                        sel.locator?.let { onSelectionAction(it) }
+                        scope.launch { clearSelection() }
+                    },
+                    onAskAira = { text ->
+                        onAskAira(text)
+                        scope.launch { clearSelection() }
+                    },
+                    onCopy = { text ->
+                        clipboardManager.setText(AnnotatedString(text))
+                        scope.launch { clearSelection() }
+                    },
+                    onShare = { text ->
+                        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_TEXT, text)
+                        }
+                        context.startActivity(android.content.Intent.createChooser(intent, null))
+                        scope.launch { clearSelection() }
+                    }
+                )
+            }
         }
     }
 
-    LaunchedEffect(decorations, activeSelectionDecoration, navigator) {
+    LaunchedEffect(decorations, navigator) {
         val decorableNav = navigator as? DecorableNavigator
         decorableNav?.applyDecorations(decorations, "user_highlights")
-        
-        if (isPagedMode) {
-            val selectionList = if (activeSelectionDecoration != null) listOf(activeSelectionDecoration) else emptyList()
-            decorableNav?.applyDecorations(selectionList, "active_selection_group")
-        }
     }
 
     LaunchedEffect(commands, navigator) {
@@ -258,7 +288,21 @@ fun ReadiumEngine(
     }
 
     LaunchedEffect(preferences, navigator) {
-        navigator?.submitPreferences(preferences)
+        val nav = navigator ?: return@LaunchedEffect
+        // Inject the new background colour directly into the WebView before Readium's
+        // own preference update reaches the renderer. This closes the timing gap that
+        // causes a "two-piece" flicker in paged mode: the Compose outer Box repaints
+        // instantly while the WebView normally waits for the Readium CSS pipeline.
+        preferences.backgroundColor?.let { readiumColor ->
+            try {
+                val cssColor = Color(readiumColor.int).toCssRgba()
+                nav.evaluateJavascript(
+                    "(function(){var c='$cssColor';var e=document.documentElement,b=document.body;" +
+                        "if(e)e.style.backgroundColor=c;if(b)b.style.backgroundColor=c;})();"
+                )
+            } catch (_: Exception) {}
+        }
+        nav.submitPreferences(preferences)
     }
 
     LaunchedEffect(targetJumpHref, navigator) {
@@ -290,11 +334,15 @@ fun ReadiumEngine(
     // Polling Loop for Selection Info (Transparent native selection tracking)
     LaunchedEffect(navigator) {
         val nav = navigator ?: return@LaunchedEffect
+
         while (true) {
-            delay(150)
+            delay(100)
             val json = try {
                 nav.evaluateJavascript("""
                     (function() {
+                        // Handles are being dragged — don't update the toolbar position yet.
+                        if (window.__quillSelChanging) return null;
+
                         var sel = window.getSelection();
                         var liveActive = sel && !sel.isCollapsed && sel.rangeCount > 0 && sel.toString();
                         if (liveActive) {
@@ -322,7 +370,7 @@ fun ReadiumEngine(
                                 } catch(e) {}
                             }
                             if (filteredRects.length > 0) {
-                                var liveData = { text: sel.toString(), rects: filteredRects };
+                                var liveData = JSON.stringify({ text: sel.toString(), rects: filteredRects });
                                 window.__quillSelData = liveData;
                                 return liveData;
                             }
@@ -330,11 +378,24 @@ fun ReadiumEngine(
                         // If live selection is gone or produced no rects, use stored capture from
                         // selectionchange — handles the case where Readium collapsed the selection
                         // before the poll ran (cross-page anchor on a continuation paragraph).
-                        return window.__quillSelData || null;
+                        var captured = window.__quillSelData;
+                        return (typeof captured === 'string') ? captured : JSON.stringify(captured) || null;
                     })()
                 """.trimIndent())
             } catch (_: Exception) { null }
-            syncSelection(json?.removeSurrounding("\""))
+
+            val processedJson = json?.removeSurrounding("\"")?.replace("\\\"", "\"")
+
+            if (processedJson == null || processedJson == "null" || processedJson == "undefined" || processedJson == "{}") {
+                selectionInfo = null
+            } else if (selectionInfo == null) {
+                // JS debounce already held back data while handles were moving;
+                // show the toolbar immediately on the first stable result.
+                syncSelection(processedJson)
+            } else {
+                // Selection exists, update position if it moved slightly (e.g. page resize)
+                // but usually syncSelection will be called by stable logic.
+            }
         }
     }
 
@@ -342,8 +403,8 @@ fun ReadiumEngine(
         val nav = navigator ?: return@LaunchedEffect
 
         suspend fun injectSelectionStyles() {
-            // In paged mode, we make the native selection transparent and use Readium Decorations
-            // to draw the visual highlight. This eliminates the flickering handles issue.
+            // Restore the native selection highlight for zero-lag visual feedback.
+            // We use the CSS ::selection selector to apply our brand color snappy.
             val bgColor = cssColorString
             val js = """
                 (function() {
@@ -355,7 +416,6 @@ fun ReadiumEngine(
                     s.textContent = `
                         ::selection {
                             background-color: $bgColor !important;
-                            color: inherit !important;
                         }
                     `;
                     document.head.appendChild(s);
@@ -414,9 +474,11 @@ fun ReadiumEngine(
                     if (window.__quillScrollLockInstalled) return;
                     window.__quillScrollLockInstalled = true;
                     window.__quillSelectionActive = false;
+                    window.__quillSelChanging = false;
 
                     var lockedScrollLeft = 0;
                     var rafId            = null;
+                    var selChangeTimer   = null;
 
                     // Use the raw descriptor to bypass any overrides and avoid triggering
                     // Readium's own scroll listeners when we restore position.
@@ -425,11 +487,9 @@ fun ReadiumEngine(
                     function getScroll() { return sd ? sd.get.call(scrollEl) : scrollEl.scrollLeft; }
                     function setScroll(v) { if (sd && sd.set) sd.set.call(scrollEl, v); else scrollEl.scrollLeft = v; }
 
-                    // requestAnimationFrame guard — corrects scroll BEFORE each frame is painted.
-                    // Handles the case where the browser scrolled to reveal an off-page anchor.
                     function rafGuard() {
                         if (!window.__quillSelectionActive) { rafId = null; return; }
-                        if (Math.abs(getScroll() - lockedScrollLeft) > 1) setScroll(lockedScrollLeft);
+                        if (Math.abs(getScroll() - lockedScrollLeft) > 50) setScroll(lockedScrollLeft);
                         rafId = requestAnimationFrame(rafGuard);
                     }
 
@@ -438,9 +498,11 @@ fun ReadiumEngine(
 
                         // ── Selection ended ──────────────────────────────────────────────────
                         if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+                            window.__quillSelData = null;
+                            window.__quillSelChanging = false;
+                            if (selChangeTimer) { clearTimeout(selChangeTimer); selChangeTimer = null; }
                             if (window.__quillSelectionActive) {
                                 window.__quillSelectionActive = false;
-                                // rafGuard self-terminates on next tick
                             }
                             return;
                         }
@@ -451,6 +513,7 @@ fun ReadiumEngine(
                             window.__quillSelectionActive = true;
                             if (!rafId) rafId = requestAnimationFrame(rafGuard);
                         }
+
 
                         // ── Capture visible rects for the polling loop ────────────────────────
                         // Stored in __quillSelData so polling can use it even if the DOM
@@ -479,8 +542,19 @@ fun ReadiumEngine(
                             }
                         } catch(capErr) {}
 
-                        // ── Restore scroll ────────────────────────────────────────────────────
-                        if (Math.abs(getScroll() - lockedScrollLeft) > 1) setScroll(lockedScrollLeft);
+                        // ── Debounce: mark selection as actively changing ──────────────────────
+                        // The toolbar is only shown once this flag clears (300 ms of no changes).
+                        window.__quillSelChanging = true;
+                        if (selChangeTimer) clearTimeout(selChangeTimer);
+                        selChangeTimer = setTimeout(function() {
+                            window.__quillSelChanging = false;
+                        }, 300);
+
+                        // Scroll restoration is intentionally omitted here. The rafGuard loop
+                        // above handles drift correction asynchronously before each painted frame.
+                        // Doing a synchronous reset inside selectionchange created a tight feedback
+                        // loop: browser adjusts 1–5px → immediate reset → selectionchange fires
+                        // again → reset → … causing rapid text oscillation (visible flicker).
                     });
                 })();
             """.trimIndent()
@@ -500,11 +574,18 @@ fun ReadiumEngine(
     }
 }
 
-private fun computeToolbarY(rectTop: Float, rectBottom: Float): Dp {
-    val hasRoomAbove = rectTop > TOOLBAR_HEIGHT_DP + TOOLBAR_MARGIN_DP + 8f
-    return if (hasRoomAbove) {
-        (rectTop - TOOLBAR_HEIGHT_DP - TOOLBAR_MARGIN_DP).dp
-    } else {
-        (rectBottom + TOOLBAR_MARGIN_DP).dp
+private fun computeToolbarY(rectTop: Float, rectBottom: Float, screenHeight: Float): Dp {
+    // Require 50dp of breathing room beyond the toolbar height before placing above/below.
+    // If the available space is even slightly marginal, overlay over the selection instead.
+    val comfortThreshold = TOOLBAR_HEIGHT_DP + 50f
+    val placementGap = 12f
+    val hasRoomAbove = rectTop >= comfortThreshold
+    val hasRoomBelow = (screenHeight - rectBottom) >= comfortThreshold
+    return when {
+        hasRoomAbove -> (rectTop - TOOLBAR_HEIGHT_DP - placementGap).dp
+        hasRoomBelow -> (rectBottom + placementGap).dp
+        // Not enough comfortable space above or below: overlay over the selection centre
+        else -> ((rectTop + rectBottom - TOOLBAR_HEIGHT_DP) / 2f)
+            .coerceIn(placementGap, screenHeight - TOOLBAR_HEIGHT_DP - placementGap).dp
     }
 }

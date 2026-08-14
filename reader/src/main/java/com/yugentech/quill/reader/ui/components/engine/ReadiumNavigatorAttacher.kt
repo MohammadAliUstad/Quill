@@ -1,5 +1,6 @@
 package com.yugentech.quill.reader.ui.components.engine
 
+import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
@@ -9,6 +10,7 @@ import org.readium.r2.navigator.epub.EpubNavigatorFactory
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.navigator.epub.css.FontStyle
+import org.readium.r2.navigator.html.HtmlDecorationTemplate
 import org.readium.r2.navigator.input.InputListener
 import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.navigator.preferences.FontFamily
@@ -72,6 +74,21 @@ fun buildNavigatorConfig() = EpubNavigatorFragment.Configuration().apply {
     servedAssets = servedAssets + "font/.*"
     shouldApplyInsetsPadding = false
     registerFonts(this)
+    registerHighlightStyles(this)
+}
+
+@OptIn(ExperimentalReadiumApi::class)
+fun registerHighlightStyles(config: EpubNavigatorFragment.Configuration) {
+    config.decorationTemplates.set(UnderlineStyle::class, HtmlDecorationTemplate(
+        layout = HtmlDecorationTemplate.Layout.BOXES,
+        element = { decoration ->
+            val style = decoration.style as UnderlineStyle
+            val color = Color(style.tint)
+            val cssColor = "rgba(${(color.red * 255).toInt()}, ${(color.green * 255).toInt()}, ${(color.blue * 255).toInt()}, 0.9)"
+            """<div style="width:100%;height:100%;box-sizing:border-box;border-bottom:2px solid $cssColor;"></div>"""
+        }
+    ))
+
 }
 
 @OptIn(ExperimentalReadiumApi::class)
