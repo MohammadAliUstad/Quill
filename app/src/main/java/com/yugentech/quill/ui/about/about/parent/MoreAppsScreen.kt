@@ -255,7 +255,7 @@ private fun SessionsCapabilitiesCarousel() {
         CapabilityItem(
             icon = Icons.Outlined.Headphones,
             title = "Immersive Audio",
-            description = "5 curated ambient sounds with adaptive ducking and haptic feedback.",
+            description = "6 curated ambient sounds with adaptive ducking and haptic feedback.",
             slot = 1
         ),
         CapabilityItem(
