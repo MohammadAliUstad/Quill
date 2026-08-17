@@ -353,111 +353,111 @@ fun ReadiumEngine(
                 (function() {
                     var scrollEl = document.scrollingElement || document.documentElement;
 
-                    // Refresh page-start fallback on every page render/navigation.
-                    var startRange = document.caretRangeFromPoint(4, 4);
-                    if (startRange) {
-                        window.__quillPageStartNode   = startRange.startContainer;
-                        window.__quillPageStartOffset = startRange.startOffset;
+                    // Always refresh page-start fallback on every page render/navigation.
+                    var s0 = document.caretRangeFromPoint(4, 4);
+                    if (s0) {
+                        window.__quillPageStartNode   = s0.startContainer;
+                        window.__quillPageStartOffset = s0.startOffset;
                     }
 
                     if (window.__quillScrollLockInstalled) return;
                     window.__quillScrollLockInstalled = true;
                     window.__quillSelectionActive = false;
 
-                    var lockedScrollLeft = 0;
-                    var lastValidAnchorNode = null;
-                    var lastValidAnchorOffset = 0;
-                    var inCorrection = false;
+                    var lockedScrollLeft       = 0;
+                    var lastValidAnchorNode    = null, lastValidAnchorOffset = 0;
+                    var lastValidFocusNode     = null, lastValidFocusOffset  = 0;
+                    var inCorrection           = false;
+                    var rafId                  = null;
 
-                    var scrollDesc = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollLeft')
-                                  || Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollLeft');
+                    // Use the raw descriptor to bypass any overrides and avoid triggering
+                    // Readium's own scroll listeners when we restore position.
+                    var sd = Object.getOwnPropertyDescriptor(Element.prototype,    'scrollLeft')
+                          || Object.getOwnPropertyDescriptor(HTMLElement.prototype,'scrollLeft');
+                    function getScroll() { return sd ? sd.get.call(scrollEl) : scrollEl.scrollLeft; }
+                    function setScroll(v) { if (sd && sd.set) sd.set.call(scrollEl, v); else scrollEl.scrollLeft = v; }
 
-                    function getRawScrollLeft() {
-                        return scrollDesc ? scrollDesc.get.call(scrollEl) : scrollEl.scrollLeft;
+                    // Returns true when a text/element node sits within the current page column.
+                    // Uses a generous tolerance (10 % of viewport width) so sub-pixel rounding
+                    // and text near the left margin don't produce false negatives.  Only content
+                    // hundreds of pixels off-screen (previous CSS column) will return false.
+                    function nodeOnPage(node, off) {
+                        if (!node) return false;
+                        try {
+                            var r = document.createRange();
+                            var safeOff = node.nodeType === 3
+                                ? Math.min(off, node.length)
+                                : Math.min(off, node.childNodes.length);
+                            r.setStart(node, safeOff);
+                            r.collapse(true);
+                            var rect = r.getBoundingClientRect();
+                            var tol = window.innerWidth * 0.1;
+                            return rect.left > -tol && rect.left < window.innerWidth + tol;
+                        } catch(e) { return false; }
                     }
-                    function setRawScrollLeft(v) {
-                        if (scrollDesc && scrollDesc.set) scrollDesc.set.call(scrollEl, v);
-                        else scrollEl.scrollLeft = v;
+
+                    // requestAnimationFrame guard — runs BEFORE each frame's paint in Chrome's
+                    // rendering pipeline (input → JS → style → layout → rAF → paint/composite).
+                    // If the browser scrolled to reveal an off-page anchor during event handling,
+                    // this corrects scroll BEFORE the frame is committed to the screen, limiting
+                    // any visible flicker to at most one 16 ms frame.
+                    // Does NOT mutate the Selection here — selection clamping is done exclusively
+                    // in selectionchange so there is exactly one place that calls setBaseAndExtent
+                    // and no re-entrant feedback loops are possible.
+                    function rafGuard() {
+                        if (!window.__quillSelectionActive) { rafId = null; return; }
+                        if (Math.abs(getScroll() - lockedScrollLeft) > 1) setScroll(lockedScrollLeft);
+                        rafId = requestAnimationFrame(rafGuard);
                     }
 
-                    // Layer A: block JS-level scrollLeft writes during selection.
-                    if (scrollDesc && scrollDesc.set) {
-                        Object.defineProperty(scrollEl, 'scrollLeft', {
-                            configurable: true,
-                            get: function() { return scrollDesc.get.call(this); },
-                            set: function(v) {
-                                if (window.__quillSelectionActive) return;
-                                scrollDesc.set.call(this, v);
-                            }
-                        });
-                    }
-
-                    // Layer B: catch C++ scroll-to-anchor that bypassed Layer A.
-                    scrollEl.addEventListener('scroll', function() {
-                        if (!window.__quillSelectionActive) return;
-                        if (Math.abs(getRawScrollLeft() - lockedScrollLeft) > 1) {
-                            setRawScrollLeft(lockedScrollLeft);
-                        }
-                    }, { passive: false });
-
-                    // Layer C: track the last valid anchor position on the current page.
-                    // When the anchor crosses into a previous-page column, restore scroll and
-                    // clamp the anchor back to the last known on-page position — NOT to the
-                    // fixed page start, which would incorrectly widen the selection.
                     document.addEventListener('selectionchange', function() {
                         if (inCorrection) return;
-
                         var sel = window.getSelection();
+
+                        // ── Selection ended ──────────────────────────────────────────────────
                         if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
-                            window.__quillSelectionActive = false;
-                            return;
-                        }
-
-                        if (!window.__quillSelectionActive) {
-                            lockedScrollLeft        = getRawScrollLeft();
-                            lastValidAnchorNode     = sel.anchorNode;
-                            lastValidAnchorOffset   = sel.anchorOffset;
-                            window.__quillSelectionActive = true;
-                            return;
-                        }
-
-                        // Restore scroll first so the rect check below is meaningful.
-                        if (Math.abs(getRawScrollLeft() - lockedScrollLeft) > 1) {
-                            setRawScrollLeft(lockedScrollLeft);
-                        }
-
-                        // After restoring scroll to lockedScrollLeft, check whether the
-                        // anchor is visible within the current page column [0, innerWidth).
-                        var anchorOnPage = false;
-                        if (sel.anchorNode) {
-                            try {
-                                var ar = document.createRange();
-                                var safeOff = (sel.anchorNode.nodeType === 3)
-                                    ? Math.min(sel.anchorOffset, sel.anchorNode.length)
-                                    : Math.min(sel.anchorOffset, sel.anchorNode.childNodes.length);
-                                ar.setStart(sel.anchorNode, safeOff);
-                                ar.collapse(true);
-                                var arRect = ar.getBoundingClientRect();
-                                anchorOnPage = arRect.left > -4 && arRect.left < window.innerWidth;
-                            } catch(e) {}
-                        }
-
-                        if (anchorOnPage) {
-                            // Anchor is on the current page — update our tracking.
-                            lastValidAnchorNode   = sel.anchorNode;
-                            lastValidAnchorOffset = sel.anchorOffset;
-                        } else {
-                            // Anchor has left the current page — clamp back to last valid position.
-                            var clampNode   = lastValidAnchorNode   || window.__quillPageStartNode;
-                            var clampOffset = lastValidAnchorNode ? lastValidAnchorOffset : (window.__quillPageStartOffset || 0);
-                            if (!clampNode || !sel.focusNode) return;
-                            try {
-                                inCorrection = true;
-                                sel.setBaseAndExtent(clampNode, clampOffset, sel.focusNode, sel.focusOffset);
-                            } catch(ex) {
-                            } finally {
-                                inCorrection = false;
+                            if (window.__quillSelectionActive) {
+                                window.__quillSelectionActive = false;
+                                // rafGuard self-terminates on next tick
                             }
+                            return;
+                        }
+
+                        // ── Selection just started ───────────────────────────────────────────
+                        if (!window.__quillSelectionActive) {
+                            lockedScrollLeft      = getScroll();
+                            lastValidAnchorNode   = sel.anchorNode; lastValidAnchorOffset = sel.anchorOffset;
+                            lastValidFocusNode    = sel.focusNode;  lastValidFocusOffset  = sel.focusOffset;
+                            window.__quillSelectionActive = true;
+                            if (!rafId) rafId = requestAnimationFrame(rafGuard);
+                            return;
+                        }
+
+                        // ── Selection active — restore scroll first so rect checks are accurate ──
+                        if (Math.abs(getScroll() - lockedScrollLeft) > 1) setScroll(lockedScrollLeft);
+
+                        var aOk = nodeOnPage(sel.anchorNode, sel.anchorOffset);
+                        var fOk = nodeOnPage(sel.focusNode,  sel.focusOffset);
+
+                        if (aOk && fOk) {
+                            lastValidAnchorNode = sel.anchorNode; lastValidAnchorOffset = sel.anchorOffset;
+                            lastValidFocusNode  = sel.focusNode;  lastValidFocusOffset  = sel.focusOffset;
+                            return;
+                        }
+
+                        // Clamp only the offending endpoint; keep the other end live.
+                        var ca  = aOk ? sel.anchorNode   : (lastValidAnchorNode || window.__quillPageStartNode);
+                        var cao = aOk ? sel.anchorOffset : (lastValidAnchorNode ? lastValidAnchorOffset : (window.__quillPageStartOffset || 0));
+                        var cf  = fOk ? sel.focusNode    : (lastValidFocusNode  || window.__quillPageStartNode);
+                        var cfo = fOk ? sel.focusOffset  : (lastValidFocusNode  ? lastValidFocusOffset  : (window.__quillPageStartOffset || 0));
+
+                        if (!ca || !cf) return;
+                        try {
+                            inCorrection = true;
+                            sel.setBaseAndExtent(ca, cao, cf, cfo);
+                        } catch(ex) {
+                        } finally {
+                            inCorrection = false;
                         }
                     });
                 })();
