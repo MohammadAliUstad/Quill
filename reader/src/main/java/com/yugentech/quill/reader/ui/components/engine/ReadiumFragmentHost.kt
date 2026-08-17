@@ -30,6 +30,8 @@ fun ReadiumFragmentHost(
     isAiraReady: Boolean = false,
     onAskAira: (selectedText: String) -> Unit = {},
     onHighlightRequest: (Locator) -> Unit = {},
+    onSelectionStarted: () -> Unit = {},
+    onSelectionEnded: () -> Unit = {},
     onNavigatorReady: (EpubNavigatorFragment) -> Unit
 ) {
 
@@ -38,6 +40,8 @@ fun ReadiumFragmentHost(
     val currentOnNavigatorReady by rememberUpdatedState(onNavigatorReady)
     val currentOnAskAira by rememberUpdatedState(onAskAira)
     val currentOnHighlightRequest by rememberUpdatedState(onHighlightRequest)
+    val currentOnSelectionStarted by rememberUpdatedState(onSelectionStarted)
+    val currentOnSelectionEnded by rememberUpdatedState(onSelectionEnded)
     val currentIsPro by rememberUpdatedState(isPro)
     val currentIsAiraReady by rememberUpdatedState(isAiraReady)
 
@@ -79,6 +83,8 @@ fun ReadiumFragmentHost(
             view.isAiraReady = currentIsAiraReady
             view.onAskAira = currentOnAskAira
             view.onHighlightRequest = currentOnHighlightRequest
+            view.onSelectionStarted = currentOnSelectionStarted
+            view.onSelectionEnded = currentOnSelectionEnded
         }
     )
 

@@ -18,7 +18,8 @@ class WrappedCallback(
     private val isPro: Boolean,
     private val isAiraReady: Boolean,
     private val getSelectedText: () -> String?,
-    private val getSelectionLocator: () -> Locator?
+    private val getSelectionLocator: () -> Locator?,
+    private val onDestroy: () -> Unit = {}
 ) : ActionMode.Callback {
 
     override fun onCreateActionMode(mode: ActionMode, menu: Menu) =
@@ -69,7 +70,10 @@ class WrappedCallback(
         return original.onActionItemClicked(mode, item)
     }
 
-    override fun onDestroyActionMode(mode: ActionMode) = original.onDestroyActionMode(mode)
+    override fun onDestroyActionMode(mode: ActionMode) {
+        original.onDestroyActionMode(mode)
+        onDestroy()
+    }
 }
 
 class WrappedCallback2(
@@ -79,7 +83,8 @@ class WrappedCallback2(
     isPro: Boolean,
     isAiraReady: Boolean,
     getSelectedText: () -> String?,
-    getSelectionLocator: () -> Locator?
+    getSelectionLocator: () -> Locator?,
+    onDestroy: () -> Unit = {}
 ) : ActionMode.Callback2() {
 
     private val delegate = WrappedCallback(
@@ -89,7 +94,8 @@ class WrappedCallback2(
         isPro,
         isAiraReady,
         getSelectedText,
-        getSelectionLocator
+        getSelectionLocator,
+        onDestroy
     )
 
     override fun onCreateActionMode(mode: ActionMode, menu: Menu) =
