@@ -52,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -88,6 +89,7 @@ fun SettingsSheet(
     onDismiss: () -> Unit
 ) {
     val haptic = koinInject<HapticService>()
+    val view = LocalView.current
     val epub = preferences.epub
     val fontOptions = remember {
         listOf(
@@ -218,7 +220,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = !isScroll,
                                 onClick = {
-                                    haptic.performHaptic()
+                                    haptic.performHaptic(view)
                                     onPreferencesChange(epub.copy(scroll = false))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
@@ -226,7 +228,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = isScroll,
                                 onClick = {
-                                    haptic.performHaptic()
+                                    haptic.performHaptic(view)
                                     onPreferencesChange(epub.copy(scroll = true))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
@@ -252,21 +254,21 @@ fun SettingsSheet(
                                     color = preset.displayColor,
                                     label = preset.name,
                                     isSelected = isSelected,
-                                    useLightBorder = preset.isDarkBorder
-                                ) {
-                                    haptic.performHaptic()
-                                    onPreferencesChange(
-                                        epub.copy(
-                                            theme = preset.theme,
-                                            backgroundColor = preset.bgColorInt?.let {
-                                                ReadiumColor(
-                                                    it
-                                                )
-                                            },
-                                            textColor = preset.textColorInt?.let { ReadiumColor(it) }
+                                    useLightBorder = preset.isDarkBorder,
+                                    onClick = {
+                                        onPreferencesChange(
+                                            epub.copy(
+                                                theme = preset.theme,
+                                                backgroundColor = preset.bgColorInt?.let {
+                                                    ReadiumColor(
+                                                        it
+                                                    )
+                                                },
+                                                textColor = preset.textColorInt?.let { ReadiumColor(it) }
+                                            )
                                         )
-                                    )
-                                }
+                                    }
+                                )
                             }
                         }
                     }
@@ -300,7 +302,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.LEFT || currentAlign == R2TextAlign.START,
                                 onClick = {
-                                    haptic.performHaptic()
+                                    haptic.performHaptic(view)
                                     onPreferencesChange(epub.copy(textAlign = R2TextAlign.LEFT))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 4)
@@ -309,7 +311,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.CENTER,
                                 onClick = {
-                                    haptic.performHaptic()
+                                    haptic.performHaptic(view)
                                     onPreferencesChange(epub.copy(textAlign = R2TextAlign.CENTER))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 4)
@@ -318,7 +320,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.JUSTIFY,
                                 onClick = {
-                                    haptic.performHaptic()
+                                    haptic.performHaptic(view)
                                     onPreferencesChange(epub.copy(textAlign = R2TextAlign.JUSTIFY))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 2, count = 4)
@@ -327,7 +329,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.RIGHT,
                                 onClick = {
-                                    haptic.performHaptic()
+                                    haptic.performHaptic(view)
                                     onPreferencesChange(epub.copy(textAlign = R2TextAlign.RIGHT))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 3, count = 4)
@@ -472,7 +474,7 @@ fun SettingsSheet(
                         Button(
                             modifier = Modifier.fillMaxWidth().height(50.dp),
                             onClick = {
-                                haptic.performHaptic()
+                                haptic.performHaptic(view)
                                 showResetDialog = true
                             }) {
                             Text("Reset to Defaults")
@@ -491,6 +493,7 @@ fun SettingsSheet(
             text = { Text("Are you sure you want to restore all reading settings to their original configuration?") },
             confirmButton = {
                 TextButton(onClick = {
+                    haptic.performHaptic(view)
                     onPreferencesChange(ReaderDefaults.getPreferences())
                     onVolumeNavigationChange(false)
                     onNightLightChange(false)

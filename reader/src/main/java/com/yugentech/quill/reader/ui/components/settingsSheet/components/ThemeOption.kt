@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,13 +36,15 @@ fun ThemeOption(
     onClick: () -> Unit
 ) {
     val haptic = koinInject<HapticService>()
+    val view = LocalView.current
+    
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable {
-                haptic.performHaptic()
+                haptic.performHaptic(view)
                 onClick()
             }
             .padding(vertical = 12.dp, horizontal = 2.dp)

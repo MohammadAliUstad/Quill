@@ -45,30 +45,37 @@ import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.model.BackgroundSound
+import com.yugentech.quill.reader.ui.components.settingsSheet.components.SettingsSwitchItem
 import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
 import org.koin.compose.koinInject
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SoundSelectionSheet(
     activeSound: BackgroundSound,
     volume: Float,
+    autoPlayEnabled: Boolean,
     onSoundToggle: (BackgroundSound) -> Unit,
     onVolumeChange: (Float) -> Unit,
+    onAutoPlayChange: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
     val haptic = koinInject<HapticService>()
+    val view = LocalView.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     
     val cornerRadius by animateDpAsState(
@@ -87,7 +94,8 @@ fun SoundSelectionSheet(
 
     val noneOption = SoundOption("None", BackgroundSound.NONE, Icons.Rounded.Block)
 
-    val volumeSliderInteractionSource = remember { MutableInteractionSource() }
+    // State to track haptics independently of the parent volume state to prevent double-ticks
+    var lastHapticVolume by remember { mutableFloatStateOf(-1f) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -144,10 +152,7 @@ fun SoundSelectionSheet(
                             SoundToggleCard(
                                 option = option,
                                 isSelected = activeSound == option.sound,
-                                onClick = {
-                                    haptic.performHaptic()
-                                    onSoundToggle(option.sound)
-                                },
+                                onClick = { onSoundToggle(option.sound) },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -157,73 +162,88 @@ fun SoundSelectionSheet(
                 SoundToggleCard(
                     option = noneOption,
                     isSelected = activeSound == noneOption.sound,
-                    onClick = {
-                        haptic.performHaptic()
-                        onSoundToggle(noneOption.sound)
-                    },
+                    onClick = { onSoundToggle(noneOption.sound) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val volumeIcon = when {
-                    volume == 0f -> Icons.AutoMirrored.Rounded.VolumeOff
-                    volume < 0.5f -> Icons.AutoMirrored.Rounded.VolumeDown
-                    else -> Icons.AutoMirrored.Rounded.VolumeUp
-                }
-
-                Crossfade(targetState = volumeIcon, label = "volume_icon_fade") { icon ->
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(24.dp)
+            // --- VOLUME SECTION ---
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Volume",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${(volume * 100).roundToInt()}%",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
-                
-                androidx.compose.material3.Slider(
-                    value = volume,
-                    onValueChange = {
-                        if ((it * 100).toInt() != (volume * 100).toInt()) {
-                            haptic.performHaptic()
-                        }
-                        onVolumeChange(it)
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(44.dp),
-                    interactionSource = volumeSliderInteractionSource,
-                    colors = SliderDefaults.colors(
-                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        thumbColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    thumb = { state ->
-                        SliderDefaults.Thumb(
-                            interactionSource = volumeSliderInteractionSource,
-                            sliderState = state,
-                            thumbSize = DpSize(4.dp, 44.dp),
-                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.onPrimaryContainer)
-                        )
-                    },
-                    track = { state ->
-                        SliderDefaults.Track(
-                            sliderState = state,
-                            modifier = Modifier.height(28.dp),
-                            thumbTrackGapSize = 6.dp,
-                            trackCornerSize = 14.dp,
-                            drawStopIndicator = null
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val volumeIcon = when {
+                        volume == 0f -> Icons.AutoMirrored.Rounded.VolumeOff
+                        volume < 0.5f -> Icons.AutoMirrored.Rounded.VolumeDown
+                        else -> Icons.AutoMirrored.Rounded.VolumeUp
+                    }
+
+                    Crossfade(targetState = volumeIcon, label = "volume_icon_fade") { icon ->
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
-                )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    androidx.compose.material3.Slider(
+                        value = volume,
+                        onValueChange = {
+                            val roundedValue = (it * 10).roundToInt() / 10f
+                            if (roundedValue != lastHapticVolume) {
+                                haptic.performTickHaptic(view)
+                                lastHapticVolume = roundedValue
+                            }
+                            onVolumeChange(it)
+                        },
+                        steps = 9, // 10% increments
+                        modifier = Modifier.weight(1f),
+                        colors = SliderDefaults.colors(
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            thumbColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SettingsSwitchItem(
+                title = "Auto-play on Open",
+                subtitle = "Start sound automatically when opening a book",
+                checked = autoPlayEnabled,
+                index = 0,
+                totalCount = 1,
+                onCheckedChange = onAutoPlayChange
+            )
         }
     }
 }
@@ -236,6 +256,8 @@ private fun SoundToggleCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = koinInject<HapticService>()
+    val view = LocalView.current
     val iconScale by animateFloatAsState(
         targetValue = if (isSelected) 1.3f else 1.0f,
         animationSpec = spring(
@@ -247,7 +269,10 @@ private fun SoundToggleCard(
 
     ToggleButton(
         checked = isSelected,
-        onCheckedChange = { onClick() },
+        onCheckedChange = {
+            haptic.performHaptic(view)
+            onClick()
+        },
         modifier = modifier,
         shapes = ToggleButtonShapes(
             shape = RoundedCornerShape(MaterialTheme.corners.medium),

@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.spacing
 import org.koin.compose.koinInject
@@ -34,6 +35,7 @@ fun SettingsSwitchItem(
     onClick: (() -> Unit)? = null
 ) {
     val haptic = koinInject<HapticService>()
+    val view = LocalView.current
     val shape = itemShape(index, totalCount)
 
     ListItem(
@@ -64,7 +66,7 @@ fun SettingsSwitchItem(
             Switch(
                 checked = checked,
                 onCheckedChange = {
-                    haptic.performHaptic()
+                    haptic.performHaptic(view)
                     onCheckedChange(it)
                 },
                 enabled = enabled,
@@ -96,7 +98,12 @@ fun SettingsSwitchItem(
         modifier = Modifier
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+            .then(
+                if (onClick != null) Modifier.clickable {
+                    haptic.performHaptic(view)
+                    onClick()
+                } else Modifier
+            ),
         colors = ListItemDefaults.colors(
             containerColor = Color.Transparent
         )

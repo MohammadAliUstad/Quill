@@ -21,16 +21,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.theme.service.HapticService
 import org.koin.compose.koinInject
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +51,7 @@ fun CustomSettingsSlider(
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
     val haptic = koinInject<HapticService>()
+    val view = LocalView.current
     val interactionSource = remember { MutableInteractionSource() }
     val isDragged by interactionSource.collectIsDraggedAsState()
 
@@ -71,6 +76,10 @@ fun CustomSettingsSlider(
         targetValue = if (isThisActive) 16.dp else 0.dp,
         label = "sliderHorizontalPadding"
     )
+
+    // Track the last "rounded" value that triggered a haptic to prevent double-firing
+    // when the raw float jitters around the step boundary.
+    var lastHapticStep by remember { mutableFloatStateOf(-1f) }
 
     Column(
         modifier = Modifier
@@ -111,11 +120,22 @@ fun CustomSettingsSlider(
             if (leadingContent != null) leadingContent()
             Slider(
                 value = value,
-                onValueChange = {
-                    if (it != value) {
-                        haptic.performHaptic()
+                onValueChange = { newValue ->
+                    val range = valueRange.endInclusive - valueRange.start
+                    val currentStep = if (steps > 0 && range > 0) {
+                        // Stepped slider: Calculate discrete step index (0 to steps+1)
+                        // This ensures we only tick when we move to a NEW step.
+                        ((newValue - valueRange.start) / range * (steps + 1)).roundToInt().toFloat()
+                    } else {
+                        // Continuous slider: Trigger tick every 10% movement
+                        (newValue * 10).roundToInt().toFloat()
                     }
-                    onValueChange(it)
+
+                    if (currentStep != lastHapticStep) {
+                        haptic.performTickHaptic(view)
+                        lastHapticStep = currentStep
+                    }
+                    onValueChange(newValue)
                 },
                 valueRange = valueRange,
                 steps = steps,
