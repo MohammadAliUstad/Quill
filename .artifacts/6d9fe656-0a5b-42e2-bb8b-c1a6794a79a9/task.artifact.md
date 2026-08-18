@@ -1,0 +1,4 @@
+- [x] Implement dynamic volume icon logic
+- [x] Add `Crossfade` for icon transitions
+- [x] Embed tone icon inside the volume slider track
+- [x] Verify visual appearance and interaction

@@ -32,7 +32,10 @@ fun SelectionToolbar(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            TextButton(onClick = onHighlight) {
+            TextButton(
+                onClick = onHighlight,
+                enabled = selectionInfo.locator != null
+            ) {
                 Text("Highlight", style = MaterialTheme.typography.labelLarge)
             }
             if (isAiraReady) {

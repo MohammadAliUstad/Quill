@@ -1,12 +1,7 @@
 package com.yugentech.quill.reader.ui.components.engine
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +20,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -92,8 +89,6 @@ fun ReadiumEngine(
     var toolbarY by remember { mutableStateOf(0.dp) }
 
     val scope = rememberCoroutineScope()
-    val clipboardManager = LocalClipboardManager.current
-    val density = LocalDensity.current.density
     val isPagedMode = preferences.scroll != true
 
     // Active selection decoration for flicker-free paged mode
@@ -109,7 +104,7 @@ fun ReadiumEngine(
     suspend fun clearSelection() {
         val nav = navigator ?: return
         try {
-            nav.evaluateJavascript("window.getSelection().removeAllRanges();")
+            nav.evaluateJavascript("window.__quillSelData = null; window.getSelection().removeAllRanges();")
         } catch (_: Exception) {}
         selectionInfo = null
     }
@@ -127,7 +122,7 @@ fun ReadiumEngine(
             val rects = obj.optJSONArray("rects")
             val locator = nav.currentSelection()?.locator
             
-            if (locator != null && rects != null && rects.length() > 0) {
+            if (rects != null && rects.length() > 0 && text.isNotEmpty()) {
                 val first = rects.getJSONObject(0)
                 val last = rects.getJSONObject(rects.length() - 1)
                 selectionInfo = SelectionInfo(
@@ -145,6 +140,9 @@ fun ReadiumEngine(
         }
     }
 
+    val density = LocalDensity.current.density
+    val clipboardManager = LocalClipboardManager.current
+
     Box(modifier = modifier.fillMaxSize()) {
         ReadiumFragmentHost(
             publication = publication,
@@ -153,6 +151,14 @@ fun ReadiumEngine(
             preferences = preferences,
             isPro = isPro,
             isAiraReady = isAiraReady,
+            onAskAira = { text ->
+                onAskAira(text)
+                scope.launch { clearSelection() }
+            },
+            onHighlightRequest = { locator ->
+                onSelectionAction(locator)
+                scope.launch { clearSelection() }
+            },
             onTap = {
                 if (selectionInfo != null) {
                     scope.launch { clearSelection() }
@@ -174,36 +180,31 @@ fun ReadiumEngine(
                 )
             }
         )
+    }
 
-        AnimatedVisibility(
-            visible = selectionInfo != null,
-            enter = fadeIn(animationSpec = tween(150)),
-            exit = fadeOut(animationSpec = tween(150)),
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset { IntOffset(0, (toolbarY.value * density).roundToInt()) }
+    val currentSelection = selectionInfo
+    if (currentSelection != null) {
+        Popup(
+            alignment = Alignment.TopCenter,
+            offset = IntOffset(0, (toolbarY.value * density).roundToInt()),
+            properties = PopupProperties(focusable = false)
         ) {
-            selectionInfo?.let { info ->
-                SelectionToolbar(
-                    selectionInfo = info,
-                    isAiraReady = isAiraReady,
-                    onHighlight = {
-                        scope.launch {
-                            val locator = info.locator
-                            if (locator != null) onSelectionAction(locator)
-                            clearSelection()
-                        }
-                    },
-                    onAskAira = { text ->
-                        onAskAira(text)
-                        scope.launch { clearSelection() }
-                    },
-                    onCopy = { text ->
-                        clipboardManager.setText(AnnotatedString(text))
-                        scope.launch { clearSelection() }
-                    }
-                )
-            }
+            SelectionToolbar(
+                selectionInfo = currentSelection,
+                isAiraReady = isAiraReady,
+                onHighlight = {
+                    currentSelection.locator?.let { onSelectionAction(it) }
+                    scope.launch { clearSelection() }
+                },
+                onAskAira = { text ->
+                    onAskAira(text)
+                    scope.launch { clearSelection() }
+                },
+                onCopy = { text ->
+                    clipboardManager.setText(AnnotatedString(text))
+                    scope.launch { clearSelection() }
+                }
+            )
         }
     }
 
@@ -295,21 +296,41 @@ fun ReadiumEngine(
                 nav.evaluateJavascript("""
                     (function() {
                         var sel = window.getSelection();
-                        if (sel.isCollapsed || sel.rangeCount === 0) return null;
-                        var range = sel.getRangeAt(0);
-                        var rects = range.getClientRects();
-                        var filteredRects = [];
-                        for (var i = 0; i < rects.length; i++) {
-                            var r = rects[i];
-                            if (r.left >= 0 && r.left < window.innerWidth) {
-                                filteredRects.push({top: r.top, bottom: r.bottom, left: r.left, right: r.right});
+                        var liveActive = sel && !sel.isCollapsed && sel.rangeCount > 0 && sel.toString();
+                        if (liveActive) {
+                            var range = sel.getRangeAt(0);
+                            var rects = range.getClientRects();
+                            var filteredRects = [];
+                            var pageTol = window.innerWidth * 0.1;
+                            for (var i = 0; i < rects.length; i++) {
+                                var r = rects[i];
+                                if (r.left >= -pageTol && r.left < window.innerWidth + pageTol) {
+                                    filteredRects.push({top: r.top, bottom: r.bottom, left: r.left, right: r.right});
+                                }
+                            }
+                            // Fallback: focus is always on the current page
+                            if (filteredRects.length === 0 && sel.focusNode) {
+                                try {
+                                    var fr = document.createRange();
+                                    var fo = Math.min(sel.focusOffset, sel.focusNode.nodeType === 3 ? sel.focusNode.length : sel.focusNode.childNodes.length);
+                                    fr.setStart(sel.focusNode, fo);
+                                    fr.collapse(true);
+                                    var fRect = fr.getBoundingClientRect();
+                                    if (fRect.height > 0) {
+                                        filteredRects.push({top: fRect.top, bottom: fRect.bottom, left: fRect.left, right: fRect.right});
+                                    }
+                                } catch(e) {}
+                            }
+                            if (filteredRects.length > 0) {
+                                var liveData = { text: sel.toString(), rects: filteredRects };
+                                window.__quillSelData = liveData;
+                                return liveData;
                             }
                         }
-                        if (filteredRects.length === 0) return null;
-                        return JSON.stringify({
-                            text: sel.toString(),
-                            rects: filteredRects
-                        });
+                        // If live selection is gone or produced no rects, use stored capture from
+                        // selectionchange — handles the case where Readium collapsed the selection
+                        // before the poll ran (cross-page anchor on a continuation paragraph).
+                        return window.__quillSelData || null;
                     })()
                 """.trimIndent())
             } catch (_: Exception) { null }
@@ -353,22 +374,49 @@ fun ReadiumEngine(
                 (function() {
                     var scrollEl = document.scrollingElement || document.documentElement;
 
+                    // Clear stored selection data on every page navigation so stale data
+                    // from the previous page never leaks into the new page's toolbar.
+                    window.__quillSelData = null;
+
                     // Always refresh page-start fallback on every page render/navigation.
-                    var s0 = document.caretRangeFromPoint(4, 4);
-                    if (s0) {
-                        window.__quillPageStartNode   = s0.startContainer;
-                        window.__quillPageStartOffset = s0.startOffset;
-                    }
+                    // Prefer a node whose offset-0 is on the current page (not a continuation from the
+                    // previous column), because Readium resolves the locator from the node start.
+                    // If all visible text is a continuation, fall back to the caret position.
+                    (function() {
+                        var tol = window.innerWidth * 0.1;
+                        function nodeStartOnPage(node) {
+                            if (!node || node.nodeType !== 3) return false;
+                            try {
+                                var r = document.createRange();
+                                r.setStart(node, 0); r.collapse(true);
+                                var rect = r.getBoundingClientRect();
+                                return rect.left > -tol && rect.left < window.innerWidth + tol;
+                            } catch(e) { return false; }
+                        }
+                        var freshNode = null, fallbackNode = null;
+                        for (var ty = 4; ty < window.innerHeight && !freshNode; ty += 24) {
+                            var r0 = document.caretRangeFromPoint(4, ty);
+                            if (!r0) continue;
+                            if (!fallbackNode) {
+                                fallbackNode = { node: r0.startContainer, offset: r0.startOffset };
+                            }
+                            if (nodeStartOnPage(r0.startContainer)) {
+                                freshNode = { node: r0.startContainer, offset: 0 };
+                            }
+                        }
+                        var found = freshNode || fallbackNode;
+                        if (found) {
+                            window.__quillPageStartNode   = found.node;
+                            window.__quillPageStartOffset = found.offset;
+                        }
+                    })();
 
                     if (window.__quillScrollLockInstalled) return;
                     window.__quillScrollLockInstalled = true;
                     window.__quillSelectionActive = false;
 
-                    var lockedScrollLeft       = 0;
-                    var lastValidAnchorNode    = null, lastValidAnchorOffset = 0;
-                    var lastValidFocusNode     = null, lastValidFocusOffset  = 0;
-                    var inCorrection           = false;
-                    var rafId                  = null;
+                    var lockedScrollLeft = 0;
+                    var rafId            = null;
 
                     // Use the raw descriptor to bypass any overrides and avoid triggering
                     // Readium's own scroll listeners when we restore position.
@@ -377,33 +425,8 @@ fun ReadiumEngine(
                     function getScroll() { return sd ? sd.get.call(scrollEl) : scrollEl.scrollLeft; }
                     function setScroll(v) { if (sd && sd.set) sd.set.call(scrollEl, v); else scrollEl.scrollLeft = v; }
 
-                    // Returns true when a text/element node sits within the current page column.
-                    // Uses a generous tolerance (10 % of viewport width) so sub-pixel rounding
-                    // and text near the left margin don't produce false negatives.  Only content
-                    // hundreds of pixels off-screen (previous CSS column) will return false.
-                    function nodeOnPage(node, off) {
-                        if (!node) return false;
-                        try {
-                            var r = document.createRange();
-                            var safeOff = node.nodeType === 3
-                                ? Math.min(off, node.length)
-                                : Math.min(off, node.childNodes.length);
-                            r.setStart(node, safeOff);
-                            r.collapse(true);
-                            var rect = r.getBoundingClientRect();
-                            var tol = window.innerWidth * 0.1;
-                            return rect.left > -tol && rect.left < window.innerWidth + tol;
-                        } catch(e) { return false; }
-                    }
-
-                    // requestAnimationFrame guard — runs BEFORE each frame's paint in Chrome's
-                    // rendering pipeline (input → JS → style → layout → rAF → paint/composite).
-                    // If the browser scrolled to reveal an off-page anchor during event handling,
-                    // this corrects scroll BEFORE the frame is committed to the screen, limiting
-                    // any visible flicker to at most one 16 ms frame.
-                    // Does NOT mutate the Selection here — selection clamping is done exclusively
-                    // in selectionchange so there is exactly one place that calls setBaseAndExtent
-                    // and no re-entrant feedback loops are possible.
+                    // requestAnimationFrame guard — corrects scroll BEFORE each frame is painted.
+                    // Handles the case where the browser scrolled to reveal an off-page anchor.
                     function rafGuard() {
                         if (!window.__quillSelectionActive) { rafId = null; return; }
                         if (Math.abs(getScroll() - lockedScrollLeft) > 1) setScroll(lockedScrollLeft);
@@ -411,7 +434,6 @@ fun ReadiumEngine(
                     }
 
                     document.addEventListener('selectionchange', function() {
-                        if (inCorrection) return;
                         var sel = window.getSelection();
 
                         // ── Selection ended ──────────────────────────────────────────────────
@@ -423,42 +445,42 @@ fun ReadiumEngine(
                             return;
                         }
 
-                        // ── Selection just started ───────────────────────────────────────────
+                        // ── Selection started ─────────────────────────────────────────────────
                         if (!window.__quillSelectionActive) {
-                            lockedScrollLeft      = getScroll();
-                            lastValidAnchorNode   = sel.anchorNode; lastValidAnchorOffset = sel.anchorOffset;
-                            lastValidFocusNode    = sel.focusNode;  lastValidFocusOffset  = sel.focusOffset;
+                            lockedScrollLeft = getScroll();
                             window.__quillSelectionActive = true;
                             if (!rafId) rafId = requestAnimationFrame(rafGuard);
-                            return;
                         }
 
-                        // ── Selection active — restore scroll first so rect checks are accurate ──
-                        if (Math.abs(getScroll() - lockedScrollLeft) > 1) setScroll(lockedScrollLeft);
-
-                        var aOk = nodeOnPage(sel.anchorNode, sel.anchorOffset);
-                        var fOk = nodeOnPage(sel.focusNode,  sel.focusOffset);
-
-                        if (aOk && fOk) {
-                            lastValidAnchorNode = sel.anchorNode; lastValidAnchorOffset = sel.anchorOffset;
-                            lastValidFocusNode  = sel.focusNode;  lastValidFocusOffset  = sel.focusOffset;
-                            return;
-                        }
-
-                        // Clamp only the offending endpoint; keep the other end live.
-                        var ca  = aOk ? sel.anchorNode   : (lastValidAnchorNode || window.__quillPageStartNode);
-                        var cao = aOk ? sel.anchorOffset : (lastValidAnchorNode ? lastValidAnchorOffset : (window.__quillPageStartOffset || 0));
-                        var cf  = fOk ? sel.focusNode    : (lastValidFocusNode  || window.__quillPageStartNode);
-                        var cfo = fOk ? sel.focusOffset  : (lastValidFocusNode  ? lastValidFocusOffset  : (window.__quillPageStartOffset || 0));
-
-                        if (!ca || !cf) return;
+                        // ── Capture visible rects for the polling loop ────────────────────────
+                        // Stored in __quillSelData so polling can use it even if the DOM
+                        // selection collapses before the 150 ms tick (cross-page anchors).
                         try {
-                            inCorrection = true;
-                            sel.setBaseAndExtent(ca, cao, cf, cfo);
-                        } catch(ex) {
-                        } finally {
-                            inCorrection = false;
-                        }
+                            var capRange = sel.getRangeAt(0);
+                            var capRects = capRange.getClientRects();
+                            var capTol = window.innerWidth * 0.1;
+                            var capVis = [];
+                            for (var ci = 0; ci < capRects.length; ci++) {
+                                var cr = capRects[ci];
+                                if (cr.left >= -capTol && cr.left < window.innerWidth + capTol) {
+                                    capVis.push({top: cr.top, bottom: cr.bottom, left: cr.left, right: cr.right});
+                                }
+                            }
+                            // Focus is always on the current page — use it as fallback rect
+                            if (capVis.length === 0 && sel.focusNode) {
+                                var cfr2 = document.createRange();
+                                var cfo2 = Math.min(sel.focusOffset, sel.focusNode.nodeType === 3 ? sel.focusNode.length : sel.focusNode.childNodes.length);
+                                cfr2.setStart(sel.focusNode, cfo2); cfr2.collapse(true);
+                                var cfRect2 = cfr2.getBoundingClientRect();
+                                if (cfRect2.height > 0) capVis.push({top: cfRect2.top, bottom: cfRect2.bottom, left: cfRect2.left, right: cfRect2.right});
+                            }
+                            if (capVis.length > 0) {
+                                window.__quillSelData = {text: sel.toString(), rects: capVis};
+                            }
+                        } catch(capErr) {}
+
+                        // ── Restore scroll ────────────────────────────────────────────────────
+                        if (Math.abs(getScroll() - lockedScrollLeft) > 1) setScroll(lockedScrollLeft);
                     });
                 })();
             """.trimIndent()

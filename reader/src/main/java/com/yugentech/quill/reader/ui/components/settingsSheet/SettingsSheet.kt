@@ -33,16 +33,12 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -64,8 +60,10 @@ import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.CustomSettingsSlider
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.FontChip
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.SectionLabel
+import com.yugentech.quill.reader.ui.components.settingsSheet.components.SettingsSwitchItem
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.ThemeOption
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.ThemePreset
+import com.yugentech.theme.tokens.spacing
 import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.navigator.preferences.Theme
 import org.readium.r2.shared.ExperimentalReadiumApi
@@ -418,52 +416,27 @@ fun SettingsSheet(
                 item {
                     Column(
                         modifier = Modifier.graphicsLayer { alpha = nonSliderAlpha },
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs)
                     ) {
                         SectionLabel("System & Advanced")
 
-                        ListItem(
-                            headlineContent = { Text("Night Light") },
-                            supportingContent = { Text("Warm amber tint for eye comfort") },
-                            trailingContent = {
-                                Switch(
-                                    checked = preferences.nightLight,
-                                    onCheckedChange = onNightLightChange,
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = MaterialTheme.colorScheme.primary,
-                                        checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
-                                    )
-                                )
-                            },
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                            modifier = Modifier.padding(horizontal = 0.dp)
+                        SettingsSwitchItem(
+                            title = "Night Light",
+                            subtitle = "Warm amber tint for eye comfort",
+                            checked = preferences.nightLight,
+                            index = 0,
+                            totalCount = 2,
+                            onCheckedChange = onNightLightChange
                         )
 
-                        ListItem(
-                            headlineContent = { Text("Volume Button Navigation") },
-                            supportingContent = { Text("Turn pages using physical volume keys") },
-                            trailingContent = {
-                                Switch(
-                                    checked = preferences.volumeNavigation,
-                                    onCheckedChange = onVolumeNavigationChange
-                                )
-                            },
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                            modifier = Modifier.padding(horizontal = 0.dp)
+                        SettingsSwitchItem(
+                            title = "Volume Button Navigation",
+                            subtitle = "Turn pages using physical volume keys",
+                            checked = preferences.volumeNavigation,
+                            index = 1,
+                            totalCount = 2,
+                            onCheckedChange = onVolumeNavigationChange
                         )
-
-/*                        ListItem(
-                            headlineContent = { Text("Hyphenation") },
-                            supportingContent = { Text("Allow breaking words at line ends") },
-                            trailingContent = {
-                                Switch(
-                                    checked = epub.hyphenation ?: false,
-                                    onCheckedChange = { onPreferencesChange(epub.copy(hyphenation = it)) }
-                                )
-                            },
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                            modifier = Modifier.padding(horizontal = 0.dp)
-                        )*/
                     }
                 }
 

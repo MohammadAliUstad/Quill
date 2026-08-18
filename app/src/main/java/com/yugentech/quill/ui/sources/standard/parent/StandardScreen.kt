@@ -150,15 +150,12 @@ fun StandardScreen(
                     focusManager.clearFocus()
                 },
                 onSearchActiveChange = { updateSearchActive(it) },
-                onSearchClear = { searchText = "" },
+                onSearchClear = {
+                    searchText = ""
+                    viewModel.onSearchQuery("")
+                },
                 onBackOrClose = {
                     updateSearchActive(!searchActive)
-                },
-                onSuggestionClick = { suggestion ->
-                    searchText = suggestion
-                    viewModel.onSearchQuery(suggestion)
-                    searchActive = false
-                    focusManager.clearFocus()
                 },
                 categories = categories,
                 selectedCategory = selectedCategory,

@@ -130,7 +130,10 @@ class StandardViewModel(
     }
 
     fun onSearchQuery(query: String) {
-        if (query.isBlank()) return
+        if (query.isBlank()) {
+            onCategorySelected("New Arrivals")
+            return
+        }
         val cacheKey = "Search: $query"
         _selectedCategory.value = cacheKey
 

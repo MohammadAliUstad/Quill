@@ -26,7 +26,6 @@ class WrappedCallback(
         original.onCreateActionMode(mode, menu)
 
     override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
-
         original.onPrepareActionMode(mode, menu)
 
         for (i in menu.size - 1 downTo 0) {
@@ -110,6 +109,15 @@ class WrappedCallback2(
     override fun onDestroyActionMode(mode: ActionMode) =
         delegate.onDestroyActionMode(mode)
 
-    override fun onGetContentRect(mode: ActionMode, view: View, outRect: Rect) =
+    override fun onGetContentRect(mode: ActionMode, view: View, outRect: Rect) {
         original.onGetContentRect(mode, view, outRect)
+        // For continuation paragraphs the anchor sits in the previous CSS column
+        // (scrollX ≈ -viewWidth), giving a rect that starts far off-screen to the
+        // left. Android's floating ActionMode won't show in that case. Clamp the
+        // rect to the view bounds so the toolbar always stays visible.
+        outRect.left = outRect.left.coerceAtLeast(0)
+        outRect.top = outRect.top.coerceAtLeast(0)
+        outRect.right = outRect.right.coerceIn(outRect.left + 1, view.width.coerceAtLeast(1))
+        outRect.bottom = outRect.bottom.coerceIn(outRect.top + 1, view.height.coerceAtLeast(1))
+    }
 }

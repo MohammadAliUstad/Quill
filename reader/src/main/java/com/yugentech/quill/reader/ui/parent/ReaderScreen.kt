@@ -327,7 +327,8 @@ private fun ReaderSuccess(
 
     if (screenState.showTocSheet) {
         TocSheet(
-            toc = state.publication.tableOfContents,
+            publication = state.publication,
+            allPositions = state.allPositions,
             currentHref = screenState.currentLocator?.href?.toString(),
             onDismiss = { screenState.showTocSheet = false },
             onTocItemClick = { href ->

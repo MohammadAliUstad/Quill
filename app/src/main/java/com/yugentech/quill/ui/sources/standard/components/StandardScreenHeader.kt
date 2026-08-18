@@ -38,7 +38,6 @@ fun StandardScreenHeader(
     onSearchActiveChange: (Boolean) -> Unit,
     onSearchClear: () -> Unit,
     onBackOrClose: () -> Unit,
-    onSuggestionClick: (String) -> Unit,
     categories: List<String>,
     selectedCategory: String,
     onCategorySelected: (String) -> Unit,
@@ -78,7 +77,9 @@ fun StandardScreenHeader(
             modifier = Modifier.widthIn(min = dockedWidth),
             windowInsets = SearchBarDefaults.windowInsets
         ) {
-            SearchSuggestions(onSuggestionClick = onSuggestionClick)
+            if (searchText.isEmpty()) {
+                StandardSearchPrompt()
+            }
         }
 
         LazyRow(

@@ -5,6 +5,7 @@ import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,22 +37,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.readium.r2.shared.publication.Link
+import org.readium.r2.shared.publication.Locator
+import org.readium.r2.shared.publication.Publication
 
 private data class TocDisplayItem(
     val link: Link,
-    val depth: Int
+    val depth: Int,
+    val pageNumber: String? = null
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TocSheet(
-    toc: List<Link>,
+    publication: Publication,
+    allPositions: List<Locator>,
     currentHref: String?,
     onTocItemClick: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val flattenedToc = remember(toc) { flattenToc(toc) }
+    val toc = publication.tableOfContents
+    val flattenedToc = remember(toc, allPositions) { flattenToc(publication, allPositions, toc) }
 
     val activeIndex = remember(flattenedToc, currentHref) {
         flattenedToc.indexOfFirst { item ->
@@ -105,7 +112,8 @@ fun TocSheet(
         ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 item {
                     Text(
@@ -132,12 +140,24 @@ fun TocSheet(
     }
 }
 
-private fun flattenToc(links: List<Link>, depth: Int = 0): List<TocDisplayItem> {
+private fun flattenToc(
+    publication: Publication,
+    allPositions: List<Locator>,
+    links: List<Link>,
+    depth: Int = 0
+): List<TocDisplayItem> {
     val result = mutableListOf<TocDisplayItem>()
     for (link in links) {
-        result.add(TocDisplayItem(link, depth))
+        val locator = publication.locatorFromLink(link)
+        val pageNumber = locator?.let { loc ->
+            // Try to find the exact position from allPositions if available
+            allPositions.firstOrNull { it.href == loc.href }?.locations?.position
+                ?: loc.locations.position
+        }
+
+        result.add(TocDisplayItem(link, depth, pageNumber?.toString()))
         if (link.children.isNotEmpty()) {
-            result.addAll(flattenToc(link.children, depth + 1))
+            result.addAll(flattenToc(publication, allPositions, link.children, depth + 1))
         }
     }
     return result
@@ -156,7 +176,7 @@ private fun SimpleTocItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 2.dp)
+            .padding(horizontal = 16.dp)
             .clip(CircleShape)
             .background(containerColor)
             .clickable { onClick(item.link.href.toString()) }
@@ -176,6 +196,16 @@ private fun SimpleTocItem(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
+
+        if (item.pageNumber != null) {
+            Text(
+                text = "page ${item.pageNumber}",
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                color = contentColor.copy(alpha = 0.6f),
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+        }
 
         if (isActive) {
             Box(

@@ -1,9 +1,15 @@
 package com.yugentech.quill.reader.ui.components.soundSheet
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,8 +22,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
+import androidx.compose.material.icons.automirrored.rounded.VolumeDown
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.BlurOn
 import androidx.compose.material.icons.rounded.Forest
 import androidx.compose.material.icons.rounded.LocalFireDepartment
@@ -28,7 +36,8 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Slider
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
@@ -36,17 +45,19 @@ import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.model.BackgroundSound
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SoundSelectionSheet(
     activeSound: BackgroundSound,
@@ -57,6 +68,11 @@ fun SoundSelectionSheet(
 ) {
     val sheetState = rememberModalBottomSheetState()
     
+    val cornerRadius by animateDpAsState(
+        targetValue = if (sheetState.targetValue == SheetValue.Expanded) 0.dp else 28.dp,
+        label = "sheetCornerRadius"
+    )
+
     val options = listOf(
         SoundOption("Forest", BackgroundSound.FOREST, Icons.Rounded.Forest),
         SoundOption("Rain", BackgroundSound.RAIN, Icons.Rounded.WaterDrop),
@@ -66,13 +82,37 @@ fun SoundSelectionSheet(
         SoundOption("Riverside", BackgroundSound.RIVERSIDE, Icons.Rounded.Water)
     )
 
-    val noneOption = SoundOption("None", BackgroundSound.NONE, Icons.AutoMirrored.Rounded.VolumeOff)
+    val noneOption = SoundOption("None", BackgroundSound.NONE, Icons.Rounded.Block)
+
+    val volumeSliderInteractionSource = remember { MutableInteractionSource() }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {}
+                    )
+                    .padding(vertical = 22.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 32.dp, height = 6.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            shape = CircleShape
+                        )
+                )
+            }
+        }
     ) {
         Column(
             modifier = Modifier
@@ -90,12 +130,12 @@ fun SoundSelectionSheet(
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
             ) {
                 options.chunked(2).forEach { rowOptions ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
                     ) {
                         rowOptions.forEach { option ->
                             SoundToggleCard(
@@ -122,17 +162,52 @@ fun SoundSelectionSheet(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.VolumeUp,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
-                )
+                val volumeIcon = when {
+                    volume == 0f -> Icons.AutoMirrored.Rounded.VolumeOff
+                    volume < 0.5f -> Icons.AutoMirrored.Rounded.VolumeDown
+                    else -> Icons.AutoMirrored.Rounded.VolumeUp
+                }
+
+                Crossfade(targetState = volumeIcon, label = "volume_icon_fade") { icon ->
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
                 Spacer(modifier = Modifier.width(16.dp))
-                Slider(
+                
+                androidx.compose.material3.Slider(
                     value = volume,
                     onValueChange = onVolumeChange,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp),
+                    interactionSource = volumeSliderInteractionSource,
+                    colors = SliderDefaults.colors(
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        thumbColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    thumb = { state ->
+                        SliderDefaults.Thumb(
+                            interactionSource = volumeSliderInteractionSource,
+                            sliderState = state,
+                            thumbSize = DpSize(4.dp, 44.dp),
+                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                        )
+                    },
+                    track = { state ->
+                        SliderDefaults.Track(
+                            sliderState = state,
+                            modifier = Modifier.height(28.dp),
+                            thumbTrackGapSize = 6.dp,
+                            trackCornerSize = 14.dp,
+                            drawStopIndicator = null
+                        )
+                    }
                 )
             }
         }
