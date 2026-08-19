@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.database.entity.HighlightEntity
+import com.yugentech.quill.database.model.HighlightStyle
 import com.yugentech.quill.reader.pref.model.QuillPreferences
 import com.yugentech.quill.reader.pref.repository.ReaderPrefRepository
 import com.yugentech.quill.reader.repository.ReaderRepository
@@ -173,6 +174,7 @@ class ReaderViewModel(
         bookId: String,
         locatorJson: String,
         colorInt: Int,
+        style: HighlightStyle = HighlightStyle.HIGHLIGHT
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val newEntity = HighlightEntity(
@@ -180,6 +182,7 @@ class ReaderViewModel(
                 bookId = bookId,
                 locatorJson = locatorJson,
                 colorInt = colorInt,
+                style = style,
                 createdAt = System.currentTimeMillis()
             )
             readerRepository.saveHighlight(newEntity)

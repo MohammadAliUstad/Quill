@@ -2,6 +2,8 @@ package com.yugentech.quill.reader.ui.parent
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,14 +27,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.yugentech.quill.database.model.HighlightStyle
 import com.yugentech.quill.reader.viewmodel.QuickViewModel
 import com.yugentech.quill.reader.pref.model.QuillPreferences
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.ui.components.engine.ReadiumEngine
+import com.yugentech.quill.reader.ui.components.engine.UnderlineStyle
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderAction
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderMenuOverlay
 import com.yugentech.quill.reader.ui.components.settingsSheet.SettingsSheet
@@ -111,10 +116,14 @@ private fun ReaderSuccess(
         dbHighlights.mapNotNull { entity ->
             try {
                 Locator.fromJSON(JSONObject(entity.locatorJson))?.let { locator ->
+                    val style = when (entity.style) {
+                        HighlightStyle.HIGHLIGHT -> Decoration.Style.Highlight(tint = entity.colorInt)
+                        HighlightStyle.UNDERLINE -> UnderlineStyle(tint = entity.colorInt)
+                    }
                     Decoration(
                         id = entity.id,
                         locator = locator,
-                        style = Decoration.Style.Highlight(tint = entity.colorInt)
+                        style = style
                     )
                 }
             } catch (e: Exception) {
@@ -148,12 +157,53 @@ private fun ReaderSuccess(
         }
     }
 
+    val isPagedMode = preferences.epub.scroll == false
+
+    // --- MODE TRANSITION ORCHESTRATION ---
+    var engineScrollMode by remember { mutableStateOf(preferences.epub.scroll ?: true) }
+    var isTransitioningMode by remember { mutableStateOf(false) }
+
+    LaunchedEffect(preferences.epub.scroll) {
+        val newScroll = preferences.epub.scroll ?: true
+        if (newScroll != engineScrollMode) {
+            isTransitioningMode = true
+            delay(450) // Wait for fade out
+            engineScrollMode = newScroll
+            delay(950) // Ample buffer for engine layout change and scroll snap
+            isTransitioningMode = false
+        }
+    }
+
+    val readerAlpha by animateFloatAsState(
+        targetValue = if (isTransitioningMode) 0f else 1f,
+        animationSpec = tween(400),
+        label = "ReaderAlpha"
+    )
+
+    val targetBgColor = Color(
+        preferences.epub.backgroundColor?.int
+            ?: ReaderDefaults.getPreferences().backgroundColor!!.int
+    )
     val animatedBgColor by animateColorAsState(
-        targetValue = Color(
-            preferences.epub.backgroundColor?.int
-                ?: ReaderDefaults.getPreferences().backgroundColor!!.int
-        ),
+        targetValue = targetBgColor,
+        animationSpec = if (isPagedMode) snap() else tween(300),
         label = "ReaderBg"
+    )
+
+    // acknowledgedBgColor is updated after a delay; while it differs from targetBgColor the
+    // overlay is active. Because the comparison is done IN composition (not in a LaunchedEffect)
+    // the overlay becomes visible in the SAME frame where the colour changes — eliminating
+    // the 1-frame two-piece flash that a LaunchedEffect-driven approach would still produce.
+    var acknowledgedBgColor by remember { mutableStateOf(targetBgColor) }
+    val themeOverlayOn = acknowledgedBgColor != targetBgColor
+    LaunchedEffect(targetBgColor) {
+        delay(120)
+        acknowledgedBgColor = targetBgColor
+    }
+    val overlayAlpha by animateFloatAsState(
+        targetValue = if (themeOverlayOn) 1f else 0f,
+        animationSpec = if (themeOverlayOn) snap() else tween(180),
+        label = "ThemeOverlay"
     )
 
     Box(
@@ -161,17 +211,10 @@ private fun ReaderSuccess(
             .fillMaxSize()
             .background(animatedBgColor)
     ) {
-        val isPagedMode = preferences.epub.scroll == false
         // Use a fixed padding in Paged mode to avoid shifting when system bars are toggled
-        val engineModifier = if (isPagedMode) Modifier.padding(top = statusBarHeight) else Modifier
+        val engineModifier = if (engineScrollMode == false) Modifier.padding(top = statusBarHeight) else Modifier
 
-        AnimatedContent(
-            targetState = preferences.epub.scroll ?: true,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(500)).togetherWith(fadeOut(animationSpec = tween(500)))
-            },
-            label = "ReaderModeTransition"
-        ) { targetScroll ->
+        Box(modifier = Modifier.fillMaxSize().alpha(readerAlpha)) {
             ReadiumEngine(
                 modifier = engineModifier,
                 publication = state.publication,
@@ -181,7 +224,7 @@ private fun ReaderSuccess(
                 targetSeekProgress = screenState.pendingSeekProgress,
                 targetLocator = screenState.targetLocator,
                 allPositions = state.allPositions,
-                preferences = preferences.epub.copy(scroll = targetScroll),
+                preferences = preferences.epub.copy(scroll = engineScrollMode),
                 commands = viewModel.commands,
                 isPro = isPro,
                 isAiraReady = isReady,
@@ -270,19 +313,31 @@ private fun ReaderSuccess(
                 }
             }
         )
+
+        // Theme-change overlay: drawn on top of everything (zIndex 2) so it covers both
+        // the status-bar strip (Compose) and the WebView area during the rendering gap.
+        if (overlayAlpha > 0f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(targetBgColor.copy(alpha = overlayAlpha))
+                    .zIndex(2f)
+            )
+        }
     }
 
     if (pendingHighlightLocator != null) {
         HighlightSheet(
             sheetState = sheetState,
             onDismiss = { pendingHighlightLocator = null },
-            onSave = { colorInt ->
+            onSave = { colorInt, style ->
                 val locator = pendingHighlightLocator!!
 
                 viewModel.addHighlight(
                     bookId = state.bookId,
                     locatorJson = locator.toJSON().toString(),
-                    colorInt = colorInt
+                    colorInt = colorInt,
+                    style = style
                 )
 
                 pendingHighlightLocator = null
