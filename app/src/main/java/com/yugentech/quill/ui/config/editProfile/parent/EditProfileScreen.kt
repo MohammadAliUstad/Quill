@@ -1,21 +1,34 @@
 package com.yugentech.quill.ui.config.editProfile.parent
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,15 +48,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.R
 import com.yugentech.quill.ui.config.editProfile.components.AvatarSection
 import com.yugentech.quill.ui.config.editProfile.components.DisplayNameSection
 import com.yugentech.quill.ui.main.components.SectionHeader
 import com.yugentech.quill.user.viewmodel.UserViewModel
+import com.yugentech.theme.service.HapticService
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,10 +76,11 @@ fun EditProfileScreen(
 ) {
     val uiState by userViewModel.uiState.collectAsStateWithLifecycle()
     val user = uiState.user
+    val view = LocalView.current
+    val haptic = koinInject<HapticService>()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scrollState = rememberScrollState()
-
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(userId) {
@@ -79,6 +101,26 @@ fun EditProfileScreen(
 
         val canSave = validationError == null && displayName.isNotBlank()
 
+        val hasUnsavedChanges = displayName.trim() != user.name.orEmpty().trim() ||
+                selectedAvatarId != (user.avatarId ?: 0)
+
+        val buttonContainerColor by animateColorAsState(
+            targetValue = if (hasUnsavedChanges && canSave)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.surfaceVariant,
+            animationSpec = tween(300),
+            label = "saveButtonContainer"
+        )
+        val buttonContentColor by animateColorAsState(
+            targetValue = if (hasUnsavedChanges && canSave)
+                MaterialTheme.colorScheme.onPrimary
+            else
+                MaterialTheme.colorScheme.onSurfaceVariant,
+            animationSpec = tween(300),
+            label = "saveButtonContent"
+        )
+
         LaunchedEffect(displayName) {
             validationError = when {
                 displayName.isBlank() -> "Display name is required"
@@ -95,12 +137,10 @@ fun EditProfileScreen(
                     name = displayName.trim(),
                     avatarId = selectedAvatarId
                 )
-
                 coroutineScope.launch {
                     userViewModel.upsertUser(updatedUser)
                 }
                 onNavigateBack()
-
             }
         }
 
@@ -155,30 +195,131 @@ fun EditProfileScreen(
                     )
                     AvatarSection(
                         selectedAvatarId = selectedAvatarId,
-                        onAvatarSelected = { selectedAvatarId = it }
+                        onAvatarSelected = {
+                            selectedAvatarId = it
+                            haptic.performHaptic(view)
+                        }
                     )
                 }
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)) {
                     SectionHeader(
                         icon = Icons.Default.Person,
                         title = "Display Name"
                     )
-
                     DisplayNameSection(
                         displayName = displayName,
                         onDisplayNameChange = {
-                            if (it.length <= 20) {
-                                displayName = it
-                            }
+                            if (it.length <= 20) displayName = it
                         },
                         validationError = validationError,
-                        isSaving = uiState.isSaving,
-                        canSave = canSave,
-                        onSaveClick = { saveProfile() }
+                        isSaving = uiState.isSaving
                     )
+                }
+
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.m))
+
+                Button(
+                    onClick = { saveProfile() },
+                    enabled = hasUnsavedChanges && canSave && !uiState.isSaving,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = buttonContainerColor,
+                        contentColor = buttonContentColor,
+                        disabledContainerColor = buttonContainerColor,
+                        disabledContentColor = buttonContentColor
+                    )
+                ) {
+                    Text(
+                        text = "Save Changes",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)) {
+                    SectionHeader(
+                        icon = Icons.Default.Email,
+                        title = "Connected Account"
+                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        shape = RoundedCornerShape(MaterialTheme.corners.extraLarge)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(MaterialTheme.spacing.l),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Email,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(MaterialTheme.icons.medium)
+                            )
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs)
+                            ) {
+                                Text(
+                                    text = "Email address",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = user.email ?: "Not available",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)) {
+                    SectionHeader(
+                        icon = Icons.Default.EmojiEvents,
+                        title = "Achievements"
+                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        shape = RoundedCornerShape(MaterialTheme.corners.extraLarge)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(MaterialTheme.spacing.l),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.EmojiEvents,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                                modifier = Modifier.size(MaterialTheme.icons.extraLarge)
+                            )
+                            Text(
+                                text = "Coming Soon",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Earn badges as you reach your reading goals",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
