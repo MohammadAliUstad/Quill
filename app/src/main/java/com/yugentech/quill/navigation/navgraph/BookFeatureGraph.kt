@@ -48,6 +48,11 @@ fun NavGraphBuilder.bookFeatureGraph(
                 navController.navigate(AppScreen.HighlightsScreen.route + "/$bookId") {
                     launchSingleTop = true
                 }
+            },
+            onManageCategoriesClick = {
+                navController.navigate(AppScreen.ManageCategories.createRouteWithAdd()) {
+                    launchSingleTop = true
+                }
             }
         )
     }

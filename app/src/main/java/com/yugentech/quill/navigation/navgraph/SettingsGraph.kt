@@ -31,11 +31,16 @@ fun NavGraphBuilder.settingsGraph(
         )
     }
 
-    composable(AppScreen.ManageCategories.route) {
+    composable(
+        route = AppScreen.ManageCategories.ROUTE,
+        arguments = AppScreen.ManageCategories.arguments
+    ) { backStackEntry ->
+        val openAdd = backStackEntry.arguments?.getBoolean("openAdd") ?: false
         val categoryViewModel: CategoryViewModel = koinViewModel()
         com.yugentech.quill.ui.config.category.parent.CategoryScreen(
             categoryViewModel = categoryViewModel,
-            onBack = { navController.popBackStack() }
+            onBack = { navController.popBackStack() },
+            openAddSheetOnEntry = openAdd
         )
     }
 

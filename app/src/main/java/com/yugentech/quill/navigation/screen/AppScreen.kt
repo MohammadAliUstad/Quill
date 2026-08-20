@@ -19,7 +19,16 @@ sealed class AppScreen(val route: String) {
     data object Aira : AppScreen("aira")
     data object Queue : AppScreen("queue")
     data object Appearance : AppScreen("appearance")
-    data object ManageCategories : AppScreen("manageCategories")
+    data object ManageCategories : AppScreen("manageCategories") {
+        const val ROUTE = "manageCategories?openAdd={openAdd}"
+        val arguments = listOf(
+            navArgument("openAdd") {
+                type = NavType.BoolType
+                defaultValue = false
+            }
+        )
+        fun createRouteWithAdd() = "manageCategories?openAdd=true"
+    }
     data object Storage : AppScreen("storage")
     data object About : AppScreen("about")
     data object AboutAira : AppScreen("about_aira")
