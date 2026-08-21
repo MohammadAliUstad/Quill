@@ -3,8 +3,6 @@ package com.yugentech.quill.reader.ui.components.engine
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ActionMode
-import android.view.Choreographer
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -21,50 +19,17 @@ class ReadiumWrapperView @JvmOverloads constructor(
     var onHighlightRequest: (Locator) -> Unit = {}
     var onSelectionStarted: () -> Unit = {}
     var onSelectionEnded: () -> Unit = {}
+    var onSelectionChanged: (text: String) -> Unit = {}
     var currentSelectedText: String? = null
     var currentSelectionLocator: Locator? = null
     var isPro: Boolean = false
     var isAiraReady: Boolean = false
+    private var activeActionMode: ActionMode? = null
     val container = FragmentContainerView(context).also { addView(it) }
 
-    private var isSelectionActive = false
-    private var lockedScrollX = 0
-    private var touchDownScrollX = 0
-    private var cachedWebView: WebView? = null
-    private var scrollListenerAttached = false
-
-    private val choreographer = Choreographer.getInstance()
-
-    private val scrollLockCallback = object : Choreographer.FrameCallback {
-        override fun doFrame(frameTimeNanos: Long) {
-            if (!isSelectionActive) return
-            resolveWebView()?.let { wv ->
-                if (wv.scrollX != lockedScrollX) {
-                    wv.scrollTo(lockedScrollX, wv.scrollY)
-                }
-            }
-            choreographer.postFrameCallback(this)
-        }
-    }
-
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
-            resolveWebView()?.let { wv ->
-                touchDownScrollX = wv.scrollX
-                attachScrollListenerIfNeeded(wv)
-            }
-        }
-        return false
-    }
-
-    private fun attachScrollListenerIfNeeded(wv: WebView) {
-        if (scrollListenerAttached) return
-        wv.setOnScrollChangeListener { _, scrollX, scrollY, _, _ ->
-            if (isSelectionActive && scrollX != lockedScrollX) {
-                wv.scrollTo(lockedScrollX, scrollY)
-            }
-        }
-        scrollListenerAttached = true
+    fun finishActionMode() {
+        activeActionMode?.finish()
+        activeActionMode = null
     }
 
     override fun startActionModeForChild(
@@ -72,16 +37,17 @@ class ReadiumWrapperView @JvmOverloads constructor(
         callback: ActionMode.Callback,
         type: Int
     ): ActionMode? {
-        lockedScrollX = touchDownScrollX
-        isSelectionActive = true
+        // Toggle software rendering to eliminate selection flickering.
+        // GPU tile rasterization can lag behind selection handle movement;
+        // software mode renders atomically to a single CPU bitmap.
+        val webView = (originalView as? WebView) ?: findWebView(this)
+        webView?.setLayerType(LAYER_TYPE_SOFTWARE, null)
+
         onSelectionStarted()
 
-        choreographer.removeFrameCallback(scrollLockCallback)
-        choreographer.postFrameCallback(scrollLockCallback)
-
         val onDestroy: () -> Unit = {
-            isSelectionActive = false
-            choreographer.removeFrameCallback(scrollLockCallback)
+            // Restore hardware rendering once the selection is settled/dismissed.
+            webView?.setLayerType(LAYER_TYPE_HARDWARE, null)
             onSelectionEnded()
         }
 
@@ -96,22 +62,18 @@ class ReadiumWrapperView @JvmOverloads constructor(
                 { currentSelectedText }, { currentSelectionLocator }, onDestroy
             )
         }
-        return super.startActionModeForChild(originalView, wrapped, type)
+        val mode = super.startActionModeForChild(originalView, wrapped, type)
+        activeActionMode = mode
+        return mode
     }
 
-    private fun resolveWebView(): WebView? {
-        val cached = cachedWebView
-        if (cached != null && cached.isAttachedToWindow) return cached
-        return findDescendantWebView().also { cachedWebView = it }
-    }
-
-    private fun findDescendantWebView(): WebView? {
-        fun View.find(): WebView? {
-            if (this is WebView) return this
-            if (this !is ViewGroup) return null
-            for (i in 0 until childCount) getChildAt(i).find()?.let { return it }
-            return null
+    private fun findWebView(view: View): WebView? {
+        if (view is WebView) return view
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                findWebView(view.getChildAt(i))?.let { return it }
+            }
         }
-        return find()
+        return null
     }
 }

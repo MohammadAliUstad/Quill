@@ -1,11 +1,15 @@
 package com.yugentech.quill.ui.shared.bookDetails.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -384,7 +388,19 @@ fun ActionButton(
             }
 
             Spacer(modifier = Modifier.width(12.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium)
+            AnimatedContent(
+                targetState = label,
+                transitionSpec = {
+                    (fadeIn() + slideInVertically { it / 2 }).togetherWith(fadeOut() + slideOutVertically { -it / 2 })
+                },
+                label = "ActionButtonLabel"
+            ) { targetLabel ->
+                Text(
+                    targetLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }

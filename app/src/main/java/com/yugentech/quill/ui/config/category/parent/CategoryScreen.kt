@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.yugentech.quill.R
 import com.yugentech.quill.category.viewmodel.CategoryViewModel
 import com.yugentech.quill.database.model.Category
-import com.yugentech.quill.ui.config.category.components.AddCategoryDialog
+import com.yugentech.quill.ui.config.category.components.AddCategorySheet
 import com.yugentech.quill.ui.config.category.components.CategoryDialogType
 import com.yugentech.quill.ui.config.category.components.DeleteCategoryDialog
 import com.yugentech.quill.ui.config.category.components.DragDropList
@@ -205,7 +205,7 @@ fun CategoryScreen(
 
     when (activeDialog) {
         CategoryDialogType.Add -> {
-            AddCategoryDialog(
+            AddCategorySheet(
                 onDismiss = closeDialog,
                 onConfirm = { name ->
                     categoryViewModel.addCategory(name)

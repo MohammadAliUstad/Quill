@@ -38,7 +38,7 @@ import com.yugentech.quill.ui.shared.bookDetails.components.BookDescriptionSecti
 import com.yugentech.quill.ui.shared.bookDetails.components.BookDetailsTopBar
 import com.yugentech.quill.ui.shared.bookDetails.components.BookHeaderContent
 import com.yugentech.quill.ui.shared.bookDetails.components.BookParallaxBackground
-import com.yugentech.quill.ui.shared.bookDetails.components.CategorySelectionDialog
+import com.yugentech.quill.ui.shared.bookDetails.components.CategorySelectionSheet
 import com.yugentech.quill.ui.shared.bookDetails.components.FloatingActionButton
 import com.yugentech.quill.ui.shared.bookDetails.components.ReadingProgressSection
 import com.yugentech.quill.ui.shared.bookDetails.components.chaptersListSection
@@ -64,7 +64,7 @@ fun BookDetailsScreen(
     val downloadStatus = book.downloadStatus
     val currentCategory = book.userCategory ?: "Library"
 
-    var showCategoryDialog by remember { mutableStateOf(false) }
+    var showCategorySheet by remember { mutableStateOf(false) }
     var showRemoveLibraryWarningDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showResetDialog by remember { mutableStateOf(false) }
@@ -155,7 +155,7 @@ fun BookDetailsScreen(
                     BookHeaderContent(
                         book = book,
                         topPadding = innerPadding.calculateTopPadding(),
-                        onCategoryClick = { showCategoryDialog = true },
+                        onCategoryClick = { showCategorySheet = true },
                         onDownloadClick = {
                             if (downloadStatus == DownloadStatus.DOWNLOADED) {
                                 showDeleteDialog = true
@@ -203,17 +203,17 @@ fun BookDetailsScreen(
         }
     }
 
-    if (showCategoryDialog) {
-        CategorySelectionDialog(
+    if (showCategorySheet) {
+        CategorySelectionSheet(
             categories = categories,
             currentCategory = currentCategory,
-            onDismiss = { showCategoryDialog = false },
+            onDismiss = { showCategorySheet = false },
             onCategorySelected = { newCat ->
                 bookDetailsViewModel.onCategoryChange(newCat)
-                showCategoryDialog = false
+                showCategorySheet = false
             },
             onRemoveClick = {
-                showCategoryDialog = false
+                showCategorySheet = false
                 if (downloadStatus == DownloadStatus.DOWNLOADED) {
                     showRemoveLibraryWarningDialog = true
                 } else {

@@ -52,6 +52,28 @@ class HapticService(
         performHapticInternal(view, isSpecial = true)
     }
 
+    // Triggers a light tick haptic for rapid interactions (like slider steps or handle movement)
+    fun performTickHaptic(view: View? = null) {
+        if (!hapticsEnabled.value) return
+        try {
+            if (view != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    view.performHapticFeedback(HapticFeedbackConstants.TEXT_HANDLE_MOVE)
+                } else {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                }
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
+                } else {
+                    vibrator.vibrate(20) // Slightly longer for visibility
+                }
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to perform tick haptic")
+        }
+    }
+
     private fun performHapticInternal(view: View?, isSpecial: Boolean) {
         try {
             Timber.v("Triggering haptic feedback (special: $isSpecial)")

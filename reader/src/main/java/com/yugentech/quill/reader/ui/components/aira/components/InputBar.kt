@@ -102,7 +102,7 @@ fun InputBar(
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(
-                            if (isStreamingOrLoading) MaterialTheme.colorScheme.errorContainer
+                            if (isStreamingOrLoading) MaterialTheme.colorScheme.secondaryContainer
                             else buttonContainerColor
                         )
                         .clickable(enabled = canSend || isStreamingOrLoading) {
@@ -114,7 +114,7 @@ fun InputBar(
                         Icon(
                             imageVector = if (loading) Icons.Default.Stop else Icons.Default.ArrowUpward,
                             contentDescription = if (loading) "Stop" else "Send",
-                            tint = if (loading) MaterialTheme.colorScheme.onErrorContainer else buttonContentColor,
+                            tint = if (loading) MaterialTheme.colorScheme.onSecondaryContainer else buttonContentColor,
                             modifier = Modifier.size(20.dp)
                         )
                     }

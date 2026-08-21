@@ -86,7 +86,7 @@ fun InputBar(
 
     val buttonContainerColor by animateColorAsState(
         targetValue = when {
-            isStreaming -> MaterialTheme.colorScheme.errorContainer
+            isStreaming -> MaterialTheme.colorScheme.secondaryContainer
             canSend -> MaterialTheme.colorScheme.primary
             else -> MaterialTheme.colorScheme.secondaryContainer
         },
@@ -95,7 +95,7 @@ fun InputBar(
     )
     val buttonContentColor by animateColorAsState(
         targetValue = when {
-            isStreaming -> MaterialTheme.colorScheme.onErrorContainer
+            isStreaming -> MaterialTheme.colorScheme.onSecondaryContainer
             canSend -> MaterialTheme.colorScheme.onPrimary
             else -> MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
         },

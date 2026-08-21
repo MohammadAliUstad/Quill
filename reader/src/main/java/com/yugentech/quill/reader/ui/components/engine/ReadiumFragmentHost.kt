@@ -33,6 +33,8 @@ fun ReadiumFragmentHost(
     onHighlightRequest: (Locator) -> Unit = {},
     onSelectionStarted: () -> Unit = {},
     onSelectionEnded: () -> Unit = {},
+    onSelectionChanged: (text: String) -> Unit = {},
+    onClearSelection: (() -> Unit) -> Unit = { it() },
     onNavigatorReady: (EpubNavigatorFragment) -> Unit
 ) {
 
@@ -43,6 +45,8 @@ fun ReadiumFragmentHost(
     val currentOnHighlightRequest by rememberUpdatedState(onHighlightRequest)
     val currentOnSelectionStarted by rememberUpdatedState(onSelectionStarted)
     val currentOnSelectionEnded by rememberUpdatedState(onSelectionEnded)
+    val currentOnSelectionChanged by rememberUpdatedState(onSelectionChanged)
+    val currentOnClearSelection by rememberUpdatedState(onClearSelection)
     val currentIsPro by rememberUpdatedState(isPro)
     val currentIsAiraReady by rememberUpdatedState(isAiraReady)
 
@@ -56,6 +60,7 @@ fun ReadiumFragmentHost(
                     fitsSystemWindows = false
                     this.isPro = currentIsPro
                     this.isAiraReady = currentIsAiraReady
+                    this.onSelectionChanged = currentOnSelectionChanged
 
                     ViewCompat.setOnApplyWindowInsetsListener(this) { _, _ -> WindowInsetsCompat.CONSUMED }
 
@@ -87,6 +92,8 @@ fun ReadiumFragmentHost(
                 view.onHighlightRequest = currentOnHighlightRequest
                 view.onSelectionStarted = currentOnSelectionStarted
                 view.onSelectionEnded = currentOnSelectionEnded
+                view.onSelectionChanged = currentOnSelectionChanged
+                currentOnClearSelection { view.finishActionMode() }
             }
         )
     }

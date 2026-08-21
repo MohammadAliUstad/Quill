@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.yugentech.quill.reader.ui.parent.luminance
 import com.yugentech.quill.reader.viewmodel.ReaderCommand
+import com.yugentech.theme.service.HapticService
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.delay
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import org.koin.compose.koinInject
 import org.readium.r2.navigator.DecorableNavigator
 import org.readium.r2.navigator.Decoration
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
@@ -83,6 +85,7 @@ fun ReadiumEngine(
     onTargetLocatorComplete: () -> Unit = {},
     onLocatorChange: (Locator) -> Unit
 ) {
+    val haptic = koinInject<HapticService>()
     val lifecycleOwner = LocalLifecycleOwner.current
     val fragmentTag = remember(bookId, preferences.scroll) {
         "readium_${bookId}_${if (preferences.scroll == true) "scroll" else "paged"}"
@@ -99,6 +102,10 @@ fun ReadiumEngine(
 
     var navigator by remember { mutableStateOf<EpubNavigatorFragment?>(null) }
     var selectionInfo by remember { mutableStateOf<SelectionInfo?>(null) }
+    var lastHapticText by remember { mutableStateOf<String?>(null) }
+    var lastBridgeText by remember { mutableStateOf("") }
+    var isClearingSelection by remember { mutableStateOf(false) }
+    var clearNativeSelectionRequest by remember { mutableStateOf<(() -> Unit)?>(null) }
     var toolbarY by remember { mutableStateOf(0.dp) }
 
     val screenHeightDp = LocalConfiguration.current.screenHeightDp.toFloat()
@@ -106,10 +113,44 @@ fun ReadiumEngine(
 
     suspend fun clearSelection() {
         val nav = navigator ?: return
-        try {
-            nav.evaluateJavascript("window.__quillSelData = null; window.getSelection().removeAllRanges();")
-        } catch (_: Exception) {}
+        if (isClearingSelection) return
+        isClearingSelection = true
+        
         selectionInfo = null
+        lastBridgeText = ""
+        
+        try {
+            // 1. Force-finish the native Android ActionMode to hide handles instantly.
+            clearNativeSelectionRequest?.invoke()
+
+            // 2. Use the navigator's built-in clearSelection and augment with JS to ensure
+            // the bridge data and native selection are fully purged.
+            nav.clearSelection()
+            val clearJs = """
+                (function() {
+                    window.__quillSelData = null;
+                    window.__quillSelChanging = false;
+                    var sel = window.getSelection();
+                    if (sel) {
+                        if (sel.empty) sel.empty();
+                        if (sel.removeAllRanges) sel.removeAllRanges();
+                    }
+                    if (document.activeElement && document.activeElement.blur) {
+                        document.activeElement.blur();
+                    }
+                })()
+            """.trimIndent()
+            nav.evaluateJavascript(clearJs)
+            // A brief delay then a second clear attempt handles cases where the
+            // first call was ignored due to an ongoing handle animation.
+            delay(100)
+            nav.evaluateJavascript(clearJs)
+        } catch (_: Exception) {}
+        
+        // Keep the flag active for a brief cooldown to ensure the polling loop 
+        // doesn't catch stale data during the WebView's asynchronous clear process.
+        delay(150)
+        isClearingSelection = false
     }
 
     suspend fun syncSelection(jsonStr: String?) {
@@ -132,6 +173,11 @@ fun ReadiumEngine(
             if (rects != null && rects.length() > 0 && text.isNotEmpty()) {
                 val first = rects.getJSONObject(0)
                 val last = rects.getJSONObject(rects.length() - 1)
+                
+                // Haptic feedback removed here to avoid overlap with the bridge's 
+                // zero-lag feedback. lastHapticText updated for consistency.
+                lastHapticText = text
+
                 selectionInfo = SelectionInfo(
                     text = text,
                     locator = locator,
@@ -167,13 +213,25 @@ fun ReadiumEngine(
                 onSelectionAction(locator)
                 scope.launch { clearSelection() }
             },
+            onSelectionStarted = {
+                // Haptics removed to avoid double-triggering with onSelectionChanged
+            },
+            onSelectionEnded = {
+                lastHapticText = null
+                lastBridgeText = ""
+            },
+            onSelectionChanged = { text ->
+                if (text.isNotBlank() && text != lastBridgeText) {
+                    haptic.performTickHaptic()
+                    lastBridgeText = text
+                }
+            },
+            onClearSelection = { request ->
+                clearNativeSelectionRequest = request
+            },
             onTap = {
                 if (selectionInfo != null) {
-                    scope.launch { 
-                        clearSelection()
-                        // Ensure JS fallback is also cleared immediately
-                        navigator?.evaluateJavascript("window.__quillSelData = null;")
-                    }
+                    scope.launch { clearSelection() }
                 } else {
                     onTap()
                 }
@@ -386,6 +444,11 @@ fun ReadiumEngine(
 
             val processedJson = json?.removeSurrounding("\"")?.replace("\\\"", "\"")
 
+            if (isClearingSelection) {
+                // Ignore poll results while a manual clear is in progress
+                continue
+            }
+
             if (processedJson == null || processedJson == "null" || processedJson == "undefined" || processedJson == "{}") {
                 selectionInfo = null
             } else if (selectionInfo == null) {
@@ -410,14 +473,13 @@ fun ReadiumEngine(
                 (function() {
                     var id = 'quill-selection-style';
                     var existing = document.getElementById(id);
-                    if (existing) existing.remove();
+                    if (existing) {
+                        existing.textContent = '::selection { background-color: $bgColor !important; }';
+                        return;
+                    }
                     var s = document.createElement('style');
                     s.id = id;
-                    s.textContent = `
-                        ::selection {
-                            background-color: $bgColor !important;
-                        }
-                    `;
+                    s.textContent = '::selection { background-color: $bgColor !important; }';
                     document.head.appendChild(s);
                 })();
             """.trimIndent()
@@ -479,6 +541,8 @@ fun ReadiumEngine(
                     var lockedScrollLeft = 0;
                     var rafId            = null;
                     var selChangeTimer   = null;
+                    var lastCapture      = 0;
+                    var lastBridgeText   = "";
 
                     // Use the raw descriptor to bypass any overrides and avoid triggering
                     // Readium's own scroll listeners when we restore position.
@@ -497,9 +561,10 @@ fun ReadiumEngine(
                         var sel = window.getSelection();
 
                         // ── Selection ended ──────────────────────────────────────────────────
-                        if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+                        if (!sel || sel.isCollapsed || sel.rangeCount === 0 || !sel.toString().trim()) {
                             window.__quillSelData = null;
                             window.__quillSelChanging = false;
+                            lastBridgeText = "";
                             if (selChangeTimer) { clearTimeout(selChangeTimer); selChangeTimer = null; }
                             if (window.__quillSelectionActive) {
                                 window.__quillSelectionActive = false;
@@ -514,33 +579,48 @@ fun ReadiumEngine(
                             if (!rafId) rafId = requestAnimationFrame(rafGuard);
                         }
 
+                        // ── Bridge Trigger (Zero-lag Haptics) ───────────────────────────────
+                        var text = sel.toString();
+                        if (text && text !== lastBridgeText) {
+                            lastBridgeText = text;
+                            // Check if the bridge is available before calling
+                            if (window.quillSelection && window.quillSelection.onTextChange) {
+                                window.quillSelection.onTextChange(text);
+                            }
+                        }
 
-                        // ── Capture visible rects for the polling loop ────────────────────────
-                        // Stored in __quillSelData so polling can use it even if the DOM
-                        // selection collapses before the 150 ms tick (cross-page anchors).
-                        try {
-                            var capRange = sel.getRangeAt(0);
-                            var capRects = capRange.getClientRects();
-                            var capTol = window.innerWidth * 0.1;
-                            var capVis = [];
-                            for (var ci = 0; ci < capRects.length; ci++) {
-                                var cr = capRects[ci];
-                                if (cr.left >= -capTol && cr.left < window.innerWidth + capTol) {
-                                    capVis.push({top: cr.top, bottom: cr.bottom, left: cr.left, right: cr.right});
+                        // ── Capture visible rects for the polling loop (throttled) ───────────
+                        // getClientRects() forces a synchronous layout flush. Calling it on
+                        // every selectionchange (dozens per second during a handle drag) causes
+                        // layout thrashing that stalls the renderer and produces text flickering.
+                        // One flush per 100 ms keeps __quillSelData fresh for the fallback.
+                        var now = Date.now();
+                        if (now - lastCapture >= 100) {
+                            lastCapture = now;
+                            try {
+                                var capRange = sel.getRangeAt(0);
+                                var capRects = capRange.getClientRects();
+                                var capTol = window.innerWidth * 0.1;
+                                var capVis = [];
+                                for (var ci = 0; ci < capRects.length; ci++) {
+                                    var cr = capRects[ci];
+                                    if (cr.left >= -capTol && cr.left < window.innerWidth + capTol) {
+                                        capVis.push({top: cr.top, bottom: cr.bottom, left: cr.left, right: cr.right});
+                                    }
                                 }
-                            }
-                            // Focus is always on the current page — use it as fallback rect
-                            if (capVis.length === 0 && sel.focusNode) {
-                                var cfr2 = document.createRange();
-                                var cfo2 = Math.min(sel.focusOffset, sel.focusNode.nodeType === 3 ? sel.focusNode.length : sel.focusNode.childNodes.length);
-                                cfr2.setStart(sel.focusNode, cfo2); cfr2.collapse(true);
-                                var cfRect2 = cfr2.getBoundingClientRect();
-                                if (cfRect2.height > 0) capVis.push({top: cfRect2.top, bottom: cfRect2.bottom, left: cfRect2.left, right: cfRect2.right});
-                            }
-                            if (capVis.length > 0) {
-                                window.__quillSelData = {text: sel.toString(), rects: capVis};
-                            }
-                        } catch(capErr) {}
+                                // Focus is always on the current page — use it as fallback rect
+                                if (capVis.length === 0 && sel.focusNode) {
+                                    var cfr2 = document.createRange();
+                                    var cfo2 = Math.min(sel.focusOffset, sel.focusNode.nodeType === 3 ? sel.focusNode.length : sel.focusNode.childNodes.length);
+                                    cfr2.setStart(sel.focusNode, cfo2); cfr2.collapse(true);
+                                    var cfRect2 = cfr2.getBoundingClientRect();
+                                    if (cfRect2.height > 0) capVis.push({top: cfRect2.top, bottom: cfRect2.bottom, left: cfRect2.left, right: cfRect2.right});
+                                }
+                                if (capVis.length > 0) {
+                                    window.__quillSelData = {text: sel.toString(), rects: capVis};
+                                }
+                            } catch(capErr) {}
+                        }
 
                         // ── Debounce: mark selection as actively changing ──────────────────────
                         // The toolbar is only shown once this flag clears (300 ms of no changes).
@@ -549,12 +629,6 @@ fun ReadiumEngine(
                         selChangeTimer = setTimeout(function() {
                             window.__quillSelChanging = false;
                         }, 300);
-
-                        // Scroll restoration is intentionally omitted here. The rafGuard loop
-                        // above handles drift correction asynchronously before each painted frame.
-                        // Doing a synchronous reset inside selectionchange created a tight feedback
-                        // loop: browser adjusts 1–5px → immediate reset → selectionchange fires
-                        // again → reset → … causing rapid text oscillation (visible flicker).
                     });
                 })();
             """.trimIndent()

@@ -161,22 +161,28 @@ private fun ReaderSuccess(
 
     // --- MODE TRANSITION ORCHESTRATION ---
     var engineScrollMode by remember { mutableStateOf(preferences.epub.scroll ?: true) }
-    var isTransitioningMode by remember { mutableStateOf(false) }
+    var isTransitioningMode by remember { mutableStateOf(true) }
 
     LaunchedEffect(preferences.epub.scroll) {
         val newScroll = preferences.epub.scroll ?: true
         if (newScroll != engineScrollMode) {
             isTransitioningMode = true
-            delay(450) // Wait for fade out
+            delay(350) // Wait for fade out
             engineScrollMode = newScroll
-            delay(950) // Ample buffer for engine layout change and scroll snap
+            delay(1150) // More generous buffer for engine layout change and scroll snap
+            isTransitioningMode = false
+        } else {
+            // Initial load case: wait for the engine to settle before revealing
+            // Scroll mode (vertical) usually needs more time to calculate layout and snap
+            val initialDelay = if (newScroll) 1400L else 800L
+            delay(initialDelay)
             isTransitioningMode = false
         }
     }
 
     val readerAlpha by animateFloatAsState(
         targetValue = if (isTransitioningMode) 0f else 1f,
-        animationSpec = tween(400),
+        animationSpec = tween(300),
         label = "ReaderAlpha"
     )
 

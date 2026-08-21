@@ -3,9 +3,6 @@ package com.yugentech.quill.reader.ui.components.engine
 import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.commitNow
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.readium.r2.navigator.epub.EpubNavigatorFactory
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.epub.EpubPreferences
@@ -17,6 +14,13 @@ import org.readium.r2.navigator.preferences.FontFamily
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
+
+class SelectionBridge(private val onSelectionChanged: (String) -> Unit) {
+    @android.webkit.JavascriptInterface
+    fun onTextChange(text: String) {
+        onSelectionChanged(text)
+    }
+}
 
 @OptIn(ExperimentalReadiumApi::class)
 fun attachNavigator(
@@ -38,7 +42,7 @@ fun attachNavigator(
         val factory = EpubNavigatorFactory(publication).createFragmentFactory(
             initialLocator = initialLocation,
             initialPreferences = preferences,
-            configuration = buildNavigatorConfig()
+            configuration = buildNavigatorConfig(wrapperView)
         )
 
         fm.fragmentFactory = factory
@@ -58,23 +62,15 @@ fun attachNavigator(
     })
 
     onNavigatorReady(fragment)
-
-    activity.lifecycleScope.launch {
-        while (true) {
-            val selection = fragment.currentSelection()
-            wrapperView.currentSelectedText = selection?.locator?.text?.highlight
-            wrapperView.currentSelectionLocator = selection?.locator
-            delay(200)
-        }
-    }
 }
 
 @OptIn(ExperimentalReadiumApi::class)
-fun buildNavigatorConfig() = EpubNavigatorFragment.Configuration().apply {
+fun buildNavigatorConfig(wrapperView: ReadiumWrapperView) = EpubNavigatorFragment.Configuration().apply {
     servedAssets = servedAssets + "font/.*"
     shouldApplyInsetsPadding = false
     registerFonts(this)
     registerHighlightStyles(this)
+    registerJavascriptInterface("quillSelection") { SelectionBridge { wrapperView.onSelectionChanged(it) } }
 }
 
 @OptIn(ExperimentalReadiumApi::class)
