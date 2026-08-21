@@ -116,7 +116,7 @@ fun MoreScreen(
                 start = MaterialTheme.spacing.m,
                 end = MaterialTheme.spacing.m,
                 top = innerPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding() + 16.dp
+                bottom = contentPadding.calculateBottomPadding() + 8.dp
             ),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs),
         ) {

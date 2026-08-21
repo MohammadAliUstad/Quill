@@ -41,6 +41,7 @@ import androidx.core.net.toUri
 import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.ui.about.about.components.AppInfoCard
 import com.yugentech.quill.ui.about.about.components.DonationDialog
+import com.yugentech.quill.ui.about.about.components.ThankYouDialog
 import com.yugentech.quill.ui.about.about.components.about.AboutContent
 import com.yugentech.quill.ui.main.components.SectionHeader
 import com.yugentech.quill.ui.main.components.ToastMessage
@@ -61,15 +62,16 @@ fun AboutScreen(
 
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var showDonationDialog by remember { mutableStateOf(false) }
+    var showThankYouDialog by remember { mutableStateOf(false) }
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
-            toastMessage = when (event) {
-                is BillingEvent.TipThankYou -> "Thank you for your support!"
-                is BillingEvent.Error -> event.message
-                else -> null
+            when (event) {
+                is BillingEvent.TipThankYou -> showThankYouDialog = true
+                is BillingEvent.Error -> toastMessage = event.message
+                else -> Unit
             }
         }
     }
@@ -225,6 +227,12 @@ fun AboutScreen(
                     }
                     showDonationDialog = false
                 }
+            )
+        }
+
+        if (showThankYouDialog) {
+            ThankYouDialog(
+                onDismiss = { showThankYouDialog = false }
             )
         }
     }

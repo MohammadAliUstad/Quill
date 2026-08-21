@@ -140,7 +140,7 @@ fun SubscriptionsScreen(
                         Column {
                             Text(text = "Quill Pro")
                             Text(
-                                text = "Power up Aira with Quill Pro",
+                                text = "Ask Aira without limits",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
