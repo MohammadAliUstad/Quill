@@ -15,6 +15,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,17 +62,21 @@ fun ReaderProgressSheet(
 
             // Track the last page that triggered a haptic to prevent double-firing
             var lastHapticPage by remember { mutableIntStateOf(currentPage) }
+            var draggingValue by remember { mutableFloatStateOf(-1f) }
+            val displayValue = if (draggingValue >= 0f) draggingValue else sliderPosition
 
             Slider(
-                value = sliderPosition,
-                onValueChange = { newPos -> 
+                value = displayValue,
+                onValueChange = { newPos ->
+                    draggingValue = newPos
                     val newPage = (newPos * (readerOverlayState.totalPages - 1)).roundToInt() + 1
                     if (newPage != lastHapticPage) {
                         haptic.performTickHaptic(view)
                         lastHapticPage = newPage
                     }
-                    onSeek(newPos) 
+                    onSeek(newPos)
                 },
+                onValueChangeFinished = { draggingValue = -1f },
                 interactionSource = interactionSource,
                 modifier = Modifier.fillMaxWidth(),
                 colors = SliderDefaults.colors(
@@ -84,7 +89,7 @@ fun ReaderProgressSheet(
             BookProgressFooter(
                 currentPage = currentPage,
                 totalPages = readerOverlayState.totalPages,
-                sliderPosition = sliderPosition
+                sliderPosition = displayValue
             )
         }
     }
