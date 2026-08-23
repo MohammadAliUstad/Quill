@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
@@ -70,10 +71,10 @@ fun AiraPeekBar(
     onSendMessage: (String) -> Unit,
     onClearSelection: () -> Unit,
     onDismiss: () -> Unit,
-    onStop: () -> Unit,
-    onUpgradeClick: () -> Unit = {}
+    onStop: () -> Unit
 ) {
     val haptic = koinInject<HapticService>()
+    val view = LocalView.current
     val voiceOutputManager: VoiceOutputManager = koinInject()
     val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
@@ -114,6 +115,10 @@ fun AiraPeekBar(
         } else {
             inputText = ""
         }
+    }
+
+    LaunchedEffect(airaUiState.canSendQuery) {
+        if (!airaUiState.canSendQuery) enforceLimitUi = true
     }
 
     val isImeVisible = WindowInsets.isImeVisible
@@ -185,10 +190,11 @@ fun AiraPeekBar(
                             isLoading = airaUiState.isLoading,
                             hasResponse = airaUiState.response != null,
                             onDismiss = {
-                                haptic.performHaptic()
+                                haptic.performHaptic(view)
                                 onDismiss()
                             },
                             onSpeak = {
+                                haptic.performHaptic(view)
                                 contentToActUpon.let { text ->
                                     if (text.isNotBlank()) {
                                         scope.launch { voiceOutputManager.speak(text) }
@@ -196,7 +202,7 @@ fun AiraPeekBar(
                                 }
                             },
                             onCopy = {
-                                haptic.performHaptic()
+                                haptic.performHaptic(view)
                                 onCopyResponse()
                             }
                         )
@@ -207,7 +213,7 @@ fun AiraPeekBar(
                             selectedText = selectedText,
                             activeChips = activeChips,
                             onChipClick = { intent ->
-                                haptic.performHaptic()
+                                haptic.performHaptic(view)
                                 onQuickAction(intent)
                                 inputText = ""
                                 focusManager.clearFocus()
@@ -237,21 +243,17 @@ fun AiraPeekBar(
                                     focusRequester = focusRequester,
                                     onFocusChanged = { isFocused = it },
                                     onSend = {
-                                        haptic.performHaptic()
+                                        haptic.performHaptic(view)
                                         send(it)
                                     },
                                     onStop = {
-                                        haptic.performHaptic()
+                                        haptic.performHaptic(view)
                                         onStop()
                                     }
                                 )
                             } else {
                                 QuotaLimitBar(
-                                    isPro = airaUiState.isPro,
-                                    onUpgradeClick = {
-                                        haptic.performHaptic()
-                                        onUpgradeClick()
-                                    }
+                                    isPro = airaUiState.isPro
                                 )
                             }
                         }

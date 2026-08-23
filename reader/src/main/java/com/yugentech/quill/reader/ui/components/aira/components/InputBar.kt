@@ -21,7 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,11 +40,18 @@ import androidx.compose.ui.unit.sp
 import com.yugentech.quill.reader.state.QuickUiState
 
 private val loadingPlaceholders = listOf(
-    "Finding the right words…",
-    "Your answer is taking shape…",
-    "Something thoughtful is coming…",
-    "Distilling an answer…",
-    "Almost there…"
+    "Finding the right words",
+    "Your answer is taking shape",
+    "Something thoughtful is coming",
+    "Distilling an answer",
+    "Almost there",
+    "Reading between the lines",
+    "Gathering my thoughts",
+    "Let me think about that",
+    "Connecting the dots",
+    "Searching for insight",
+    "Pulling it all together",
+    "Crafting a response"
 )
 
 @Composable
@@ -60,8 +69,19 @@ fun InputBar(
     onStop: () -> Unit
 ) {
     val isStreamingOrLoading = airaUiState.isStreaming || airaUiState.isLoading
-    val loadingPlaceholder = remember(airaUiState.isLoading) {
-        if (airaUiState.isLoading) loadingPlaceholders.random() else ""
+    var loadingPlaceholder by remember { mutableStateOf("") }
+    var lastPlaceholderIndex by remember { mutableIntStateOf(-1) }
+
+    LaunchedEffect(airaUiState.isLoading) {
+        if (airaUiState.isLoading) {
+            var index: Int
+            do { index = loadingPlaceholders.indices.random() }
+            while (index == lastPlaceholderIndex && loadingPlaceholders.size > 1)
+            lastPlaceholderIndex = index
+            loadingPlaceholder = loadingPlaceholders[index]
+        } else {
+            loadingPlaceholder = ""
+        }
     }
 
     Row(
@@ -129,7 +149,7 @@ fun InputBar(
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 disabledIndicatorColor = Color.Transparent

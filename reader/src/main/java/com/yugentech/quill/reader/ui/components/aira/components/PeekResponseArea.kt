@@ -144,7 +144,8 @@ private fun QuickActionChips(
                 Surface(
                     onClick = { onChipClick(intent) },
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
                 ) {
                     Text(
                         text = label,
