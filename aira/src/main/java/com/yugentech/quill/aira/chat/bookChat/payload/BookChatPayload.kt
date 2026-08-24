@@ -6,7 +6,9 @@ data class BookChatPayload(
     val bookTitle: String,
     val bookAuthor: String,
     val history: List<Map<String, Any>>,
-    val queryIntent: String
+    val queryIntent: String,
+    val selectedText: String? = null,
+    val userName: String? = null
 ) {
     fun toMap(): HashMap<String, Any> {
         return hashMapOf(
@@ -15,7 +17,9 @@ data class BookChatPayload(
             "bookTitle" to bookTitle,
             "bookAuthor" to bookAuthor,
             "history" to history,
-            "queryIntent" to queryIntent
+            "queryIntent" to queryIntent,
+            "selectedText" to (selectedText ?: ""),
+            "userName" to (userName ?: "")
         )
     }
 }
