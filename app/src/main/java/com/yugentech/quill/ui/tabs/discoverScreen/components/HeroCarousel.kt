@@ -48,9 +48,9 @@ fun HeroCarousel(
         }
     }
 
-    // Auto-scroll logic
-    LaunchedEffect(pairedBooks.size) {
-        if (pairedBooks.size > 1) {
+    // Auto-scroll logic: only runs when the user is NOT interacting
+    LaunchedEffect(pairedBooks.size, pagerState.isScrollInProgress) {
+        if (pairedBooks.size > 1 && !pagerState.isScrollInProgress) {
             while (true) {
                 delay(5000)
                 pagerState.animateScrollToPage(

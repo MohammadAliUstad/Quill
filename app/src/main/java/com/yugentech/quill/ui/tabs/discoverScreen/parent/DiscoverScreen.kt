@@ -265,23 +265,7 @@ fun DiscoverScreen(
                 label = "border_color"
             )
 
-            if (!searchExpanded) {
-                Box(
-                    modifier = Modifier
-                        .padding(top = statusBarHeight + 8.dp)
-                        .widthIn(min = dockedWidth)
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(50.dp))
-                        .hazeEffect(
-                            state = hazeState,
-                            style = HazeDefaults.style(
-                                backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f),
-                                blurRadius = 20.dp,
-                                noiseFactor = 0.05f
-                            )
-                        )
-                )
-            }
+
 
             SearchBar(
                 inputField = {
@@ -323,11 +307,26 @@ fun DiscoverScreen(
                                 }
                             }
                         },
-                        modifier = Modifier.border(
-                            width = 1.dp,
-                            color = animatedBorderColor,
-                            shape = RoundedCornerShape(28.dp)
-                        )
+                        modifier = Modifier
+                            .then(
+                                if (!searchExpanded) {
+                                    Modifier
+                                        .clip(RoundedCornerShape(28.dp))
+                                        .hazeEffect(
+                                            state = hazeState,
+                                            style = HazeDefaults.style(
+                                                backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f),
+                                                blurRadius = 20.dp,
+                                                noiseFactor = 0.05f
+                                            )
+                                        )
+                                } else Modifier
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = animatedBorderColor,
+                                shape = RoundedCornerShape(28.dp)
+                            )
                     )
                 },
                 expanded = searchExpanded,
