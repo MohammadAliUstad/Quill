@@ -11,6 +11,8 @@ interface BookChatRepository {
         question: String,
         route: Intent.BookRelated,
         history: List<AiraMessageEntity>,
-        book: BookEntity
+        book: BookEntity,
+        selectedText: String? = null,
+        userName: String? = null
     ): Flow<AiraResponse>
 }

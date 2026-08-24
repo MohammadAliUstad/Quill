@@ -4,12 +4,14 @@ import com.yugentech.quill.aira.chat.bookChat.payload.BookChatPayload
 import com.yugentech.quill.aira.chat.bookChat.service.BookChatService
 import com.yugentech.quill.aira.intent.model.Intent
 import com.yugentech.quill.aira.intent.model.QueryIntent
+import com.yugentech.quill.aira.rag.EpubTextExtractor
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.aira.util.AiraBuilder
 import com.yugentech.quill.aira.util.ChatUtils
 import com.yugentech.quill.database.entity.AiraMessageEntity
 import com.yugentech.quill.database.entity.BookEntity
+import com.yugentech.quill.database.model.RetrievedChunk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.json.JSONObject
@@ -17,47 +19,19 @@ import timber.log.Timber
 
 class BookChatRepositoryImpl(
     private val chatService: BookChatService,
-    private val ragRetriever: RagRetriever
+    private val ragRetriever: RagRetriever,
+    private val epubTextExtractor: EpubTextExtractor
 ) : BookChatRepository {
 
     override fun handle(
         question: String,
         route: Intent.BookRelated,
         history: List<AiraMessageEntity>,
-        book: BookEntity
+        book: BookEntity,
+        selectedText: String?,
+        userName: String?
     ): Flow<AiraResponse> = flow {
-        Timber.d("BookChatRepo: Handling book-related query. Route=$route")
-        val chunks = when {
-            route.intent == QueryIntent.CHARACTER_INFO && route.entities.isNotEmpty() -> {
-                Timber.d("BookChatRepo: Using focused CHARACTER_INFO retrieval for entities=${route.entities}")
-                route.entities.flatMap { entity ->
-                    ragRetriever.retrieveWithExpansion(
-                        bookId = book.id,
-                        queries = listOf("$entity character person description role"),
-                        entities = listOf(entity),
-                        boostedKeywords = listOf(entity),
-                        topPassages = 3,
-                        candidatesPerQuery = route.intent.candidatesPerQuery,
-                        spoilerLockEnabled = book.spoilerLockEnabled
-                    )
-                }
-                    .distinctBy { it.chapterIndex to it.chunkIndex }
-                    .sortedWith(compareBy({ it.chapterIndex }, { it.chunkIndex }))
-            }
-
-            else -> ragRetriever.retrieveWithExpansion(
-                bookId = book.id,
-                queries = route.queryVariations,
-                entities = route.entities,
-                boostedKeywords = (route.entities + route.keywords).distinct(),
-                topPassages = route.intent.topPassages,
-                candidatesPerQuery = route.intent.candidatesPerQuery,
-                spoilerLockEnabled = book.spoilerLockEnabled
-            )
-        }
-        Timber.d("BookChatRepo: Retrieved ${chunks.size} chunks from RAG")
-
-        val contextBlock = AiraBuilder.buildContextBlock(chunks)
+        val contextBlock = buildContextBlock(route, book)
 
         val payload =
             BookChatPayload(
@@ -66,13 +40,14 @@ class BookChatRepositoryImpl(
                 bookTitle = book.title,
                 bookAuthor = book.author,
                 history = ChatUtils.formatHistory(history),
-                queryIntent = route.intent.name.lowercase()
+                queryIntent = route.intent.name.lowercase(),
+                selectedText = selectedText,
+                userName = userName
             )
-        Timber.d("BookChatRepo: Sending payload to service: $payload")
 
         try {
             val rawResponse = chatService.bookChat(payload)
-            Timber.d("BookChatRepo: Raw response from service: '$rawResponse'")
+            Timber.d("BookChat[${route.intent}] question=\"$question\" response: $rawResponse")
 
             try {
                 val cleaned = rawResponse
@@ -84,22 +59,18 @@ class BookChatRepositoryImpl(
                 val endIndex = cleaned.lastIndexOf('}')
 
                 if (startIndex == -1 || endIndex == -1) {
-                    Timber.w("BookChatRepo: No JSON found in response, returning raw text")
                     emit(AiraResponse.Success(text = rawResponse))
                     return@flow
                 }
 
                 val json = JSONObject(cleaned.substring(startIndex, endIndex + 1))
                 val answer = json.getString("answer")
-                Timber.d("BookChatRepo: Extracted answer: '$answer'")
 
                 emit(AiraResponse.Success(text = answer))
             } catch (e: Exception) {
-                Timber.e(e, "BookChatRepo: JSON parsing failed")
                 emit(AiraResponse.Success(text = rawResponse))
             }
         } catch (e: Exception) {
-            Timber.e(e, "BookChatRepo: Service call failed")
             val errorMsg = when {
                 e.message?.contains("resource-exhausted") == true ->
                     "You've reached your free limit. Upgrade to Quill Pro."
@@ -107,5 +78,137 @@ class BookChatRepositoryImpl(
             }
             emit(AiraResponse.Error(errorMsg))
         }
+    }
+
+    // Routes each classified intent to whichever retrieval already does the best job for that
+    // shape of question -- the same specialized functions the quick-action chips use -- falling
+    // back to generic multi-query retrieval whenever a specialized path can't be used (e.g. the
+    // classifier didn't confidently extract a character name).
+    private suspend fun buildContextBlock(route: Intent.BookRelated, book: BookEntity): String {
+        return when (route.intent) {
+            QueryIntent.CHAPTER_SUMMARY -> {
+                // Always the reader's actual current chapter -- never a chapter number parsed
+                // out of the question, which risks either resolving to the wrong chapter or
+                // spoiling one the reader hasn't reached yet.
+                extractCurrentChapterText(book)?.also {
+                    Timber.d("BookChat[CHAPTER_SUMMARY] chapterIndex=${book.lastChapterIndex} chars=${it.length}")
+                } ?: run {
+                    Timber.d("BookChat[CHAPTER_SUMMARY] no chapter text -- falling back to generic retrieval")
+                    buildGenericContextBlock(route, book)
+                }
+            }
+
+            QueryIntent.CHARACTER_PROFILE -> {
+                val name = route.characterName
+                if (name.isNullOrBlank()) {
+                    Timber.d("BookChat[CHARACTER_PROFILE] no characterName -- falling back to generic retrieval")
+                    buildGenericContextBlock(route, book)
+                } else {
+                    val chunks = ragRetriever.retrieveForRecallCharacter(
+                        bookId = book.id,
+                        characterName = name,
+                        spoilerLockEnabled = book.spoilerLockEnabled
+                    )
+                    logChunks("CHARACTER_PROFILE:$name", chunks)
+                    chunks.ifEmpty { null }?.let { AiraBuilder.buildContextBlock(it) }
+                        ?: buildGenericContextBlock(route, book)
+                }
+            }
+
+            QueryIntent.CHARACTER_RECENT -> {
+                val name = route.characterName
+                if (name.isNullOrBlank()) {
+                    Timber.d("BookChat[CHARACTER_RECENT] no characterName -- falling back to generic retrieval")
+                    buildGenericContextBlock(route, book)
+                } else {
+                    val chunks = ragRetriever.retrieveForRecentRole(
+                        bookId = book.id,
+                        characterName = name,
+                        spoilerLockEnabled = book.spoilerLockEnabled
+                    )
+                    logChunks("CHARACTER_RECENT:$name", chunks)
+                    chunks.ifEmpty { null }?.let { AiraBuilder.buildContextBlock(it) }
+                        ?: buildGenericContextBlock(route, book)
+                }
+            }
+
+            QueryIntent.CHARACTER_ARC -> {
+                val name = route.characterName
+                if (name.isNullOrBlank()) {
+                    Timber.d("BookChat[CHARACTER_ARC] no characterName -- falling back to generic retrieval")
+                    buildGenericContextBlock(route, book)
+                } else {
+                    val chunks = ragRetriever.retrieveForJourney(
+                        bookId = book.id,
+                        characterName = name,
+                        spoilerLockEnabled = book.spoilerLockEnabled
+                    )
+                    logChunks("CHARACTER_ARC:$name", chunks)
+                    chunks.ifEmpty { null }?.let { AiraBuilder.buildContextBlock(it) }
+                        ?: buildGenericContextBlock(route, book)
+                }
+            }
+
+            QueryIntent.THEME_ANALYSIS, QueryIntent.SIGNIFICANCE -> {
+                if (route.isChapterScoped) {
+                    val chapterText = extractCurrentChapterText(book)
+                    if (chapterText == null) {
+                        Timber.d("BookChat[${route.intent}] chapter-scoped but no chapter text -- falling back to generic retrieval")
+                        buildGenericContextBlock(route, book)
+                    } else {
+                        val supplementary = genericChunks(route, book, topPassagesOverride = 8)
+                        Timber.d("BookChat[${route.intent}] chapter-scoped: chapterIndex=${book.lastChapterIndex} chars=${chapterText.length}")
+                        logChunks("${route.intent}:supplementary", supplementary)
+                        "CURRENT CHAPTER:\n$chapterText\n\n" +
+                            "ADDITIONAL CONTEXT FROM ELSEWHERE IN THE BOOK:\n" +
+                            AiraBuilder.buildContextBlock(supplementary)
+                    }
+                } else {
+                    // Whole-book scope genuinely benefits from a wider net than the default --
+                    // there's no single chapter anchoring the answer here.
+                    val chunks = genericChunks(route, book, topPassagesOverride = 15)
+                    logChunks("${route.intent}:wholeBook", chunks)
+                    AiraBuilder.buildContextBlock(chunks)
+                }
+            }
+
+            else -> buildGenericContextBlock(route, book)
+        }
+    }
+
+    private suspend fun buildGenericContextBlock(route: Intent.BookRelated, book: BookEntity): String {
+        val chunks = genericChunks(route, book)
+        logChunks("${route.intent}:generic", chunks)
+        return AiraBuilder.buildContextBlock(chunks)
+    }
+
+    // Mirrors QuickChatRepositoryImpl's logRetrievedChunks -- shows exactly which
+    // chapters/chunks are going into the LLM call, without dumping the full chunk text.
+    private fun logChunks(label: String, chunks: List<RetrievedChunk>) {
+        Timber.d(
+            "BookChat[$label] retrieved ${chunks.size} chunks:\n" +
+                chunks.joinToString("\n") { chunk ->
+                    "[Ch ${chunk.chapterIndex} chunk ${chunk.chunkIndex}] ${chunk.text.take(80)}"
+                }
+        )
+    }
+
+    private suspend fun genericChunks(
+        route: Intent.BookRelated,
+        book: BookEntity,
+        topPassagesOverride: Int? = null
+    ): List<RetrievedChunk> = ragRetriever.retrieveWithExpansion(
+        bookId = book.id,
+        queries = route.queryVariations,
+        entities = route.entities,
+        boostedKeywords = (route.entities + route.keywords).distinct(),
+        topPassages = topPassagesOverride ?: route.intent.topPassages,
+        candidatesPerQuery = route.intent.candidatesPerQuery,
+        spoilerLockEnabled = book.spoilerLockEnabled
+    )
+
+    private suspend fun extractCurrentChapterText(book: BookEntity): String? {
+        val localFilePath = book.localFilePath ?: return null
+        return epubTextExtractor.extractChapter(localFilePath, book.lastChapterIndex)?.text
     }
 }
