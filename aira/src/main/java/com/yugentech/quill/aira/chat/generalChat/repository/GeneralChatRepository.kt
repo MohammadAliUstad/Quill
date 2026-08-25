@@ -9,6 +9,8 @@ interface GeneralChatRepository {
     fun handle(
         question: String,
         history: List<AiraMessageEntity>,
-        book: BookEntity
+        book: BookEntity,
+        selectedText: String? = null,
+        userName: String? = null
     ): Flow<AiraResponse>
 }

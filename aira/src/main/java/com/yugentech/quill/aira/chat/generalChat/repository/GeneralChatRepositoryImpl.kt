@@ -17,24 +17,25 @@ class GeneralChatRepositoryImpl(
     override fun handle(
         question: String,
         history: List<AiraMessageEntity>,
-        book: BookEntity
+        book: BookEntity,
+        selectedText: String?,
+        userName: String?
     ): Flow<AiraResponse> = flow {
-        Timber.d("GeneralChatRepo: Handling general query")
         val payload =
             GeneralChatPayload(
                 query = question,
                 bookTitle = book.title,
                 bookAuthor = book.author,
-                history = ChatUtils.formatHistory(history)
+                history = ChatUtils.formatHistory(history),
+                selectedText = selectedText,
+                userName = userName
             )
-        Timber.d("GeneralChatRepo: Sending payload to service: $payload")
 
         try {
             val rawResponse = chatService.getChatResponse(payload)
-            Timber.d("GeneralChatRepo: Raw response from service: '$rawResponse'")
+            Timber.d("GeneralChat question=\"$question\" response: $rawResponse")
             emit(AiraResponse.Success(text = rawResponse))
         } catch (e: Exception) {
-            Timber.e(e, "GeneralChatRepo: Service call failed")
             val errorMsg = when {
                 e.message?.contains("resource-exhausted") == true ->
                     "You've reached your free limit. Upgrade to Quill Pro."
