@@ -5,7 +5,6 @@ import com.yugentech.quill.aira.intent.model.IntentResponse
 import com.yugentech.quill.aira.intent.model.QueryIntent
 import com.yugentech.quill.aira.intent.service.IntentDetectionService
 import org.json.JSONObject
-import timber.log.Timber
 
 class IntentDetectionRepository(
     private val detectionService: IntentDetectionService
@@ -13,45 +12,46 @@ class IntentDetectionRepository(
     suspend fun detectIntent(
         query: String,
         title: String,
-        author: String
+        author: String,
+        selectedText: String? = null
     ): Intent {
-        Timber.d("IntentDetection: Detecting intent for query='$query', book='$title'")
         return try {
-            val rawResponse = detectionService.detectIntent(query, title, author)
-            Timber.d("IntentDetection: Raw response from service: '$rawResponse'")
-            
+            val rawResponse = detectionService.detectIntent(query, title, author, selectedText)
+
             val cleaned = rawResponse
                 .replace("```json", "", ignoreCase = true)
                 .replace("```", "")
                 .trim()
-                
+
             val json = JSONObject(cleaned)
             val response = IntentResponse.fromJson(json)
-            Timber.d("IntentDetection: Parsed response: $response")
-            
+
             if (response.isRAG && response.queryVariations.isNotEmpty()) {
-                val intent = Intent.BookRelated(
+                Intent.BookRelated(
                     queryVariations = response.queryVariations,
                     entities = response.entities,
                     keywords = response.keywords,
-                    intent = parseIntent(response.queryIntent)
+                    intent = parseIntent(response.queryIntent),
+                    characterName = response.characterName,
+                    isChapterScoped = response.isChapterScoped
                 )
-                Timber.d("IntentDetection: Decided on BookRelated: $intent")
-                intent
             } else {
-                Timber.d("IntentDetection: Decided on General")
                 Intent.General
             }
         } catch (e: Exception) {
-            Timber.e(e, "Intent detection failed, falling back to General")
             Intent.General
         }
     }
 
     private fun parseIntent(raw: String): QueryIntent = when (raw.lowercase().trim()) {
-        "character_info" -> QueryIntent.CHARACTER_INFO
+        "chapter_summary" -> QueryIntent.CHAPTER_SUMMARY
+        "character_profile" -> QueryIntent.CHARACTER_PROFILE
+        "character_recent" -> QueryIntent.CHARACTER_RECENT
+        "character_arc" -> QueryIntent.CHARACTER_ARC
         "relationship" -> QueryIntent.RELATIONSHIP
         "plot_event" -> QueryIntent.PLOT_EVENT
+        "theme_analysis" -> QueryIntent.THEME_ANALYSIS
+        "significance" -> QueryIntent.SIGNIFICANCE
         "quote_lookup" -> QueryIntent.QUOTE_LOOKUP
         else -> QueryIntent.GENERAL
     }
