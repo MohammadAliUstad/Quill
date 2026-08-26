@@ -163,89 +163,6 @@ fun MoreScreen(
                 }
             }
 
-            // --- NOTIFICATIONS SECTION ---
-            item { SectionHeader(icon = Icons.Default.Notifications, title = "Notifications") }
-            item {
-                SettingsSwitchItem(
-                    title = "Enable Notifications",
-                    subtitle = "Allow Quill to send you updates",
-                    checked = notificationConfig.notificationsEnabled,
-                    index = 0,
-                    totalCount = 2,
-                    onCheckedChange = { enabled ->
-                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            if (ContextCompat.checkSelfPermission(
-                                    context,
-                                    Manifest.permission.POST_NOTIFICATIONS
-                                ) != PackageManager.PERMISSION_GRANTED
-                            ) {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else {
-                                notificationViewModel.setNotificationsEnabled(true)
-                            }
-                        } else {
-                            notificationViewModel.setNotificationsEnabled(enabled)
-                        }
-                        hapticService.performHaptic(view)
-                    }
-                )
-            }
-            item {
-                SettingsSwitchItem(
-                    title = "Playful Reminders",
-                    subtitle = "Occasional friendly nudges to keep your reading habit alive",
-                    checked = notificationConfig.playfulRemindersEnabled,
-                    enabled = notificationConfig.notificationsEnabled,
-                    index = 1,
-                    totalCount = 3,
-                    onCheckedChange = {
-                        notificationViewModel.setPlayfulRemindersEnabled(it)
-                        hapticService.performHaptic(view)
-                    }
-                )
-            }
-            item {
-                SettingsSwitchItem(
-                    title = "Daily Reading Reminder",
-                    subtitle = notificationViewModel.formatReminderTime(),
-                    checked = notificationConfig.readingRemindersEnabled,
-                    enabled = notificationConfig.notificationsEnabled,
-                    index = 2,
-                    totalCount = 3,
-                    onCheckedChange = { isChecked ->
-                        if (isChecked) {
-                            if (notificationViewModel.canEnableReminders()) {
-                                showTimePickerDialog = true
-                            }
-                        } else {
-                            notificationViewModel.setReadingRemindersEnabled(false)
-                            hapticService.performHaptic(view)
-                        }
-                    },
-                    onClick = {
-                        if (notificationConfig.notificationsEnabled && notificationViewModel.canEnableReminders()) {
-                            showTimePickerDialog = true
-                        }
-                    }
-                )
-            }
-
-            // --- AUDIO & HAPTICS SECTION ---
-            item { SectionHeader(icon = Icons.AutoMirrored.Filled.VolumeUp, title = "Audio & Haptics") }
-            item {
-                SettingsSwitchItem(
-                    title = "Haptic Feedback",
-                    subtitle = "Feel subtle vibrations during interactions",
-                    checked = hapticsEnabled,
-                    index = 0,
-                    totalCount = 1,
-                    onCheckedChange = { 
-                        settingsViewModel.setHapticsEnabled(it)
-                        hapticService.performHaptic(view)
-                    }
-                )
-            }
-
             // --- LIBRARY SECTION ---
             item { SectionHeader(icon = Icons.AutoMirrored.Filled.List, title = "Library") }
             item {
@@ -276,6 +193,86 @@ fun MoreScreen(
                     index = 0,
                     totalCount = 1,
                     onClick = onAppearance,
+                )
+            }
+
+            // --- NOTIFICATIONS & HAPTICS SECTION ---
+            item { SectionHeader(icon = Icons.Default.Notifications, title = "Notifications & Haptics") }
+            item {
+                SettingsSwitchItem(
+                    title = "Enable Notifications",
+                    subtitle = "Allow Quill to send you updates",
+                    checked = notificationConfig.notificationsEnabled,
+                    index = 0,
+                    totalCount = 4,
+                    onCheckedChange = { enabled ->
+                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            if (ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                notificationViewModel.setNotificationsEnabled(true)
+                            }
+                        } else {
+                            notificationViewModel.setNotificationsEnabled(enabled)
+                        }
+                        hapticService.performHaptic(view)
+                    }
+                )
+            }
+            item {
+                SettingsSwitchItem(
+                    title = "Playful Reminders",
+                    subtitle = "Occasional friendly nudges to keep your reading habit alive",
+                    checked = notificationConfig.playfulRemindersEnabled,
+                    enabled = notificationConfig.notificationsEnabled,
+                    index = 1,
+                    totalCount = 4,
+                    onCheckedChange = {
+                        notificationViewModel.setPlayfulRemindersEnabled(it)
+                        hapticService.performHaptic(view)
+                    }
+                )
+            }
+            item {
+                SettingsSwitchItem(
+                    title = "Daily Reading Reminder",
+                    subtitle = notificationViewModel.formatReminderTime(),
+                    checked = notificationConfig.readingRemindersEnabled,
+                    enabled = notificationConfig.notificationsEnabled,
+                    index = 2,
+                    totalCount = 4,
+                    onCheckedChange = { isChecked ->
+                        if (isChecked) {
+                            if (notificationViewModel.canEnableReminders()) {
+                                showTimePickerDialog = true
+                            }
+                        } else {
+                            notificationViewModel.setReadingRemindersEnabled(false)
+                            hapticService.performHaptic(view)
+                        }
+                    },
+                    onClick = {
+                        if (notificationConfig.notificationsEnabled && notificationViewModel.canEnableReminders()) {
+                            showTimePickerDialog = true
+                        }
+                    }
+                )
+            }
+            item {
+                SettingsSwitchItem(
+                    title = "Haptic Feedback",
+                    subtitle = "Feel vibrations throughout the app",
+                    checked = hapticsEnabled,
+                    index = 3,
+                    totalCount = 4,
+                    onCheckedChange = {
+                        settingsViewModel.setHapticsEnabled(it)
+                        hapticService.performHaptic(view)
+                    }
                 )
             }
 
