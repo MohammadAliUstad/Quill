@@ -9,6 +9,7 @@ import com.yugentech.quill.database.dao.AiraMessageDao
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.entity.AiraMessageEntity
 import com.yugentech.quill.database.entity.AiraMessageRole
+import com.yugentech.quill.domain.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import timber.log.Timber
@@ -18,49 +19,54 @@ class AiraChatService(
     private val generalChatRepository: GeneralChatRepository,
     private val bookChatRepository: BookChatRepository,
     private val bookDao: BookDao,
-    private val airaMessageDao: AiraMessageDao
+    private val airaMessageDao: AiraMessageDao,
+    private val authRepository: AuthRepository
 ) {
 
-    fun ask(bookId: String, query: String): Flow<AiraResponse> = flow {
-        Timber.d("AiraChatService: Starting ask flow for bookId=$bookId, query='$query'")
+    fun ask(bookId: String, query: String, selectedText: String? = null): Flow<AiraResponse> = flow {
         val book = bookDao.getBookEntity(bookId)!!
         val recentHistory = airaMessageDao.getRecentMessagesForBook(bookId)
-        Timber.d("AiraChatService: Fetched ${recentHistory.size} history messages")
+        val userName = authRepository.currentUserName
 
         try {
             val intent = intentDetectionRepository.detectIntent(
                 query = query,
                 title = book.title,
-                author = book.author
+                author = book.author,
+                selectedText = selectedText
             )
-            Timber.d("AiraChatService: Detected intent: $intent")
+            Timber.d(
+                "AiraChat intent for query=\"$query\" selectedText=${
+                    selectedText?.let { "\"${it.take(60)}\"" } ?: "null"
+                } -> $intent"
+            )
 
             val responseFlow = when (intent) {
                 is Intent.BookRelated -> {
-                    Timber.d("AiraChatService: Routing to BookChatRepository")
                     bookChatRepository.handle(
                         question = query,
                         route = intent,
                         history = recentHistory,
-                        book = book
+                        book = book,
+                        selectedText = selectedText,
+                        userName = userName
                     )
                 }
 
                 is Intent.General -> {
-                    Timber.d("AiraChatService: Routing to GeneralChatRepository")
                     generalChatRepository.handle(
                         question = query,
                         history = recentHistory,
-                        book = book
+                        book = book,
+                        selectedText = selectedText,
+                        userName = userName
                     )
                 }
             }
 
             responseFlow.collect { response ->
-                Timber.d("AiraChatService: Received response emission: $response")
                 emit(response)
                 if (response is AiraResponse.Success) {
-                    Timber.d("AiraChatService: Saving turn to database")
                     // Save User message
                     airaMessageDao.insertMessage(
                         AiraMessageEntity(
@@ -81,7 +87,6 @@ class AiraChatService(
             }
 
         } catch (e: Exception) {
-            Timber.e(e, "AiraChatService: Fatal error in chat flow")
             emit(AiraResponse.Error(resolveErrorMessage(e)))
         }
     }

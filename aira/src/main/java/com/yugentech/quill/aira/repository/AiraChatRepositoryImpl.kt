@@ -13,8 +13,8 @@ class AiraChatRepositoryImpl(
     private val airaMessageDao: AiraMessageDao
 ) : AiraChatRepository {
 
-    override suspend fun ask(bookId: String, query: String): Flow<AiraResponse> =
-        airaService.ask(bookId, query)
+    override suspend fun ask(bookId: String, query: String, selectedText: String?): Flow<AiraResponse> =
+        airaService.ask(bookId, query, selectedText)
 
     override suspend fun getMessagesForBook(bookId: String): Flow<List<AiraMessage>> =
         airaMessageDao.getMessagesForBook(bookId).map { entities ->

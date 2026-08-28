@@ -5,7 +5,7 @@ import com.yugentech.quill.aira.response.AiraResponse
 import kotlinx.coroutines.flow.Flow
 
 interface AiraChatRepository {
-    suspend fun ask(bookId: String, query: String): Flow<AiraResponse>
+    suspend fun ask(bookId: String, query: String, selectedText: String? = null): Flow<AiraResponse>
     suspend fun getMessagesForBook(bookId: String): Flow<List<AiraMessage>>
     suspend fun clearMessagesForBook(bookId: String)
 }
