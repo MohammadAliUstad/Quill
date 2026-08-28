@@ -32,12 +32,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.yugentech.quill.database.model.HighlightStyle
 import com.yugentech.quill.reader.viewmodel.QuickViewModel
 import com.yugentech.quill.reader.pref.model.QuillPreferences
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.ui.components.engine.ReadiumEngine
-import com.yugentech.quill.reader.ui.components.engine.UnderlineStyle
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderAction
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderMenuOverlay
 import com.yugentech.quill.reader.ui.components.settingsSheet.SettingsSheet
@@ -116,14 +114,10 @@ private fun ReaderSuccess(
         dbHighlights.mapNotNull { entity ->
             try {
                 Locator.fromJSON(JSONObject(entity.locatorJson))?.let { locator ->
-                    val style = when (entity.style) {
-                        HighlightStyle.HIGHLIGHT -> Decoration.Style.Highlight(tint = entity.colorInt)
-                        HighlightStyle.UNDERLINE -> UnderlineStyle(tint = entity.colorInt)
-                    }
                     Decoration(
                         id = entity.id,
                         locator = locator,
-                        style = style
+                        style = Decoration.Style.Highlight(tint = entity.colorInt)
                     )
                 }
             } catch (e: Exception) {
@@ -274,6 +268,8 @@ private fun ReaderSuccess(
             showAiraPeek = screenState.showAiraPeek,
             readerOverlayState = screenState.overlayState,
             airaUiState = airaUiState,
+            currentSound = viewModel.activeSound.collectAsState().value,
+            lastSelectedSound = preferences.lastSelectedSound,
             onAction = { action ->
                 when (action) {
                     is ReaderAction.OnBackClick -> onBackClick()
@@ -316,6 +312,9 @@ private fun ReaderSuccess(
 
                     is ReaderAction.OnStopGeneration -> quickViewModel.stopGeneration()
                     is ReaderAction.OnClearSelection -> screenState.selectedText = null
+                    is ReaderAction.OnSoundQuickToggle -> {
+                        viewModel.quickToggleSound()
+                    }
                 }
             }
         )
@@ -336,14 +335,13 @@ private fun ReaderSuccess(
         HighlightSheet(
             sheetState = sheetState,
             onDismiss = { pendingHighlightLocator = null },
-            onSave = { colorInt, style ->
+            onSave = { colorInt ->
                 val locator = pendingHighlightLocator!!
 
                 viewModel.addHighlight(
                     bookId = state.bookId,
                     locatorJson = locator.toJSON().toString(),
-                    colorInt = colorInt,
-                    style = style
+                    colorInt = colorInt
                 )
 
                 pendingHighlightLocator = null
@@ -356,13 +354,13 @@ private fun ReaderSuccess(
             onDismissRequest = { highlightToDelete = null },
             title = {
                 Text(
-                    text = "Delete Annotation",
+                    text = "Delete Highlight",
                     style = MaterialTheme.typography.titleLarge
                 )
             },
             text = {
                 Text(
-                    text = "Are you sure you want to remove this annotation? This action cannot be undone.",
+                    text = "Are you sure you want to remove this highlight? This action cannot be undone.",
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -407,8 +405,10 @@ private fun ReaderSuccess(
         SoundSelectionSheet(
             activeSound = activeSound,
             volume = volume,
+            autoPlayEnabled = preferences.autoPlaySound,
             onSoundToggle = { viewModel.toggleBackgroundSound(it) },
             onVolumeChange = { viewModel.updateSoundVolume(it) },
+            onAutoPlayChange = { viewModel.updateAutoPlaySound(it) },
             onDismiss = { screenState.showSoundSheet = false }
         )
     }

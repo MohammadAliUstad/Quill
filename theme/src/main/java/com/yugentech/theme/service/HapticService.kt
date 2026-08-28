@@ -23,7 +23,7 @@ class HapticService(
     hapticsEnabledFlow: kotlinx.coroutines.flow.Flow<Boolean>
 ) {
     private val scope = CoroutineScope(Dispatchers.IO)
-    
+
     private val hapticsEnabled: StateFlow<Boolean> = hapticsEnabledFlow
         .stateIn(
             scope = scope,

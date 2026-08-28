@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.database.entity.HighlightEntity
-import com.yugentech.quill.database.model.HighlightStyle
 import com.yugentech.quill.reader.pref.model.QuillPreferences
 import com.yugentech.quill.reader.pref.repository.ReaderPrefRepository
 import com.yugentech.quill.reader.repository.ReaderRepository
@@ -21,6 +20,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -154,6 +154,15 @@ class ReaderViewModel(
 
                     observeHighlights(bookId)
 
+                    // Auto-play sound if enabled
+                    viewModelScope.launch {
+                        val prefs = preferencesRepository.quillPreferences.first()
+                        _soundVolume.value = prefs.soundVolume
+                        if (prefs.autoPlaySound && prefs.lastSelectedSound != BackgroundSound.NONE) {
+                            playBackgroundSound(prefs.lastSelectedSound)
+                        }
+                    }
+
                 } catch (e: Exception) {
                     _uiState.value = ReaderUiState.Error(e.message ?: "Failed to open book")
                 }
@@ -173,8 +182,7 @@ class ReaderViewModel(
     fun addHighlight(
         bookId: String,
         locatorJson: String,
-        colorInt: Int,
-        style: HighlightStyle = HighlightStyle.HIGHLIGHT
+        colorInt: Int
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val newEntity = HighlightEntity(
@@ -182,7 +190,6 @@ class ReaderViewModel(
                 bookId = bookId,
                 locatorJson = locatorJson,
                 colorInt = colorInt,
-                style = style,
                 createdAt = System.currentTimeMillis()
             )
             readerRepository.saveHighlight(newEntity)
@@ -243,6 +250,12 @@ class ReaderViewModel(
         }
     }
 
+    fun updateAutoPlaySound(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.saveAutoPlaySound(enabled)
+        }
+    }
+
     fun onVolumeUp() {
         viewModelScope.launch {
             _commands.send(ReaderCommand.PreviousPage)
@@ -256,22 +269,43 @@ class ReaderViewModel(
     }
 
     fun toggleBackgroundSound(sound: BackgroundSound) {
-        hapticService.performHaptic()
         if (_activeSound.value == sound) {
-            backgroundSoundService.stop()
-            _activeSound.value = BackgroundSound.NONE
+            stopBackgroundSound()
         } else {
-            backgroundSoundService.play(sound, _soundVolume.value)
-            _activeSound.value = sound
+            playBackgroundSound(sound)
+        }
+    }
+
+    private fun playBackgroundSound(sound: BackgroundSound) {
+        backgroundSoundService.play(sound, _soundVolume.value)
+        _activeSound.value = sound
+        if (sound != BackgroundSound.NONE) {
+            viewModelScope.launch {
+                preferencesRepository.saveLastSelectedSound(sound)
+            }
+        }
+    }
+
+    private fun stopBackgroundSound() {
+        backgroundSoundService.stop()
+        _activeSound.value = BackgroundSound.NONE
+    }
+
+    fun quickToggleSound() {
+        val lastSound = readerPreferences.value.lastSelectedSound
+        if (_activeSound.value == BackgroundSound.NONE) {
+            toggleBackgroundSound(lastSound)
+        } else {
+            toggleBackgroundSound(_activeSound.value)
         }
     }
 
     fun updateSoundVolume(volume: Float) {
-        if (Math.abs(_soundVolume.value - volume) > 0.05f) {
-            hapticService.performHaptic()
-        }
         _soundVolume.value = volume
         backgroundSoundService.setVolume(volume)
+        viewModelScope.launch {
+            preferencesRepository.saveSoundVolume(volume)
+        }
     }
 
     private fun flattenToc(links: List<Link>): Map<String, String> {
@@ -290,7 +324,7 @@ class ReaderViewModel(
 
     override fun onCleared() {
         saveReadingSession()
-        backgroundSoundService.release()
+        backgroundSoundService.stop()
         super.onCleared()
         publication?.close()
     }
