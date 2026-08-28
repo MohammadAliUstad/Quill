@@ -7,6 +7,7 @@ class BackgroundSoundRepositoryImpl(
     private val soundService: BackgroundSoundService
 ) : BackgroundSoundRepository {
     override fun play(sound: BackgroundSound, volume: Float) = soundService.play(sound, volume)
+    override fun playPreview(sound: BackgroundSound, volume: Float) = soundService.playPreview(sound, volume)
     override fun stop() = soundService.stop()
     override fun setVolume(volume: Float) = soundService.setVolume(volume)
     override fun release() = soundService.release()

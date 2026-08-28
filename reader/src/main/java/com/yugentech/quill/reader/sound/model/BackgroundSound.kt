@@ -18,7 +18,7 @@ enum class BackgroundSound(
 
     companion object {
         fun fromId(id: String?): BackgroundSound {
-            return entries.find { it.id == id } ?: NONE
+            return entries.find { it.id == id } ?: RAIN
         }
     }
 }
