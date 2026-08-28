@@ -5,5 +5,9 @@ sealed class AiraResponse {
         val text: String
     ) : AiraResponse()
 
+    data class ImageSuccess(
+        val imagePath: String
+    ) : AiraResponse()
+
     data class Error(val message: String) : AiraResponse()
 }
