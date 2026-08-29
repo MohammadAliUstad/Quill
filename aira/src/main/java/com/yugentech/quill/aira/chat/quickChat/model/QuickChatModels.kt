@@ -3,15 +3,14 @@ package com.yugentech.quill.aira.chat.quickChat.model
 enum class QuickChatType {
     SUMMARIZE_CHAPTER,
     WHO_ARE_CHARACTERS,
-    WHO_IS_THIS,
+    RECALL_CHARACTER,
+    RECENT_ROLE,
+    JOURNEY_SO_FAR,
     WHAT_ARE_THEMES,
     DEFINE_WORD,
     WHAT_IS_THIS,
-    SIMPLIFY_THIS,
     EXPLAIN_THIS,
-    WHAT_SIGNIFICANCE,
-    WHO_IS_SPEAKING,
-    CUSTOM_QUESTION
+    WHAT_SIGNIFICANCE
 }
 
 data class QuickChatPayload(
