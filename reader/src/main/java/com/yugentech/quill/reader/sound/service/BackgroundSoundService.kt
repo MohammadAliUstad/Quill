@@ -32,11 +32,68 @@ class BackgroundSoundService(private val context: Context) {
     private val handler = Handler(Looper.getMainLooper())
 
     companion object {
-        private const val FADE_DURATION = 1500L
+        private const val FADE_DURATION = 500L
         private const val CROSSFADE_START_OFFSET = 2000L
         private const val CROSSFADE_DURATION = 2000L
+        private const val PREVIEW_DURATION = 2000L
+        private const val PREVIEW_FADE_DURATION = 500L
         private const val POSITION_CHECK_INTERVAL = 100L
         private const val MAX_VOLUME = 1.0f
+    }
+
+    // Plays a short clip of the sound for user selection, then fades out
+    fun playPreview(sound: BackgroundSound, volume: Float = MAX_VOLUME) {
+        handler.post {
+            Timber.d("playPreview() called with sound: ${sound.id}, volume: $volume")
+            handler.removeCallbacksAndMessages(null)
+            releaseInternal()
+
+            if (sound == BackgroundSound.NONE) return@post
+
+            sound.resId?.let { resId ->
+                try {
+                    val uri = "android.resource://${context.packageName}/$resId"
+                    currentSound = sound
+                    isLooping = false
+                    isStopping = false
+
+                    activePlayer = ExoPlayer.Builder(context).build().apply {
+                        setMediaItem(MediaItem.fromUri(uri))
+                        this.volume = 0f
+                        repeatMode = Player.REPEAT_MODE_OFF
+                        prepare()
+                        playWhenReady = true
+                    }
+
+                    // Fade in
+                    volumeAnimator = ValueAnimator.ofFloat(0f, volume).apply {
+                        duration = PREVIEW_FADE_DURATION
+                        interpolator = LinearInterpolator()
+                        addUpdateListener { activePlayer?.volume = it.animatedValue as Float }
+                        start()
+                    }
+
+                    // Schedule fade out and cleanup
+                    handler.postDelayed({
+                        volumeAnimator?.cancel()
+                        volumeAnimator =
+                            ValueAnimator.ofFloat(activePlayer?.volume ?: volume, 0f).apply {
+                                duration = PREVIEW_FADE_DURATION
+                                interpolator = LinearInterpolator()
+                                addUpdateListener { activePlayer?.volume = it.animatedValue as Float }
+                                addListener(object : AnimatorListenerAdapter() {
+                                    override fun onAnimationEnd(animation: Animator) = releaseInternal()
+                                })
+                                start()
+                            }
+                    }, PREVIEW_DURATION - PREVIEW_FADE_DURATION)
+
+                } catch (e: Exception) {
+                    Timber.e(e, "Preview failed")
+                    releaseInternal()
+                }
+            }
+        }
     }
 
     // Main entry point to start playing a specific sound
@@ -95,20 +152,7 @@ class BackgroundSoundService(private val context: Context) {
     fun stop() {
         handler.post {
             Timber.d("stop() called")
-
-            if (activePlayer?.isPlaying == true) {
-                isStopping = true
-                fadeVolumeInternal(targetVolume, 0f) {
-                    if (isStopping) {
-                        Timber.d("Fade complete, releasing player")
-                        releaseInternal()
-                    } else {
-                        Timber.d("Fade complete, but stop was cancelled - keeping player")
-                    }
-                }
-            } else {
-                releaseInternal()
-            }
+            releaseInternal()
         }
     }
 
