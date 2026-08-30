@@ -39,25 +39,47 @@ interface BookChunkDao {
     ): List<BookChunkEntity>
 
     @Query("""
-        SELECT book_chunks.chapterIndex, book_chunks.chunkIndex 
-        FROM book_chunks 
-        JOIN book_chunks_fts ON book_chunks.id = book_chunks_fts.rowid 
-        WHERE book_chunks_fts.text MATCH :searchQuery 
+        SELECT book_chunks.chapterIndex, book_chunks.chunkIndex
+        FROM book_chunks
+        JOIN book_chunks_fts ON book_chunks.id = book_chunks_fts.rowid
+        WHERE book_chunks_fts.text MATCH :searchQuery
         AND book_chunks.bookId = :bookId
     """)
     suspend fun searchFts(bookId: String, searchQuery: String): List<ChunkLocationTuple>
 
     @Query("""
-        SELECT id, chapterIndex, chunkIndex, embedding 
-        FROM book_chunks 
-        WHERE bookId = :bookId AND chapterIndex <= :maxChapterIndex 
+        SELECT book_chunks.chapterIndex, book_chunks.chunkIndex
+        FROM book_chunks
+        JOIN book_chunks_fts ON book_chunks.id = book_chunks_fts.rowid
+        WHERE book_chunks_fts.text MATCH :searchQuery
+        AND book_chunks.bookId = :bookId
+        AND book_chunks.chapterIndex <= :maxChapterIndex
+    """)
+    suspend fun searchFtsUpToChapter(
+        bookId: String,
+        searchQuery: String,
+        maxChapterIndex: Int
+    ): List<ChunkLocationTuple>
+
+    @Query("""
+        SELECT id, chapterIndex, chunkIndex, embedding
+        FROM book_chunks
+        WHERE bookId = :bookId AND chapterIndex <= :maxChapterIndex
         ORDER BY chapterIndex ASC, chunkIndex ASC
     """)
     suspend fun getCandidateVectors(bookId: String, maxChapterIndex: Int): List<ChunkVectorTuple>
 
     @Query("""
-    SELECT * FROM book_chunks 
-    WHERE bookId = :bookId AND chapterIndex = :chapterIndex 
+        SELECT id, chapterIndex, chunkIndex, embedding
+        FROM book_chunks
+        WHERE bookId = :bookId AND chapterIndex BETWEEN :fromChapter AND :toChapter
+        ORDER BY chapterIndex ASC, chunkIndex ASC
+    """)
+    suspend fun getCandidateVectorsInRange(bookId: String, fromChapter: Int, toChapter: Int): List<ChunkVectorTuple>
+
+    @Query("""
+    SELECT * FROM book_chunks
+    WHERE bookId = :bookId AND chapterIndex = :chapterIndex
     ORDER BY chunkIndex ASC
 """)
     suspend fun getChunksForChapter(bookId: String, chapterIndex: Int): List<BookChunkEntity>
