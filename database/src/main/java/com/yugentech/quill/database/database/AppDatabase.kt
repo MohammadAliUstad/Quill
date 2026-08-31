@@ -14,6 +14,7 @@ import com.yugentech.quill.database.dao.CategoryDao
 import com.yugentech.quill.database.dao.HighlightDao
 import com.yugentech.quill.database.dao.QuotaDao
 import com.yugentech.quill.database.dao.ReadingSessionDao
+import com.yugentech.quill.database.dao.VisualDao
 import com.yugentech.quill.database.entity.AiraMessageEntity
 import com.yugentech.quill.database.entity.BookChunkEntity
 import com.yugentech.quill.database.entity.BookChunkFtsEntity
@@ -25,6 +26,7 @@ import com.yugentech.quill.database.entity.CategoryEntity
 import com.yugentech.quill.database.entity.QuotaEntity
 import com.yugentech.quill.database.entity.ReadingSessionEntity
 import com.yugentech.quill.database.entity.UserEntity
+import com.yugentech.quill.database.entity.VisualEntity
 import com.yugentech.quill.database.view.LibraryBookView
 import com.yugentech.quill.database.dao.UserDao
 import com.yugentech.quill.database.entity.HighlightEntity
@@ -42,12 +44,13 @@ import com.yugentech.quill.database.entity.HighlightEntity
         ReadingSessionEntity::class,
         QuotaEntity::class,
         BookIndexingStateEntity::class,
-        HighlightEntity::class
+        HighlightEntity::class,
+        VisualEntity::class
     ],
     views = [
         LibraryBookView::class
     ],
-    version = 3,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(RoomConverters::class)
@@ -63,4 +66,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun quotaDao(): QuotaDao
     abstract fun bookIndexingStateDao(): BookIndexingStateDao
     abstract fun highlightDao(): HighlightDao
+    abstract fun visualDao(): VisualDao
 }
