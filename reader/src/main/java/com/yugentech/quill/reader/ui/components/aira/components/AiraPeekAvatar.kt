@@ -25,7 +25,7 @@ fun AiraPeekAvatar(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(40.dp)
+            .size(48.dp)
             .clip(CircleShape)
     ) {
         Surface(
@@ -37,10 +37,10 @@ fun AiraPeekAvatar(
             painter = painterResource(id = R.drawable.pneutral),
             contentDescription = "Aira",
             modifier = Modifier
-                .requiredSize(60.dp)
+                .requiredSize(100.dp)
                 .offset(
-                    x = (-1).dp,
-                    y = 4.dp
+                    x = (-2).dp,
+                    y = 16.dp
                 )
         )
     }

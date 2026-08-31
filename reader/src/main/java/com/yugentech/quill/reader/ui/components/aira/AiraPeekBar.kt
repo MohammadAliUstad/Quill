@@ -147,7 +147,11 @@ fun AiraPeekBar(
 
     fun send(text: String) {
         if (text.isBlank()) return
-        onSendMessage(text)
+        if (selectedText != null) {
+            onQuickAction(QuickPrompt.CustomQuestion(selectedText, text))
+        } else {
+            onSendMessage(text)
+        }
         inputText = ""
         focusManager.clearFocus()
         onClearSelection()

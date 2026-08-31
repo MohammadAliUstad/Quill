@@ -3,7 +3,6 @@ package com.yugentech.quill.reader.ui.components.aira.components
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -144,15 +143,14 @@ private fun QuickActionChips(
                 Surface(
                     onClick = { onChipClick(intent) },
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
                 ) {
                     Text(
                         text = label,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
@@ -160,4 +158,3 @@ private fun QuickActionChips(
         Spacer(Modifier.height(12.dp))
     }
 }
-
