@@ -146,6 +146,7 @@ fun SelectionToolbar(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Rounded.Brush,
                 label = "Highlight",
+                tint = MaterialTheme.colorScheme.tertiary,
                 onClick = {
                     haptic.performHaptic()
                     onHighlight()

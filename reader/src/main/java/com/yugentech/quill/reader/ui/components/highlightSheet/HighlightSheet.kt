@@ -159,7 +159,7 @@ fun HighlightSheet(
                 onClick = { onSave(selectedColorInt) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(56.dp)
             ) {
                 Text("Save Highlight")
             }
