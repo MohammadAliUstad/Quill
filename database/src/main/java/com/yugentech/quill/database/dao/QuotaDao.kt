@@ -18,11 +18,11 @@ interface QuotaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveQuota(quota: QuotaEntity)
 
-    @Query("UPDATE quotas SET queriesUsed = queriesUsed + 1 WHERE userId = :userId")
-    suspend fun incrementUsage(userId: String)
+    @Query("UPDATE quotas SET queriesUsed = queriesUsed + :amount WHERE userId = :userId")
+    suspend fun incrementUsage(userId: String, amount: Int = 1)
 
-    @Query("UPDATE quotas SET queriesUsed = 0, resetAtMillis = :newResetAt WHERE userId = :userId")
-    suspend fun resetUsage(userId: String, newResetAt: Long)
+    @Query("UPDATE quotas SET queriesUsed = 0, lastResetDate = :today WHERE userId = :userId")
+    suspend fun resetUsage(userId: String, today: String)
 
     @Query("UPDATE quotas SET queriesLimit = :newLimit WHERE userId = :userId")
     suspend fun updateLimit(userId: String, newLimit: Int)
