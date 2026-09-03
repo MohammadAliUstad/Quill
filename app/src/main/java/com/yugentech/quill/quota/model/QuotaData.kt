@@ -1,15 +1,12 @@
 package com.yugentech.quill.quota.model
 
-import com.google.firebase.Timestamp
-import java.util.Date
-
 data class QuotaData(
     val queriesUsed: Int,
     val queriesLimit: Int,
-    val resetAt: Timestamp?
+    // The calendar day (device-local, "yyyy-MM-dd") this queriesUsed count belongs to.
+    val lastResetDate: String?
 ) {
-    val isExpired: Boolean
-        get() = resetAt != null && resetAt.toDate().before(Date())
+    fun isFromPreviousDay(today: String): Boolean = lastResetDate != today
 
     val hasQuota: Boolean
         get() = queriesUsed < queriesLimit
