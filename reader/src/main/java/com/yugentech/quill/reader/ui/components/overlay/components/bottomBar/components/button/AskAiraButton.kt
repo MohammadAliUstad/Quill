@@ -43,7 +43,7 @@ fun AskAiraButton(
         elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 2.dp),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
         modifier = Modifier
-            .padding(end = 8.dp, bottom = 2.dp)
+            .padding(end = 8.dp)
             .height(52.dp)
             .widthIn(min = 140.dp)
     ) {
