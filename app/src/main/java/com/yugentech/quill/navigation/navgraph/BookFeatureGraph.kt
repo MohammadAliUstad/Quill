@@ -14,6 +14,8 @@ import com.yugentech.quill.ui.shared.airaChat.viewmodel.AiraViewModel
 import com.yugentech.quill.ui.shared.bookDetails.parent.BookDetailsScreen
 import com.yugentech.quill.ui.shared.bookDetails.parent.HighlightsScreen
 import com.yugentech.quill.ui.shared.bookDetails.parent.HighlightsViewModel
+import com.yugentech.quill.ui.shared.bookDetails.parent.VisualsScreen
+import com.yugentech.quill.ui.shared.bookDetails.parent.VisualsViewModel
 import com.yugentech.theme.tokens.AppConstants.EMPTY
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -49,8 +51,13 @@ fun NavGraphBuilder.bookFeatureGraph(
                     launchSingleTop = true
                 }
             },
-            onManageCategoriesClick = {
-                navController.navigate(AppScreen.ManageCategories.createRouteWithAdd()) {
+            onVisualsClick = { bookId ->
+                navController.navigate(AppScreen.VisualsScreen.route + "/$bookId") {
+                    launchSingleTop = true
+                }
+            },
+            onGoToCategoriesClick = {
+                navController.navigate(AppScreen.ManageCategories.route) {
                     launchSingleTop = true
                 }
             }
@@ -79,6 +86,31 @@ fun NavGraphBuilder.bookFeatureGraph(
                 )
             },
             viewModel = highlightsViewModel
+        )
+    }
+
+    composable(
+        route = AppScreen.VisualsScreen.route + "/{bookId}",
+        arguments = listOf(navArgument("bookId") {
+            type = NavType.StringType
+        })
+    ) { backStackEntry ->
+        val bookId = backStackEntry.arguments?.getString("bookId") ?: return@composable
+        val visualsViewModel: VisualsViewModel = koinViewModel()
+
+        VisualsScreen(
+            bookId = bookId,
+            onBackClick = { navController.popBackStack() },
+            onVisualClick = { clickedBookId, locatorJson ->
+                context.startActivity(
+                    ReaderActivity.createIntent(
+                        context = context,
+                        bookId = clickedBookId,
+                        locatorJson = locatorJson
+                    )
+                )
+            },
+            viewModel = visualsViewModel
         )
     }
 

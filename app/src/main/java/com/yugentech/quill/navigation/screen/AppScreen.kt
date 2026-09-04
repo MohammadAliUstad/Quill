@@ -27,7 +27,6 @@ sealed class AppScreen(val route: String) {
                 defaultValue = false
             }
         )
-        fun createRouteWithAdd() = "manageCategories?openAdd=true"
     }
     data object Storage : AppScreen("storage")
     data object About : AppScreen("about")
@@ -39,6 +38,7 @@ sealed class AppScreen(val route: String) {
     data object EditProfileScreen : AppScreen("edit_profile")
     data object Subscriptions : AppScreen("subscriptions")
     data object HighlightsScreen : AppScreen("highlights")
+    data object VisualsScreen : AppScreen("visuals")
 
     data object BookDetailsScreen : AppScreen("bookDetailsScreen") {
 

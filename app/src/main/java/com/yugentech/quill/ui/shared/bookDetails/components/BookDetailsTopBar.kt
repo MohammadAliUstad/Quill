@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material3.DropdownMenu
@@ -61,6 +62,7 @@ fun BookDetailsTopBar(
     onBackClick: () -> Unit,
     onFavoriteClick: () -> Unit,
     onHighlightsClick: () -> Unit,
+    onVisualsClick: () -> Unit,
     onResetProgressClick: () -> Unit,
     onDeleteClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior
@@ -164,6 +166,28 @@ fun BookDetailsTopBar(
                                 onClick = {
                                     menuExpanded = false
                                     onHighlightsClick()
+                                },
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Visuals",
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Image, contentDescription = "Visuals")
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onVisualsClick()
                                 },
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)
