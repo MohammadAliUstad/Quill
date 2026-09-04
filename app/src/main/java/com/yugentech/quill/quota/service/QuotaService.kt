@@ -1,15 +1,14 @@
 package com.yugentech.quill.quota.service
 
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.yugentech.quill.quota.model.QuotaData
 import com.yugentech.quill.quota.model.QuotaFields
 import com.yugentech.quill.quota.model.QuotaLimits
+import com.yugentech.quill.quota.model.todayDateString
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
-import java.util.Calendar
 
 class QuotaService(
     private val firestore: FirebaseFirestore
@@ -26,7 +25,7 @@ class QuotaService(
             QuotaData(
                 queriesUsed = doc.getLong(QuotaFields.QUERIES_USED)?.toInt() ?: 0,
                 queriesLimit = doc.getLong(QuotaFields.QUERIES_LIMIT)?.toInt() ?: QuotaLimits.FREE,
-                resetAt = doc.getTimestamp(QuotaFields.RESET_AT)
+                lastResetDate = doc.getString(QuotaFields.LAST_RESET_DATE)
             )
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch quota for user: $userId")
@@ -39,7 +38,7 @@ class QuotaService(
             val data = mapOf(
                 QuotaFields.QUERIES_USED to 0,
                 QuotaFields.QUERIES_LIMIT to if (isPro) QuotaLimits.PRO else QuotaLimits.FREE,
-                QuotaFields.RESET_AT to midnightTimestamp()
+                QuotaFields.LAST_RESET_DATE to todayDateString()
             )
             quotaDocRef(userId).set(data).await()
             Timber.d("Quota initialized for user: $userId isPro=$isPro")
@@ -52,7 +51,7 @@ class QuotaService(
         try {
             val data = mapOf(
                 QuotaFields.QUERIES_USED to 0,
-                QuotaFields.RESET_AT to midnightTimestamp()
+                QuotaFields.LAST_RESET_DATE to todayDateString()
             )
             quotaDocRef(userId).set(data, SetOptions.merge()).await()
             Timber.d("Quota reset for user: $userId")
@@ -61,12 +60,12 @@ class QuotaService(
         }
     }
 
-    suspend fun incrementUsage(userId: String) {
+    suspend fun incrementUsage(userId: String, amount: Int = 1) {
         try {
             quotaDocRef(userId).update(
-                QuotaFields.QUERIES_USED, FieldValue.increment(1)
+                QuotaFields.QUERIES_USED, FieldValue.increment(amount.toLong())
             ).await()
-            Timber.d("Quota incremented for user: $userId")
+            Timber.d("Quota incremented by $amount for user: $userId")
         } catch (e: Exception) {
             Timber.e(e, "Failed to increment quota for user: $userId")
         }
@@ -85,14 +84,5 @@ class QuotaService(
         } catch (e: Exception) {
             Timber.e(e, "Failed to update quota limit for user: $userId")
         }
-    }
-
-    private fun midnightTimestamp(): Timestamp {
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 23)
-            set(Calendar.MINUTE, 59)
-            set(Calendar.SECOND, 59)
-        }
-        return Timestamp(calendar.time)
     }
 }

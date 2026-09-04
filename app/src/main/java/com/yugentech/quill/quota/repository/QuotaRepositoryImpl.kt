@@ -5,6 +5,7 @@ import com.yugentech.quill.database.entity.QuotaEntity
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.QuotaRepository
 import com.yugentech.quill.quota.model.QuotaLimits
+import com.yugentech.quill.quota.model.todayDateString
 import com.yugentech.quill.quota.service.QuotaService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,21 +29,39 @@ class QuotaRepositoryImpl(
     override val remainingQueries: StateFlow<Int> = authRepository.authState
         .map { user -> user?.uid }
         .flatMapLatest { uid ->
-            if (uid != null) quotaDao.observeQuota(uid).map { it?.remaining ?: QuotaLimits.FREE }
-            else flowOf(0)
+            if (uid != null) {
+                quotaDao.observeQuota(uid).map { quota ->
+                    when {
+                        quota == null -> QuotaLimits.FREE
+                        // A row left over from a previous day is stale, not exhausted -- show
+                        // the full limit rather than yesterday's leftover count. The row itself
+                        // gets properly reset the next time a query is actually sent
+                        // (consumeQuery), not here -- this is just what the UI displays.
+                        quota.isFromPreviousDay(todayDateString()) -> quota.queriesLimit
+                        else -> quota.remaining
+                    }
+                }
+            } else {
+                flowOf(0)
+            }
         }
         .stateIn(repositoryScope, SharingStarted.Companion.WhileSubscribed(5000), QuotaLimits.FREE)
 
     override val canSendQuery: StateFlow<Boolean> = authRepository.authState
         .map { user -> user?.uid }
         .flatMapLatest { uid ->
-            if (uid != null) quotaDao.observeQuota(uid).map { it?.hasQuota ?: true }
-            else flowOf(false)
+            if (uid != null) {
+                quotaDao.observeQuota(uid).map { quota ->
+                    quota == null || quota.isFromPreviousDay(todayDateString()) || quota.hasQuota
+                }
+            } else {
+                flowOf(false)
+            }
         }
         .stateIn(repositoryScope, SharingStarted.Companion.WhileSubscribed(5000), true)
 
-
     override suspend fun loadQuota(userId: String, isPro: Boolean) {
+        val today = todayDateString()
         var networkQuota = quotaService.fetchQuota(userId)
 
         when {
@@ -51,7 +70,7 @@ class QuotaRepositoryImpl(
                 networkQuota = quotaService.fetchQuota(userId)
             }
 
-            networkQuota.isExpired -> {
+            networkQuota.isFromPreviousDay(today) -> {
                 quotaService.resetQuota(userId)
                 networkQuota = quotaService.fetchQuota(userId)
             }
@@ -62,28 +81,29 @@ class QuotaRepositoryImpl(
                 userId = userId,
                 queriesUsed = networkQuota.queriesUsed,
                 queriesLimit = networkQuota.queriesLimit,
-                resetAtMillis = networkQuota.resetAt?.toDate()?.time ?: 0L
+                lastResetDate = networkQuota.lastResetDate ?: today
             )
             quotaDao.saveQuota(entity)
         }
     }
 
-    override suspend fun consumeQuery(userId: String): Boolean {
+    override suspend fun consumeQuery(userId: String, amount: Int): Boolean {
+        val today = todayDateString()
         var currentQuota = quotaDao.getQuota(userId)
 
-        if (currentQuota?.isExpired == true) {
-            val newResetTime = System.currentTimeMillis() + 86400000L
-
-            quotaDao.resetUsage(userId, newResetTime)
+        if (currentQuota == null || currentQuota.isFromPreviousDay(today)) {
+            // Reset both copies against the same "today" -- there's no schedule to invent here,
+            // just "is this a new day, yes or no."
+            quotaDao.resetUsage(userId, today)
             quotaService.resetQuota(userId)
 
             currentQuota = quotaDao.getQuota(userId)
         }
 
-        if (currentQuota?.hasQuota == false) return false
+        if (currentQuota != null && currentQuota.remaining < amount) return false
 
-        quotaDao.incrementUsage(userId)
-        quotaService.incrementUsage(userId)
+        quotaDao.incrementUsage(userId, amount)
+        quotaService.incrementUsage(userId, amount)
 
         return true
     }
