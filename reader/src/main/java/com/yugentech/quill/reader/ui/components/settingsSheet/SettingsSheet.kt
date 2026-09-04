@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.FormatAlignJustify
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -202,13 +204,20 @@ fun SettingsSheet(
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 item {
-                    Text(
-                        text = "Display Settings",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.graphicsLayer { alpha = nonSliderAlpha }
-                    )
+                    Column(modifier = Modifier.graphicsLayer { alpha = nonSliderAlpha }) {
+                        Text(
+                            text = "Display Settings",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Customize text size, layout, and appearance",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 // --- READING MODE (Paged vs Scroll) ---
@@ -448,8 +457,6 @@ fun SettingsSheet(
                             title = "Night Light",
                             subtitle = "Warm amber tint for eye comfort",
                             checked = preferences.nightLight,
-                            index = 0,
-                            totalCount = 2,
                             onCheckedChange = onNightLightChange
                         )
 
@@ -457,8 +464,6 @@ fun SettingsSheet(
                             title = "Volume Button Navigation",
                             subtitle = "Turn pages using physical volume keys",
                             checked = preferences.volumeNavigation,
-                            index = 1,
-                            totalCount = 2,
                             onCheckedChange = onVolumeNavigationChange
                         )
                     }
@@ -472,7 +477,7 @@ fun SettingsSheet(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Button(
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
                             onClick = {
                                 haptic.performHaptic(view)
                                 showResetDialog = true
@@ -492,14 +497,20 @@ fun SettingsSheet(
             title = { Text("Reset to Defaults") },
             text = { Text("Are you sure you want to restore all reading settings to their original configuration?") },
             confirmButton = {
-                TextButton(onClick = {
-                    haptic.performHaptic(view)
-                    onPreferencesChange(ReaderDefaults.getPreferences())
-                    onVolumeNavigationChange(false)
-                    onNightLightChange(false)
-                    showResetDialog = false
-                }) {
-                    Text("Reset", color = MaterialTheme.colorScheme.error)
+                Button(
+                    onClick = {
+                        haptic.performHaptic(view)
+                        onPreferencesChange(ReaderDefaults.getPreferences())
+                        onVolumeNavigationChange(false)
+                        onNightLightChange(false)
+                        showResetDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Text("Reset")
                 }
             },
             dismissButton = {

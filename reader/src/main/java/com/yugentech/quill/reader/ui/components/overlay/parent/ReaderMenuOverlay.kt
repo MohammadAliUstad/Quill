@@ -3,8 +3,10 @@ package com.yugentech.quill.reader.ui.components.overlay.parent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -97,7 +100,7 @@ fun ReaderMenuOverlay(
             horizontalAlignment = Alignment.End
         ) {
             AnimatedVisibility(
-                visible = isVisible && showBottomControls && airaUiState.isReady,
+                visible = isVisible && showBottomControls,
                 enter = slideInVertically(
                     initialOffsetY = { it },
                     animationSpec = tween(300, easing = FastOutSlowInEasing)
@@ -108,6 +111,7 @@ fun ReaderMenuOverlay(
                 ) + fadeOut()
             ) {
                 Column(
+                    modifier = Modifier.padding(bottom = 2.dp),
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
@@ -116,7 +120,14 @@ fun ReaderMenuOverlay(
                         lastSelectedSound = lastSelectedSound,
                         onClick = { onAction(ReaderAction.OnSoundQuickToggle) }
                     )
-                    AskAiraButton(onClick = { onAction(ReaderAction.OnAskAiraClick) })
+
+                    AnimatedVisibility(
+                        visible = airaUiState.isReady,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        AskAiraButton(onClick = { onAction(ReaderAction.OnAskAiraClick) })
+                    }
                 }
             }
 
