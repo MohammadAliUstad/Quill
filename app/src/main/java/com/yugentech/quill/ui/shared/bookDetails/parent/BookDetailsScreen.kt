@@ -62,9 +62,10 @@ import com.yugentech.quill.ui.shared.bookDetails.components.chaptersListSection
 fun BookDetailsScreen(
     onBackClick: () -> Unit,
     onHighlightsClick: (bookId: String) -> Unit,
+    onVisualsClick: (bookId: String) -> Unit,
     onReadClick: (String, String?) -> Unit,
     onAiraClick: (String) -> Unit,
-    onManageCategoriesClick: () -> Unit,
+    onGoToCategoriesClick: () -> Unit,
     bookDetailsViewModel: BookDetailsViewModel
 ) {
     val uiState by bookDetailsViewModel.uiState.collectAsStateWithLifecycle()
@@ -133,7 +134,8 @@ fun BookDetailsScreen(
                 onDeleteClick = { showDeleteDialog = true },
                 onResetProgressClick = { showResetDialog = true },
                 scrollBehavior = scrollBehavior,
-                onHighlightsClick = { onHighlightsClick(book.id) }
+                onHighlightsClick = { onHighlightsClick(book.id) },
+                onVisualsClick = { onVisualsClick(book.id) }
             )
         },
         floatingActionButton = {
@@ -248,9 +250,9 @@ fun BookDetailsScreen(
                     onBackClick()
                 }
             },
-            onAddCategoryClick = {
+            onGoToCategoriesClick = {
                 showCategorySheet = false
-                onManageCategoriesClick()
+                onGoToCategoriesClick()
             }
         )
     }

@@ -154,7 +154,7 @@ fun HighlightsScreen(
                         start = 16.dp,
                         end = 16.dp,
                         top = paddingValues.calculateTopPadding() + 8.dp,
-                        bottom = paddingValues.calculateBottomPadding() + 8.dp
+                        bottom = paddingValues.calculateBottomPadding()
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
