@@ -21,6 +21,11 @@ class AuthRepositoryImpl(
     override val currentUser: String?
         get() = authService.currentUser?.uid
 
+    // The reader's display name, for personalizing Aira's responses -- null if not set
+    // (e.g. an email/password account that never set one) or not logged in.
+    override val currentUserName: String?
+        get() = authService.currentUser?.displayName?.takeIf { it.isNotBlank() }
+
     // Registers a new user with email and password
     override suspend fun signUp(
         name: String,
