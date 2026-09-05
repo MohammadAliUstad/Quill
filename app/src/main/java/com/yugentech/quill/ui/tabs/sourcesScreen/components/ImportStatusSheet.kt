@@ -157,7 +157,7 @@ fun ImportStatusSheet(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Close")
+                Text(if (successCount > 0) "Go to Library" else "Close")
             }
         }
     }
