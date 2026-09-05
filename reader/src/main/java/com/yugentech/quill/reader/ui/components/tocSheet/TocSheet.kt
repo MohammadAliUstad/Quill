@@ -201,7 +201,7 @@ private fun SimpleTocItem(
                 modifier = Modifier
                     .padding(start = 12.dp)
                     .size(8.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    .background(MaterialTheme.colorScheme.tertiary, CircleShape)
             )
         }
     }

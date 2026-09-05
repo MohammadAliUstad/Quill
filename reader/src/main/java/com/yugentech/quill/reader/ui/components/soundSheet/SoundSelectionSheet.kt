@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -66,7 +67,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SoundSelectionSheet(
-    activeSound: BackgroundSound,
+    selectedSound: BackgroundSound,
     volume: Float,
     autoPlayEnabled: Boolean,
     onSoundToggle: (BackgroundSound) -> Unit,
@@ -130,41 +131,58 @@ fun SoundSelectionSheet(
                 .fillMaxWidth()
                 .padding(start = 24.dp, end = 24.dp, bottom = 40.dp)
         ) {
-            Text(
-                text = "Ambient Sounds",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Column {
+                Text(
+                    text = "Ambient Sounds",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Choose a soothing ambience to stay immersed in your reads.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
-            ) {
-                options.chunked(2).forEach { rowOptions ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
-                    ) {
-                        rowOptions.forEach { option ->
-                            SoundToggleCard(
-                                option = option,
-                                isSelected = activeSound == option.sound,
-                                onClick = { onSoundToggle(option.sound) },
-                                modifier = Modifier.weight(1f)
-                            )
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                val cardWidth = (maxWidth - MaterialTheme.spacing.s) / 2
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+                ) {
+                    options.chunked(2).forEach { rowOptions ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+                        ) {
+                            rowOptions.forEach { option ->
+                                SoundToggleCard(
+                                    option = option,
+                                    isSelected = selectedSound == option.sound,
+                                    onClick = { onSoundToggle(option.sound) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                     }
+
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        SoundToggleCard(
+                            option = noneOption,
+                            isSelected = selectedSound == noneOption.sound,
+                            onClick = { onSoundToggle(noneOption.sound) },
+                            modifier = Modifier.width(cardWidth)
+                        )
+                    }
                 }
-                
-                SoundToggleCard(
-                    option = noneOption,
-                    isSelected = activeSound == noneOption.sound,
-                    onClick = { onSoundToggle(noneOption.sound) },
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -240,8 +258,6 @@ fun SoundSelectionSheet(
                 title = "Auto-play on Open",
                 subtitle = "Start sound automatically when opening a book",
                 checked = autoPlayEnabled,
-                index = 0,
-                totalCount = 1,
                 onCheckedChange = onAutoPlayChange
             )
         }
