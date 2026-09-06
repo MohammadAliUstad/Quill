@@ -77,7 +77,7 @@ fun ReadiumEngine(
     decorations: List<Decoration> = emptyList(),
     commands: Flow<ReaderCommand>? = null,
     onTap: () -> Unit,
-    onAskAira: (String) -> Unit = {},
+    onAskAira: (String, Locator?) -> Unit = { _, _ -> },
     onSelectionAction: (Locator) -> Unit = {},
     onDecorationTapped: (Decoration) -> Unit = {},
     onJumpComplete: () -> Unit,
@@ -205,8 +205,8 @@ fun ReadiumEngine(
             preferences = preferences,
             isPro = isPro,
             isAiraReady = isAiraReady,
-            onAskAira = { text ->
-                onAskAira(text)
+            onAskAira = { text, locator ->
+                onAskAira(text, locator)
                 scope.launch { clearSelection() }
             },
             onHighlightRequest = { locator ->
@@ -281,7 +281,7 @@ fun ReadiumEngine(
                         scope.launch { clearSelection() }
                     },
                     onAskAira = { text ->
-                        onAskAira(text)
+                        onAskAira(text, sel.locator)
                         scope.launch { clearSelection() }
                     },
                     onCopy = { text ->

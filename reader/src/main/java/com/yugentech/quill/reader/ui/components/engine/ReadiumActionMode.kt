@@ -12,7 +12,7 @@ import org.readium.r2.shared.publication.Locator
 
 class WrappedCallback(
     private val original: ActionMode.Callback,
-    private val onAskAira: (String) -> Unit,
+    private val onAskAira: (String, Locator?) -> Unit,
     private val onHighlightRequest: (Locator) -> Unit,
     private val isPro: Boolean,
     private val isAiraReady: Boolean,
@@ -46,7 +46,7 @@ class WrappedCallback(
             }
 
             ASKAIRA -> {
-                onAskAira(getSelectedText() ?: "Processing selection...")
+                onAskAira(getSelectedText() ?: "Processing selection...", getSelectionLocator())
                 mode.finish()
                 return true
             }
@@ -62,7 +62,7 @@ class WrappedCallback(
 
 class WrappedCallback2(
     private val original: ActionMode.Callback2,
-    onAskAira: (String) -> Unit,
+    onAskAira: (String, Locator?) -> Unit,
     onHighlightRequest: (Locator) -> Unit,
     isPro: Boolean,
     isAiraReady: Boolean,
