@@ -276,6 +276,30 @@ class ReaderViewModel(
         }
     }
 
+    fun previewSound(sound: BackgroundSound) {
+        viewModelScope.launch {
+            preferencesRepository.saveLastSelectedSound(sound)
+        }
+
+        if (sound == BackgroundSound.NONE) {
+            stopBackgroundSound()
+            return
+        }
+
+        if (_activeSound.value != BackgroundSound.NONE) {
+            playBackgroundSound(sound)
+            return
+        }
+
+        backgroundSoundRepository.playPreview(sound, _soundVolume.value)
+    }
+
+    fun stopPreview() {
+        if (_activeSound.value == BackgroundSound.NONE) {
+            backgroundSoundRepository.stop()
+        }
+    }
+
     private fun playBackgroundSound(sound: BackgroundSound) {
         backgroundSoundRepository.play(sound, _soundVolume.value)
         _activeSound.value = sound

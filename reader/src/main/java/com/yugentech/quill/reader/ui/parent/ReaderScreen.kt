@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.yugentech.quill.reader.sound.model.BackgroundSound
 import com.yugentech.quill.reader.ui.components.highlightSheet.HighlightSheet
 import com.yugentech.quill.reader.viewmodel.quick.QuickViewModel
 import com.yugentech.quill.reader.settings.model.ReaderSettings
@@ -361,13 +364,17 @@ private fun ReaderSuccess(
                 )
             },
             confirmButton = {
-                androidx.compose.material3.TextButton(
+                Button(
                     onClick = {
                         viewModel.deleteHighlight(highlightToDelete!!.id)
                         highlightToDelete = null
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text("Delete")
                 }
             },
             dismissButton = {
@@ -396,16 +403,20 @@ private fun ReaderSuccess(
 
     if (screenState.showSoundSheet) {
         val activeSound by viewModel.activeSound.collectAsState()
+        val selectedSound = if (activeSound != BackgroundSound.NONE) activeSound else preferences.lastSelectedSound
         val volume by viewModel.soundVolume.collectAsState()
 
         SoundSelectionSheet(
-            activeSound = activeSound,
+            selectedSound = selectedSound,
             volume = volume,
             autoPlayEnabled = preferences.autoPlaySound,
-            onSoundToggle = { viewModel.toggleBackgroundSound(it) },
+            onSoundToggle = { viewModel.previewSound(it) },
             onVolumeChange = { viewModel.updateSoundVolume(it) },
             onAutoPlayChange = { viewModel.updateAutoPlaySound(it) },
-            onDismiss = { screenState.showSoundSheet = false }
+            onDismiss = {
+                viewModel.stopPreview()
+                screenState.showSoundSheet = false
+            }
         )
     }
 
