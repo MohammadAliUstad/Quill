@@ -29,7 +29,7 @@ fun ReadiumFragmentHost(
     onTap: () -> Unit,
     isPro: Boolean = false,
     isAiraReady: Boolean = false,
-    onAskAira: (selectedText: String) -> Unit = {},
+    onAskAira: (selectedText: String, locator: Locator?) -> Unit = { _, _ -> },
     onHighlightRequest: (Locator) -> Unit = {},
     onSelectionStarted: () -> Unit = {},
     onSelectionEnded: () -> Unit = {},

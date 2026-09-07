@@ -15,7 +15,7 @@ class ReadiumWrapperView @JvmOverloads constructor(
     attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs) {
 
-    var onAskAira: (String) -> Unit = {}
+    var onAskAira: (String, Locator?) -> Unit = { _, _ -> }
     var onHighlightRequest: (Locator) -> Unit = {}
     var onSelectionStarted: () -> Unit = {}
     var onSelectionEnded: () -> Unit = {}
