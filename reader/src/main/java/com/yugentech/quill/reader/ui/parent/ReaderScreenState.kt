@@ -25,6 +25,7 @@ class ReaderScreenState(
     var isBrightnessInteracting by mutableStateOf(false)
     var showAiraPeek by mutableStateOf(false)
     var selectedText by mutableStateOf<String?>(null)
+    var selectedTextLocator by mutableStateOf<Locator?>(null)
     var targetJumpHref by mutableStateOf<String?>(null)
     var pendingSeekProgress by mutableStateOf<Double?>(null)
     var currentLocator by mutableStateOf(initialLocator)
@@ -65,27 +66,31 @@ class ReaderScreenState(
             progress = (currentLocator?.locations?.totalProgression ?: 0.0).toFloat(),
             totalPages = totalPages,
             currentChapterIndex = currentChapterIndex,
-            selectedText = selectedText
+            selectedText = selectedText,
+            selectedTextLocator = selectedTextLocator
         )
 
     fun toggleMenu() {
         if (showAiraPeek) {
             showAiraPeek = false
             selectedText = null
+            selectedTextLocator = null
         } else {
             isMenuVisible = !isMenuVisible
         }
     }
 
-    fun showAira(text: String?) {
+    fun showAira(text: String?, locator: Locator? = null) {
         selectedText = text
+        selectedTextLocator = locator
         showAiraPeek = true
-        isMenuVisible = false 
+        isMenuVisible = false
     }
 
     fun dismissAira() {
         showAiraPeek = false
         selectedText = null
+        selectedTextLocator = null
     }
 
     fun handleLocatorChange(newLocator: Locator) {

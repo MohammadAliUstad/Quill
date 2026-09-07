@@ -48,6 +48,7 @@ fun ReaderMenuOverlay(
     airaUiState: QuickUiState = QuickUiState(),
     currentSound: BackgroundSound = BackgroundSound.NONE,
     lastSelectedSound: BackgroundSound = BackgroundSound.RAIN,
+    soundEnabled: Boolean = true,
     onAction: (ReaderAction) -> Unit
 ) {
     var sliderPosition by remember { mutableFloatStateOf(readerOverlayState.progress) }
@@ -84,6 +85,7 @@ fun ReaderMenuOverlay(
         AiraPeekBar(
             isVisible = showAiraPeek,
             selectedText = readerOverlayState.selectedText,
+            selectedTextLocator = readerOverlayState.selectedTextLocator,
             currentChapterIndex = readerOverlayState.currentChapterIndex,
             airaUiState = airaUiState,
             onQuickAction = { onAction(ReaderAction.OnQuickAction(it)) },
@@ -115,11 +117,17 @@ fun ReaderMenuOverlay(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    SoundToggleButton(
-                        currentSound = currentSound,
-                        lastSelectedSound = lastSelectedSound,
-                        onClick = { onAction(ReaderAction.OnSoundQuickToggle) }
-                    )
+                    AnimatedVisibility(
+                        visible = soundEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        SoundToggleButton(
+                            currentSound = currentSound,
+                            lastSelectedSound = lastSelectedSound,
+                            onClick = { onAction(ReaderAction.OnSoundQuickToggle) }
+                        )
+                    }
 
                     AnimatedVisibility(
                         visible = airaUiState.isReady,
