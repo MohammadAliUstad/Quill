@@ -4,6 +4,8 @@ data class QuickUiState(
     val isReady: Boolean = false,
     val isPro: Boolean = false,
     val response: String? = null,
+    val imagePath: String? = null,
+    val isGeneratingImage: Boolean = false,
     val isLoading: Boolean = false,
     val isStreaming: Boolean = false,
     val canSendQuery: Boolean = true,

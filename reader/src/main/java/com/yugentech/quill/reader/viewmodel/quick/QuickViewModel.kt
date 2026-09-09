@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.aira.repository.AiraChatRepository
 import com.yugentech.quill.reader.repository.book.ReaderBookRepository
 import com.yugentech.quill.aira.chat.quickChat.prompt.QuickPrompt
+import com.yugentech.quill.aira.chat.quickChat.prompt.quotaCost
 import com.yugentech.quill.aira.chat.quickChat.repository.QuickChatRepository
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.domain.AuthRepository
@@ -81,7 +82,7 @@ class QuickViewModel(
         if (_uiState.value.isLoading) return
         if (!checkQuota()) return
 
-        prepareForNewQuery()
+        prepareForNewQuery(isGeneratingImage = intent is QuickPrompt.VisualizeThis)
 
         activeJob = viewModelScope.launch {
             var hasConsumedQuota = false
@@ -90,7 +91,7 @@ class QuickViewModel(
                     handleResponseStream(response) {
                         if (!hasConsumedQuota) {
                             hasConsumedQuota = true
-                            consumeQuota()
+                            consumeQuota(amount = intent.quotaCost)
                         }
                     }
                 }
@@ -109,6 +110,20 @@ class QuickViewModel(
                         isLoading = false,
                         isStreaming = true,
                         response = response.text,
+                        imagePath = null,
+                        error = null
+                    )
+                }
+            }
+
+            is AiraResponse.ImageSuccess -> {
+                onFirstSuccess()
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isStreaming = false,
+                        response = null,
+                        imagePath = response.imagePath,
                         error = null
                     )
                 }
@@ -126,13 +141,15 @@ class QuickViewModel(
         }
     }
 
-    private fun prepareForNewQuery() {
+    private fun prepareForNewQuery(isGeneratingImage: Boolean = false) {
         activeJob?.cancel()
         _uiState.update {
             it.copy(
                 isLoading = true,
                 isStreaming = false,
                 response = EMPTY,
+                imagePath = null,
+                isGeneratingImage = isGeneratingImage,
                 error = null
             )
         }
@@ -146,9 +163,9 @@ class QuickViewModel(
         return true
     }
 
-    private fun consumeQuota() {
+    private fun consumeQuota(amount: Int = 1) {
         currentUserId?.let { uid ->
-            viewModelScope.launch { quotaRepository.consumeQuery(uid) }
+            viewModelScope.launch { quotaRepository.consumeQuery(uid, amount) }
         }
     }
 
@@ -176,6 +193,7 @@ class QuickViewModel(
                 isLoading = false,
                 isStreaming = false,
                 response = null,
+                imagePath = null,
                 error = null
             )
         }
