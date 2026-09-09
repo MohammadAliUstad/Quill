@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.material3)
     implementation(libs.haze)
+    implementation(libs.coil.compose)
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
     testImplementation(libs.junit)
