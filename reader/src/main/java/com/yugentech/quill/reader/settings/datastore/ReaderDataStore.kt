@@ -4,7 +4,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,7 +18,7 @@ class ReaderDataStore(
         private val NIGHT_LIGHT_KEY = booleanPreferencesKey("night_light")
         private val AUTO_PLAY_SOUND_KEY = booleanPreferencesKey("auto_play_sound")
         private val LAST_SELECTED_SOUND_KEY = stringPreferencesKey("last_selected_sound")
-        private val SOUND_VOLUME_KEY = floatPreferencesKey("sound_volume")
+        private val SOUND_ENABLED_KEY = booleanPreferencesKey("sound_enabled")
     }
 
     val preferencesJsonFlow: Flow<String?> = dataStore.data.map { it[EPUB_PREFS_KEY] }
@@ -27,7 +26,7 @@ class ReaderDataStore(
     val nightLightFlow: Flow<Boolean> = dataStore.data.map { it[NIGHT_LIGHT_KEY] ?: false }
     val autoPlaySoundFlow: Flow<Boolean> = dataStore.data.map { it[AUTO_PLAY_SOUND_KEY] ?: false }
     val lastSelectedSoundFlow: Flow<String?> = dataStore.data.map { it[LAST_SELECTED_SOUND_KEY] }
-    val soundVolumeFlow: Flow<Float> = dataStore.data.map { it[SOUND_VOLUME_KEY] ?: 1.0f }
+    val soundEnabledFlow: Flow<Boolean> = dataStore.data.map { it[SOUND_ENABLED_KEY] ?: true }
 
     suspend fun savePreferencesJson(jsonString: String) {
         dataStore.edit { prefs -> prefs[EPUB_PREFS_KEY] = jsonString }
@@ -45,11 +44,11 @@ class ReaderDataStore(
         dataStore.edit { prefs -> prefs[AUTO_PLAY_SOUND_KEY] = enabled }
     }
 
-    suspend fun saveLastSelectedSound(soundId: String) {
-        dataStore.edit { prefs -> prefs[LAST_SELECTED_SOUND_KEY] = soundId }
+    suspend fun saveSoundEnabled(enabled: Boolean) {
+        dataStore.edit { prefs -> prefs[SOUND_ENABLED_KEY] = enabled }
     }
 
-    suspend fun saveSoundVolume(volume: Float) {
-        dataStore.edit { prefs -> prefs[SOUND_VOLUME_KEY] = volume }
+    suspend fun saveLastSelectedSound(soundId: String) {
+        dataStore.edit { prefs -> prefs[LAST_SELECTED_SOUND_KEY] = soundId }
     }
 }

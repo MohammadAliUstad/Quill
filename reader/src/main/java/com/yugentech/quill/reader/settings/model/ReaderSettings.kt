@@ -9,5 +9,5 @@ data class ReaderSettings(
     val nightLight: Boolean = false,
     val autoPlaySound: Boolean = false,
     val lastSelectedSound: BackgroundSound = BackgroundSound.RAIN,
-    val soundVolume: Float = 1.0f
+    val soundEnabled: Boolean = true
 )
