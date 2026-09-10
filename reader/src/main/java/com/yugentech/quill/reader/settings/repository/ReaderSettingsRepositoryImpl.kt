@@ -22,14 +22,14 @@ class ReaderSettingsRepositoryImpl(
         readerDataStore.nightLightFlow,
         readerDataStore.autoPlaySoundFlow,
         readerDataStore.lastSelectedSoundFlow,
-        readerDataStore.soundVolumeFlow
+        readerDataStore.soundEnabledFlow
     ) { args ->
         val jsonString = args[0] as? String
         val volumeNav = args[1] as Boolean
         val nightLight = args[2] as Boolean
         val autoPlay = args[3] as Boolean
         val lastSoundId = args[4] as? String
-        val volume = args[5] as Float
+        val soundEnabled = args[5] as Boolean
 
         val epub = if (jsonString != null) {
             try {
@@ -42,7 +42,7 @@ class ReaderSettingsRepositoryImpl(
             ReaderDefaults.getPreferences()
         }
         val lastSound = BackgroundSound.fromId(lastSoundId)
-        ReaderSettings(epub, volumeNav, nightLight, autoPlay, lastSound, volume)
+        ReaderSettings(epub, volumeNav, nightLight, autoPlay, lastSound, soundEnabled)
     }
 
     override suspend fun saveEpubPreferences(preferences: EpubPreferences) {
@@ -70,7 +70,7 @@ class ReaderSettingsRepositoryImpl(
         readerDataStore.saveLastSelectedSound(sound.id)
     }
 
-    override suspend fun saveSoundVolume(volume: Float) {
-        readerDataStore.saveSoundVolume(volume)
+    override suspend fun saveSoundEnabled(enabled: Boolean) {
+        readerDataStore.saveSoundEnabled(enabled)
     }
 }

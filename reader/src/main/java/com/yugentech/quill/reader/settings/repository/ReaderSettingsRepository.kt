@@ -12,5 +12,5 @@ interface ReaderSettingsRepository {
     suspend fun saveNightLight(enabled: Boolean)
     suspend fun saveAutoPlaySound(enabled: Boolean)
     suspend fun saveLastSelectedSound(sound: BackgroundSound)
-    suspend fun saveSoundVolume(volume: Float)
+    suspend fun saveSoundEnabled(enabled: Boolean)
 }
