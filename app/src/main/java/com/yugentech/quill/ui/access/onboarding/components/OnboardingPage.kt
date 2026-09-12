@@ -20,17 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,8 +32,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import com.yugentech.quill.R
 import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.dimensions.AppAnimations
 import com.yugentech.theme.tokens.icons
@@ -52,45 +39,12 @@ import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.delay
 
 @Composable
-fun OnboardingPage(page: Int, isVisible: Boolean) {
+fun OnboardingPage(content: PageContent, isVisible: Boolean) {
     val spacing = MaterialTheme.spacing
     val icons = MaterialTheme.icons
     val components = MaterialTheme.components
 
-    val (title, description, highlights, imageRes) = when (page) {
-        0 -> PageContent(
-            title = "Enter Your\nOrbit",
-            description = "In a noisy world, focus is your superpower. Block distractions with proven Pomodoro techniques—work in timed sessions, your way.",
-            highlights = listOf(
-                FeatureHighlight(Icons.Default.Settings, "Customizable sessions"),
-                FeatureHighlight(Icons.Default.Timer, "Set your own focus & break times"),
-                FeatureHighlight(Icons.Default.Repeat, "Multiple sets for deep work")
-            ),
-            imageRes = R.drawable.chaotic_good
-        )
-
-        1 -> PageContent(
-            title = "Find Your\nFlow",
-            description = "Create your perfect focus environment with complete control over your sessions and ambience.",
-            highlights = listOf(
-                FeatureHighlight(Icons.Default.MusicNote, "6 ambient sounds for focus"),
-                FeatureHighlight(Icons.Default.Palette, "8 beautiful color themes"),
-                FeatureHighlight(Icons.Default.DarkMode, "Light, dark & AMOLED modes")
-            ),
-            imageRes = R.drawable.growth
-        )
-
-        else -> PageContent(
-            title = "Watch It\nGrow",
-            description = "Every focused minute counts. Track your sessions, build consistency, and stay on top of your goals with smart reminders.",
-            highlights = listOf(
-                FeatureHighlight(Icons.Default.NotificationsActive, "Intelligent smart reminders"),
-                FeatureHighlight(Icons.AutoMirrored.Filled.TrendingUp, "Track your focus progress"),
-                FeatureHighlight(Icons.Default.BarChart, "Visualize your weekly rhythm")
-            ),
-            imageRes = R.drawable.jumping
-        )
-    }
+    val (title, description, highlights, imageRes) = content
 
     val titleState = remember { MutableTransitionState(false) }
     val textState = remember { MutableTransitionState(false) }
