@@ -266,6 +266,10 @@ class AiraViewModel(
                     )
                 }
             }
+
+            // General/book chat never produces an image -- that's exclusive to the
+            // quick-action "Visualize this" flow, which doesn't go through this ViewModel.
+            is AiraResponse.ImageSuccess -> Unit
         }
     }
 

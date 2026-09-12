@@ -1,7 +1,6 @@
 package com.yugentech.quill.ui.shared.airaChat.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +40,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.reader.ui.components.aira.components.ThinkingIndicator
+import com.yugentech.quill.reader.ui.components.aira.components.TypewriterText
 
 @Composable
 fun MessageItem(
@@ -56,107 +56,97 @@ fun MessageItem(
     if (isAira) {
         val isThinking = message.isNew && message.text.isBlank()
 
-        val textLength = remember(message.stableKey) {
-            androidx.compose.animation.core.Animatable(if (message.isNew) 0f else message.text.length.toFloat())
-        }
+        var isRevealed by remember(message.stableKey) { mutableStateOf(!message.isNew) }
 
-        LaunchedEffect(message.text) {
-            if (textLength.value < message.text.length) {
-                onTypingStateChange(true)
+        var visible by remember(message.stableKey) { mutableStateOf(!message.isNew) }
+        LaunchedEffect(message.stableKey) { visible = true }
 
-                val charsRemaining = message.text.length - textLength.value
-                textLength.animateTo(
-                    targetValue = message.text.length.toFloat(),
-                    animationSpec = tween(
-                        durationMillis = (charsRemaining * 15f).toInt().coerceAtLeast(10),
-                        easing = LinearEasing
-                    )
-                )
-
-                onTypingStateChange(false)
-            }
-        }
-
-        val displayedText =
-            message.text.substring(0, textLength.value.toInt().coerceAtMost(message.text.length))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.Top
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(250))
         ) {
-            Surface(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape),
-                color = MaterialTheme.colorScheme.secondaryContainer
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.Top
             ) {
-                Icon(
-                    imageVector = Icons.Default.AutoAwesome,
-                    contentDescription = "Aira",
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                Surface(
                     modifier = Modifier
-                        .padding(6.dp)
-                        .size(16.dp)
-                )
-            }
-
-            Spacer(Modifier.width(10.dp))
-
-            Column(modifier = Modifier.widthIn(max = maxWidth)) {
-                if (isThinking) {
-                    Box(
-                        modifier = Modifier.height(28.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        ThinkingIndicator()
-                    }
-                } else {
-                    Text(
-                        text = displayedText,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            lineHeight = 24.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(top = 4.dp)
+                        .size(28.dp)
+                        .clip(CircleShape),
+                    color = MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = "Aira",
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier
+                            .padding(6.dp)
+                            .size(16.dp)
                     )
+                }
 
-                    if (textLength.value.toInt() == message.text.length) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                Spacer(Modifier.width(10.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.End
+                Column(modifier = Modifier.widthIn(max = maxWidth)) {
+                    if (isThinking) {
+                        Box(
+                            modifier = Modifier.height(28.dp),
+                            contentAlignment = Alignment.CenterStart
                         ) {
-                            // Right side: Action Buttons
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                // Speak Button
-                                IconButton(
-                                    onClick = { onSpeakClick(message.text) },
-                                    modifier = Modifier.size(32.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.VolumeUp,
-                                        contentDescription = "Read Aloud",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
+                            ThinkingIndicator()
+                        }
+                    } else {
+                        TypewriterText(
+                            text = message.text,
+                            resetKey = message.stableKey,
+                            startRevealed = !message.isNew,
+                            style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(top = 4.dp),
+                            onTypingStateChange = { isTyping ->
+                                onTypingStateChange(isTyping)
+                                if (!isTyping) isRevealed = true
+                            }
+                        )
 
-                                // Copy Button
-                                IconButton(
-                                    onClick = { clipboardManager.setText(AnnotatedString(message.text)) },
-                                    modifier = Modifier.size(32.dp)
+                        if (isRevealed) {
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                // Right side: Action Buttons
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ContentCopy,
-                                        contentDescription = "Copy Text",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(16.dp)
-                                    )
+                                    // Speak Button
+                                    IconButton(
+                                        onClick = { onSpeakClick(message.text) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.VolumeUp,
+                                            contentDescription = "Read Aloud",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+
+                                    // Copy Button
+                                    IconButton(
+                                        onClick = { clipboardManager.setText(AnnotatedString(message.text)) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ContentCopy,
+                                            contentDescription = "Copy Text",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
