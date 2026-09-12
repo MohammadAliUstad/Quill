@@ -64,9 +64,6 @@ class ReaderViewModel(
     private val _activeSound = MutableStateFlow<BackgroundSound>(BackgroundSound.NONE)
     val activeSound = _activeSound.asStateFlow()
 
-    private val _soundVolume = MutableStateFlow(1.0f)
-    val soundVolume = _soundVolume.asStateFlow()
-
     val readerPreferences = preferencesRepository.readerSettings.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -157,8 +154,7 @@ class ReaderViewModel(
                     // Auto-play sound if enabled
                     viewModelScope.launch {
                         val prefs = preferencesRepository.readerSettings.first()
-                        _soundVolume.value = prefs.soundVolume
-                        if (prefs.autoPlaySound && prefs.lastSelectedSound != BackgroundSound.NONE) {
+                        if (prefs.soundEnabled && prefs.autoPlaySound && prefs.lastSelectedSound != BackgroundSound.NONE) {
                             playBackgroundSound(prefs.lastSelectedSound)
                         }
                     }
@@ -291,7 +287,7 @@ class ReaderViewModel(
             return
         }
 
-        backgroundSoundRepository.playPreview(sound, _soundVolume.value)
+        backgroundSoundRepository.playPreview(sound, 1.0f)
     }
 
     fun stopPreview() {
@@ -301,7 +297,7 @@ class ReaderViewModel(
     }
 
     private fun playBackgroundSound(sound: BackgroundSound) {
-        backgroundSoundRepository.play(sound, _soundVolume.value)
+        backgroundSoundRepository.play(sound, 1.0f)
         _activeSound.value = sound
         if (sound != BackgroundSound.NONE) {
             viewModelScope.launch {
@@ -315,20 +311,32 @@ class ReaderViewModel(
         _activeSound.value = BackgroundSound.NONE
     }
 
+    // Master switch for the ambient sound feature -- it never starts real playback (that's the
+    // overlay sound button's job). Turning it on previews the selected sound, same as tapping its
+    // card; turning it off stops anything playing or previewing.
+    fun setSoundEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.saveSoundEnabled(enabled)
+        }
+        if (enabled) {
+            // Older builds could persist NONE via the removed "None" card; fall back to the default.
+            val lastSound = readerPreferences.value.lastSelectedSound
+                .takeIf { it != BackgroundSound.NONE } ?: BackgroundSound.RAIN
+            previewSound(lastSound)
+        } else {
+            stopBackgroundSound()
+        }
+    }
+
     fun quickToggleSound() {
+        if (!readerPreferences.value.soundEnabled) return
+        // Older builds could persist NONE via the removed "None" card; fall back to the default.
         val lastSound = readerPreferences.value.lastSelectedSound
+            .takeIf { it != BackgroundSound.NONE } ?: BackgroundSound.RAIN
         if (_activeSound.value == BackgroundSound.NONE) {
             toggleBackgroundSound(lastSound)
         } else {
             toggleBackgroundSound(_activeSound.value)
-        }
-    }
-
-    fun updateSoundVolume(volume: Float) {
-        _soundVolume.value = volume
-        backgroundSoundRepository.setVolume(volume)
-        viewModelScope.launch {
-            preferencesRepository.saveSoundVolume(volume)
         }
     }
 

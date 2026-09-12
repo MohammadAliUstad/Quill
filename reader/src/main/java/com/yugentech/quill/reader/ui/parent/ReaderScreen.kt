@@ -229,8 +229,8 @@ private fun ReaderSuccess(
                 isAiraReady = isReady,
                 decorations = activeDecorations,
                 onTap = { screenState.toggleMenu() },
-                onAskAira = { text ->
-                    screenState.showAira(text)
+                onAskAira = { text, locator ->
+                    screenState.showAira(text, locator)
                     quickViewModel.clearResponse()
                 },
                 onSelectionAction = { locator ->
@@ -269,6 +269,7 @@ private fun ReaderSuccess(
             airaUiState = airaUiState,
             currentSound = viewModel.activeSound.collectAsState().value,
             lastSelectedSound = preferences.lastSelectedSound,
+            soundEnabled = preferences.soundEnabled,
             onAction = { action ->
                 when (action) {
                     is ReaderAction.OnBackClick -> onBackClick()
@@ -404,14 +405,13 @@ private fun ReaderSuccess(
     if (screenState.showSoundSheet) {
         val activeSound by viewModel.activeSound.collectAsState()
         val selectedSound = if (activeSound != BackgroundSound.NONE) activeSound else preferences.lastSelectedSound
-        val volume by viewModel.soundVolume.collectAsState()
 
         SoundSelectionSheet(
             selectedSound = selectedSound,
-            volume = volume,
+            isSoundOn = preferences.soundEnabled,
             autoPlayEnabled = preferences.autoPlaySound,
+            onSoundEnabledChange = { viewModel.setSoundEnabled(it) },
             onSoundToggle = { viewModel.previewSound(it) },
-            onVolumeChange = { viewModel.updateSoundVolume(it) },
             onAutoPlayChange = { viewModel.updateAutoPlaySound(it) },
             onDismiss = {
                 viewModel.stopPreview()
