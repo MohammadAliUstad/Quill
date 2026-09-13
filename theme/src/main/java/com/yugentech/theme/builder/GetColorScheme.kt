@@ -48,8 +48,8 @@ fun getColorScheme(
         ColorTheme.HARVEST ->
             if (isDarkMode) AppColorSchemes.HarvestDarkColorScheme else AppColorSchemes.HarvestLightColorScheme
 
-        ColorTheme.GROVE ->
-            if (isDarkMode) AppColorSchemes.GroveDarkColorScheme else AppColorSchemes.GroveLightColorScheme
+        ColorTheme.HARBOR ->
+            if (isDarkMode) AppColorSchemes.HarborDarkColorScheme else AppColorSchemes.HarborLightColorScheme
 
         ColorTheme.ALPINE ->
             if (isDarkMode) AppColorSchemes.AlpineDarkColorScheme else AppColorSchemes.AlpineLightColorScheme

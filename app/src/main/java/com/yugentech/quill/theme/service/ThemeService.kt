@@ -39,9 +39,23 @@ class ThemeService(
                 AppFont.Google
             }
 
+            val savedThemeMode = prefs[THEME_MODE_KEY]
+            val themeMode = try {
+                ThemeMode.valueOf(savedThemeMode ?: ThemeMode.SYSTEM.name)
+            } catch (_: IllegalArgumentException) {
+                ThemeMode.SYSTEM
+            }
+
+            val savedColorTheme = prefs[COLOR_THEME_KEY]
+            val colorTheme = try {
+                ColorTheme.valueOf(savedColorTheme ?: ColorTheme.QUILL.name)
+            } catch (_: IllegalArgumentException) {
+                ColorTheme.QUILL
+            }
+
             ThemeConfiguration(
-                themeMode = ThemeMode.valueOf(prefs[THEME_MODE_KEY] ?: ThemeMode.SYSTEM.name),
-                colorTheme = ColorTheme.valueOf(prefs[COLOR_THEME_KEY] ?: ColorTheme.QUILL.name),
+                themeMode = themeMode,
+                colorTheme = colorTheme,
                 useDynamicColors = prefs[USE_DYNAMIC_COLORS_KEY] ?: false,
                 isAmoledMode = prefs[IS_AMOLED_MODE_KEY] ?: false,
                 appFont = appFont
