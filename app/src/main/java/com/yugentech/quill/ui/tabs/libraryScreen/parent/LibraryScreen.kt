@@ -242,7 +242,6 @@ fun LibraryScreen(
                                 )
                                 LastReadBookCard(
                                     book = lastReadBook!!,
-                                    hazeState = hazeState,
                                     onCardClick = { onResumeClick(lastReadBook!!.toBook()) },
                                     onCoverClick = { onLibraryBookClick(it.toBook()) }
                                 )

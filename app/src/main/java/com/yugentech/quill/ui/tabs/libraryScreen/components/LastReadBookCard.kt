@@ -29,15 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import dev.chrisbanes.haze.HazeDefaults
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
 import coil.compose.AsyncImage
 import com.yugentech.quill.database.view.LibraryBookView
 import java.time.Instant
@@ -50,7 +46,6 @@ import kotlin.math.roundToInt
 @Composable
 fun LastReadBookCard(
     book: LibraryBookView,
-    hazeState: HazeState,
     onCardClick: () -> Unit,
     onCoverClick: (LibraryBookView) -> Unit
 ) {
@@ -109,24 +104,17 @@ fun LastReadBookCard(
             onClick = onCardClick,
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(32.dp))
-                .hazeEffect(
-                    state = hazeState,
-                    style = HazeDefaults.style(
-                        backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.35f),
-                        blurRadius = 16.dp,
-                        noiseFactor = 0.05f
-                    )
-                ),
+                .fillMaxHeight(),
             shape = RoundedCornerShape(32.dp),
             border = BorderStroke(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
             ),
             colors = CardDefaults.cardColors(
-                containerColor = Color.Transparent
+                // This subtle primary tint provides the color without the "rectangle" shadow
+                containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.25f)
             ),
+            // Explicitly removing elevation removes the shadow and tonal tint
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
