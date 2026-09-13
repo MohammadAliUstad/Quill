@@ -55,6 +55,7 @@ import com.yugentech.quill.ui.config.category.components.AddCategorySheet
 import com.yugentech.quill.ui.config.category.components.CategoryDialogType
 import com.yugentech.quill.ui.config.category.components.DeleteCategoryDialog
 import com.yugentech.quill.ui.config.category.components.DragDropList
+import com.yugentech.quill.ui.config.category.components.PinnedShelfItem
 import com.yugentech.quill.ui.config.category.components.RenameCategoryDialog
 import com.yugentech.theme.service.HapticService
 import org.koin.compose.koinInject
@@ -195,24 +196,39 @@ fun CategoryScreen(
                 }
             }
         } else {
-            DragDropList(
-                modifier = Modifier.padding(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = innerPadding.calculateBottomPadding() + 8.dp
-                ),
-                items = categories,
-                onReorderFinished = { newOrder ->
-                    categoryViewModel.updateOrder(newOrder)
-                },
-                onRename = { category ->
-                    selectedCategory = category
-                    activeDialog = CategoryDialogType.Rename
-                },
-                onDelete = { category ->
-                    selectedCategory = category
-                    activeDialog = CategoryDialogType.Delete
+            val shelfCategory = categories.firstOrNull { it.isSystem }
+            val draggableCategories = categories.filter { !it.isSystem }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = innerPadding.calculateTopPadding())
+            ) {
+                shelfCategory?.let { shelf ->
+                    PinnedShelfItem(
+                        category = shelf,
+                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)
+                    )
                 }
-            )
+
+                DragDropList(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(bottom = innerPadding.calculateBottomPadding() + 8.dp),
+                    items = draggableCategories,
+                    onReorderFinished = { newOrder ->
+                        categoryViewModel.updateOrder(newOrder)
+                    },
+                    onRename = { category ->
+                        selectedCategory = category
+                        activeDialog = CategoryDialogType.Rename
+                    },
+                    onDelete = { category ->
+                        selectedCategory = category
+                        activeDialog = CategoryDialogType.Delete
+                    }
+                )
+            }
         }
     }
 

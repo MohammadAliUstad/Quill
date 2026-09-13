@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Category
 import com.yugentech.quill.ui.main.components.itemShape
 import com.yugentech.theme.service.HapticService
+import com.yugentech.theme.tokens.corners
 import org.koin.compose.koinInject
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -65,14 +66,10 @@ fun DragDropList(
     val reorderableLazyListState = rememberReorderableLazyListState(
         lazyListState = lazyListState,
         onMove = { from, to ->
-            val fromItem = localList.getOrNull(from.index)
-            val toItem = localList.getOrNull(to.index)
-            if (fromItem != null && toItem != null && !fromItem.isSystem && !toItem.isSystem) {
-                localList.apply {
-                    add(to.index, removeAt(from.index))
-                }
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            localList.apply {
+                add(to.index, removeAt(from.index))
             }
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
     )
 
@@ -106,78 +103,56 @@ fun DragDropList(
                 ) {
                     ListItem(
                         headlineContent = {
-                            Text(
-                                text = category.name,
-                                fontWeight = if (category.isSystem) FontWeight.SemiBold else FontWeight.Normal
-                            )
+                            Text(text = category.name)
                         },
                         trailingContent = {
-                            if (category.isSystem) {
-                                Box(
-                                    modifier = Modifier
-                                        .padding(end = 8.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
-                                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        text = "DEFAULT",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            } else {
-                                Row {
-                                    IconButton(
-                                        onClick = {
-                                            hapticService.performHaptic(view)
-                                            onRename(category)
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Edit,
-                                            contentDescription = "Rename",
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            hapticService.performHaptic(view)
-                                            onDelete(category)
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Delete",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                        },
-                        leadingContent = if (category.isSystem) null else {
-                            {
+                            Row {
                                 IconButton(
-                                    onClick = {},
-                                    modifier = Modifier.draggableHandle(
-                                        onDragStarted = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        },
-                                        onDragStopped = {
-                                            val updatedOrder = localList.mapIndexed { i, cat ->
-                                                cat.copy(sortOrder = i)
-                                            }
-                                            onReorderFinished(updatedOrder)
-                                        }
-                                    )
+                                    onClick = {
+                                        hapticService.performHaptic(view)
+                                        onRename(category)
+                                    }
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.DragHandle,
-                                        contentDescription = "Reorder",
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Rename",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        hapticService.performHaptic(view)
+                                        onDelete(category)
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete",
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
+                            }
+                        },
+                        leadingContent = {
+                            IconButton(
+                                onClick = {},
+                                modifier = Modifier.draggableHandle(
+                                    onDragStarted = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    },
+                                    onDragStopped = {
+                                        val updatedOrder = localList.mapIndexed { i, cat ->
+                                            cat.copy(sortOrder = i)
+                                        }
+                                        onReorderFinished(updatedOrder)
+                                    }
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DragHandle,
+                                    contentDescription = "Reorder",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent)
@@ -185,5 +160,41 @@ fun DragDropList(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PinnedShelfItem(
+    category: Category,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(MaterialTheme.corners.large))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        ListItem(
+            headlineContent = {
+                Text(text = category.name, fontWeight = FontWeight.SemiBold)
+            },
+            trailingContent = {
+                Box(
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "DEFAULT",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
     }
 }
