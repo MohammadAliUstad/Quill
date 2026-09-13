@@ -6,6 +6,8 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,13 +20,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Brush
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,9 +35,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush as GradientBrush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -49,7 +49,6 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SelectionToolbar(
     selectionInfo: SelectionInfo,
@@ -103,20 +102,36 @@ fun SelectionToolbar(
                     tint = primaryColor,
                     isAnimated = true,
                     customContent = { scale, alpha ->
-                        val density = LocalDensity.current
+                        // scale swings 1.0-1.1; stretch that same phase into a
+                        // stronger 0.5-1.0 alpha swing so the glow visibly breathes.
+                        val glowAlpha = 0.5f + (scale - 1f) * 5f
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier.size(38.dp)
                         ) {
-                            CircularWavyProgressIndicator(
-                                progress = { 0.75f },
-                                modifier = Modifier.size(38.dp),
-                                color = primaryColor.copy(alpha = 0.75f),
-                                trackColor = Color.Transparent,
-                                stroke = Stroke(
-                                    width = with(density) { 3.5.dp.toPx() },
-                                    cap = StrokeCap.Round
-                                )
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                        this.alpha = glowAlpha
+                                    }
+                                    .background(
+                                        brush = GradientBrush.radialGradient(
+                                            0.0f to primaryColor.copy(alpha = 1f),
+                                            0.4f to primaryColor.copy(alpha = 0.55f),
+                                            1.0f to Color.Transparent,
+                                            radius = with(LocalDensity.current) { 19.dp.toPx() }
+                                        ),
+                                        shape = CircleShape
+                                    )
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .border(1.5.dp, primaryColor.copy(alpha = 0.4f), CircleShape)
                             )
                             Text(
                                 text = "✦",
@@ -192,7 +207,7 @@ private fun ToolbarAction(
             initialValue = 1f,
             targetValue = 1.1f,
             animationSpec = infiniteRepeatable(
-                animation = tween(1500, easing = LinearEasing),
+                animation = tween(2400, easing = LinearEasing),
                 repeatMode = RepeatMode.Reverse
             ),
             label = "scale"
@@ -206,7 +221,7 @@ private fun ToolbarAction(
             initialValue = 0.85f,
             targetValue = 1f,
             animationSpec = infiniteRepeatable(
-                animation = tween(1500, easing = LinearEasing),
+                animation = tween(2400, easing = LinearEasing),
                 repeatMode = RepeatMode.Reverse
             ),
             label = "alpha"

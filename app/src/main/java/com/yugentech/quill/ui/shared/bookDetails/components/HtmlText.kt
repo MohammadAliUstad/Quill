@@ -31,7 +31,11 @@ fun HtmlText(
         },
         update = { textView ->
             val spanned = HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_COMPACT)
-            textView.text = spanned
+            // movementMethod must be set before text is assigned: TextView decides
+            // whether it can ellipsize based on the movementMethod in place at the
+            // time checkForRelayout() runs inside setText(). Setting it after leaves
+            // a stale layout that never re-enables the "..." once a link movement
+            // method has ever been attached (from a prior expanded state).
             textView.maxLines = maxLines
             textView.ellipsize = TextUtils.TruncateAt.END
             textView.setTextColor(textColor.toArgb())
@@ -40,6 +44,7 @@ fun HtmlText(
             } else {
                 null
             }
+            textView.text = spanned
 
             textView.post {
                 val width = textView.width
