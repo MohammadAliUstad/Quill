@@ -93,6 +93,7 @@ class MainActivity : FragmentActivity() {
                             navController = navController,
                             webClientId = BuildConfig.WEB_CLIENT_ID,
                             authViewModel = authViewModel,
+                            themeViewModel = themeViewModel,
                             showOnboarding = showOnboarding!!,
                             onOnboardingComplete = {
                                 authViewModel.completeOnboarding()

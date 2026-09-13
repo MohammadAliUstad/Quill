@@ -13,7 +13,8 @@ import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 fun NavGraphBuilder.settingsGraph(
-    navController: NavHostController
+    navController: NavHostController,
+    themeViewModel: ThemeViewModel
 ) {
     composable(AppScreen.Queue.route) {
         val viewModel: IndexingViewModel = koinViewModel()
@@ -24,7 +25,6 @@ fun NavGraphBuilder.settingsGraph(
     }
 
     composable(AppScreen.Appearance.route) {
-        val themeViewModel: ThemeViewModel = koinViewModel()
         com.yugentech.quill.ui.config.appearance.parent.AppearanceScreen(
             themeViewModel = themeViewModel,
             onNavigateBack = { navController.popBackStack() }

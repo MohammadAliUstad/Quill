@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import com.yugentech.quill.auth.state.AuthState
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
+import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.quill.navigation.navgraph.aboutGraph
 import com.yugentech.quill.navigation.navgraph.accountGraph
 import com.yugentech.quill.navigation.navgraph.authGraph
@@ -40,6 +41,7 @@ fun AppNavHost(
     navController: NavHostController,
     webClientId: String,
     authViewModel: AuthViewModel,
+    themeViewModel: ThemeViewModel,
     showOnboarding: Boolean,
     onOnboardingComplete: () -> Unit,
     shouldNavigateToHome: Boolean = false,
@@ -168,7 +170,7 @@ fun AppNavHost(
         )
         bookFeatureGraph(navController, context)
         accountGraph(navController, authViewModel, subscriptionViewModel)
-        settingsGraph(navController)
+        settingsGraph(navController, themeViewModel)
         aboutGraph(navController)
     }
 }
