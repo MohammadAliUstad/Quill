@@ -132,7 +132,7 @@ fun LargeCatalogCard(
                     ) {
                         Text(
                             text = catalog.buttonText,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
                 }

@@ -1,10 +1,8 @@
 package com.yugentech.quill.ui.access.subscriptions.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -68,7 +66,7 @@ fun SubscribeBottomBar(
                     )
                 }
 
-                // Secondary Action: Restore (Now Animated)
+                // Secondary Action: Restore
                 TextButton(
                     onClick = onRestoreClick,
                     enabled = !isRestoring,
@@ -78,21 +76,17 @@ fun SubscribeBottomBar(
                     AnimatedContent(
                         targetState = isRestoring,
                         transitionSpec = {
-                            // Fade + Scale In for the new state, simple fade out for the old one
-                            (fadeIn(animationSpec = tween(220, delayMillis = 90))
-                                    + scaleIn(
-                                        initialScale = 0.92f,
-                                        animationSpec = tween(220, delayMillis = 90)
-                                    )
-                            ).togetherWith(fadeOut(animationSpec = tween(90)))
+                            // Same plain crossfade used for ActionButtonLabel in
+                            // the book details category button.
+                            fadeIn().togetherWith(fadeOut())
                         },
-                        label = "restore_button_transition"
-                    ) { stateIsRestoring ->
+                        label = "restore_button_state"
+                    ) { restoring ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            if (stateIsRestoring) {
+                            if (restoring) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
                                     strokeWidth = 2.dp,
