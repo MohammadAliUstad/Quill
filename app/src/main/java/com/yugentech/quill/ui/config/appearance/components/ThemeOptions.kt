@@ -57,12 +57,12 @@ fun themeOptions(
     ),
 
     ThemeOption(
-        colorTheme = ColorTheme.GROVE,
-        displayName = "Grove",
-        primaryColor = AppColorSchemes.GroveLightColorScheme.primary,
+        colorTheme = ColorTheme.HARBOR,
+        displayName = "Harbor",
+        primaryColor = AppColorSchemes.HarborLightColorScheme.primary,
         gradientColors = listOf(
-            AppColorSchemes.GroveLightColorScheme.primary,
-            AppColorSchemes.GroveLightColorScheme.primaryContainer
+            AppColorSchemes.HarborLightColorScheme.primary,
+            AppColorSchemes.HarborLightColorScheme.primaryContainer
         )
     ),
 
