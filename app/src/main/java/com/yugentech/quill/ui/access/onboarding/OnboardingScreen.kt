@@ -1,10 +1,12 @@
 package com.yugentech.quill.ui.access.onboarding
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,6 +38,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.yugentech.quill.ui.access.onboarding.components.OnboardingPage
+import com.yugentech.quill.ui.access.onboarding.components.onboardingPages
 import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.dimensions.AppAnimations
@@ -50,7 +53,8 @@ fun OnboardingScreen(
     onFinish: () -> Unit
 ) {
     val haptic = koinInject<HapticService>()
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
+    val lastPage = onboardingPages.lastIndex
     val scope = rememberCoroutineScope()
     val spacing = MaterialTheme.spacing
 
@@ -64,7 +68,7 @@ fun OnboardingScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                val showSkip = pagerState.currentPage < 2
+                val showSkip = pagerState.currentPage < lastPage
                 AnimatedVisibility(
                     visible = showSkip,
                     enter = fadeIn(),
@@ -87,7 +91,7 @@ fun OnboardingScreen(
                     onClick = {
                         haptic.performHaptic()
                         scope.launch {
-                            if (pagerState.currentPage < 2) {
+                            if (pagerState.currentPage < lastPage) {
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
                             } else {
                                 onFinish()
@@ -97,19 +101,29 @@ fun OnboardingScreen(
                     shape = MaterialTheme.shapes.extraLarge,
                     contentPadding = PaddingValues(horizontal = spacing.l, vertical = spacing.sm)
                 ) {
-                    Text(
-                        text = if (pagerState.currentPage < 2) "Next" else "Get Started",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                    Spacer(Modifier.width(spacing.s))
-                    Icon(
-                        imageVector = if (pagerState.currentPage < 2)
-                            Icons.AutoMirrored.Filled.ArrowForward
-                        else
-                            Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(MaterialTheme.icons.smallMedium)
-                    )
+                    // Standard fade between "Next" and "Get Started"; AnimatedContent's default
+                    // size transform also smoothly resizes the button to fit the longer label.
+                    AnimatedContent(
+                        targetState = pagerState.currentPage == lastPage,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        label = "OnboardingButtonLabel"
+                    ) { isLastPage ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (isLastPage) "Get Started" else "Next",
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                            Spacer(Modifier.width(spacing.s))
+                            Icon(
+                                imageVector = if (isLastPage)
+                                    Icons.Default.Check
+                                else
+                                    Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier.size(MaterialTheme.icons.smallMedium)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -119,7 +133,7 @@ fun OnboardingScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            val targetProgress = (pagerState.currentPage + 1) / 3f
+            val targetProgress = (pagerState.currentPage + 1) / onboardingPages.size.toFloat()
 
             val animatedProgress by animateFloatAsState(
                 targetValue = targetProgress,
@@ -145,7 +159,7 @@ fun OnboardingScreen(
                 modifier = Modifier.weight(1f)
             ) { page ->
                 OnboardingPage(
-                    page = page,
+                    content = onboardingPages[page],
                     isVisible = (pagerState.currentPage == page)
                 )
             }
