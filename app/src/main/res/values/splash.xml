@@ -10,8 +10,8 @@
 
         <item name="windowSplashScreenAnimationDuration">2000</item>
 
-        <item name="android:windowBackground">#8D806A</item>
-        <item name="windowSplashScreenBackground">#8D806A</item>
+        <item name="android:windowBackground">#576421</item>
+        <item name="windowSplashScreenBackground">#576421</item>
     </style>
 
 </resources>
