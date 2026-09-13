@@ -65,7 +65,7 @@ fun AppInfoCard() {
                         if (!isAnimating) {
                             isAnimating = true
                             scope.launch {
-                                delay(800) // matches avd_quill.xml total duration (350 + 450ms)
+                                delay(1900) // matches avd_quill.xml total duration (trace outside+inside in parallel, then fill both together)
                                 isAnimating = false
                             }
                         }
@@ -74,7 +74,7 @@ fun AppInfoCard() {
             ) {
                 AnimatedQuillIcon(
                     isAnimating = isAnimating,
-                    modifier = Modifier.requiredSize(MaterialTheme.components.imageSizeLarge * 1.4f)
+                    modifier = Modifier.requiredSize(MaterialTheme.components.imageSizeLarge * 0.55f)
                 )
             }
 
