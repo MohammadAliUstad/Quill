@@ -47,7 +47,7 @@ class NotificationHelper(private val context: Context) {
         )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.notification_icon)
+            .setSmallIcon(R.drawable.ic_stat_name)
             .setContentTitle("Time to Read")
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
