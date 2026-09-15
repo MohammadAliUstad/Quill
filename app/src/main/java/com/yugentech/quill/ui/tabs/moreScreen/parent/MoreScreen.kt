@@ -32,11 +32,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.database.model.UserData
 import com.yugentech.quill.ui.main.components.SectionHeader
@@ -83,6 +86,14 @@ fun MoreScreen(
     val view = LocalView.current
     val hapticService: HapticService = koinInject()
 
+    // Returning from the exact-alarm settings screen with the permission granted picks up
+    // where the user left off (opens the time picker) instead of needing another tap.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (notificationViewModel.onReturnedFromSettings()) {
+            showTimePickerDialog = true
+        }
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -91,7 +102,10 @@ fun MoreScreen(
         }
     }
 
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = {
@@ -105,7 +119,8 @@ fun MoreScreen(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
-                )
+                ),
+                scrollBehavior = scrollBehavior
             )
         },
         containerColor = MaterialTheme.colorScheme.surface
@@ -225,25 +240,11 @@ fun MoreScreen(
             }
             item {
                 SettingsSwitchItem(
-                    title = "Playful Reminders",
-                    subtitle = "Occasional friendly nudges to keep your reading habit alive",
-                    checked = notificationConfig.playfulRemindersEnabled,
-                    enabled = notificationConfig.notificationsEnabled,
-                    index = 1,
-                    totalCount = 4,
-                    onCheckedChange = {
-                        notificationViewModel.setPlayfulRemindersEnabled(it)
-                        hapticService.performHaptic(view)
-                    }
-                )
-            }
-            item {
-                SettingsSwitchItem(
                     title = "Daily Reading Reminder",
                     subtitle = notificationViewModel.formatReminderTime(),
                     checked = notificationConfig.readingRemindersEnabled,
                     enabled = notificationConfig.notificationsEnabled,
-                    index = 2,
+                    index = 1,
                     totalCount = 4,
                     onCheckedChange = { isChecked ->
                         if (isChecked) {
@@ -259,6 +260,20 @@ fun MoreScreen(
                         if (notificationConfig.notificationsEnabled && notificationViewModel.canEnableReminders()) {
                             showTimePickerDialog = true
                         }
+                    }
+                )
+            }
+            item {
+                SettingsSwitchItem(
+                    title = "Playful Reminders",
+                    subtitle = "Occasional friendly nudges to keep your reading habit alive",
+                    checked = notificationConfig.playfulRemindersEnabled,
+                    enabled = notificationConfig.notificationsEnabled,
+                    index = 2,
+                    totalCount = 4,
+                    onCheckedChange = {
+                        notificationViewModel.setPlayfulRemindersEnabled(it)
+                        hapticService.performHaptic(view)
                     }
                 )
             }
@@ -336,7 +351,7 @@ fun MoreScreen(
     if (showPermissionDialog) {
         AlarmPermissionDialog(
             context = context,
-            onDismiss = { notificationViewModel.dismissPermissionDialog() },
+            onDismiss = { notificationViewModel.cancelPermissionRequest() },
             onConfirm = { notificationViewModel.dismissPermissionDialog() }
         )
     }

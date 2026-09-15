@@ -33,17 +33,49 @@ class NotificationViewModel(
     private val _showExactAlarmDialog = MutableStateFlow(value = false)
     val showExactAlarmDialog = _showExactAlarmDialog.asStateFlow()
 
+    // Set when the user is sent to system settings for the exact-alarm permission, so that
+    // coming back with it granted can finish what they were doing instead of making them
+    // tap the reminder toggle again.
+    private var awaitingExactAlarmPermission = false
+
     fun dismissPermissionDialog() {
+        _showExactAlarmDialog.value = false
+    }
+
+    // User backed out of the permission dialog without going to settings.
+    fun cancelPermissionRequest() {
+        awaitingExactAlarmPermission = false
         _showExactAlarmDialog.value = false
     }
 
     fun canEnableReminders(): Boolean {
         val hasPermission = notificationManager.canScheduleExactAlarms()
         if (!hasPermission) {
-            _showExactAlarmDialog.value = true
+            requestExactAlarmPermission()
             return false
         }
         return true
+    }
+
+    // Called when the screen resumes. Returns true if the user just came back from granting
+    // the exact-alarm permission while trying to turn the reminder on, meaning the time
+    // picker should open to finish that. If the reminder was already on (the alarm just
+    // couldn't be scheduled), it's rescheduled here directly instead.
+    fun onReturnedFromSettings(): Boolean {
+        if (!awaitingExactAlarmPermission || !notificationManager.canScheduleExactAlarms()) return false
+        awaitingExactAlarmPermission = false
+
+        val config = notificationConfig.value
+        if (config.notificationsEnabled && config.readingRemindersEnabled) {
+            updateAlarms(config.reminderTimeHour, config.reminderTimeMinute)
+            return false
+        }
+        return true
+    }
+
+    private fun requestExactAlarmPermission() {
+        awaitingExactAlarmPermission = true
+        _showExactAlarmDialog.value = true
     }
 
     fun setNotificationsEnabled(enabled: Boolean) {
@@ -53,8 +85,9 @@ class NotificationViewModel(
                 notificationManager.cancelReminders()
                 notificationManager.cancelPlayfulReminders()
             } else {
-                if (notificationConfig.value.readingRemindersEnabled) {
-                    updateAlarms()
+                val config = notificationConfig.value
+                if (config.readingRemindersEnabled) {
+                    updateAlarms(config.reminderTimeHour, config.reminderTimeMinute)
                 }
                 if (notificationConfig.value.playfulRemindersEnabled) {
                     notificationManager.schedulePlayfulReminders()
@@ -67,8 +100,9 @@ class NotificationViewModel(
         viewModelScope.launch {
             userDataStore.setReadingRemindersEnabled(enabled)
             if (enabled) {
-                if (notificationConfig.value.notificationsEnabled) {
-                    updateAlarms()
+                val config = notificationConfig.value
+                if (config.notificationsEnabled) {
+                    updateAlarms(config.reminderTimeHour, config.reminderTimeMinute)
                 }
             } else {
                 notificationManager.cancelReminders()
@@ -93,8 +127,11 @@ class NotificationViewModel(
         viewModelScope.launch {
             userDataStore.setReminderTime(hour, minute)
             userDataStore.setReadingRemindersEnabled(true)
+            // Schedule with the time just picked, not notificationConfig.value -- the saved
+            // time only reaches that StateFlow after DataStore emits, so reading it back here
+            // can still return the previous time.
             if (notificationConfig.value.notificationsEnabled) {
-                updateAlarms()
+                updateAlarms(hour, minute)
             }
         }
     }
@@ -113,13 +150,12 @@ class NotificationViewModel(
         return "Daily at " + SimpleDateFormat("h:mm a", Locale.getDefault()).format(calendar.time)
     }
 
-    private fun updateAlarms() {
-        val config = notificationConfig.value
+    private fun updateAlarms(hour: Int, minute: Int) {
         try {
-            notificationManager.scheduleReminder(config.reminderTimeHour, config.reminderTimeMinute)
+            notificationManager.scheduleReminder(hour, minute)
         } catch (e: SecurityException) {
             Timber.w(e, "Exact alarm permission missing")
-            _showExactAlarmDialog.value = true
+            requestExactAlarmPermission()
         } catch (e: Exception) {
             Timber.e(e, "Failed to schedule reminder")
         }
