@@ -3,6 +3,7 @@ package com.yugentech.quill.aira.chat.bookChat.repository
 import com.yugentech.quill.aira.chat.bookChat.payload.BookChatPayload
 import com.yugentech.quill.aira.chat.bookChat.service.BookChatService
 import com.yugentech.quill.aira.intent.model.Intent
+import com.yugentech.quill.aira.intent.model.QueryIntent
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.aira.util.AiraBuilder
@@ -26,15 +27,34 @@ class BookChatRepositoryImpl(
         book: BookEntity
     ): Flow<AiraResponse> = flow {
         Timber.d("BookChatRepo: Handling book-related query. Route=$route")
-        val chunks = ragRetriever.retrieveWithExpansion(
-            bookId = book.id,
-            queries = route.queryVariations,
-            entities = route.entities,
-            boostedKeywords = (route.entities + route.keywords).distinct(),
-            topPassages = route.intent.topPassages,
-            candidatesPerQuery = route.intent.candidatesPerQuery,
-            spoilerLockEnabled = book.spoilerLockEnabled
-        )
+        val chunks = when {
+            route.intent == QueryIntent.CHARACTER_INFO && route.entities.isNotEmpty() -> {
+                Timber.d("BookChatRepo: Using focused CHARACTER_INFO retrieval for entities=${route.entities}")
+                route.entities.flatMap { entity ->
+                    ragRetriever.retrieveWithExpansion(
+                        bookId = book.id,
+                        queries = listOf("$entity character person description role"),
+                        entities = listOf(entity),
+                        boostedKeywords = listOf(entity),
+                        topPassages = 3,
+                        candidatesPerQuery = route.intent.candidatesPerQuery,
+                        spoilerLockEnabled = book.spoilerLockEnabled
+                    )
+                }
+                    .distinctBy { it.chapterIndex to it.chunkIndex }
+                    .sortedWith(compareBy({ it.chapterIndex }, { it.chunkIndex }))
+            }
+
+            else -> ragRetriever.retrieveWithExpansion(
+                bookId = book.id,
+                queries = route.queryVariations,
+                entities = route.entities,
+                boostedKeywords = (route.entities + route.keywords).distinct(),
+                topPassages = route.intent.topPassages,
+                candidatesPerQuery = route.intent.candidatesPerQuery,
+                spoilerLockEnabled = book.spoilerLockEnabled
+            )
+        }
         Timber.d("BookChatRepo: Retrieved ${chunks.size} chunks from RAG")
 
         val contextBlock = AiraBuilder.buildContextBlock(chunks)
@@ -45,7 +65,8 @@ class BookChatRepositoryImpl(
                 context = contextBlock,
                 bookTitle = book.title,
                 bookAuthor = book.author,
-                history = ChatUtils.formatHistory(history)
+                history = ChatUtils.formatHistory(history),
+                queryIntent = route.intent.name.lowercase()
             )
         Timber.d("BookChatRepo: Sending payload to service: $payload")
 

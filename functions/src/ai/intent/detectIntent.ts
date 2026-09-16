@@ -23,8 +23,17 @@ RAG is NOT required when the question asks about:
 - General literary discussion or recommendations
 - Casual conversation or greetings
 
+GROUNDING RULE — this is critical: only use a name if you are certain it belongs to a character,
+place, or thing in THIS specific book, "${bookTitle}" by ${bookAuthor}. Never invent, guess, or
+borrow a name from a different book, even one by the same author. If the question refers to
+someone by role or relation (e.g. "Katya's father", "the colonel") and you do not know their
+given name with certainty, keep referring to them exactly as the question does — do NOT expand
+or fabricate a name. This applies to entities, queryVariations, and keywords alike.
+
 If RAG is required, also extract:
-- entities: all character names, place names, and proper nouns mentioned in the question, expanded to their full formal names if you know them from the book
+- entities: all character names, place names, and proper nouns mentioned in the question. Only
+  expand to a full formal name if you are certain it's correct for this book (see GROUNDING RULE
+  above) — otherwise use the name or description exactly as it appears in the question.
 - keywords: the most meaningful content words from the question, excluding stop words, that would likely appear verbatim in the relevant passage
 - queryIntent: one of character_info, relationship, plot_event, quote_lookup, general
 

@@ -13,6 +13,7 @@ import com.yugentech.quill.aira.chat.quickChat.service.QuickChatService
 import com.yugentech.quill.aira.intent.repository.IntentDetectionRepository
 import com.yugentech.quill.aira.intent.service.IntentDetectionService
 import com.yugentech.quill.aira.rag.EmbeddingEngine
+import com.yugentech.quill.aira.rag.EpubTextExtractor
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.repository.AiraChatRepository
 import com.yugentech.quill.aira.repository.AiraChatRepositoryImpl
@@ -33,6 +34,12 @@ val airaModule = module {
             chunkDao = get(),
             bookDao = get(),
             embeddingEngine = get()
+        )
+    }
+
+    single {
+        EpubTextExtractor(
+            context = androidContext()
         )
     }
 
@@ -69,7 +76,7 @@ val airaModule = module {
     single<QuickChatRepository> {
         QuickChatRepositoryImpl(
             bookDao = get(),
-            bookChunkDao = get(),
+            epubTextExtractor = get(),
             actionService = get(),
             ragRetriever = get()
         )

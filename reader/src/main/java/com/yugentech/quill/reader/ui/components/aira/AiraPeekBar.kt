@@ -117,10 +117,6 @@ fun AiraPeekBar(
         }
     }
 
-    LaunchedEffect(airaUiState.canSendQuery) {
-        if (!airaUiState.canSendQuery) enforceLimitUi = true
-    }
-
     val isImeVisible = WindowInsets.isImeVisible
     LaunchedEffect(isImeVisible) { if (!isImeVisible) focusManager.clearFocus() }
 
@@ -147,6 +143,10 @@ fun AiraPeekBar(
 
     fun send(text: String) {
         if (text.isBlank()) return
+        if (!airaUiState.canSendQuery) {
+            enforceLimitUi = true
+            return
+        }
         if (selectedText != null) {
             onQuickAction(QuickPrompt.CustomQuestion(selectedText, text))
         } else {
@@ -218,10 +218,14 @@ fun AiraPeekBar(
                             activeChips = activeChips,
                             onChipClick = { intent ->
                                 haptic.performHaptic(view)
-                                onQuickAction(intent)
-                                inputText = ""
-                                focusManager.clearFocus()
-                                onClearSelection()
+                                if (!airaUiState.canSendQuery) {
+                                    enforceLimitUi = true
+                                } else {
+                                    onQuickAction(intent)
+                                    inputText = ""
+                                    focusManager.clearFocus()
+                                    onClearSelection()
+                                }
                             },
                             onGreetingSelected = { currentGreeting = it }
                         )

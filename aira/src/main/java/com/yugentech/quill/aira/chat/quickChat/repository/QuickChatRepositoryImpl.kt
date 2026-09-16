@@ -5,9 +5,9 @@ import com.yugentech.quill.aira.chat.quickChat.model.QuickChatType
 import com.yugentech.quill.aira.chat.quickChat.prompt.QuickPrompt
 import com.yugentech.quill.aira.chat.quickChat.service.QuickChatService
 import com.yugentech.quill.aira.chat.quickChat.util.QuickBuilder
+import com.yugentech.quill.aira.rag.EpubTextExtractor
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.response.AiraResponse
-import com.yugentech.quill.database.dao.BookChunkDao
 import com.yugentech.quill.database.dao.BookDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -15,7 +15,7 @@ import timber.log.Timber
 
 class QuickChatRepositoryImpl(
     private val bookDao: BookDao,
-    private val bookChunkDao: BookChunkDao,
+    private val epubTextExtractor: EpubTextExtractor,
     private val actionService: QuickChatService,
     private val ragRetriever: RagRetriever
 ) : QuickChatRepository {
@@ -31,9 +31,12 @@ class QuickChatRepositoryImpl(
 
         val payload: QuickChatPayload = when (quickPrompt) {
             is QuickPrompt.SummarizeChapter -> {
-                val chunks = bookChunkDao.getChunksForChapter(bookId, quickPrompt.chapterIndex)
-                if (chunks.isEmpty()) {
-                    Timber.w("QuickChatRepo: No chunks found for chapter ${quickPrompt.chapterIndex}")
+                val localFilePath = book.localFilePath
+                val chapter = localFilePath?.let {
+                    epubTextExtractor.extractChapter(it, quickPrompt.chapterIndex)
+                }
+                if (chapter == null) {
+                    Timber.w("QuickChatRepo: Could not extract chapter ${quickPrompt.chapterIndex}")
                     emit(AiraResponse.Error("No content found for this chapter."))
                     return@flow
                 }
@@ -41,7 +44,7 @@ class QuickChatRepositoryImpl(
                     actionType = QuickChatType.SUMMARIZE_CHAPTER,
                     bookTitle = book.title,
                     bookAuthor = book.author,
-                    context = chunks.joinToString("\n\n") { it.text }
+                    context = chapter.text
                 )
             }
 
@@ -60,9 +63,10 @@ class QuickChatRepositoryImpl(
             }
 
             is QuickPrompt.WhoIsThis -> {
-                val retrieved = ragRetriever.retrieve(
+                val retrieved = ragRetriever.retrieveForCharacter(
                     bookId = bookId,
-                    query = "${quickPrompt.name} character person description role",
+                    characterName = quickPrompt.name,
+                    currentChapterIndex = quickPrompt.currentChapterIndex,
                     spoilerLockEnabled = true
                 )
                 if (retrieved.isEmpty()) {

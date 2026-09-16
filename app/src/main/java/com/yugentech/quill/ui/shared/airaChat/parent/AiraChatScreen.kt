@@ -70,6 +70,8 @@ fun AiraChatScreen(
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
 
+    var enforceLimitUi by remember { mutableStateOf(!uiState.canSendQuery) }
+
     DisposableEffect(Unit) {
         onDispose {
             voiceOutputManager.stop()
@@ -211,7 +213,7 @@ fun AiraChatScreen(
             }
 
             AnimatedContent(
-                targetState = uiState.canSendQuery,
+                targetState = enforceLimitUi,
                 transitionSpec = {
                     fadeIn(tween(300)) togetherWith fadeOut(tween(300))
                 },
@@ -219,8 +221,8 @@ fun AiraChatScreen(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth(),
                 label = "BottomAreaTransition"
-            ) { canSend ->
-                if (canSend) {
+            ) { isLimitReached ->
+                if (!isLimitReached) {
                     AnimatedVisibility(
                         visible = !uiState.isIndexing && uiState.hasStartedReading,
                         modifier = Modifier
@@ -236,8 +238,12 @@ fun AiraChatScreen(
                             isStreaming = uiState.isStreaming || uiState.isLoading,
                             onSend = {
                                 if (inputText.isNotBlank()) {
-                                    viewModel.ask(inputText)
-                                    inputText = EMPTY
+                                    if (!uiState.canSendQuery) {
+                                        enforceLimitUi = true
+                                    } else {
+                                        viewModel.ask(inputText)
+                                        inputText = EMPTY
+                                    }
                                 }
                             },
                             onStop = {

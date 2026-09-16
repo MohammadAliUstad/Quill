@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import org.readium.r2.shared.publication.Link
+import org.readium.r2.shared.publication.Publication
 import org.readium.r2.shared.util.asset.AssetRetriever
 import org.readium.r2.shared.util.getOrElse
 import org.readium.r2.shared.util.http.DefaultHttpClient
@@ -122,24 +123,86 @@ class EpubTextExtractor(
     }.flowOn(Dispatchers.IO)
 
     suspend fun countChapters(filePath: String): Int = withContext(Dispatchers.IO) {
+        val publication = openPublication(filePath) ?: return@withContext 0
+        val count = publication.readingOrder.size
+        publication.close()
+        count
+    }
+
+    /**
+     * The exact text of one chapter, read directly from the EPUB rather than
+     * reassembled from overlapping RAG chunks — those overlap by design (so a
+     * retrieved passage isn't cut awkwardly), which duplicates text at every
+     * chunk boundary when naively joined for a full-chapter summary.
+     */
+    suspend fun extractChapter(filePath: String, chapterIndex: Int): ChapterText? =
+        withContext(Dispatchers.IO) {
+            val publication = openPublication(filePath) ?: return@withContext null
+            try {
+                val link = publication.readingOrder.getOrNull(chapterIndex)
+                    ?: return@withContext null
+
+                val hrefToTitleMap = flattenLinks(publication.tableOfContents)
+                    .mapNotNull { tocLink ->
+                        val title = tocLink.title?.trim()
+                        if (title.isNullOrBlank()) {
+                            null
+                        } else {
+                            tocLink.href.toString().substringBefore("#") to title
+                        }
+                    }.toMap()
+
+                val cleanHref = link.href.toString().substringBefore("#")
+                val title = hrefToTitleMap[cleanHref]
+                    ?: link.title?.trim()?.ifBlank { null }
+                    ?: "Chapter ${chapterIndex + 1}"
+
+                val resource = publication.get(link) ?: return@withContext null
+                val bytes = resource.read().getOrElse { return@withContext null }
+                val plainText = stripHtml(String(bytes, Charsets.UTF_8))
+
+                if (plainText.length < MIN_CHAPTER_LENGTH) {
+                    null
+                } else {
+                    ChapterText(
+                        chapterIndex = chapterIndex,
+                        chapterTitle = title,
+                        text = plainText
+                    )
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error extracting chapter $chapterIndex from $filePath")
+                null
+            } finally {
+                publication.close()
+            }
+        }
+
+    private suspend fun openPublication(filePath: String): Publication? {
         val file = File(filePath)
-        if (!file.exists()) return@withContext 0
-        try {
+        if (!file.exists()) {
+            Timber.e("✗ File not found at path: $filePath")
+            return null
+        }
+
+        return try {
             val httpClient = DefaultHttpClient()
             val assetRetriever = AssetRetriever(context.contentResolver, httpClient)
             val parser = DefaultPublicationParser(context, httpClient, assetRetriever, null)
             val publicationOpener = PublicationOpener(parser, emptyList(), onCreatePublication = {})
-            val asset = assetRetriever.retrieve(file).getOrElse { return@withContext 0 }
-            val publication = publicationOpener.open(asset, allowUserInteraction = false)
-                .getOrElse { return@withContext 0 }
-            val count = publication.readingOrder.count { link ->
-                true
+
+            val asset = assetRetriever.retrieve(file).getOrElse { err ->
+                Timber.e("✗ Failed to retrieve asset: $err")
+                return null
             }
-            publication.close()
-            count
+
+            publicationOpener.open(asset, allowUserInteraction = false).getOrElse { err ->
+                Timber.e("✗ Failed to open publication: $err")
+                return null
+            }
         } catch (e: Exception) {
-            Timber.w(e, "Failed to count chapters for $filePath")
-            0
+            Timber.w(e, "Failed to open publication for $filePath")
+            null
         }
     }
 
