@@ -1,6 +1,11 @@
 package com.yugentech.quill.ui.main.parent
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -17,11 +22,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.firebase.auth.FirebaseAuth
 import com.yugentech.quill.database.mapper.toBook
@@ -34,13 +45,18 @@ import com.yugentech.quill.ui.main.components.ExitConfirmationDialog
 import com.yugentech.quill.ui.main.components.LogoutConfirmationDialog
 import com.yugentech.quill.ui.main.components.QuillTab
 import com.yugentech.quill.ui.main.components.ResumeFab
+import com.yugentech.quill.ui.main.components.ToastMessage
 import com.yugentech.quill.ui.tabs.discoverScreen.parent.DiscoverScreen
 import com.yugentech.quill.ui.tabs.libraryScreen.parent.LibraryScreen
 import com.yugentech.quill.ui.info.indexing.viewmodel.IndexingViewModel
 import com.yugentech.quill.ui.tabs.moreScreen.parent.MoreScreen
 import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesScreen
+import com.yugentech.quill.ui.tabs.sourcesScreen.components.FilePickerBottomSheet
+import com.yugentech.quill.ui.tabs.sourcesScreen.components.ImportStatusSheet
+import com.yugentech.quill.ui.tabs.sourcesScreen.result.ImportResult
 import com.yugentech.quill.ui.tabs.sourcesScreen.viewmodel.SourcesViewModel
 import com.yugentech.quill.user.viewmodel.UserViewModel
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
 private val quillTabs = listOf(
@@ -81,6 +97,38 @@ fun MainScreen(
         if (userId.isNotEmpty()) userViewModel.loadUser(userId)
     }
 
+    val context = LocalContext.current
+    var toastMessage by remember { mutableStateOf<String?>(null) }
+    var hasCheckedPermission by rememberSaveable { mutableStateOf(false) }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (!isGranted) {
+                toastMessage =
+                    "Notification permission denied. Please enable notifications to get your reading reminders."
+            }
+        }
+    )
+
+    // Android 13+ needs POST_NOTIFICATIONS granted at runtime, and notifications default to
+    // enabled in settings -- so ask once on launch, otherwise reminders would be silently
+    // dropped while the settings toggle still shows them as on.
+    LaunchedEffect(Unit) {
+        if (!hasCheckedPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasPermission) {
+                delay(500)
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            hasCheckedPermission = true
+        }
+    }
+
     val userUiState by userViewModel.uiState.collectAsStateWithLifecycle()
     val userData = userUiState.user ?: UserData()
 
@@ -88,9 +136,17 @@ fun MainScreen(
     val isIndexingActive = queueState.isNotEmpty()
 
     var currentTab by rememberSaveable { mutableStateOf(QuillTab.Library) }
+    var scrollLibraryToBottom by remember { mutableStateOf(false) }
     var isScrollingDown by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
     var showSignOutDialog by remember { mutableStateOf(false) }
+
+    var isLibraryEmpty by remember { mutableStateOf(false) }
+    var showFilePickerSheet by remember { mutableStateOf(false) }
+    // Only show the import result sheet here for imports started from the Library FAB --
+    // the Sources tab shows its own sheet for imports started there.
+    var importStartedFromLibrary by remember { mutableStateOf(false) }
+    val importResults by sourcesViewModel.importResults.collectAsStateWithLifecycle()
 
     val saveableStateHolder = rememberSaveableStateHolder()
 
@@ -123,10 +179,20 @@ fun MainScreen(
             )
         },
         floatingActionButton = {
+            // Empty library: the FAB becomes "Add Books" and runs the same device import flow
+            // as the Sources tab. Otherwise it's the usual Continue-reading FAB.
             ResumeFab(
-                visible = currentTab == QuillTab.Library && lastReadBook != null,
+                visible = currentTab == QuillTab.Library && (isLibraryEmpty || lastReadBook != null),
                 isScrollingDown = isScrollingDown,
-                onClick = { lastReadBook?.let { onResumeClick(it.toBook()) } },
+                onClick = {
+                    if (isLibraryEmpty) {
+                        showFilePickerSheet = true
+                    } else {
+                        lastReadBook?.let { onResumeClick(it.toBook()) }
+                    }
+                },
+                icon = if (isLibraryEmpty) Icons.Default.Add else Icons.AutoMirrored.Filled.MenuBook,
+                label = if (isLibraryEmpty) "Add Books" else "Continue",
             )
         },
     ) { innerPadding ->
@@ -154,6 +220,10 @@ fun MainScreen(
                             viewModel = libraryViewModel,
                             onResumeClick = onResumeClick,
                             onSeeAllClick = onSeeAllClick,
+                            scrollToBottom = scrollLibraryToBottom,
+                            onScrollToBottomHandled = { scrollLibraryToBottom = false },
+                            onEmptyStateChange = { isLibraryEmpty = it },
+                            onAddBooksClick = { showFilePickerSheet = true },
                         )
 
                         QuillTab.Discover -> DiscoverScreen(
@@ -165,7 +235,10 @@ fun MainScreen(
                             contentPadding = innerPadding,
                             onSourceClick = onSourceClick,
                             viewModel = sourcesViewModel,
-                            onLocalFilesClick = {},
+                            onLocalFilesClick = {
+                                currentTab = QuillTab.Library
+                                scrollLibraryToBottom = true
+                            },
                         )
 
                         QuillTab.Settings -> MoreScreen(
@@ -189,7 +262,39 @@ fun MainScreen(
                     }
                 }
             }
+
+            ToastMessage(
+                message = toastMessage,
+                onDismiss = { toastMessage = null },
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
+    }
+
+    if (showFilePickerSheet) {
+        FilePickerBottomSheet(
+            onDismiss = { showFilePickerSheet = false },
+            onFilesSelected = { uris ->
+                showFilePickerSheet = false
+                importStartedFromLibrary = true
+                sourcesViewModel.importFiles(context, uris)
+            },
+        )
+    }
+
+    if (importStartedFromLibrary && importResults.isNotEmpty()) {
+        ImportStatusSheet(
+            results = importResults,
+            onDismiss = {
+                val hasSuccess = importResults.any { it is ImportResult.Success }
+                sourcesViewModel.clearResults()
+                importStartedFromLibrary = false
+                if (hasSuccess) {
+                    currentTab = QuillTab.Library
+                    scrollLibraryToBottom = true
+                }
+            },
+        )
     }
 
     if (showExitDialog) {

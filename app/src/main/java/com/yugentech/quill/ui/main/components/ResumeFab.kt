@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,7 +40,9 @@ import kotlinx.coroutines.delay
 fun ResumeFab(
     visible: Boolean,
     isScrollingDown: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    icon: ImageVector = Icons.AutoMirrored.Filled.MenuBook,
+    label: String = "Continue"
 ) {
     var isVisible by remember { mutableStateOf(visible) }
     var isExpanded by remember { mutableStateOf(true) }
@@ -84,8 +87,8 @@ fun ResumeFab(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = "Continue Reading",
+                    imageVector = icon,
+                    contentDescription = label,
                     modifier = Modifier.size(26.dp)
                 )
                 AnimatedVisibility(
@@ -100,7 +103,7 @@ fun ResumeFab(
                     )
                 ) {
                     Text(
-                        text = "Continue",
+                        text = label,
                         style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(start = 12.dp)
