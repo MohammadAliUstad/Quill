@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -95,7 +96,10 @@ fun SourcesScreen(
         )
     )
 
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = {
@@ -109,7 +113,8 @@ fun SourcesScreen(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
-                )
+                ),
+                scrollBehavior = scrollBehavior
             )
         },
         containerColor = MaterialTheme.colorScheme.surface

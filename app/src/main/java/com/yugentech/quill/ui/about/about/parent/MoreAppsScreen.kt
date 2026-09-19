@@ -54,7 +54,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -77,7 +82,10 @@ fun MoreAppsScreen(
     val sessionsPlayStoreUrl =
         "https://play.google.com/store/apps/details?id=com.yugentech.sessions"
 
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = { Text("More from us") },
@@ -91,9 +99,11 @@ fun MoreAppsScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                ),
+                scrollBehavior = scrollBehavior
             )
         },
         containerColor = MaterialTheme.colorScheme.surface
@@ -164,81 +174,150 @@ private fun SessionsHeroSection(onDownloadClick: () -> Unit) {
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Box(
+        Column {
+            Row(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clipToBounds()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        if (!isAnimating) {
-                            isAnimating = true
-                            scope.launch {
-                                delay(900)
-                                isAnimating = false
-                            }
-                        }
-                    },
-                contentAlignment = Alignment.Center
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                AnimatedSessionsIcon(
-                    isAnimating = isAnimating,
-                    modifier = Modifier.requiredSize(200.dp)
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clipToBounds()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            if (!isAnimating) {
+                                isAnimating = true
+                                scope.launch {
+                                    delay(900)
+                                    isAnimating = false
+                                }
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    AnimatedSessionsIcon(
+                        isAnimating = isAnimating,
+                        modifier = Modifier.requiredSize(200.dp)
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "Sessions",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Ultimate Pomodoro Timer",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Button(
+                        onClick = onDownloadClick,
+                        modifier = Modifier.height(40.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Get on Play Store",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+                }
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            // Play Store-style stats strip.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StoreStat(
+                    value = "4.9",
+                    showStar = true,
+                    label = "70+ reviews",
+                    modifier = Modifier.weight(1f)
+                )
+                VerticalDivider(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+                StoreStat(
+                    value = "3K+",
+                    showStar = false,
+                    label = "Downloads",
+                    modifier = Modifier.weight(1f)
                 )
             }
+        }
+    }
+}
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Column {
-                    Text(
-                        text = "Sessions",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Ultimate Pomodoro Timer",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Button(
-                    onClick = onDownloadClick,
-                    modifier = Modifier.height(40.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Get on Play Store",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    )
-                }
+@Composable
+private fun StoreStat(
+    value: String,
+    showStar: Boolean,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (showStar) {
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = "stars",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
