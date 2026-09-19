@@ -132,7 +132,8 @@ fun SubscriptionsScreen(
                         IconButton(onClick = onBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
-                    }
+                    },
+                    scrollBehavior = scrollBehavior
                 )
             } else {
                 LargeTopAppBar(
