@@ -20,6 +20,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -61,7 +65,11 @@ fun LibraryScreen(
     onResumeClick: (Book) -> Unit,
     onSeeAllClick: (categoryName: String) -> Unit,
     viewModel: LibraryViewModel,
-    contentPadding: PaddingValues = PaddingValues(0.dp)
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    scrollToBottom: Boolean = false,
+    onScrollToBottomHandled: () -> Unit = {},
+    onEmptyStateChange: (Boolean) -> Unit = {},
+    onAddBooksClick: () -> Unit = {}
 ) {
     val lastReadBook by viewModel.lastReadBook.collectAsState()
     val historyBooks by viewModel.historyBooks.collectAsState()
@@ -86,9 +94,24 @@ fun LibraryScreen(
         }
     }
 
-    LaunchedEffect(scrollState.maxValue) {
-        if (savedScroll > 0 && scrollState.maxValue >= savedScroll) {
+    LaunchedEffect(scrollState.maxValue, scrollToBottom) {
+        // Skip while a scroll-to-bottom request is pending -- otherwise this fires the moment
+        // maxValue settles and races the effect below back to wherever the user scrolled to
+        // *last* time they were on this tab, undoing the jump to the bottom.
+        if (!scrollToBottom && savedScroll > 0 && scrollState.maxValue >= savedScroll) {
             scrollState.scrollTo(savedScroll)
+        }
+    }
+
+    // After a book import, land the user at the very bottom so the freshly added book is
+    // visible. "My Shelf" was unsubscribed while the user was away on the Sources tab, so it
+    // re-queries from scratch on remount -- give that a moment to land before measuring.
+    LaunchedEffect(scrollToBottom) {
+        if (scrollToBottom) {
+            delay(400)
+            scrollState.scrollTo(scrollState.maxValue)
+            savedScroll = scrollState.maxValue
+            onScrollToBottomHandled()
         }
     }
 
@@ -105,6 +128,9 @@ fun LibraryScreen(
             favoriteBooks.isEmpty() &&
             bookShelf.isEmpty() &&
             allCategoryBooks.all { it.isEmpty() }
+
+    // Lets the parent swap the Continue FAB for an Add Books FAB while the library is empty.
+    LaunchedEffect(isEmpty) { onEmptyStateChange(isEmpty) }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val hazeState = remember { HazeState() }
@@ -139,10 +165,23 @@ fun LibraryScreen(
                             fontWeight = FontWeight.Bold
                         )
                     },
+                    actions = {
+                        // Only once the library has books -- the empty state has its own
+                        // Add Books FAB instead.
+                        if (!isInitializing && !isEmpty) {
+                            IconButton(onClick = onAddBooksClick) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add books"
+                                )
+                            }
+                        }
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
                         scrolledContainerColor = Color.Transparent,
                         titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurface,
                     ),
                     scrollBehavior = scrollBehavior
                 )

@@ -2,7 +2,6 @@ package com.yugentech.quill.ui.tabs.libraryScreen.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,12 +53,17 @@ fun HistoryCarousel(
             }
     }
 
+    // The 16dp side margin is a plain modifier padding, not the carousel's contentPadding:
+    // leading contentPadding makes Material3 add an extra keyline step that shifts every item
+    // by the padding over just the last 16dp of scroll, so swiping back to the first book
+    // ended in a visible squeeze-and-snap.
     HorizontalMultiBrowseCarousel(
         state = carouselState,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
         preferredItemWidth = 280.dp,
-        itemSpacing = 12.dp,
-        contentPadding = PaddingValues(horizontal = 16.dp)
+        itemSpacing = 12.dp
     ) { index ->
         val book = books[index]
         HistoryCard(

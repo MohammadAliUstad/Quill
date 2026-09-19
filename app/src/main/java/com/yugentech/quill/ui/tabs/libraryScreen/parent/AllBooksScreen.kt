@@ -103,7 +103,7 @@ fun AllBooksScreen(
                 top = innerPadding.calculateTopPadding() + 8.dp,
                 start = 16.dp,
                 end = 16.dp,
-                bottom = innerPadding.calculateBottomPadding() + 16.dp
+                bottom = innerPadding.calculateBottomPadding()
             ),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
