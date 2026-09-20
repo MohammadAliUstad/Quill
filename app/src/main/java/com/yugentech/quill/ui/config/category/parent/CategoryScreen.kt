@@ -214,7 +214,7 @@ fun CategoryScreen(
                 DragDropList(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(bottom = innerPadding.calculateBottomPadding() + 8.dp),
+                        .padding(bottom = innerPadding.calculateBottomPadding()),
                     items = draggableCategories,
                     onReorderFinished = { newOrder ->
                         categoryViewModel.updateOrder(newOrder)

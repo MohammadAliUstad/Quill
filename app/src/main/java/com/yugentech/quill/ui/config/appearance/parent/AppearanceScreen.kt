@@ -61,7 +61,7 @@ fun AppearanceScreen(
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
@@ -73,7 +73,7 @@ fun AppearanceScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = paddingValues.calculateTopPadding(),
-                bottom = paddingValues.calculateBottomPadding()+ 8.dp,
+                bottom = paddingValues.calculateBottomPadding(),
                 start = MaterialTheme.spacing.m,
                 end = MaterialTheme.spacing.m
             ),
