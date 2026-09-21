@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Lock
@@ -42,6 +43,11 @@ fun FeatureHighlights() {
             title = "Interactive Story Chat",
             description = "Ask Aira anything about the book's themes, plot, or narrative significance.",
             icon = Icons.Default.ChatBubbleOutline
+        ),
+        FeatureItem(
+            title = "Visualize Scenes",
+            description = "Turn any passage into a painted illustration and revisit it anytime in your Visuals gallery. Each image uses 3 queries.",
+            icon = Icons.Default.Brush
         ),
         FeatureItem(
             title = "Active Spoiler Protection",
