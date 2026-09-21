@@ -16,11 +16,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.AutoStories
+import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Highlight
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,29 +61,59 @@ fun WhatsNewScreen(
 
     val updates = listOf(
         UpdateItem(
-            "Aira Architecture 2.0",
-            "Experience groundbreaking speed and reliability. Our refactored AI engine ensures smoother conversations and more precise grounded insights.",
-            Icons.Default.Bolt
-        ),
-        UpdateItem(
-            "Smart AI Routing",
-            "Aira is now more intuitive than ever. She automatically detects if you're asking about your book or general knowledge, providing the best possible context.",
+            "Meet the New Aira",
+            "Aira has been rebuilt from the ground up. She knows whether you're asking about your book or anything else, answers straight from the pages you've read, never spoils what's ahead, and can read her answers aloud.",
             Icons.Default.AutoAwesome
         ),
         UpdateItem(
-            "Modernized Audio UI",
-            "Enjoy a more immersive background sound selector. New expressive toggle cards with bouncy animations make finding your reading ambiance a delight.",
-            Icons.AutoMirrored.Filled.VolumeUp
+            "Ask Aira From the Page",
+            "Select any word or passage while reading and Aira is right there. Define words, explain tricky lines, or find out why a moment matters, without leaving the book.",
+            Icons.Default.TouchApp
         ),
         UpdateItem(
-            "Atomic History Persistence",
-            "Never lose a chat turn again. Both your question and Aira's answer are now saved atomically, ensuring your conversation history remains robust and clean.",
-            Icons.Default.History
+            "Character Companion",
+            "Select a character's name to recall who they are, see what they're up to lately, or trace their whole journey so far. Always spoiler-free.",
+            Icons.Default.Face
+        ),
+        UpdateItem(
+            "Visualize Scenes",
+            "Turn any passage into a painted illustration. Your images are kept in a Visuals gallery, and tapping one takes you right back to the passage it came from.",
+            Icons.Default.Brush
+        ),
+        UpdateItem(
+            "Highlights",
+            "A smoother way to select text, plus highlights you can revisit from one place and jump straight back to in the book.",
+            Icons.Default.Highlight
+        ),
+        UpdateItem(
+            "A Reimagined Reader",
+            "A refreshed reading screen with new reading settings, a cleaner table of contents, a warm night light, and page turning with your volume keys.",
+            Icons.Default.AutoStories
+        ),
+        UpdateItem(
+            "Ambient Sounds",
+            "Set the mood with six soundscapes, from gentle rain to a crackling fireplace. Preview them before you play, or have them start automatically when you open a book.",
+            Icons.Default.MusicNote
         ),
         UpdateItem(
             "Reading Reminders",
-            "Stay on track with your reading goals. Set precise daily reminders and receive playful nudges to help you maintain your streak.",
+            "Pick a time for a daily reading reminder, or let playful nudges help you keep your streak going.",
             Icons.Default.NotificationsActive
+        ),
+        UpdateItem(
+            "Discover & Organize",
+            "A redesigned Discover tab, better Project Gutenberg and Standard Ebooks browsing, a quick way to add your own books, and categories you can reorder by dragging.",
+            Icons.Default.Explore
+        ),
+        UpdateItem(
+            "Reading Insights",
+            "See your reading time, streak, peak reading hours, favorite authors, and how you read with Aira, all on a refreshed Insights screen.",
+            Icons.Default.Insights
+        ),
+        UpdateItem(
+            "A Fresh Look",
+            "A brand new app icon and splash screen, the new Harbor color theme, and a polished feel across the whole app.",
+            Icons.Default.Palette
         )
     )
 
@@ -106,7 +142,7 @@ fun WhatsNewScreen(
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
@@ -121,7 +157,7 @@ fun WhatsNewScreen(
                 .fillMaxSize()
                 .padding(top = scaffoldPadding.calculateTopPadding()),
             contentPadding = PaddingValues(
-                bottom = navBarPadding.calculateBottomPadding() + 16.dp,
+                bottom = navBarPadding.calculateBottomPadding(),
                 start = MaterialTheme.spacing.m + scaffoldPadding.calculateStartPadding(layoutDirection),
                 end = MaterialTheme.spacing.m + scaffoldPadding.calculateEndPadding(layoutDirection)
             ),
