@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -26,14 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.model.BookStorageBreakdown
 
+// Compact text-only row: title and author on the left, size and delete on the right.
 @Composable
 fun BookStorageItem(
     book: BookEntity,
@@ -50,79 +47,62 @@ fun BookStorageItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(start = 16.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Card(
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .width(80.dp)
-                    .height(120.dp)
-            ) {
-                AsyncImage(
-                    model = book.coverUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(96.dp)
-                    .padding(vertical = 2.dp)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = book.title,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = book.author,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(2.dp))
 
-                val totalBytes = breakdown?.totalBytes ?: book.fileSizeBytes
+                Text(
+                    text = book.author,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = formatBytes(totalBytes),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+            Spacer(modifier = Modifier.width(12.dp))
+
+            val totalBytes = breakdown?.totalBytes ?: book.fileSizeBytes
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = formatBytes(totalBytes),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
 
             Spacer(modifier = Modifier.width(8.dp))
 
             IconButton(
                 onClick = onDeleteClick,
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(40.dp),
                 colors = IconButtonDefaults.iconButtonColors(
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                 )
             ) {
-                Icon(Icons.Filled.Delete, contentDescription = "Delete File")
+                Icon(
+                    Icons.Filled.Delete,
+                    contentDescription = "Delete File",
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
