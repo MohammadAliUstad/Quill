@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.yugentech.theme.tokens.corners
@@ -26,13 +28,17 @@ fun GlanceStatCard(
     icon: @Composable () -> Unit,
     value: String,
     label: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    shape: Shape = RoundedCornerShape(MaterialTheme.corners.large)
 ) {
     Card(
         modifier = modifier.aspectRatio(1f),
-        shape = RoundedCornerShape(MaterialTheme.corners.large),
+        shape = shape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            containerColor = containerColor,
+            contentColor = contentColor
         )
     ) {
         Column(
@@ -53,14 +59,14 @@ fun GlanceStatCard(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = contentColor,
                 textAlign = TextAlign.Center
             )
 
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = contentColor.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
             )
         }

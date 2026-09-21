@@ -22,7 +22,7 @@ fun EmptyDistributionPlaceholder(
             .fillMaxWidth()
             .height(MaterialTheme.components.controlBarItemWidthWide)
             .background(
-                MaterialTheme.colorScheme.surfaceContainerLow,
+                MaterialTheme.colorScheme.surfaceContainerHighest,
                 RoundedCornerShape(MaterialTheme.corners.medium)
             ),
         contentAlignment = Alignment.Center

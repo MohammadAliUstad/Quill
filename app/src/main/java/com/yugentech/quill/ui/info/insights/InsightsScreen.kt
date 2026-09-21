@@ -39,6 +39,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import com.yugentech.quill.insghts.state.InsightsUiState
@@ -112,13 +114,16 @@ fun InsightsScreen(
                         start = MaterialTheme.spacing.m + paddingValues.calculateStartPadding(layoutDirection),
                         end = MaterialTheme.spacing.m + paddingValues.calculateEndPadding(layoutDirection)
                     ),
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
                 ) {
 
+                    // The three stats read as one grouped block (primary / secondary / tertiary
+                    // containers, tight gap, large corners only on the outer edges) -- the
+                    // Sessions insights treatment, laid out horizontally.
                     item {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             GlanceStatCard(
                                 icon = {
@@ -131,7 +136,10 @@ fun InsightsScreen(
                                 },
                                 value = totalTimeFormatted,
                                 label = "Time read",
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                shape = rowItemShape(index = 0, count = 3)
                             )
                             GlanceStatCard(
                                 icon = {
@@ -144,7 +152,10 @@ fun InsightsScreen(
                                 },
                                 value = "${uiState.streakCount}",
                                 label = "Day streak",
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                shape = rowItemShape(index = 1, count = 3)
                             )
                             GlanceStatCard(
                                 icon = {
@@ -157,7 +168,10 @@ fun InsightsScreen(
                                 },
                                 value = "${uiState.finishedBooksCount}",
                                 label = "Finished",
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                shape = rowItemShape(index = 2, count = 3)
                             )
                         }
                     }
@@ -252,5 +266,31 @@ fun InsightsScreen(
                 }
             }
         }
+    }
+}
+// Horizontal counterpart of itemShape: a row of cards reads as one grouped block, with large
+// corners only on the outer edges and small corners where neighbours meet.
+@Composable
+private fun rowItemShape(index: Int, count: Int): Shape {
+    val largeCorner = MaterialTheme.corners.large
+    val smallCorner = MaterialTheme.corners.small
+
+    return when {
+        count == 1 -> RoundedCornerShape(largeCorner)
+        index == 0 -> RoundedCornerShape(
+            topStart = largeCorner,
+            bottomStart = largeCorner,
+            topEnd = smallCorner,
+            bottomEnd = smallCorner
+        )
+
+        index == count - 1 -> RoundedCornerShape(
+            topStart = smallCorner,
+            bottomStart = smallCorner,
+            topEnd = largeCorner,
+            bottomEnd = largeCorner
+        )
+
+        else -> RoundedCornerShape(smallCorner)
     }
 }
