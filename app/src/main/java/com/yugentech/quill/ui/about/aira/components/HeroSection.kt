@@ -57,7 +57,7 @@ fun HeroSection() {
     var currentImage by remember { mutableStateOf(airaImages.first()) }
     LaunchedEffect(Unit) {
         while (true) {
-            delay(2500L)
+            delay(1500L)
             currentImage = airaImages.filter { it != currentImage }.random()
         }
     }
@@ -86,7 +86,7 @@ fun HeroSection() {
             ) {
                 Crossfade(
                     targetState = currentImage,
-                    animationSpec = tween(durationMillis = 700),
+                    animationSpec = tween(durationMillis = 400),
                     label = "aira-avatar"
                 ) { imageRes ->
                     Image(
