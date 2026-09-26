@@ -13,3 +13,15 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# Kotlin compiler daemon data and crash logs
+.kotlin/
+
+# Per-developer Android Studio state
+/.idea/deviceManager.xml
+
+# Stray Node files at the repo root (the Cloud Functions project lives in functions/,
+# which has its own .gitignore)
+/node_modules/
+/package.json
+/package-lock.json
