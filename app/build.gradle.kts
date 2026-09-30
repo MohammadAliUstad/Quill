@@ -29,7 +29,7 @@ android {
         minSdk = 26
         targetSdk = 37
 
-        versionCode = 12
+        versionCode = 13
         versionName = "4.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -89,8 +89,6 @@ dependencies {
     implementation(project(":domain"))
 
     implementation(libs.firebase.functions.ktx)
-    implementation(libs.androidx.graphics.shapes)
-    implementation(libs.androidx.lifecycle.process)
     implementation(libs.billing.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.material3)
@@ -103,7 +101,6 @@ dependencies {
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.ktor.client.okhttp)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -114,26 +111,20 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.runtime)
     implementation(libs.google.material)
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.compose.material3.window.size.class1)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.accompanist.navigation.animation)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.database.ktx)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
     implementation(libs.play.services.auth)
     implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animation.graphics)
-    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.core)
     implementation(libs.androidx.work.runtime.ktx)

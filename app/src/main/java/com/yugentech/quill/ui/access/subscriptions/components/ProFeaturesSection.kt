@@ -70,6 +70,14 @@ fun ProFeaturesSection() {
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
         )
+
+        // Quota cost note: applies to both tiers
+        Text(
+            text = "Each question to Aira uses 1 query. Each generated image uses 3 queries.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = MaterialTheme.spacing.xs)
+        )
     }
 }
 

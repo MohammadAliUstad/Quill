@@ -16,10 +16,10 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.acknowledgePurchase
 import com.android.billingclient.api.consumePurchase
-import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
 import com.yugentech.quill.billing.model.ProductIds
 import com.yugentech.quill.domain.BillingEvent
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,8 +28,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.resume
 import timber.log.Timber
+
+private const val CONNECTION_TIMEOUT_MS = 15_000L
 
 class BillingService(context: Context) {
 
@@ -88,13 +93,50 @@ class BillingService(context: Context) {
         .enablePendingPurchases(
             PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
         )
+        // No enableAutoServiceReconnection(): any API call made while the initial connection is
+        // still in flight makes it retry startConnection(), which Play rejects with "already in
+        // the process of connecting" -- and the whole client ends up disconnected. Reconnection
+        // is handled by ensureConnected() below instead.
         .build()
 
+    // The single in-flight connection attempt, shared by every caller that needs Play.
+    private var pendingConnection: CompletableDeferred<Boolean>? = null
+
     fun connect() {
+        scope.launch {
+            if (ensureConnected()) {
+                if (_subProducts.value.isEmpty()) querySubProducts()
+                if (_tipProducts.value.isEmpty()) queryTipProducts()
+            }
+        }
+    }
+
+    // Suspends until the client is connected (or the attempt fails/times out). Concurrent callers
+    // wait on the same attempt instead of each calling startConnection().
+    private suspend fun ensureConnected(): Boolean {
+        if (billingClient.isReady) return true
+
+        val attempt = synchronized(this) {
+            pendingConnection?.takeIf { it.isActive }
+                ?: CompletableDeferred<Boolean>().also {
+                    pendingConnection = it
+                    startConnection(it)
+                }
+        }
+
+        return withTimeoutOrNull(CONNECTION_TIMEOUT_MS) { attempt.await() } ?: run {
+            Timber.e("BillingClient connection timed out")
+            false
+        }
+    }
+
+    private fun startConnection(attempt: CompletableDeferred<Boolean>) {
+        Timber.d("BillingClient connecting")
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(result: BillingResult) {
                 if (result.responseCode == BillingClient.BillingResponseCode.OK) {
                     Timber.d("BillingClient connected")
+                    attempt.complete(true)
                     scope.launch {
                         querySubProducts()
                         queryTipProducts()
@@ -102,54 +144,83 @@ class BillingService(context: Context) {
                         currentUserId?.let { restorePurchases(it) }
                     }
                 } else {
-                    Timber.e("BillingClient setup failed: ${result.debugMessage}")
+                    Timber.e("BillingClient setup failed [${result.responseCode}]: ${result.debugMessage}")
+                    attempt.complete(false)
                 }
             }
 
             override fun onBillingServiceDisconnected() {
+                // The next ensureConnected() call starts a fresh attempt.
                 Timber.w("BillingClient disconnected")
+                attempt.complete(false)
             }
         })
     }
 
     private suspend fun querySubProducts() {
-        val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(
-                ProductIds.subs.map { id ->
-                    QueryProductDetailsParams.Product.newBuilder()
-                        .setProductId(id)
-                        .setProductType(BillingClient.ProductType.SUBS)
-                        .build()
-                }
-            )
-            .build()
-
-        val (result, products) = billingClient.queryProductDetails(params)
-        if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-            _subProducts.value = products ?: emptyList()
-        }
+        queryProducts(ProductIds.subs, BillingClient.ProductType.SUBS)?.let { _subProducts.value = it }
     }
 
     private suspend fun queryTipProducts() {
+        queryProducts(ProductIds.tips, BillingClient.ProductType.INAPP)?.let { _tipProducts.value = it }
+    }
+
+    // Uses the callback API rather than the ktx extension because only the callback exposes
+    // unfetchedProductList -- the one place Play says *why* a product ID came back empty.
+    private suspend fun queryProducts(ids: List<String>, type: String): List<ProductDetails>? {
+        if (!ensureConnected()) return null
+
         val params = QueryProductDetailsParams.newBuilder()
             .setProductList(
-                ProductIds.tips.map { id ->
+                ids.map { id ->
                     QueryProductDetailsParams.Product.newBuilder()
                         .setProductId(id)
-                        .setProductType(BillingClient.ProductType.INAPP)
+                        .setProductType(type)
                         .build()
                 }
             )
             .build()
 
-        val (result, products) = billingClient.queryProductDetails(params)
-        if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-            _tipProducts.value = products ?: emptyList()
+        return suspendCancellableCoroutine { cont ->
+            billingClient.queryProductDetailsAsync(params) { result, queryResult ->
+                if (result.responseCode != BillingClient.BillingResponseCode.OK) {
+                    Timber.e("Product query ($type) failed [${result.responseCode}]: ${result.debugMessage}")
+                    cont.resume(null)
+                    return@queryProductDetailsAsync
+                }
+
+                queryResult.unfetchedProductList.forEach { unfetched ->
+                    Timber.w("Product not fetched ($type): ${unfetched.productId} status=${unfetched.statusCode}")
+                }
+
+                cont.resume(queryResult.productDetailsList)
+            }
         }
+    }
+
+    // Products may be missing if the initial query failed or never ran. Try once more on demand
+    // instead of failing the purchase outright.
+    private suspend fun findSubProduct(): ProductDetails? {
+        _subProducts.value.find { it.productId == ProductIds.QUILL_PRO }?.let { return it }
+        Timber.w("Subscription product missing on purchase; re-querying")
+        querySubProducts()
+        return _subProducts.value.find { it.productId == ProductIds.QUILL_PRO }
+    }
+
+    private suspend fun findTipProduct(productId: String): ProductDetails? {
+        _tipProducts.value.find { it.productId == productId }?.let { return it }
+        Timber.w("Tip product $productId missing on purchase; re-querying")
+        queryTipProducts()
+        return _tipProducts.value.find { it.productId == productId }
     }
 
     fun launchSubscriptionFlow(activity: Activity, basePlanId: String, userId: String) {
         scope.launch {
+            if (!ensureConnected()) {
+                _events.emit(BillingEvent.Error("Couldn't reach Google Play. Please try again."))
+                return@launch
+            }
+
             val queryParams = QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.SUBS)
                 .build()
@@ -172,23 +243,24 @@ class BillingService(context: Context) {
                 }
             }
 
+            val product = findSubProduct()
+
+            if (product == null) {
+                _events.emit(BillingEvent.Error("Product details not loaded. Please try again."))
+                return@launch
+            }
+
+            val offerToken = product.subscriptionOfferDetails
+                ?.firstOrNull { it.basePlanId == basePlanId }
+                ?.offerToken
+
+            if (offerToken == null) {
+                Timber.e("No offer for base plan $basePlanId; available: ${product.subscriptionOfferDetails?.map { it.basePlanId }}")
+                _events.emit(BillingEvent.Error("Selected plan unavailable."))
+                return@launch
+            }
+
             withContext(Dispatchers.Main) {
-                val product = _subProducts.value.find { it.productId == ProductIds.QUILL_PRO }
-
-                if (product == null) {
-                    _events.emit(BillingEvent.Error("Product details not loaded. Please try again."))
-                    return@withContext
-                }
-
-                val offerToken = product.subscriptionOfferDetails
-                    ?.firstOrNull { it.basePlanId == basePlanId }
-                    ?.offerToken
-
-                if (offerToken == null) {
-                    _events.emit(BillingEvent.Error("Selected plan unavailable."))
-                    return@withContext
-                }
-
                 val flowParams = BillingFlowParams.newBuilder()
                     .setObfuscatedAccountId(userId)
                     .setProductDetailsParamsList(
@@ -208,7 +280,7 @@ class BillingService(context: Context) {
 
     fun launchTipFlow(activity: Activity, productId: String) {
         scope.launch {
-            val product = _tipProducts.value.find { it.productId == productId }
+            val product = findTipProduct(productId)
             if (product == null) {
                 _events.emit(BillingEvent.Error("Product not available. Please try again."))
                 return@launch
@@ -229,6 +301,8 @@ class BillingService(context: Context) {
     }
 
     suspend fun restorePurchases(userId: String): Boolean? {
+        if (!ensureConnected()) return null
+
         val params = QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.SUBS)
             .build()

@@ -41,8 +41,17 @@ fun BooksGrid(
     topPadding: Dp = 0.dp,
     bottomPadding: Dp = 0.dp,
     onLoadMore: (() -> Unit)? = null,
+    hideLastRow: Boolean = false,
 ) {
     val gridState = rememberLazyGridState()
+
+    // While more pages are coming, hold back the final row: it only appears once the next
+    // page has loaded beneath it (and the loading indicator is gone), so the grid never ends
+    // on a half-filled or placeholder row mid-feed.
+    val visibleBooks = if (hideLastRow && books.size > COLUMNS) {
+        val lastRowCount = books.size % COLUMNS
+        books.dropLast(if (lastRowCount == 0) COLUMNS else lastRowCount)
+    } else books
 
     val shouldLoadMore by remember {
         derivedStateOf {
@@ -59,8 +68,8 @@ fun BooksGrid(
     // Always pad to complete the last row, regardless of pagination state.
     // This keeps the last row stable during load transitions and prevents
     // the 2-book flash when isPaginating toggles.
-    val trailingPadding = if (books.isNotEmpty()) {
-        val rem = books.size % COLUMNS
+    val trailingPadding = if (visibleBooks.isNotEmpty()) {
+        val rem = visibleBooks.size % COLUMNS
         if (rem != 0) COLUMNS - rem else 0
     } else 0
 
@@ -78,7 +87,7 @@ fun BooksGrid(
         modifier = Modifier.fillMaxSize()
     ) {
         items(
-            items = books,
+            items = visibleBooks,
             key = { book -> book.id }
         ) { book ->
             StandardBookItem(

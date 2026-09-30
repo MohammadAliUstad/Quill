@@ -7,39 +7,37 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Brush
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush as GradientBrush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,7 +88,7 @@ fun SelectionToolbar(
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 8.dp, vertical = 9.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -100,56 +98,7 @@ fun SelectionToolbar(
                     icon = null,
                     label = "Ask Aira",
                     tint = primaryColor,
-                    isAnimated = true,
-                    customContent = { scale, alpha ->
-                        // scale swings 1.0-1.1; stretch that same phase into a
-                        // stronger 0.5-1.0 alpha swing so the glow visibly breathes.
-                        val glowAlpha = 0.5f + (scale - 1f) * 5f
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.size(38.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(CircleShape)
-                                    .graphicsLayer {
-                                        scaleX = scale
-                                        scaleY = scale
-                                        this.alpha = glowAlpha
-                                    }
-                                    .background(
-                                        brush = GradientBrush.radialGradient(
-                                            0.0f to primaryColor.copy(alpha = 1f),
-                                            0.4f to primaryColor.copy(alpha = 0.55f),
-                                            1.0f to Color.Transparent,
-                                            radius = with(LocalDensity.current) { 19.dp.toPx() }
-                                        ),
-                                        shape = CircleShape
-                                    )
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .border(1.5.dp, primaryColor.copy(alpha = 0.4f), CircleShape)
-                            )
-                            Text(
-                                text = "✦",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontSize = 18.sp,
-                                    lineHeight = 18.sp
-                                ),
-                                color = primaryColor,
-                                modifier = Modifier
-                                    .offset(y = (-2).dp)
-                                    .graphicsLayer {
-                                        scaleX = scale
-                                        scaleY = scale
-                                        this.alpha = alpha
-                                    }
-                            )
-                        }
-                    },
+                    customContent = { AiraBadge() },
                     onClick = {
                         haptic.performHaptic()
                         onAskAira(selectionInfo.text)
@@ -191,45 +140,56 @@ fun SelectionToolbar(
     }
 }
 
+// Aira's mark: the same Cookie9Sided shape used on the Aira screen, turning slowly so the
+// action reads as "live" without the glow fighting the sparkle for contrast. Only the
+// shape rotates; the sparkle stays upright.
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun AiraBadge() {
+    val rotation by rememberInfiniteTransition(label = "aira_badge").animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(12000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rotation"
+    )
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(IconSlotSize)
+    ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer { rotationZ = rotation }
+                .background(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = MaterialShapes.Cookie9Sided.toShape()
+                )
+        )
+        Icon(
+            imageVector = Icons.Rounded.AutoAwesome,
+            contentDescription = "Ask Aira",
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+// Every action gets the same icon slot so the labels line up across the row.
+private val IconSlotSize = 32.dp
+
 @Composable
 private fun ToolbarAction(
     modifier: Modifier = Modifier,
     icon: ImageVector?,
     label: String,
     tint: Color = MaterialTheme.colorScheme.onSurface,
-    isAnimated: Boolean = false,
-    customContent: (@Composable (scale: Float, alpha: Float) -> Unit)? = null,
+    customContent: (@Composable () -> Unit)? = null,
     onClick: () -> Unit
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "icon_anim")
-    val scale by if (isAnimated) {
-        infiniteTransition.animateFloat(
-            initialValue = 1f,
-            targetValue = 1.1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(2400, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "scale"
-        )
-    } else {
-        androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(1f) }
-    }
-
-    val alpha by if (isAnimated) {
-        infiniteTransition.animateFloat(
-            initialValue = 0.85f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(2400, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "alpha"
-        )
-    } else {
-        androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(1f) }
-    }
-
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
@@ -238,21 +198,20 @@ private fun ToolbarAction(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (customContent != null) {
-            customContent(scale, alpha)
-        } else if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                modifier = Modifier
-                    .size(22.dp)
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        this.alpha = alpha
-                    },
-                tint = tint
-            )
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(IconSlotSize)
+        ) {
+            if (customContent != null) {
+                customContent()
+            } else if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    modifier = Modifier.size(22.dp),
+                    tint = tint
+                )
+            }
         }
 
         Spacer(Modifier.height(4.dp))
@@ -263,7 +222,7 @@ private fun ToolbarAction(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.1.sp
             ),
-            color = if (isAnimated) tint else tint.copy(alpha = 0.9f),
+            color = if (customContent != null) tint else tint.copy(alpha = 0.9f),
             maxLines = 1
         )
     }

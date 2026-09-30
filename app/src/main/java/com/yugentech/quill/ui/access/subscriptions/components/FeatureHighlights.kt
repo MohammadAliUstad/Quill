@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Translate
@@ -53,6 +54,11 @@ fun FeatureHighlights() {
             title = "Active Spoiler Protection",
             description = "Aira's knowledge is locked to your progress, preventing accidental spoilers.",
             icon = Icons.Default.Lock
+        ),
+        FeatureItem(
+            title = "AI Can Make Mistakes",
+            description = "Aira is an AI, so answers may not always be accurate.",
+            icon = Icons.Default.Info
         )
     )
 

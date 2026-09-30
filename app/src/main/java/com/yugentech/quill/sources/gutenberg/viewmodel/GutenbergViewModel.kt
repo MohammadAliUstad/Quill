@@ -42,7 +42,16 @@ class GutenbergViewModel(
     private val _navigationEvent = MutableSharedFlow<GutenbergNavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
+    private val _hasMorePages = MutableStateFlow(false)
+    val hasMorePages = _hasMorePages.asStateFlow()
+
     private var nextPageUrl: String? = null
+        set(value) {
+            field = value
+            _hasMorePages.value = value != null
+        }
+    // Kept so clearing a search can resume the popular feed's pagination.
+    private var popularSecondPageUrl: String? = null
     private var contentJob: Job? = null
     private var paginationJob: Job? = null
 
@@ -73,11 +82,20 @@ class GutenbergViewModel(
     }
 
     fun onSearchQuery(query: String) {
+        // A page or search still in flight belongs to the list being left; cancel it so its
+        // results aren't appended to (or replace) the list being switched to.
+        contentJob?.cancel()
+        paginationJob?.cancel()
+        _isPaginating.value = false
+        _isLoading.value = false
+
         if (query.isBlank()) {
             paginatedMemoryCache.clear()
+            _error.value = null
             _displayTitle.value = "Popular Books"
             _booksState.value = cachedPopularBooks
-            nextPageUrl = null
+            // Back on the first popular page, so pagination resumes from its second page.
+            nextPageUrl = popularSecondPageUrl
             return
         }
 
@@ -85,7 +103,6 @@ class GutenbergViewModel(
         paginatedMemoryCache.clear()
         nextPageUrl = null
         _error.value = null
-        contentJob?.cancel()
 
         contentJob = viewModelScope.launch {
             _isLoading.value = true
@@ -114,7 +131,10 @@ class GutenbergViewModel(
             Timber.d("syncPopularFeed() started")
             gutenbergRepository.syncPopularFeed()
                 .onSuccess { url ->
-                    nextPageUrl = url
+                    popularSecondPageUrl = url
+                    // A search may have started while the sync was running; don't hand it the
+                    // popular feed's next page.
+                    if (_displayTitle.value == "Popular Books") nextPageUrl = url
                     Timber.d("syncPopularFeed() succeeded — nextPageUrl=$url")
                 }
                 .onFailure { Timber.e(it, "syncPopularFeed() failed") }

@@ -43,19 +43,9 @@ object LicensesContent {
 
         // AI & ML
         LibraryOption(
-            name = "Gemini SDK (generativeai)",
-            author = "Google",
-            url = "https://github.com/google-gemini/generative-ai-android"
-        ),
-        LibraryOption(
             name = "ONNX Runtime",
             author = "Microsoft",
             url = "https://github.com/microsoft/onnxruntime"
-        ),
-        LibraryOption(
-            name = "MediaPipe Tasks Text",
-            author = "Google",
-            url = "https://developers.google.com/mediapipe"
         ),
 
         // Networking
@@ -127,11 +117,6 @@ object LicensesContent {
         ),
 
         // Utilities
-        LibraryOption(
-            name = "Accompanist",
-            author = "Google",
-            url = "https://github.com/google/accompanist"
-        ),
         LibraryOption(
             name = "Timber",
             author = "Jake Wharton",

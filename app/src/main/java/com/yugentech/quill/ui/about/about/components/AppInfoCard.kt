@@ -1,5 +1,6 @@
 package com.yugentech.quill.ui.about.about.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -24,8 +25,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.yugentech.quill.R
 import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
@@ -58,6 +63,9 @@ fun AppInfoCard() {
             Box(
                 modifier = Modifier
                     .size(MaterialTheme.components.imageSizeMedium)
+                    // The icon on its launcher background, same tile as on the More from us screen.
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(colorResource(R.color.ic_launcher_background))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -74,7 +82,7 @@ fun AppInfoCard() {
             ) {
                 AnimatedQuillIcon(
                     isAnimating = isAnimating,
-                    modifier = Modifier.requiredSize(MaterialTheme.components.imageSizeLarge * 0.55f)
+                    modifier = Modifier.requiredSize(64.dp)
                 )
             }
 

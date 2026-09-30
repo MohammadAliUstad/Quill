@@ -100,10 +100,14 @@ class QuotaRepositoryImpl(
             currentQuota = quotaDao.getQuota(userId)
         }
 
-        if (currentQuota != null && currentQuota.remaining < amount) return false
+        // This runs after the response was already delivered, so it must never refuse to charge.
+        // A costly action (e.g. an image) with fewer units left than it costs takes whatever is
+        // left, landing exactly on the limit rather than going over it or being skipped for free.
+        val charge = currentQuota?.let { minOf(amount, it.remaining) } ?: amount
+        if (charge <= 0) return false
 
-        quotaDao.incrementUsage(userId, amount)
-        quotaService.incrementUsage(userId, amount)
+        quotaDao.incrementUsage(userId, charge)
+        quotaService.incrementUsage(userId, charge)
 
         return true
     }

@@ -58,7 +58,7 @@ private fun Color.toCssRgba(): String {
     return "rgba($r, $g, $b, $alpha)"
 }
 
-private const val TOOLBAR_HEIGHT_DP = 60f
+private const val TOOLBAR_HEIGHT_DP = 66f
 
 @OptIn(ExperimentalReadiumApi::class)
 @Composable
@@ -652,8 +652,8 @@ private fun computeToolbarY(rectTop: Float, rectBottom: Float, screenHeight: Flo
     // Require 50dp of breathing room beyond the toolbar height before placing above/below.
     // If the available space is even slightly marginal, overlay over the selection instead.
     val comfortThreshold = TOOLBAR_HEIGHT_DP + 50f
-    val gapAbove = 15f
-    val gapBelow = 6f
+    val gapAbove = 8f
+    val gapBelow = 4f
     val hasRoomAbove = rectTop >= comfortThreshold
     val hasRoomBelow = (screenHeight - rectBottom) >= comfortThreshold
     return when {

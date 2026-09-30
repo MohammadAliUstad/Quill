@@ -2,6 +2,7 @@ package com.yugentech.quill.reader.ui.components.aira.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -12,6 +13,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -30,10 +32,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,6 +48,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -55,6 +62,9 @@ import com.yugentech.quill.aira.chat.quickChat.prompt.QuickPrompt
 import com.yugentech.quill.reader.viewmodel.quick.QuickUiState
 import kotlinx.coroutines.delay
 import java.io.File
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 private sealed class ResponseAreaState {
     data object Loading : ResponseAreaState()
@@ -211,41 +221,62 @@ fun PeekResponseArea(
     }
 }
 
+// Staged, in the order the work actually happens. The card steps through them once and holds
+// on the last line instead of looping, so a slow generation never cycles back to "Reading".
 private val IMAGE_GENERATION_CAPTIONS = listOf(
-    "Rendering pixels into meaning…",
-    "Translating words into light…",
-    "Sketching the scene in silicon…",
-    "Weaving imagination into form…",
-    "Painting with borrowed light…",
-    "Composing a visual echo…",
-    "Summoning shapes from text…",
-    "Turning ink into imagery…"
+    "Reading the passage",
+    "Picking out the key details",
+    "Sketching the composition",
+    "Adding color and light",
+    "Refining the details",
+    "Finishing up"
 )
 
 // A square placeholder matching the eventual image's rounded-corner treatment, so the
 // transition into the real result reads as "this card fills in" rather than a layout swap.
-// The motion is the standard skeleton-loader shimmer: a soft highlight band sweeps fully
-// off-screen on both ends before restarting, so the loop has no visible snap. The icon stays
-// completely still -- only the shimmer and the rotating caption move.
+// Soft washes of the theme colors drift across the card like an image developing; every blob
+// moves on whole cycles of the same phase, so the loop has no visible seam. The centre mark is
+// Aira's slowly turning Cookie9Sided (same as the selection toolbar), with the sparkle upright.
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ImageGeneratingCard(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "imageGenCard")
 
-    val shimmerProgress by infiniteTransition.animateFloat(
+    val phase by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 1f,
+        targetValue = (2 * PI).toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = LinearEasing),
+            animation = tween(7500, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
-        label = "shimmerProgress"
+        label = "washPhase"
+    )
+    val markRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(11000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "markRotation"
+    )
+    // The mark breathes gently as it turns, so the card reads as actively working rather
+    // than just drifting.
+    val markScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.07f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "markScale"
     )
 
     var captionIndex by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
-        while (true) {
-            delay(2800)
-            captionIndex = (captionIndex + 1) % IMAGE_GENERATION_CAPTIONS.size
+        while (captionIndex < IMAGE_GENERATION_CAPTIONS.lastIndex) {
+            delay(3000)
+            captionIndex++
         }
     }
 
@@ -253,7 +284,9 @@ private fun ImageGeneratingCard(modifier: Modifier = Modifier) {
     // background to read as a distinct solid card -- surfaceContainerHighest gives it real
     // contrast instead of looking like a translucent patch over the sheet.
     val baseColor = MaterialTheme.colorScheme.surfaceContainerHighest
-    val highlight = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+    val washA = MaterialTheme.colorScheme.primary.copy(alpha = 0.26f)
+    val washB = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.24f)
+    val washC = MaterialTheme.colorScheme.secondary.copy(alpha = 0.20f)
 
     Box(
         modifier = modifier
@@ -261,32 +294,46 @@ private fun ImageGeneratingCard(modifier: Modifier = Modifier) {
             .aspectRatio(1f)
             .clip(RoundedCornerShape(16.dp))
             .background(baseColor)
-    ) {
-        // The band spans the full box width already (horizontalGradient); translating it from
-        // just past the left edge to just past the right edge sweeps the highlight across the
-        // visible card while both loop endpoints sit outside the clipped bounds.
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .graphicsLayer { translationX = (shimmerProgress * 2.4f - 0.7f) * size.width }
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(Color.Transparent, highlight, Color.Transparent)
+            .drawBehind {
+                val radius = size.minDimension * 0.6f
+                fun wash(color: Color, x: Float, y: Float) {
+                    val center = Offset(size.width * x, size.height * y)
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(color, Color.Transparent),
+                            center = center,
+                            radius = radius
+                        ),
+                        radius = radius,
+                        center = center
                     )
-                )
-        )
-
+                }
+                wash(washA, 0.32f + 0.20f * cos(phase), 0.34f + 0.16f * sin(phase))
+                wash(washB, 0.68f + 0.18f * cos(phase + 2.1f), 0.62f + 0.18f * sin(2 * phase))
+                wash(washC, 0.45f + 0.22f * sin(phase + 4.2f), 0.76f + 0.12f * cos(phase))
+            }
+    ) {
         Column(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                modifier = Modifier.size(64.dp),
                 contentAlignment = Alignment.Center
             ) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .graphicsLayer {
+                            rotationZ = markRotation
+                            scaleX = markScale
+                            scaleY = markScale
+                        }
+                        .background(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = MaterialShapes.Cookie9Sided.toShape()
+                        )
+                )
                 Icon(
                     imageVector = Icons.Filled.AutoAwesome,
                     contentDescription = null,
@@ -294,15 +341,20 @@ private fun ImageGeneratingCard(modifier: Modifier = Modifier) {
                     modifier = Modifier.size(28.dp)
                 )
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(18.dp))
             AnimatedContent(
                 targetState = captionIndex,
-                transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(300)) },
+                transitionSpec = {
+                    (slideInVertically(tween(380)) { it / 2 } + fadeIn(tween(380))) togetherWith
+                        (slideOutVertically(tween(260)) { -it / 2 } + fadeOut(tween(200))) using
+                        SizeTransform(clip = false)
+                },
                 label = "captionSwap"
             ) { index ->
                 Text(
                     text = IMAGE_GENERATION_CAPTIONS[index],
                     style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 24.dp)

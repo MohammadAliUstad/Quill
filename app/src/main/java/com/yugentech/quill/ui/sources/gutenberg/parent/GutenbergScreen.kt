@@ -59,6 +59,7 @@ fun GutenbergScreen(
     val books by viewModel.booksState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isPaginating by viewModel.isPaginating.collectAsState()
+    val hasMorePages by viewModel.hasMorePages.collectAsState()
     val displayTitle by viewModel.displayTitle.collectAsState()
     val error by viewModel.error.collectAsState()
 
@@ -139,7 +140,8 @@ fun GutenbergScreen(
                                 bottomPadding = navBarHeight,
                                 isPaginating = isPaginating,
                                 onBookClick = { book -> viewModel.onBookClick(book) },
-                                onLoadMore = { viewModel.loadNextPage() }
+                                onLoadMore = { viewModel.loadNextPage() },
+                                hideLastRow = hasMorePages
                             )
                         }
                     }

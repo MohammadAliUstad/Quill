@@ -33,6 +33,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [What's New in 4.0](#-whats-new-in-40)
 - [Key Features](#-key-features)
 - [Screenshots](#-screenshots)
 - [How Aira Works](#how-aira-works)
@@ -49,6 +50,22 @@
 Quill reimagines what a reading app can be. It pairs a carefully crafted EPUB reader with **Aira**, an AI reading companion that reads along with you. Aira answers questions about your book straight from its pages, explains difficult passages, helps you keep track of characters, and can even paint a scene you're reading, all without ever spoiling what comes next.
 
 Bring your own EPUBs or pick from thousands of free classics on **Project Gutenberg** and **Standard Ebooks**, set the mood with ambient soundscapes, and build a steady reading habit with reminders and insights.
+
+---
+
+## 🆕 What's New in 4.0
+
+- **Meet the New Aira:** rebuilt from the ground up. Aira knows whether you're asking about your book or anything else, answers straight from the pages you've read, never spoils what's ahead, and can read her answers aloud.
+- **Ask Aira From the Page:** select any word or passage while reading to define words, explain tricky lines, or find out why a moment matters, without leaving the book.
+- **Character Companion:** select a character's name to recall who they are, see what they're up to lately, or trace their whole journey so far. Always spoiler-free.
+- **Visualize Scenes:** turn any passage into a painted illustration, kept in a Visuals gallery that takes you right back to the passage it came from.
+- **Highlights:** a smoother way to select text, plus highlights you can revisit from one place and jump straight back to.
+- **A Reimagined Reader:** new reading settings, a cleaner table of contents, a warm night light, and page turning with your volume keys.
+- **Ambient Sounds:** six soundscapes, from gentle rain to a crackling fireplace. Preview them before you play, or have them start automatically when you open a book.
+- **Reading Reminders:** a daily reminder at the time you pick, or playful nudges to keep your streak going.
+- **Discover & Organize:** a redesigned Discover tab, better Project Gutenberg and Standard Ebooks browsing, a quick way to add your own books, and categories you can reorder by dragging.
+- **Reading Insights:** reading time, streak, peak reading hours, favorite authors, and how you read with Aira, all on a refreshed Insights screen.
+- **A Fresh Look:** a brand new app icon and splash screen, the new Harbor color theme, and a polished feel across the whole app.
 
 ---
 
@@ -96,7 +113,7 @@ Select text while reading and the Aira peek bar offers quick actions based on wh
 ### Ambient Sounds
 
 - Six soundscapes: **Forest, Rain, Brown Noise, Fireplace, Library, Riverside**.
-- Preview sounds before playing, start and stop from the reader overlay, and optionally **auto-play on open**.
+- Preview sounds before playing, start and stop from the reader overlay, and optionally **auto-play on open**. Volume follows your device's own volume controls.
 - Seamless looping with crossfades.
 
 ### Library & Sources
@@ -138,38 +155,38 @@ Quotas reset daily. Subscriptions are handled through Google Play Billing.
 <table width="100%">
   <tr>
     <td align="center" width="25%">
-      <img src="screenshots/Library.jpg" alt="Library" width="100%"/>
+      <img src="screenshots/Library.png" alt="Library" width="100%"/>
       <br/><sub><b>Library</b></sub>
     </td>
     <td align="center" width="25%">
-      <img src="screenshots/Details.jpg" alt="Details" width="100%"/>
-      <br/><sub><b>Details</b></sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="screenshots/Discover.jpg" alt="Discover" width="100%"/>
+      <img src="screenshots/Discover.png" alt="Discover" width="100%"/>
       <br/><sub><b>Discover</b></sub>
     </td>
     <td align="center" width="25%">
-       <img src="screenshots/Aira.jpg" alt="Aira" width="100%"/>
-      <br/><sub><b>Aira</b></sub>
+      <img src="screenshots/Details.png" alt="Book Details" width="100%"/>
+      <br/><sub><b>Book Details</b></sub>
     </td>
-  </tr>
-  <tr>
     <td align="center" width="25%">
       <img src="screenshots/Reader.jpg" alt="Reader" width="100%"/>
       <br/><sub><b>Reader</b></sub>
     </td>
+  </tr>
+  <tr>
     <td align="center" width="25%">
-      <img src="screenshots/Settings.jpg" alt="Settings" width="100%"/>
-      <br/><sub><b>Settings</b></sub>
+      <img src="screenshots/AI.png" alt="Ask Aira From the Page" width="100%"/>
+      <br/><sub><b>Ask Aira From the Page</b></sub>
     </td>
     <td align="center" width="25%">
-      <img src="screenshots/Search.jpg" alt="Search" width="100%"/>
-      <br/><sub><b>Search</b></sub>
+      <img src="screenshots/Aira.png" alt="Aira Chat" width="100%"/>
+      <br/><sub><b>Aira Chat</b></sub>
     </td>
     <td align="center" width="25%">
-      <img src="screenshots/AI.jpg" alt="AI" width="100%"/>
-      <br/><sub><b>AI</b></sub>
+      <img src="screenshots/Settings.png" alt="Reading Settings" width="100%"/>
+      <br/><sub><b>Reading Settings</b></sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="screenshots/Insights.png" alt="Insights" width="100%"/>
+      <br/><sub><b>Insights</b></sub>
     </td>
   </tr>
 </table>
