@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -102,6 +103,15 @@ fun AiraPeekBar(
     val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
 
+    // Closing hides the bar and clears the response/selection upstream in the same moment, but
+    // the exit slide takes 300ms -- rendering the live values would swap a long response for the
+    // chips mid-slide, collapsing the sheet and sliding the chips back up into view before it
+    // finishes leaving. Hold whatever was last shown while visible so it slides out unchanged.
+    val shownUiState = rememberHeldWhileHidden(isVisible, airaUiState)
+    val shownSelectedText = rememberHeldWhileHidden(isVisible, selectedText)
+    val shownSelectedTextLocator = rememberHeldWhileHidden(isVisible, selectedTextLocator)
+    val shownChapterIndex = rememberHeldWhileHidden(isVisible, currentChapterIndex)
+
     // Tapping outside closes the peek bar via AnimatedVisibility, which disposes its content --
     // including PeekResponseArea's TypewriterText and whatever reveal progress it had. Remembered
     // here, above that AnimatedVisibility, so it survives the close/reopen and a message that
@@ -120,8 +130,8 @@ fun AiraPeekBar(
     var isFocused by remember { mutableStateOf(false) }
     var currentGreeting by remember { mutableStateOf("") }
 
-    val contentToActUpon = remember(airaUiState.response, airaUiState.error, currentGreeting) {
-        airaUiState.error ?: airaUiState.response ?: currentGreeting
+    val contentToActUpon = remember(shownUiState.response, shownUiState.error, currentGreeting) {
+        shownUiState.error ?: shownUiState.response ?: currentGreeting
     }
 
     val onCopyResponse = {
@@ -132,11 +142,11 @@ fun AiraPeekBar(
         }
     }
 
-    val activeChips = remember(selectedText, currentChapterIndex, selectedTextLocator) {
-        resolveChips(selectedText, currentChapterIndex, selectedTextLocator)
+    val activeChips = remember(shownSelectedText, shownChapterIndex, shownSelectedTextLocator) {
+        resolveChips(shownSelectedText, shownChapterIndex, shownSelectedTextLocator)
     }
 
-    var enforceLimitUi by remember { mutableStateOf(!airaUiState.canSendQuery) }
+    var enforceLimitUi by remember { mutableStateOf(!shownUiState.canSendQuery) }
 
     // null = automatic, content-driven height. Once the user drags the handle, this becomes
     // an explicit override that sticks for the rest of this peek bar session, regardless of
@@ -147,7 +157,7 @@ fun AiraPeekBar(
 
     // Only a real result is worth resizing around -- the empty chips/greeting screen has
     // nothing whose size the user would want to adjust.
-    val hasResponseContent = airaUiState.response != null || airaUiState.imagePath != null
+    val hasResponseContent = shownUiState.response != null || shownUiState.imagePath != null
 
     // Natural (unclamped) heights of each sibling, tracked independently of whatever height the
     // user has manually forced the sheet to -- these feed the drag handle's upward limit so it
@@ -165,10 +175,17 @@ fun AiraPeekBar(
     val responseScrollState = rememberScrollState()
     val maxDragUpSlackPx = with(density) { MAX_DRAG_UP_SLACK.toPx() }
 
+    val visibleState = remember { MutableTransitionState(isVisible) }
+    visibleState.targetState = isVisible
+
     LaunchedEffect(isVisible) {
-        if (isVisible) {
-            enforceLimitUi = !airaUiState.canSendQuery
-        } else {
+        if (isVisible) enforceLimitUi = !shownUiState.canSendQuery
+    }
+
+    // Reset only once the exit slide has fully finished -- clearing manualHeightPx while still
+    // sliding out would snap a hand-resized sheet back to its automatic height mid-animation.
+    LaunchedEffect(visibleState.isIdle, visibleState.currentState) {
+        if (visibleState.isIdle && !visibleState.currentState) {
             inputText = ""
             manualHeightPx = null
         }
@@ -196,7 +213,7 @@ fun AiraPeekBar(
     val minSheetHeightPx = with(density) { MIN_SHEET_HEIGHT.toPx() }
     val maxSheetHeightPx = with(density) { maxSheetHeight.toPx() }
 
-    val canSend = inputText.isNotBlank() && !airaUiState.isLoading
+    val canSend = inputText.isNotBlank() && !shownUiState.isLoading
 
     val buttonContainerColor by animateColorAsState(
         targetValue = if (canSend) MaterialTheme.colorScheme.primary
@@ -213,12 +230,12 @@ fun AiraPeekBar(
 
     fun send(text: String) {
         if (text.isBlank()) return
-        if (!airaUiState.canSendQuery) {
+        if (!shownUiState.canSendQuery) {
             enforceLimitUi = true
             return
         }
-        if (selectedText != null) {
-            onQuickAction(QuickPrompt.CustomQuestion(selectedText, text))
+        if (shownSelectedText != null) {
+            onQuickAction(QuickPrompt.CustomQuestion(shownSelectedText, text))
         } else {
             onSendMessage(text)
         }
@@ -232,7 +249,7 @@ fun AiraPeekBar(
         contentAlignment = Alignment.BottomCenter
     ) {
         AnimatedVisibility(
-            visible = isVisible,
+            visibleState = visibleState,
             enter = slideInVertically(
                 initialOffsetY = { it },
                 animationSpec = tween(380, easing = FastOutSlowInEasing)
@@ -256,10 +273,10 @@ fun AiraPeekBar(
                 // different one (or back to chips) should never carry over a stale scroll
                 // offset from whatever was previously showing.
                 val contentKind = when {
-                    airaUiState.isLoading -> 0
+                    shownUiState.isLoading -> 0
                     enforceLimitUi -> 1
-                    airaUiState.error != null -> 2
-                    airaUiState.response != null -> 3
+                    shownUiState.error != null -> 2
+                    shownUiState.response != null -> 3
                     else -> 4
                 }
 
@@ -326,16 +343,16 @@ fun AiraPeekBar(
                                     .padding(top = headerHeightDp)
                             ) {
                                 PeekResponseArea(
-                                    airaUiState = airaUiState,
+                                    airaUiState = shownUiState,
                                     showLimitReached = enforceLimitUi,
-                                    selectedText = selectedText,
+                                    selectedText = shownSelectedText,
                                     activeChips = activeChips,
-                                    startRevealed = airaUiState.response != null &&
-                                        airaUiState.response == lastRevealedResponse,
+                                    startRevealed = shownUiState.response != null &&
+                                        shownUiState.response == lastRevealedResponse,
                                     onResponseRevealed = { lastRevealedResponse = it },
                                     onChipClick = { intent ->
                                         haptic.performHaptic(view)
-                                        if (!airaUiState.canSendQuery) {
+                                        if (!shownUiState.canSendQuery) {
                                             enforceLimitUi = true
                                         } else {
                                             onQuickAction(intent)
@@ -427,8 +444,8 @@ fun AiraPeekBar(
                                 )
                                 AiraPeekHeader(
                                     modifier = Modifier.padding(top = 12.dp),
-                                    isLoading = airaUiState.isLoading,
-                                    hasResponse = airaUiState.response != null,
+                                    isLoading = shownUiState.isLoading,
+                                    hasResponse = shownUiState.response != null,
                                     onDismiss = {
                                         haptic.performHaptic(view)
                                         onDismiss()
@@ -463,7 +480,7 @@ fun AiraPeekBar(
                                 InputBar(
                                     inputText = inputText,
                                     onInputChange = { inputText = it },
-                                    airaUiState = airaUiState,
+                                    airaUiState = shownUiState,
                                     canSend = canSend,
                                     buttonContainerColor = buttonContainerColor,
                                     buttonContentColor = buttonContentColor,
@@ -481,7 +498,7 @@ fun AiraPeekBar(
                                 )
                             } else {
                                 QuotaLimitBar(
-                                    isPro = airaUiState.isPro
+                                    isPro = shownUiState.isPro
                                 )
                             }
                         }
@@ -490,4 +507,16 @@ fun AiraPeekBar(
             }
         }
     }
+}
+
+private class Held<T>(var value: T)
+
+// Tracks [value] while visible and keeps returning the last visible one once hidden. A plain
+// holder rather than state: a change to [value] already recomposes the caller, so nothing needs
+// to observe the write.
+@Composable
+private fun <T> rememberHeldWhileHidden(isVisible: Boolean, value: T): T {
+    val held = remember { Held(value) }
+    if (isVisible) held.value = value
+    return held.value
 }
