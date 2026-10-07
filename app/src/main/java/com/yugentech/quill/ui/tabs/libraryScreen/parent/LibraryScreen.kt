@@ -54,6 +54,7 @@ import com.yugentech.quill.library.viewmodel.LibraryViewModel
 import com.yugentech.quill.ui.tabs.libraryScreen.components.BookRow
 import com.yugentech.quill.ui.tabs.libraryScreen.components.HistoryCarousel
 import com.yugentech.quill.ui.tabs.libraryScreen.components.LastReadBookCard
+import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
 import com.yugentech.quill.ui.tabs.libraryScreen.components.LibraryParallaxBackground
 import kotlinx.coroutines.delay
 
@@ -254,7 +255,7 @@ fun LibraryScreen(
                     if (parallaxCoverUrl != null) {
                         Box(modifier = Modifier.fillMaxSize().hazeSource(hazeState)) {
                             LibraryParallaxBackground(
-                                coverUrl = parallaxCoverUrl,
+                                coverUrl = parallaxCoverUrl?.toCoverThumbnailUrl(),
                                 scrollOffset = scrollState.value,
                                 headerHeight = headerHeight
                             )

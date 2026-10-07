@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.ui.tabs.discoverScreen.util.thumbnailCoverUrl
 
 import com.yugentech.theme.service.HapticService
 import org.koin.compose.koinInject
@@ -71,7 +72,7 @@ fun DiscoverBookCard(
             )
 
             AsyncImage(
-                model = book.coverUrl,
+                model = book.thumbnailCoverUrl,
                 contentDescription = book.title,
                 contentScale = ContentScale.Crop,
                 onState = { imageState = it },

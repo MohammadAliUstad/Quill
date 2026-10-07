@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.ui.tabs.discoverScreen.util.thumbnailCoverUrl
 
 @Composable
 fun StandardBookItem(
@@ -47,7 +48,7 @@ fun StandardBookItem(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         AsyncImage(
-            model = book.coverUrl,
+            model = book.thumbnailCoverUrl,
             contentDescription = "Cover of ${book.title}",
             contentScale = ContentScale.Crop,
             onState = { imageState = it },

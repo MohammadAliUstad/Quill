@@ -65,6 +65,7 @@ import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfRow
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfSkeleton
 import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarousel
 import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarouselSkeleton
+import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
 import com.yugentech.quill.ui.tabs.libraryScreen.components.LibraryParallaxBackground
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
@@ -154,7 +155,7 @@ fun DiscoverScreen(
         // --- THE PARALLAX LAYER ---
         if (parallaxCoverUrl != null) {
             LibraryParallaxBackground(
-                coverUrl = parallaxCoverUrl,
+                coverUrl = parallaxCoverUrl?.toCoverThumbnailUrl(),
                 scrollOffset = parallaxScrollOffset,
                 headerHeight = 550.dp
             )

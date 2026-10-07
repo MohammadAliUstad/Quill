@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.ui.tabs.discoverScreen.util.thumbnailCoverUrl
 
 @Composable
 fun BookParallaxBackground(
@@ -44,7 +45,7 @@ fun BookParallaxBackground(
     ) {
         // Blurred Background Image
         AsyncImage(
-            model = book.coverUrl,
+            model = book.thumbnailCoverUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier

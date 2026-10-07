@@ -43,6 +43,7 @@ import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.quill.database.view.LibraryBookView
+import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
 import com.yugentech.quill.ui.tabs.discoverScreen.components.shimmerEffect
 import com.yugentech.theme.service.HapticService
 import org.koin.compose.koinInject
@@ -95,7 +96,7 @@ fun BookItem(
 
                 // Image fades in
                 AsyncImage(
-                    model = book.coverUrl,
+                    model = book.coverUrl?.toCoverThumbnailUrl(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     onState = { imageState = it },

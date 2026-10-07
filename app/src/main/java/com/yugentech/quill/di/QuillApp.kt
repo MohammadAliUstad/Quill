@@ -2,6 +2,8 @@ package com.yugentech.quill.di
 
 import android.app.Application
 import androidx.work.Configuration
+import coil.ImageLoader
+import coil.ImageLoaderFactory
 import com.yugentech.quill.BuildConfig
 import com.yugentech.quill.di.modules.access.authModule
 import com.yugentech.quill.di.modules.access.billingModule
@@ -27,10 +29,12 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.workmanager.factory.KoinWorkerFactory
 import org.koin.androidx.workmanager.koin.workManagerFactory
+import okhttp3.Dispatcher
+import okhttp3.OkHttpClient
 import org.koin.core.context.startKoin
 import timber.log.Timber
 
-class QuillApp : Application(), Configuration.Provider {
+class QuillApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
     override fun onCreate() {
         super.onCreate()
@@ -71,5 +75,16 @@ class QuillApp : Application(), Configuration.Provider {
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(KoinWorkerFactory())
+            .build()
+
+    // Coil's default OkHttp client allows only 5 concurrent requests per host. Discover pulls
+    // dozens of covers from standardebooks.org (HTTP/1.1), so raise the cap to stop them queueing.
+    override fun newImageLoader(): ImageLoader =
+        ImageLoader.Builder(this)
+            .okHttpClient {
+                OkHttpClient.Builder()
+                    .dispatcher(Dispatcher().apply { maxRequestsPerHost = 16 })
+                    .build()
+            }
             .build()
 }

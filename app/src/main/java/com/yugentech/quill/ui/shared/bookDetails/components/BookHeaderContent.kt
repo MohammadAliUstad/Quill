@@ -63,6 +63,7 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.yugentech.quill.R
 import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.ui.tabs.discoverScreen.util.thumbnailCoverUrl
 import com.yugentech.quill.database.model.DownloadStatus
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,7 +103,7 @@ fun BookHeaderContent(
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 12.dp)
         ) {
             AsyncImage(
-                model = book.coverUrl,
+                model = book.thumbnailCoverUrl,
                 contentDescription = "Book Cover",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -223,7 +224,7 @@ fun BookHeaderContent(
 
     if (showCoverDialog) {
         CoverImageDialog(
-            coverUrl = book.coverUrl,
+            coverUrl = book.thumbnailCoverUrl,
             onDismiss = { showCoverDialog = false }
         )
     }

@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.yugentech.quill.database.view.LibraryBookView
+import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -131,7 +132,7 @@ fun HistoryCard(
         ) {
             // Image
             AsyncImage(
-                model = book.coverUrl,
+                model = book.coverUrl?.toCoverThumbnailUrl(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
