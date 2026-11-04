@@ -2,10 +2,6 @@ package com.yugentech.quill.ui.sources.standard.parent
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -38,6 +34,7 @@ import com.yugentech.quill.sources.standard.viewmodel.StandardViewModel
 import com.yugentech.quill.ui.sources.standard.components.BooksGrid
 import com.yugentech.quill.ui.sources.standard.components.SourceEmptyState
 import com.yugentech.quill.ui.sources.standard.components.StandardScreenHeader
+import com.yugentech.theme.tokens.dimensions.AppAnimations
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
@@ -58,6 +55,7 @@ fun StandardScreen(
     val error by viewModel.error.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collectLatest { event ->
@@ -110,9 +108,7 @@ fun StandardScreen(
                     !isLoading && books.isEmpty() -> SourceScreenState.Empty
                     else -> SourceScreenState.Content
                 },
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
-                },
+                transitionSpec = { fadeThrough() },
                 label = "StandardContentAnimation"
             ) { state ->
                 when (state) {

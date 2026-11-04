@@ -41,8 +41,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -57,8 +58,6 @@ import com.yugentech.quill.ui.config.category.components.DeleteCategoryDialog
 import com.yugentech.quill.ui.config.category.components.DragDropList
 import com.yugentech.quill.ui.config.category.components.PinnedShelfItem
 import com.yugentech.quill.ui.config.category.components.RenameCategoryDialog
-import com.yugentech.theme.service.HapticService
-import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,8 +66,7 @@ fun CategoryScreen(
     categoryViewModel: CategoryViewModel,
     openAddSheetOnEntry: Boolean = false
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
 
     val categories by categoryViewModel.categories.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -102,7 +100,7 @@ fun CategoryScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            haptic.performHaptic(view)
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                             onBack()
                         }
                     ) {
@@ -115,7 +113,7 @@ fun CategoryScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    haptic.performHaptic(view)
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     activeDialog = CategoryDialogType.Add
                 },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,

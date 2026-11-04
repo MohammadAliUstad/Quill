@@ -11,7 +11,9 @@ class GutenbergApiService(
     private val httpClient: HttpClient
 ) {
     companion object {
+        // Gutendex for the popular grid (fast, it's cached); gutenberg.org for search and details.
         private const val BASE_URL = "https://gutendex.com"
+        private const val SITE = "https://www.gutenberg.org"
     }
 
     suspend fun getPopularBooks(page: Int = 1): String {
@@ -27,14 +29,26 @@ class GutenbergApiService(
         return response.bodyAsText()
     }
 
-    suspend fun searchBooks(query: String, page: Int = 1): String {
-        return httpClient.get("$BASE_URL/books/") {
+    /**
+     * Search goes to Project Gutenberg's own catalogue: about 1.5s, where Gutendex's search took
+     * 40-70s for anything it hadn't cached. "l.en" keeps it to English books, as Gutendex's
+     * languages=en did, and leaves out the Subjects/Authors shortcuts.
+     */
+    suspend fun searchBooks(query: String): String {
+        return httpClient.get("$SITE/ebooks/search.opds/") {
             timeout {
-                requestTimeoutMillis = 60_000
+                requestTimeoutMillis = 30_000
             }
-            parameter("search", query)
-            parameter("languages", "en")
-            parameter("page", page)
+            parameter("query", "$query l.en")
+        }.bodyAsText()
+    }
+
+    /** One book's own feed on gutenberg.org: its summary and subjects, for the details page. */
+    suspend fun getBookFeed(number: Int): String {
+        return httpClient.get("$SITE/ebooks/$number.opds") {
+            timeout {
+                requestTimeoutMillis = 30_000
+            }
         }.bodyAsText()
     }
 

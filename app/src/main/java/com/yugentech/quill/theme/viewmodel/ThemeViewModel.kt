@@ -7,6 +7,7 @@ import com.yugentech.theme.ThemeRepository
 import com.yugentech.theme.models.ColorTheme
 import com.yugentech.theme.models.ThemeConfiguration
 import com.yugentech.theme.models.ThemeMode
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,8 +17,17 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class ThemeViewModel(
-    private val themeRepository: ThemeRepository
+    private val themeRepository: ThemeRepository,
+    hapticsEnabledFlow: Flow<Boolean>
 ) : ViewModel() {
+
+    // The "Haptic Feedback" switch in Settings; QuillTheme gates all UI haptics on it.
+    val hapticsEnabled: StateFlow<Boolean> = hapticsEnabledFlow
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true
+        )
 
     private val _themeConfiguration = MutableStateFlow(
         ThemeConfiguration(

@@ -16,7 +16,9 @@ animationGraphics = "1.11.0"
 animationVersion = "1.11.0"
 lottieCompose = "6.7.1"
 googleMaterial = "1.13.0"
-material3 = "1.5.0-alpha22"
+# The last Material3 alpha built on Compose 1.11 (alpha19+ need Compose 1.12); keeps the expressive
+# components on stable Compose 1.11, as Hajime and Sessions run on.
+material3 = "1.5.0-alpha18"
 navigationCompose = "2.9.8"
 firebaseBom = "34.12.0"
 firebaseFunctionsKtx = "21.2.1"
@@ -65,7 +67,9 @@ androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-ru
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom-alpha", version.ref = "composeBom" }
+# Stable BOM (Compose 1.11.3), as Hajime and Sessions use: the alpha BOM brought Compose 1.12.0-beta01,
+# whose text input closed and reopened the keyboard whenever focus moved between text fields.
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }

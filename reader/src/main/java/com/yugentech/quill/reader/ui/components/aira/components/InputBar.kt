@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.reader.viewmodel.quick.QuickUiState
+import com.yugentech.theme.tokens.dimensions.AppAnimations
 
 private val loadingPlaceholders = listOf(
     "Finding the right words",
@@ -69,6 +70,7 @@ fun InputBar(
     onStop: () -> Unit
 ) {
     val isStreamingOrLoading = airaUiState.isStreaming || airaUiState.isLoading
+    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
     var loadingPlaceholder by remember { mutableStateOf("") }
     var lastPlaceholderIndex by remember { mutableIntStateOf(-1) }
 
@@ -130,7 +132,11 @@ fun InputBar(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    AnimatedContent(targetState = isStreamingOrLoading, label = "SendStopIcon") { loading ->
+                    AnimatedContent(
+                        targetState = isStreamingOrLoading,
+                        transitionSpec = { fadeThrough() },
+                        label = "SendStopIcon"
+                    ) { loading ->
                         Icon(
                             imageVector = if (loading) Icons.Default.Stop else Icons.Default.ArrowUpward,
                             contentDescription = if (loading) "Stop" else "Send",

@@ -162,7 +162,7 @@ fun InsightsScreen(
                                     Icon(
                                         Icons.Outlined.CheckCircle,
                                         null,
-                                        tint = MaterialTheme.colorScheme.tertiary,
+                                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
                                         modifier = Modifier.size(MaterialTheme.icons.medium)
                                     )
                                 },

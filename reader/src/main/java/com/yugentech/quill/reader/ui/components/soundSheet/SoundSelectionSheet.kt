@@ -43,15 +43,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.sound.model.BackgroundSound
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.SettingsSwitchItem
-import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
-import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -183,8 +182,7 @@ private fun SoundToggleCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
     val iconScale by animateFloatAsState(
         targetValue = if (isSelected && enabled) 1.3f else 1.0f,
         animationSpec = spring(
@@ -197,7 +195,7 @@ private fun SoundToggleCard(
     ToggleButton(
         checked = isSelected,
         onCheckedChange = {
-            haptic.performHaptic(view)
+            haptic.performHapticFeedback(if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
             onClick()
         },
         modifier = modifier,

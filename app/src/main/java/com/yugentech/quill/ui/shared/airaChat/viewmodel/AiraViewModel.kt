@@ -66,7 +66,8 @@ class AiraViewModel(
                     bookAuthor = book?.author ?: EMPTY,
                     lastChapterTitle = book?.lastChapterTitle,
                     hasStartedReading = book?.lastChapterTitle != null,
-                    spoilerLockEnabled = book?.spoilerLockEnabled ?: true
+                    spoilerLockEnabled = book?.spoilerLockEnabled ?: true,
+                    isBookLoaded = true
                 )
             }
         }
@@ -122,6 +123,7 @@ class AiraViewModel(
 
                     else -> Unit
                 }
+                _uiState.update { it.copy(isIndexStatusLoaded = true) }
             }
             .launchIn(viewModelScope)
     }
@@ -130,7 +132,7 @@ class AiraViewModel(
         viewModelScope.launch {
             airaChatRepository.getMessagesForBook(bookId).collectLatest { messages ->
                 if (!isCurrentlyStreaming) {
-                    _uiState.update { it.copy(messages = messages) }
+                    _uiState.update { it.copy(messages = messages, areMessagesLoaded = true) }
                 }
             }
         }

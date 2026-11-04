@@ -20,13 +20,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.sheet.components.BookProgressFooter
 import com.yugentech.quill.reader.ui.components.overlay.components.bottomBar.components.sheet.components.ChapterProgressHeader
 import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
-import com.yugentech.theme.service.HapticService
-import org.koin.compose.koinInject
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,8 +37,7 @@ fun ReaderProgressSheet(
     currentPage: Int,
     onSeek: (Float) -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -71,7 +69,7 @@ fun ReaderProgressSheet(
                     draggingValue = newPos
                     val newPage = (newPos * (readerOverlayState.totalPages - 1)).roundToInt() + 1
                     if (newPage != lastHapticPage) {
-                        haptic.performTickHaptic(view)
+                        haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
                         lastHapticPage = newPage
                     }
                     onSeek(newPos)

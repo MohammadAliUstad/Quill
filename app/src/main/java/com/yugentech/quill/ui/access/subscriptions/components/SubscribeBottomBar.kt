@@ -1,9 +1,6 @@
 package com.yugentech.quill.ui.access.subscriptions.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.ui.access.subscriptions.parent.planOptions
+import com.yugentech.theme.tokens.dimensions.AppAnimations
 
 @Composable
 fun SubscribeBottomBar(
@@ -36,6 +34,8 @@ fun SubscribeBottomBar(
     onSubscribeClick: () -> Unit,
     onRestoreClick: () -> Unit
 ) {
+    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
+
     Surface(
         tonalElevation = 4.dp,
         shadowElevation = 8.dp,
@@ -75,11 +75,9 @@ fun SubscribeBottomBar(
                 ) {
                     AnimatedContent(
                         targetState = isRestoring,
-                        transitionSpec = {
-                            // Same plain crossfade used for ActionButtonLabel in
-                            // the book details category button.
-                            fadeIn().togetherWith(fadeOut())
-                        },
+                        // Same fade through as ActionButtonLabel in the book details
+                        // category button.
+                        transitionSpec = { fadeThrough() },
                         label = "restore_button_state"
                     ) { restoring ->
                         Row(

@@ -25,6 +25,8 @@ import com.yugentech.quill.di.modules.core.workerModule
 import com.yugentech.quill.di.modules.shared.airaModule
 import com.yugentech.quill.di.modules.shared.bookDetailsModule
 import com.yugentech.quill.di.modules.shared.readerModule
+import com.yugentech.quill.notification.reminders.ReminderManager
+import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.workmanager.factory.KoinWorkerFactory
@@ -70,6 +72,9 @@ class QuillApp : Application(), Configuration.Provider, ImageLoaderFactory {
                 settingsModule
             )
         }
+
+        // Books the reminders from the saved settings (the hourly nudge job and the daily alarm).
+        get<ReminderManager>().onAppStart()
     }
 
     override val workManagerConfiguration: Configuration

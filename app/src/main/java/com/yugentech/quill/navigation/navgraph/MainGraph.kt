@@ -73,9 +73,6 @@ fun NavGraphBuilder.mainGraph(
             onAiraSettings = {
                 navController.navigate(AppScreen.AboutAira.route) { launchSingleTop = true }
             },
-            onEditProfile = {
-                navController.navigate(AppScreen.EditProfileScreen.route) { launchSingleTop = true }
-            },
             onViewInsights = {
                 navController.navigate(AppScreen.Insights.route) { launchSingleTop = true }
             },
@@ -93,6 +90,9 @@ fun NavGraphBuilder.mainGraph(
             },
             onWhatsNew = {
                 navController.navigate(AppScreen.WhatsNew.route) { launchSingleTop = true }
+            },
+            onMoreApps = {
+                navController.navigate(AppScreen.MoreApps.route) { launchSingleTop = true }
             },
         )
     }

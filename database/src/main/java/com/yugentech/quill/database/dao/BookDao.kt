@@ -8,6 +8,7 @@ import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.model.BookStorageBreakdown
 import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.quill.database.model.SourceBookCount
 import com.yugentech.quill.database.view.LibraryBookView
 import kotlinx.coroutines.flow.Flow
 
@@ -29,6 +30,10 @@ interface BookDao {
 
     @Query("SELECT COUNT(*) FROM books WHERE progressPercent >= 0.9")
     fun getFinishedBooksCountFlow(): Flow<Int>
+
+    // Every row is a library book (removing one deletes the row), so this is the library size per source.
+    @Query("SELECT source, COUNT(*) AS count FROM books GROUP BY source")
+    fun getLibraryCountsBySource(): Flow<List<SourceBookCount>>
 
     @Query("SELECT * FROM books WHERE isSynced = 0")
     suspend fun getUnsyncedBooks(): List<BookEntity>

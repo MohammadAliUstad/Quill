@@ -30,6 +30,19 @@ fun AiraChatHistory(
 ) {
     var isVisuallyTyping by remember { mutableStateOf(false) }
 
+    // The reply being generated, remembered from while it's still loading. The reply arrives in
+    // one piece and loading/streaming can both clear before the next frame, so by the time its
+    // text is first composed those flags may already say it's not new; this keeps it new until
+    // its reveal finishes.
+    var liveReplyKey by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(uiState.isLoading, uiState.messages.size) {
+        if (uiState.isLoading) {
+            liveReplyKey = "${uiState.messages.size}_${AiraMessage.Role.AIRA}"
+        } else if (uiState.messages.isEmpty()) {
+            liveReplyKey = null
+        }
+    }
+
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
             listState.animateScrollToItem(0)
@@ -47,7 +60,7 @@ fun AiraChatHistory(
                 start = 16.dp,
                 end = 16.dp,
                 top = 100.dp,
-                bottom = bottomPadding + 8.dp
+                bottom = bottomPadding
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -59,8 +72,9 @@ fun AiraChatHistory(
                 }
             ) { index, message ->
                 val isAira = message.role == AiraMessage.Role.AIRA
-                val isLiveGeneration =
-                    index == 0 && isAira && (uiState.isLoading || uiState.isStreaming)
+                val stableKey = "${uiState.messages.size - index}_${message.role}"
+                val isLiveGeneration = index == 0 && isAira &&
+                    (uiState.isLoading || uiState.isStreaming || stableKey == liveReplyKey)
                 val shouldRender = message.content.isNotBlank() || isLiveGeneration
 
                 if (shouldRender) {
@@ -69,12 +83,13 @@ fun AiraChatHistory(
                             text = message.content,
                             isFromAira = isAira,
                             isNew = isLiveGeneration,
-                            stableKey = "${uiState.messages.size - index}_${message.role}"
+                            stableKey = stableKey
                         ),
                         onTypingStateChange = { isTyping ->
                             if (index == 0 && isAira) {
                                 isVisuallyTyping = isTyping
                             }
+                            if (!isTyping && stableKey == liveReplyKey) liveReplyKey = null
                         },
                         onSpeakClick = onSpeakClick
                     )

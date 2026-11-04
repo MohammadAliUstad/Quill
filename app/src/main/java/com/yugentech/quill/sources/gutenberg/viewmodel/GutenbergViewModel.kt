@@ -108,7 +108,7 @@ class GutenbergViewModel(
             _isLoading.value = true
             _displayTitle.value = "Searching for '$query'..."
 
-            gutenbergRepository.searchBooks(query)
+            val search = gutenbergRepository.searchBooks(query)
                 .onSuccess { result ->
                     Timber.d("Search success — ${result.books.size} books, nextUrl=${result.nextPageUrl}")
                     _booksState.value = result.books
@@ -122,6 +122,10 @@ class GutenbergViewModel(
                 }
 
             _isLoading.value = false
+
+            // Search results lack their summaries; fetch the top ones now, so tapping one opens
+            // a complete page.
+            search.getOrNull()?.let { gutenbergRepository.prefetchBookExtras(it.books.take(8)) }
         }
     }
 

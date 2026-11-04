@@ -11,19 +11,20 @@ class StandardApiService(
     private val httpClient: HttpClient
 ) {
     companion object {
+        // Feeds live under /feeds/opds; the old /opds paths only redirect there, costing a round trip.
         private const val BASE_URL = "https://standardebooks.org"
         private const val USER_AGENT = "Quill/UMA21131 (Android; yugentech.kazuki@gmail.com)"
     }
 
     suspend fun getNewReleases(): String {
-        return httpClient.get("$BASE_URL/opds/new-releases") {
+        return httpClient.get("$BASE_URL/feeds/opds/new-releases") {
             header(HttpHeaders.UserAgent, USER_AGENT)
             header(HttpHeaders.Accept, "application/atom+xml")
         }.bodyAsText()
     }
 
     suspend fun searchBooks(query: String): String {
-        return httpClient.get("$BASE_URL/opds/all") {
+        return httpClient.get("$BASE_URL/feeds/opds/all") {
             header(HttpHeaders.UserAgent, USER_AGENT)
             header(HttpHeaders.Accept, "application/atom+xml")
             parameter("query", query)
@@ -31,14 +32,14 @@ class StandardApiService(
     }
 
     suspend fun getCategories(): String {
-        return httpClient.get("$BASE_URL/opds/subjects") {
+        return httpClient.get("$BASE_URL/feeds/opds/subjects") {
             header(HttpHeaders.UserAgent, USER_AGENT)
             header(HttpHeaders.Accept, "application/atom+xml")
         }.bodyAsText()
     }
 
     suspend fun getTopicFeed(topic: String): String {
-        return httpClient.get("$BASE_URL/opds/subjects/$topic") {
+        return httpClient.get("$BASE_URL/feeds/opds/subjects/$topic") {
             header(HttpHeaders.UserAgent, USER_AGENT)
             header(HttpHeaders.Accept, "application/atom+xml")
         }.bodyAsText()
@@ -57,14 +58,14 @@ class StandardApiService(
     }
 
     suspend fun getCollections(): String {
-        return httpClient.get("$BASE_URL/opds/collections") {
+        return httpClient.get("$BASE_URL/feeds/opds/collections") {
             header(HttpHeaders.UserAgent, USER_AGENT)
             header(HttpHeaders.Accept, "application/atom+xml")
         }.bodyAsText()
     }
 
     suspend fun getBooksByAuthor(authorName: String): String {
-        return httpClient.get("$BASE_URL/opds/all") {
+        return httpClient.get("$BASE_URL/feeds/opds/all") {
             header(HttpHeaders.UserAgent, USER_AGENT)
             header(HttpHeaders.Accept, "application/atom+xml")
             parameter("query", "author:\"$authorName\"")

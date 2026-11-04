@@ -1,5 +1,6 @@
 package com.yugentech.quill.ui.config.category.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,7 +19,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetValue
@@ -39,27 +42,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.corners
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RenameCategoryDialog(
     initialName: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
 
     var textFieldValue by remember {
         mutableStateOf(
@@ -77,6 +78,23 @@ fun RenameCategoryDialog(
     val isReserved = currentText.equals("Shelf", ignoreCase = true) ||
             currentText.equals("Favorites", ignoreCase = true)
     val isInvalid = currentText.isBlank() || isReserved
+    val canSave = !isInvalid && currentText != initialName
+
+    // Save eases between its disabled and enabled colours instead of snapping, on the theme's
+    // effects spring (no bounce). Both states get the same animated colour, so the button's own
+    // enabled/disabled switch can't cut the animation short.
+    val defaultSaveColors = ButtonDefaults.buttonColors()
+    val colorSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
+    val saveContainerColor by animateColorAsState(
+        targetValue = if (canSave) defaultSaveColors.containerColor else defaultSaveColors.disabledContainerColor,
+        animationSpec = colorSpec,
+        label = "saveContainer"
+    )
+    val saveContentColor by animateColorAsState(
+        targetValue = if (canSave) defaultSaveColors.contentColor else defaultSaveColors.disabledContentColor,
+        animationSpec = colorSpec,
+        label = "saveContent"
+    )
 
     LaunchedEffect(Unit) {
         snapshotFlow { sheetState.currentValue }
@@ -151,8 +169,8 @@ fun RenameCategoryDialog(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        if (!isInvalid && currentText != initialName) {
-                            haptic.performHaptic(view)
+                        if (canSave) {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                             onConfirm(currentText.trim())
                         }
                     }
@@ -166,17 +184,23 @@ fun RenameCategoryDialog(
             ) {
                 TextButton(
                     onClick = {
-                        haptic.performHaptic(view)
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                         onDismiss()
                     }
                 ) { Text("Cancel") }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        haptic.performHaptic(view)
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                         onConfirm(currentText.trim())
                     },
-                    enabled = !isInvalid && currentText != initialName
+                    enabled = canSave,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = saveContainerColor,
+                        contentColor = saveContentColor,
+                        disabledContainerColor = saveContainerColor,
+                        disabledContentColor = saveContentColor
+                    )
                 ) { Text("Save") }
             }
         }

@@ -2,11 +2,12 @@ package com.yugentech.quill.sources.discover.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.sources.discover.state.DiscoverUiState
 import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
 import com.yugentech.quill.sources.standard.repository.StandardRepository
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -111,19 +112,40 @@ class DiscoverViewModel(
 
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            val standardDeferred = async { standardRepository.searchBooks(query) }
-            val gutenbergDeferred = async { gutenbergRepository.searchBooks(query) }
+            // Wait for a pause in typing, so each keystroke doesn't start (and then abandon) a
+            // search on both sites.
+            delay(SEARCH_DEBOUNCE_MILLIS)
 
-            val standardResult = standardDeferred.await().getOrNull()?.books ?: emptyList()
-            val gutenbergResult = gutenbergDeferred.await().getOrNull()?.books ?: emptyList()
+            // Each source's books go into the grid as soon as that source answers, after any
+            // already there, so a slower source never holds the other's results back and the
+            // grid only grows at the end. The spinner stays only until something arrives.
+            val results = mutableListOf<Book>()
+            var pending = 2
+            val publish: (List<Book>) -> Unit = { books ->
+                results += books.filter { book -> results.none { it.id == book.id } }
+                pending--
+                _uiState.update {
+                    it.copy(
+                        searchResults = results.toList(),
+                        isSearchLoading = pending > 0 && results.isEmpty()
+                    )
+                }
+            }
 
-            _uiState.update {
-                it.copy(
-                    searchResults = standardResult + gutenbergResult,
-                    isSearchLoading = false
-                )
+            launch { publish(standardRepository.searchBooks(query).getOrNull()?.books ?: emptyList()) }
+            launch {
+                val books = gutenbergRepository.searchBooks(query).getOrNull()?.books ?: emptyList()
+                publish(books)
+                // Gutenberg results lack their summaries; fetch the top ones now, so tapping one
+                // opens a complete page.
+                gutenbergRepository.prefetchBookExtras(books.take(PREFETCH_COUNT))
             }
         }
+    }
+
+    private companion object {
+        const val SEARCH_DEBOUNCE_MILLIS = 400L
+        const val PREFETCH_COUNT = 8
     }
 
     fun clearSearch() {

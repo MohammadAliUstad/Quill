@@ -38,7 +38,8 @@ val bookDetailsModule = module {
         BookDetailsViewModel(
             repository = get(),
             savedStateHandle = get(),
-            billingRepository = get()
+            billingRepository = get(),
+            gutenbergRepository = get()
         )
     }
 

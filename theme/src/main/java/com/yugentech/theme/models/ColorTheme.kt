@@ -3,7 +3,7 @@ package com.yugentech.theme.models
 enum class ColorTheme {
     DYNAMIC,
     TWILIGHT,
-    HARBOR,
+    LAGOON,
     CANYON,
     QUILL,
     SAKURA,

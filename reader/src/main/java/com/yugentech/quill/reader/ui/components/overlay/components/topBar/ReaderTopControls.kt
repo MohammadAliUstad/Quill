@@ -20,12 +20,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
-import com.yugentech.theme.service.HapticService
-import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,8 +36,7 @@ fun ReaderTopBar(
     onSoundClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
 
     AnimatedVisibility(
         visible = isVisible,
@@ -67,7 +65,7 @@ fun ReaderTopBar(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            haptic.performHaptic(view)
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                             onBackClick()
                         }
                     ) {
@@ -80,7 +78,7 @@ fun ReaderTopBar(
                 actions = {
                     IconButton(
                         onClick = {
-                            haptic.performHaptic(view)
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                             onTocClick()
                         }
                     ) {
@@ -92,7 +90,7 @@ fun ReaderTopBar(
 
                     IconButton(
                         onClick = {
-                            haptic.performHaptic(view)
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                             onSoundClick()
                         }
                     ) {
@@ -104,7 +102,7 @@ fun ReaderTopBar(
 
                     IconButton(
                         onClick = {
-                            haptic.performHaptic(view)
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                             onSettingsClick()
                         }
                     ) {

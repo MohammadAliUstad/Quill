@@ -1,6 +1,6 @@
 package com.yugentech.quill.ui.tabs.libraryScreen.parent
 
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -39,7 +39,6 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -51,11 +50,13 @@ import com.yugentech.quill.R
 import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
+import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
 import com.yugentech.quill.ui.tabs.libraryScreen.components.BookRow
 import com.yugentech.quill.ui.tabs.libraryScreen.components.HistoryCarousel
 import com.yugentech.quill.ui.tabs.libraryScreen.components.LastReadBookCard
 import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
 import com.yugentech.quill.ui.tabs.libraryScreen.components.LibraryParallaxBackground
+import com.yugentech.theme.tokens.dimensions.AppAnimations
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,6 +136,7 @@ fun LibraryScreen(
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val hazeState = remember { HazeState() }
+    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -148,14 +150,7 @@ fun LibraryScreen(
                         .graphicsLayer {
                             alpha = (scrollState.value / 100f).coerceIn(0f, 1f)
                         }
-                        .background(
-                            Brush.verticalGradient(
-                                0.0f to surfaceColor.copy(alpha = 0.9f),
-                                0.4f to surfaceColor.copy(alpha = 0.7f),
-                                0.7f to surfaceColor.copy(alpha = 0.30f),
-                                1.0f to surfaceColor.copy(alpha = 0.0f)
-                            )
-                        )
+                        .background(rememberSmoothScrimBrush(surfaceColor))
                 )
 
                 TopAppBar(
@@ -191,10 +186,10 @@ fun LibraryScreen(
         containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
 
-        // Wrap the content in a Crossfade to smooth out the transition when data loads
-        Crossfade(
+        // Fades through between the empty state and the library when books arrive or leave
+        AnimatedContent(
             targetState = isEmpty,
-            animationSpec = tween(durationMillis = 800), // Smooth 800ms fade transition
+            transitionSpec = { fadeThrough() },
             label = "library_content_transition"
         ) { currentlyEmpty ->
 

@@ -97,7 +97,8 @@ val airaModule = module {
             bookChatRepository = get(),
             bookDao = get(),
             airaMessageDao = get(),
-            authRepository = get()
+            authRepository = get(),
+            userDao = get()
         )
     }
 

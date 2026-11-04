@@ -166,6 +166,8 @@ fun AiraChatHeader(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        // Keeps the header (and its fade) at the 100dp the chat list reserves as top padding:
+        // 88dp avatar + 8dp row padding + this. Any taller and the fade covers the first message.
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }

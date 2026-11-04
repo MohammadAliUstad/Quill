@@ -4,21 +4,25 @@ import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.yugentech.quill.auth.state.AuthState
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
@@ -32,6 +36,11 @@ import com.yugentech.quill.navigation.navgraph.settingsGraph
 import com.yugentech.quill.navigation.navgraph.sourceGraph
 import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.ui.access.onboarding.OnboardingScreen
+import com.yugentech.quill.ui.access.onboarding.components.AuraBackgroundState
+import com.yugentech.quill.ui.access.onboarding.components.AuraRoutes
+import com.yugentech.quill.ui.access.onboarding.components.AuraTheme
+import com.yugentech.quill.ui.access.onboarding.components.LocalAuraBackground
+import com.yugentech.quill.ui.access.onboarding.components.QuillAuraBackground
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 
@@ -121,33 +130,37 @@ fun AppNavHost(
         }
     }
 
+    // Onboarding, sign-in and sign-up all sit on the one aura drawn here, as in Amatyaa, so
+    // moving between them changes only their content: the background never jumps or shows an
+    // edge, and keeps drifting while they slide over it. It fades with the switch into the app.
+    val currentEntry by navController.currentBackStackEntryAsState()
+    val onAura = currentEntry?.destination?.route in AuraRoutes
+    val auraBackground = remember { AuraBackgroundState() }
+    val transitions = rememberNavTransitions()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+    AnimatedVisibility(
+        visible = onAura,
+        enter = fadeIn(animationSpec = tween(300)),
+        exit = fadeOut(animationSpec = tween(300))
+    ) {
+        AuraTheme {
+            QuillAuraBackground(
+                modifier = Modifier.fillMaxSize(),
+                travel = { auraBackground.travel }
+            )
+        }
+    }
+
+    CompositionLocalProvider(LocalAuraBackground provides auraBackground) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        enterTransition = {
-            slideInHorizontally(
-                animationSpec = tween(250),
-                initialOffsetX = { 1000 }
-            ) + fadeIn(animationSpec = tween(250))
-        },
-        exitTransition = {
-            slideOutHorizontally(
-                animationSpec = tween(250),
-                targetOffsetX = { -1000 }
-            ) + fadeOut(animationSpec = tween(250))
-        },
-        popEnterTransition = {
-            slideInHorizontally(
-                animationSpec = tween(250),
-                initialOffsetX = { -1000 }
-            ) + fadeIn(animationSpec = tween(250))
-        },
-        popExitTransition = {
-            slideOutHorizontally(
-                animationSpec = tween(250),
-                targetOffsetX = { 1000 }
-            ) + fadeOut(animationSpec = tween(250))
-        }
+        // Material 3 motion for every screen change, as in Hajime (NavTransitions)
+        enterTransition = { transitions.enter(this) },
+        exitTransition = { transitions.exit(this) },
+        popEnterTransition = { transitions.popEnter(this) },
+        popExitTransition = { transitions.popExit(this) }
     ) {
         composable(AppScreen.Onboarding.route) {
             OnboardingScreen(
@@ -172,5 +185,7 @@ fun AppNavHost(
         accountGraph(navController, authViewModel, subscriptionViewModel)
         settingsGraph(navController, themeViewModel)
         aboutGraph(navController)
+    }
+    }
     }
 }

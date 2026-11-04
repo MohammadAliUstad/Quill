@@ -7,9 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
+import com.yugentech.quill.navigation.host.rememberNavTransitions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -79,7 +77,6 @@ fun MainScreen(
     onManageCategories: () -> Unit = {},
     onManageStorage: () -> Unit = {},
     onAiraSettings: () -> Unit = {},
-    onEditProfile: () -> Unit = {},
     onViewInsights: () -> Unit = {},
     onExitApp: () -> Unit = {},
     onSignOut: () -> Unit = {},
@@ -89,6 +86,7 @@ fun MainScreen(
     onSubscriptions: () -> Unit,
     onViewIndexingQueue: () -> Unit,
     onWhatsNew: () -> Unit,
+    onMoreApps: () -> Unit,
     indexingViewModel: IndexingViewModel = koinViewModel()
 ) {
     val userId = remember { FirebaseAuth.getInstance().currentUser?.uid.orEmpty() }
@@ -196,19 +194,15 @@ fun MainScreen(
             )
         },
     ) { innerPadding ->
+        val transitions = rememberNavTransitions()
         Box(modifier = Modifier.fillMaxSize()) {
             AnimatedContent(
                 targetState = currentTab,
                 transitionSpec = {
-                    val targetIndex = quillTabs.indexOf(targetState)
-                    val initialIndex = quillTabs.indexOf(initialState)
-                    val navigatingRight = targetIndex > initialIndex
-
-                    if (navigatingRight) {
-                        slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
-                    } else {
-                        slideInHorizontally { -it } togetherWith slideOutHorizontally { it }
-                    }
+                    // The same shared axis X as opening a screen (Hajime's tab switch), moving the
+                    // way the tab bar reads
+                    val navigatingRight = quillTabs.indexOf(targetState) > quillTabs.indexOf(initialState)
+                    transitions.tabSwitch(forward = navigatingRight)
                 },
                 label = "TabSwitch",
             ) { tab ->
@@ -245,7 +239,8 @@ fun MainScreen(
                             contentPadding = innerPadding,
                             userData = userData,
                             streakCount = userUiState.streakCount,
-                            onEditProfile = onEditProfile,
+                            onUpdateName = userViewModel::updateName,
+                            onUpdateAvatar = userViewModel::updateAvatar,
                             onViewInsights = onViewInsights,
                             onAbout = onAboutClick,
                             onAppearance = onAppearanceClick,
@@ -258,6 +253,7 @@ fun MainScreen(
                             isIndexingActive = isIndexingActive,
                             onViewIndexingQueue = onViewIndexingQueue,
                             onWhatsNew = onWhatsNew,
+                            onMoreApps = onMoreApps,
                         )
                     }
                 }

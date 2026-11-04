@@ -43,12 +43,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -77,14 +77,7 @@ fun BookDetailsTopBar(
                 .graphicsLayer {
                     alpha = (-scrollBehavior.state.contentOffset / 100f).coerceIn(0f, 1f)
                 }
-                .background(
-                    Brush.verticalGradient(
-                        0.0f to surfaceColor.copy(alpha = 0.85f),
-                        0.4f to surfaceColor.copy(alpha = 0.65f),
-                        0.7f to surfaceColor.copy(alpha = 0.30f),
-                        1.0f to surfaceColor.copy(alpha = 0.0f)
-                    )
-                )
+                .background(rememberSmoothScrimBrush(surfaceColor))
         )
 
         TopAppBar(

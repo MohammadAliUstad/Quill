@@ -2,10 +2,6 @@ package com.yugentech.quill.ui.sources.gutenberg.parent
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -42,6 +38,7 @@ import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel
 import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
 import com.yugentech.quill.ui.sources.standard.components.SourceEmptyState
 import com.yugentech.quill.ui.sources.gutenberg.components.GutenbergScreenHeader
+import com.yugentech.theme.tokens.dimensions.AppAnimations
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
@@ -62,6 +59,7 @@ fun GutenbergScreen(
     val hasMorePages by viewModel.hasMorePages.collectAsState()
     val displayTitle by viewModel.displayTitle.collectAsState()
     val error by viewModel.error.collectAsState()
+    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
 
     LaunchedEffect(Unit) {
         viewModel.navigationEvent.collectLatest { event ->
@@ -115,9 +113,7 @@ fun GutenbergScreen(
                         !isLoading && books.isEmpty() -> SourceScreenState.Empty
                         else -> SourceScreenState.Content
                     },
-                    transitionSpec = {
-                        fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
-                    },
+                    transitionSpec = { fadeThrough() },
                     label = "GutenbergContentAnimation"
                 ) { state ->
                     when (state) {

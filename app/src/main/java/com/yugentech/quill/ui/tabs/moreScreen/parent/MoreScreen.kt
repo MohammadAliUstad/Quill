@@ -5,11 +5,15 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.List
@@ -30,11 +34,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -42,17 +50,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.database.model.UserData
+import com.yugentech.quill.ui.about.about.parent.MoreFromUsSheet
 import com.yugentech.quill.ui.main.components.SectionHeader
+import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
+import com.yugentech.quill.ui.tabs.moreScreen.components.AvatarPickerSheet
+import com.yugentech.quill.ui.tabs.moreScreen.components.EditNameSheet
 import com.yugentech.quill.ui.tabs.moreScreen.components.ProfileCard
 import com.yugentech.quill.ui.tabs.moreScreen.components.SettingsListItem
 import com.yugentech.quill.ui.tabs.moreScreen.components.SettingsSwitchItem
 import com.yugentech.quill.ui.tabs.moreScreen.components.dialogs.AlarmPermissionDialog
 import com.yugentech.quill.ui.tabs.moreScreen.components.dialogs.TimerPickerDialog
-import com.yugentech.quill.ui.tabs.moreScreen.viewmodel.NotificationViewModel
+import com.yugentech.quill.notification.viewmodel.NotificationViewModel
 import com.yugentech.quill.ui.tabs.moreScreen.viewmodel.SettingsViewModel
-import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.spacing
-import org.koin.compose.koinInject
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,7 +74,8 @@ fun MoreScreen(
     isIndexingActive: Boolean,
     onSignOut: () -> Unit,
     onExit: () -> Unit,
-    onEditProfile: () -> Unit,
+    onUpdateName: (String) -> Unit,
+    onUpdateAvatar: (Int) -> Unit,
     onViewInsights: () -> Unit,
     onAbout: () -> Unit,
     onAppearance: () -> Unit,
@@ -74,6 +85,7 @@ fun MoreScreen(
     onSubscriptions: () -> Unit,
     onViewIndexingQueue: () -> Unit,
     onWhatsNew: () -> Unit,
+    onMoreApps: () -> Unit,
     notificationViewModel: NotificationViewModel = koinViewModel(),
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
@@ -82,9 +94,12 @@ fun MoreScreen(
     val hapticsEnabled by settingsViewModel.hapticsEnabled.collectAsState(initial = true)
 
     var showTimePickerDialog by remember { mutableStateOf(false) }
+    var showMoreApps by rememberSaveable { mutableStateOf(false) }
+    // The name and avatar are edited in sheets right here (there's no Edit Profile screen).
+    var showNameSheet by rememberSaveable { mutableStateOf(false) }
+    var showAvatarSheet by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
-    val view = LocalView.current
-    val hapticService: HapticService = koinInject()
+    val haptic = LocalHapticFeedback.current
 
     // Returning from the exact-alarm settings screen with the permission granted picks up
     // where the user left off (opens the time picker) instead of needing another tap.
@@ -103,29 +118,50 @@ fun MoreScreen(
     }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val listState = rememberLazyListState()
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "More",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-                scrollBehavior = scrollBehavior
-            )
+            val surfaceColor = MaterialTheme.colorScheme.surface
+
+            // Same as Library: a transparent bar over a gradient scrim that fades in as the
+            // list scrolls under it
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .graphicsLayer {
+                            alpha = if (listState.firstVisibleItemIndex > 0) {
+                                1f
+                            } else {
+                                (listState.firstVisibleItemScrollOffset / 100f).coerceIn(0f, 1f)
+                            }
+                        }
+                        .background(rememberSmoothScrimBrush(surfaceColor))
+                )
+
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "More",
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                    scrollBehavior = scrollBehavior
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = MaterialTheme.spacing.m,
@@ -139,7 +175,8 @@ fun MoreScreen(
                 ProfileCard(
                     userData = userData,
                     streakCount = streakCount,
-                    onEditProfile = onEditProfile,
+                    onEditName = { showNameSheet = true },
+                    onEditAvatar = { showAvatarSheet = true },
                     onViewInsights = onViewInsights
                 )
             }
@@ -234,7 +271,7 @@ fun MoreScreen(
                         } else {
                             notificationViewModel.setNotificationsEnabled(enabled)
                         }
-                        hapticService.performHaptic(view)
+                        haptic.performHapticFeedback(if (enabled) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
                     }
                 )
             }
@@ -242,7 +279,7 @@ fun MoreScreen(
                 SettingsSwitchItem(
                     title = "Daily Reading Reminder",
                     subtitle = notificationViewModel.formatReminderTime(),
-                    checked = notificationConfig.readingRemindersEnabled,
+                    checked = notificationConfig.dailyReminderEnabled,
                     enabled = notificationConfig.notificationsEnabled,
                     index = 1,
                     totalCount = 4,
@@ -252,8 +289,8 @@ fun MoreScreen(
                                 showTimePickerDialog = true
                             }
                         } else {
-                            notificationViewModel.setReadingRemindersEnabled(false)
-                            hapticService.performHaptic(view)
+                            notificationViewModel.setDailyReminderEnabled(false)
+                            haptic.performHapticFeedback(HapticFeedbackType.ToggleOff)
                         }
                     },
                     onClick = {
@@ -266,14 +303,14 @@ fun MoreScreen(
             item {
                 SettingsSwitchItem(
                     title = "Playful Reminders",
-                    subtitle = "Occasional friendly nudges to keep your reading habit alive",
+                    subtitle = "Friendly nudges now and then",
                     checked = notificationConfig.playfulRemindersEnabled,
                     enabled = notificationConfig.notificationsEnabled,
                     index = 2,
                     totalCount = 4,
                     onCheckedChange = {
                         notificationViewModel.setPlayfulRemindersEnabled(it)
-                        hapticService.performHaptic(view)
+                        haptic.performHapticFeedback(if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
                     }
                 )
             }
@@ -286,7 +323,7 @@ fun MoreScreen(
                     totalCount = 4,
                     onCheckedChange = {
                         settingsViewModel.setHapticsEnabled(it)
-                        hapticService.performHaptic(view)
+                        haptic.performHapticFeedback(if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
                     }
                 )
             }
@@ -298,7 +335,7 @@ fun MoreScreen(
                     title = "About Quill",
                     subtitle = "Version ${com.yugentech.quill.BuildConfig.VERSION_NAME}",
                     index = 0,
-                    totalCount = 2,
+                    totalCount = 3,
                     onClick = onAbout,
                 )
             }
@@ -307,8 +344,17 @@ fun MoreScreen(
                     title = "What's New",
                     subtitle = "See the latest changes and features",
                     index = 1,
-                    totalCount = 2,
+                    totalCount = 3,
                     onClick = onWhatsNew,
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "More from us",
+                    subtitle = "Explore our other apps",
+                    index = 2,
+                    totalCount = 3,
+                    onClick = { showMoreApps = true },
                 )
             }
 
@@ -337,14 +383,40 @@ fun MoreScreen(
 
     if (showTimePickerDialog) {
         TimerPickerDialog(
-            initialHour = notificationConfig.reminderTimeHour,
-            initialMinute = notificationConfig.reminderTimeMinute,
+            initialHour = notificationConfig.reminderHour,
+            initialMinute = notificationConfig.reminderMinute,
             onTimeSelected = { hour, minute ->
                 notificationViewModel.setReminderTime(hour, minute)
-                hapticService.performHaptic(view)
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                 showTimePickerDialog = false
             },
             onDismiss = { showTimePickerDialog = false }
+        )
+    }
+
+    if (showNameSheet && userData.userId.isNotEmpty()) {
+        EditNameSheet(
+            currentName = userData.name.orEmpty(),
+            onSave = { name ->
+                onUpdateName(name)
+                showNameSheet = false
+            },
+            onDismiss = { showNameSheet = false }
+        )
+    }
+
+    if (showAvatarSheet && userData.userId.isNotEmpty()) {
+        AvatarPickerSheet(
+            selectedAvatarId = userData.avatarId ?: 0,
+            onAvatarSelected = onUpdateAvatar,
+            onDismiss = { showAvatarSheet = false }
+        )
+    }
+
+    if (showMoreApps) {
+        MoreFromUsSheet(
+            onDismiss = { showMoreApps = false },
+            onSeeAll = onMoreApps
         )
     }
 

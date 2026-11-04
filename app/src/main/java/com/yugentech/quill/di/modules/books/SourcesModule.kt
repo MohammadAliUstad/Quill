@@ -59,7 +59,9 @@ val sourcesModule = module {
     viewModel {
         SourcesViewModel(
             bookDao = get(),
-            billingRepository = get()
+            billingRepository = get(),
+            standardRepository = get(),
+            gutenbergRepository = get()
         )
     }
 

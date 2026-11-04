@@ -1,5 +1,13 @@
 package com.yugentech.quill.ui.about.whatsNew.parent
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,14 +22,19 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Highlight
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -38,16 +51,22 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.R
 import com.yugentech.quill.ui.main.components.itemShape
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.dimensions.AppAnimations
 import com.yugentech.theme.tokens.spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,9 +76,42 @@ fun WhatsNewScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val layoutDirection = LocalLayoutDirection.current
-    val versionName = "Version ${com.yugentech.quill.BuildConfig.VERSION_NAME}"
+    val versionName = "Current Version ${com.yugentech.quill.BuildConfig.VERSION_NAME}"
 
-    val updates = listOf(
+    val v41Updates = listOf(
+        UpdateItem(
+            "A Redesigned Sources Tab",
+            "Sources has a fresh new look, with a friendlier way to import books from your device, cover previews from each catalogue, and a count of how many of their books are already in your library.",
+            Icons.Default.Explore
+        ),
+        UpdateItem(
+            "A New Profile Card",
+            "Your profile card in More is more compact, with a bigger avatar. Tap the avatar to pick a new one from a sheet, or the pencil to change your name, without leaving the page.",
+            Icons.Default.AccountCircle
+        ),
+        UpdateItem(
+            "Smoother Aira Replies",
+            "Aira's answers now flow in a few words at a time, and the conversation glides up gently as they appear, both in the chat and in the quick panel while you read.",
+            Icons.Default.AutoAwesome
+        ),
+        UpdateItem(
+            "Faster Covers",
+            "Standard Ebooks covers now load as lighter thumbnails, so Discover, your Library, and book pages fill in much quicker.",
+            Icons.Default.Image
+        ),
+        UpdateItem(
+            "Gentler Reminders",
+            "Your daily reading reminder now shows when it rings, like \"Every evening at 7:00 PM\". Playful reminders are quieter and never more than one a day, with a few kind words if you've been away for a while.",
+            Icons.Default.NotificationsActive
+        ),
+        UpdateItem(
+            "Polish & Fixes",
+            "Smoother, consistent fades behind the top bars across the app, Aira's quick panel now resizes back to its full height, and the sign-in spinner shows only on the button you tapped.",
+            Icons.Default.Palette
+        )
+    )
+
+    val v4Updates = listOf(
         UpdateItem(
             "Meet the New Aira",
             "Aira has been rebuilt from the ground up. She knows whether you're asking about your book or anything else, answers straight from the pages you've read, never spoils what's ahead, and can read her answers aloud.",
@@ -117,6 +169,8 @@ fun WhatsNewScreen(
         )
     )
 
+    var v4Expanded by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -163,9 +217,79 @@ fun WhatsNewScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs)
         ) {
-            items(updates.size) { index ->
-                UpdateCard(updates[index], index, updates.size)
+            itemsIndexed(v41Updates) { index, item ->
+                UpdateCard(item, index, v41Updates.size)
             }
+
+            // 4.0.0 collapsible section
+            item {
+                VersionSectionHeader(
+                    version = "4.0.0",
+                    isLatest = false,
+                    expanded = v4Expanded,
+                    onClick = { v4Expanded = !v4Expanded }
+                )
+            }
+
+            item(key = "v4_collapsible_content") {
+                AnimatedVisibility(
+                    visible = v4Expanded,
+                    enter = fadeIn(tween(AppAnimations.Durations.Standard)) + expandVertically(tween(AppAnimations.Durations.Standard)),
+                    exit = fadeOut(tween(AppAnimations.Durations.Standard)) + shrinkVertically(tween(AppAnimations.Durations.Standard))
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs)
+                    ) {
+                        v4Updates.forEachIndexed { index, item ->
+                            UpdateCard(item, index, v4Updates.size)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VersionSectionHeader(
+    version: String,
+    isLatest: Boolean,
+    expanded: Boolean = true,
+    onClick: (() -> Unit)? = null
+) {
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        label = "chevron"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(MaterialTheme.corners.medium))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(
+                horizontal = if (onClick != null) MaterialTheme.spacing.s else 0.dp,
+                vertical = MaterialTheme.spacing.m
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = "Version $version",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (isLatest) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (onClick != null) {
+            Icon(
+                imageVector = Icons.Default.ExpandMore,
+                contentDescription = if (expanded) "Collapse" else "Expand",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.graphicsLayer { rotationZ = chevronRotation }
+            )
         }
     }
 }

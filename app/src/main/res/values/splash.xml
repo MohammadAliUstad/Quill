@@ -10,8 +10,10 @@
 
         <item name="windowSplashScreenAnimationDuration">2000</item>
 
-        <item name="android:windowBackground">#576421</item>
-        <item name="windowSplashScreenBackground">#576421</item>
+        <!-- The icon's green (#576421) dimmed a little: filling the whole screen, the same green
+             reads brighter than it does in the small icon, so it's toned down to look alike. -->
+        <item name="android:windowBackground">#48531B</item>
+        <item name="windowSplashScreenBackground">#48531B</item>
     </style>
 
 </resources>

@@ -8,5 +8,7 @@ data class BookDetailsUiState(
     val chapters: List<Chapter> = emptyList(),
     val isLoading: Boolean = true,
     val isDescriptionExpanded: Boolean = true,
+    /** The description is still being fetched (a Gutenberg book opened from search). */
+    val isDescriptionLoading: Boolean = false,
     val isPro: Boolean = false
 )

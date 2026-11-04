@@ -19,15 +19,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.ui.tabs.discoverScreen.util.thumbnailCoverUrl
 
-import com.yugentech.theme.service.HapticService
-import org.koin.compose.koinInject
 
 @Composable
 fun DiscoverBookCard(
@@ -35,7 +35,7 @@ fun DiscoverBookCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val haptic = koinInject<HapticService>()
+    val haptic = LocalHapticFeedback.current
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
     val isLoaded = imageState is AsyncImagePainter.State.Success
     val imageAlpha by animateFloatAsState(
@@ -60,7 +60,7 @@ fun DiscoverBookCard(
                 .aspectRatio(2f / 3f)
                 .clip(coverShape)
                 .clickable {
-                    haptic.performHaptic()
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     onClick()
                 }
         ) {

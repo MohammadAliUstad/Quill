@@ -214,6 +214,7 @@ fun BookDetailsScreen(
                         BookDescriptionSection(
                             description = book.description,
                             subjects = book.subjects,
+                            isDescriptionLoading = uiState.isDescriptionLoading,
                             modifier = Modifier
                                 .padding(horizontal = 24.dp),
                             isExpanded = isDescriptionExpanded,

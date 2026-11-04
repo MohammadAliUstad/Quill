@@ -1,6 +1,5 @@
 package com.yugentech.quill.navigation.navgraph
 
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
@@ -12,11 +11,10 @@ import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.ui.info.insights.InsightsScreen
 import com.yugentech.quill.insghts.viewmodel.InsightsViewModel
 import com.yugentech.quill.ui.access.subscriptions.parent.SubscriptionsScreen
-import com.yugentech.quill.ui.config.editProfile.parent.EditProfileScreen
-import com.yugentech.quill.user.viewmodel.UserViewModel
 import org.koin.androidx.compose.koinViewModel
-import timber.log.Timber
 
+// The profile (name and avatar) is edited in sheets on the More screen, so there's no
+// Edit Profile route here any more.
 fun NavGraphBuilder.accountGraph(
     navController: NavHostController,
     authViewModel: AuthViewModel,
@@ -37,22 +35,5 @@ fun NavGraphBuilder.accountGraph(
             onBack = { navController.popBackStack() },
             subscriptionViewModel = subscriptionViewModel
         )
-    }
-
-    composable(AppScreen.EditProfileScreen.route) {
-        val userViewModel: UserViewModel = koinViewModel()
-        val authState by authViewModel.authState.collectAsStateWithLifecycle()
-        val currentUserId = authState.userId
-
-        if (currentUserId != null) {
-            EditProfileScreen(
-                userViewModel = userViewModel,
-                userId = currentUserId,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        } else {
-            Timber.w("Navigated to EditProfile without valid User ID")
-            LaunchedEffect(Unit) { navController.popBackStack() }
-        }
     }
 }

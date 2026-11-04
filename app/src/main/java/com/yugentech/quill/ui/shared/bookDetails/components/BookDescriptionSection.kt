@@ -1,9 +1,16 @@
 package com.yugentech.quill.ui.shared.bookDetails.components
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -48,6 +55,7 @@ fun BookDescriptionSection(
     subjects: List<String> = emptyList(),
     isExpanded: Boolean,
     isGutenberg: Boolean = false,
+    isDescriptionLoading: Boolean = false,
     onExpandedChange: (Boolean) -> Unit
 ) {
     val cleanedSubjects = remember(subjects) {
@@ -108,53 +116,70 @@ fun BookDescriptionSection(
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            HtmlText(
-                html = cleanDescription(processedDescription),
-                maxLines = if (isExpanded) Int.MAX_VALUE else 3,
-                textColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
+            // While the summary is still on its way: soft placeholder lines, not "No description
+            // available.", then the text fades in over them.
+            Crossfade(
+                targetState = isDescriptionLoading,
+                animationSpec = tween(durationMillis = 300),
+                label = "descriptionLoading"
+            ) { loading ->
+                if (loading) {
+                    DescriptionPlaceholder()
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        HtmlText(
+                            html = cleanDescription(processedDescription),
+                            maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                            textColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    if (showExpandToggle) {
+                                        isUserInitiated = true
+                                        onExpandedChange(!isExpanded)
+                                    }
+                                },
+                            onLineCountChanged = { lineCount ->
+                                if (lineCount > fullLineCount) {
+                                    fullLineCount = lineCount
+                                }
+                            }
+                        )
+
                         if (showExpandToggle) {
-                            isUserInitiated = true
-                            onExpandedChange(!isExpanded)
+                            val yOffset = if (!isGutenberg && isExpanded) (-8).dp else 0.dp
+
+                            Box(
+                                modifier = Modifier
+                                    .offset(y = yOffset)
+                                    .clip(CircleShape)
+                                    .clickable {
+                                        isUserInitiated = true
+                                        onExpandedChange(!isExpanded)
+                                    }
+                                    .size(40.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
                         }
-                    },
-                onLineCountChanged = { lineCount ->
-                    if (lineCount > fullLineCount) {
-                        fullLineCount = lineCount
                     }
-                }
-            )
-
-            if (showExpandToggle) {
-                val yOffset = if (!isGutenberg && isExpanded) (-8).dp else 0.dp
-
-                Box(
-                    modifier = Modifier
-                        .offset(y = yOffset)
-                        .clip(CircleShape)
-                        .clickable {
-                            isUserInitiated = true
-                            onExpandedChange(!isExpanded)
-                        }
-                        .size(40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(32.dp)
-                    )
                 }
             }
         }
 
-        if (cleanedSubjects.isNotEmpty()) {
+        if (cleanedSubjects.isNotEmpty() && !isDescriptionLoading) {
             Spacer(modifier = Modifier.height(8.dp))
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -178,6 +203,36 @@ fun BookDescriptionSection(
                     }
                 }
             }
+        }
+    }
+}
+
+/** Three soft lines where the description will go, gently pulsing while it loads. */
+@Composable
+private fun DescriptionPlaceholder() {
+    val pulse = rememberInfiniteTransition(label = "descriptionPlaceholder")
+    val alpha by pulse.animateFloat(
+        initialValue = 0.06f,
+        targetValue = 0.14f,
+        animationSpec = infiniteRepeatable(tween(durationMillis = 800), RepeatMode.Reverse),
+        label = "descriptionPlaceholderAlpha"
+    )
+    val lineColor = MaterialTheme.colorScheme.onBackground.copy(alpha = alpha)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        listOf(1f, 1f, 0.6f).forEach { fraction ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(fraction)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(lineColor)
+            )
         }
     }
 }

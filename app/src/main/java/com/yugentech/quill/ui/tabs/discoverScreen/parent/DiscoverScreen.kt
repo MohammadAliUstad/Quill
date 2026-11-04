@@ -47,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -60,6 +59,7 @@ import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.sources.discover.viewmodel.DiscoverViewModel
 import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
 import com.yugentech.quill.ui.sources.standard.components.AnimatedSearchIcon
+import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
 import com.yugentech.quill.ui.sources.standard.components.SearchSuggestions
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfRow
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfSkeleton
@@ -238,14 +238,7 @@ fun DiscoverScreen(
                     .fillMaxWidth()
                     .height(statusBarHeight + 110.dp)
                     .graphicsLayer { alpha = scrollAlpha }
-                    .background(
-                        Brush.verticalGradient(
-                            0.0f to surfaceColor.copy(alpha = 0.9f),
-                            0.4f to surfaceColor.copy(alpha = 0.7f),
-                            0.7f to surfaceColor.copy(alpha = 0.30f),
-                            1.0f to surfaceColor.copy(alpha = 0.0f)
-                        )
-                    )
+                    .background(rememberSmoothScrimBrush(surfaceColor))
             )
 
             val animatedContainerColor by animateColorAsState(
@@ -366,9 +359,9 @@ fun DiscoverScreen(
                             BooksGrid(
                                 books = uiState.searchResults,
                                 onBookClick = { book ->
-                                    searchExpanded = false
-                                    searchText = ""
-                                    viewModel.clearSearch()
+                                    // The search stays as it is (query, results, open bar), so
+                                    // coming back from the book lands on the results again.
+                                    focusManager.clearFocus()
                                     onBookClick(book)
                                 },
                                 topPadding = 16.dp,

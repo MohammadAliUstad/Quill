@@ -22,6 +22,7 @@ import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.navigation.host.AppNavHost
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.theme.QuillTheme
+import com.yugentech.theme.ThemeRevealHost
 import com.yugentech.theme.models.ThemeMode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,6 +61,7 @@ class MainActivity : FragmentActivity() {
 
             val themeViewModel: ThemeViewModel = koinViewModel()
             val themeConfiguration by themeViewModel.themeConfiguration.collectAsStateWithLifecycle()
+            val hapticsEnabled by themeViewModel.hapticsEnabled.collectAsStateWithLifecycle()
             val darkTheme = when (themeConfiguration.themeMode) {
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
@@ -80,29 +82,33 @@ class MainActivity : FragmentActivity() {
             )
 
             QuillTheme(
-                themeConfiguration = themeConfiguration
+                themeConfiguration = themeConfiguration,
+                hapticsEnabled = hapticsEnabled
             ) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+                // Outermost, so a light/dark wipe covers the whole screen.
+                ThemeRevealHost {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
-                    if (showOnboarding != null && !authState.isInitializing) {
-                        AppNavHost(
-                            navController = navController,
-                            webClientId = BuildConfig.WEB_CLIENT_ID,
-                            authViewModel = authViewModel,
-                            themeViewModel = themeViewModel,
-                            showOnboarding = showOnboarding!!,
-                            onOnboardingComplete = {
-                                authViewModel.completeOnboarding()
-                            },
-                            shouldNavigateToHome = shouldNavigateToHome,
-                            onNavigatedToHome = {
-                                shouldNavigateToHome = false
-                            }
-                        )
+                        if (showOnboarding != null && !authState.isInitializing) {
+                            AppNavHost(
+                                navController = navController,
+                                webClientId = BuildConfig.WEB_CLIENT_ID,
+                                authViewModel = authViewModel,
+                                themeViewModel = themeViewModel,
+                                showOnboarding = showOnboarding!!,
+                                onOnboardingComplete = {
+                                    authViewModel.completeOnboarding()
+                                },
+                                shouldNavigateToHome = shouldNavigateToHome,
+                                onNavigatedToHome = {
+                                    shouldNavigateToHome = false
+                                }
+                            )
+                        }
                     }
                 }
             }

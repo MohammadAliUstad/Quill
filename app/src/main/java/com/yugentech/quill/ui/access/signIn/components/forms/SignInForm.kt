@@ -1,17 +1,14 @@
 package com.yugentech.quill.ui.access.signIn.components.forms
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,18 +20,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import com.yugentech.quill.ui.access.signIn.components.AppTextField
+import com.yugentech.quill.ui.access.signIn.components.AuthDivider
+import com.yugentech.quill.ui.access.signIn.components.buttons.ActionButton
 import com.yugentech.quill.ui.access.signIn.components.buttons.GoogleSignInButton
+import androidx.compose.ui.unit.dp
 import com.yugentech.quill.ui.access.signIn.state.SignInFormState
 import com.yugentech.quill.ui.access.signIn.util.FormValidator
-import com.yugentech.quill.ui.access.signIn.components.buttons.ActionButton
 import com.yugentech.theme.tokens.components
-import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.launch
 
+/** Email and password, then Google underneath, as on Hajime's sign-in. */
 @Composable
 fun SignInForm(
     isLoading: Boolean,
@@ -54,117 +53,99 @@ fun SignInForm(
         onClearError()
     }
 
-    Card(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        shape = RoundedCornerShape(MaterialTheme.corners.extraLarge)
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
     ) {
-        Column(
-            modifier = Modifier.padding(MaterialTheme.spacing.l),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
-        ) {
-            Text(
-                text = "Sign In",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = MaterialTheme.colorScheme.onSurface
+        AppTextField(
+            value = formState.email,
+            onValueChange = { newEmail ->
+                formState = formState.copy(
+                    email = newEmail,
+                    emailError = FormValidator.validateEmail(newEmail)
+                )
+            },
+            label = "Email",
+            leadingIcon = Icons.Default.Email,
+            error = formState.emailError
+        )
+
+        Column {
+            AppTextField(
+                value = formState.password,
+                onValueChange = { newPassword ->
+                    formState = formState.copy(
+                        password = newPassword,
+                        passwordError = FormValidator.validatePassword(newPassword)
+                    )
+                },
+                label = "Password",
+                leadingIcon = Icons.Default.Lock,
+                error = formState.passwordError,
+                isPassword = true
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)) {
-                AppTextField(
-                    value = formState.email,
-                    onValueChange = { newEmail ->
-                        formState = formState.copy(
-                            email = newEmail,
-                            emailError = FormValidator.validateEmail(newEmail)
-                        )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                TextButton(
+                    onClick = {
+                        if (formState.email.isBlank()) {
+                            formState = formState.copy(
+                                emailError = "Enter your email first, and we'll send a reset link"
+                            )
+                        } else {
+                            onForgotPassword(formState.email)
+                        }
                     },
-                    label = "Email",
-                    leadingIcon = Icons.Default.Email,
-                    error = formState.emailError
+                    modifier = Modifier.height(MaterialTheme.components.buttonSmall)
+                ) {
+                    Text(
+                        text = "Forgot password?",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+
+        ActionButton(
+            text = "Sign in",
+            isLoading = isLoading && !isGoogleSignIn,
+            enabled = !isLoading,
+            onClick = {
+                isGoogleSignIn = false
+                val isValid = FormValidator.validateSignInForm(
+                    email = formState.email,
+                    password = formState.password,
+                    onEmailError = { error ->
+                        formState = formState.copy(emailError = error)
+                    },
+                    onPasswordError = { error ->
+                        formState = formState.copy(passwordError = error)
+                    }
                 )
 
-                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)) {
-                    AppTextField(
-                        value = formState.password,
-                        onValueChange = { newPassword ->
-                            formState = formState.copy(
-                                password = newPassword,
-                                passwordError = FormValidator.validatePassword(newPassword)
-                            )
-                        },
-                        label = "Password",
-                        leadingIcon = Icons.Default.Lock,
-                        error = formState.passwordError,
-                        isPassword = true
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(
-                            onClick = {
-                                if (formState.email.isBlank()) {
-                                    formState = formState.copy(
-                                        emailError = "Please enter your email first"
-                                    )
-                                } else {
-                                    onForgotPassword(formState.email)
-                                }
-                            },
-                            modifier = Modifier
-                                .padding(end = MaterialTheme.spacing.xs)
-                                .height(MaterialTheme.components.buttonMedium)
-                        ) {
-                            Text(
-                                text = "Forgot Password?",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
+                if (isValid) {
+                    scope.launch {
+                        onSignIn(formState.email, formState.password)
                     }
                 }
             }
+        )
 
-            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)) {
-                ActionButton(
-                    text = "Sign In",
-                    isLoading = isLoading && !isGoogleSignIn,
-                    enabled = !isLoading,
-                    onClick = {
-                        isGoogleSignIn = false
-                        val isValid = FormValidator.validateSignInForm(
-                            email = formState.email,
-                            password = formState.password,
-                            onEmailError = { error ->
-                                formState = formState.copy(emailError = error)
-                            },
-                            onPasswordError = { error ->
-                                formState = formState.copy(passwordError = error)
-                            }
-                        )
+        AuthDivider(text = "or")
 
-                        if (isValid) {
-                            scope.launch {
-                                onSignIn(formState.email, formState.password)
-                            }
-                        }
-                    }
-                )
-
-                GoogleSignInButton(
-                    isLoading = isLoading && isGoogleSignIn,
-                    enabled = !isLoading,
-                    onClick = {
-                        isGoogleSignIn = true
-                        scope.launch { onGoogleSignIn() }
-                    }
-                )
+        GoogleSignInButton(
+            isLoading = isLoading && isGoogleSignIn,
+            enabled = !isLoading,
+            onClick = {
+                isGoogleSignIn = true
+                scope.launch { onGoogleSignIn() }
             }
-        }
+        )
     }
 }

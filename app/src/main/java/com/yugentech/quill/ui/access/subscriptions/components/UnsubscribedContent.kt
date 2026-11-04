@@ -29,16 +29,13 @@ fun UnsubscribedContent(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // 1. The Teaser Hero
-        item { AiraHero() }
-
-        // 2. The Core Comparison (Your existing cards)
+        // 1. The Core Comparison
         item { ProFeaturesSection() }
 
-        // 3. The Value Add (New Feature List)
+        // 2. The Value Add
         item { FeatureHighlights() }
 
-        // 4. The Selection Section
+        // 3. The Selection Section
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(

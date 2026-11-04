@@ -38,14 +38,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yugentech.theme.service.HapticService
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
-import org.koin.compose.koinInject
 
 @Composable
 fun SelectionToolbar(
@@ -59,7 +59,7 @@ fun SelectionToolbar(
     onShare: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val haptic = koinInject<HapticService>()
+    val haptic = LocalHapticFeedback.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
     // On light ebook backgrounds the frosted glass blurs to near-white and disappears.
@@ -100,7 +100,7 @@ fun SelectionToolbar(
                     tint = primaryColor,
                     customContent = { AiraBadge() },
                     onClick = {
-                        haptic.performHaptic()
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                         onAskAira(selectionInfo.text)
                     }
                 )
@@ -112,7 +112,7 @@ fun SelectionToolbar(
                 label = "Highlight",
                 tint = MaterialTheme.colorScheme.tertiary,
                 onClick = {
-                    haptic.performHaptic()
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     onHighlight()
                 }
             )
@@ -122,7 +122,7 @@ fun SelectionToolbar(
                 icon = Icons.Rounded.ContentCopy,
                 label = "Copy",
                 onClick = {
-                    haptic.performHaptic()
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     onCopy(selectionInfo.text)
                 }
             )
@@ -132,7 +132,7 @@ fun SelectionToolbar(
                 icon = Icons.Rounded.Share,
                 label = "Share",
                 onClick = {
-                    haptic.performHaptic()
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     onShare(selectionInfo.text)
                 }
             )

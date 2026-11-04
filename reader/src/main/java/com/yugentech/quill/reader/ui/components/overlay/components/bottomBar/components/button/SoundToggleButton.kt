@@ -19,12 +19,11 @@ import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.sound.model.BackgroundSound
-import com.yugentech.theme.service.HapticService
-import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -33,15 +32,14 @@ fun SoundToggleButton(
     lastSelectedSound: BackgroundSound,
     onClick: () -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
     val isPlaying = currentSound != BackgroundSound.NONE
     val soundLabel = if (isPlaying) currentSound.displayName else lastSelectedSound.displayName
 
     ToggleButton(
         checked = isPlaying,
         onCheckedChange = {
-            haptic.performHaptic(view)
+            haptic.performHapticFeedback(if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
             onClick()
         },
         shapes = ToggleButtonShapes(

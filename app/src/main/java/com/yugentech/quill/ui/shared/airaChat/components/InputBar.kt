@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
+import com.yugentech.theme.tokens.dimensions.AppAnimations
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -59,6 +60,7 @@ fun InputBar(
     onSend: () -> Unit,
     onStop: () -> Unit,
 ) {
+    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
     val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
     val isImeVisible = WindowInsets.isImeVisible
     val focusManager = LocalFocusManager.current
@@ -172,6 +174,7 @@ fun InputBar(
                     ) {
                         AnimatedContent(
                             targetState = isStreaming,
+                            transitionSpec = { fadeThrough() },
                             label = "SendStopIcon"
                         ) { streaming ->
                             Icon(

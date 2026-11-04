@@ -93,7 +93,8 @@ object GutenbergMapper {
         )
     }
 
-    private fun cleanTitle(raw: String): String {
+    // Shared with GutenbergOpdsMapper, so both sources tidy titles the same way.
+    internal fun cleanTitle(raw: String): String {
         val cleaned = raw
             .substringBefore("; ")
             .substringBefore(" : ")

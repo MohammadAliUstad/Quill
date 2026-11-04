@@ -3,11 +3,6 @@ package com.yugentech.quill.navigation.navgraph
 import android.app.Activity
 import android.content.Context
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -24,31 +19,7 @@ fun NavGraphBuilder.authGraph(
     context: Context
 ) {
     composable(
-        route = AppScreen.SignIn.route,
-        enterTransition = {
-            slideInHorizontally(
-                animationSpec = tween(250),
-                initialOffsetX = { 1000 }
-            ) + fadeIn(animationSpec = tween(250))
-        },
-        exitTransition = {
-            slideOutHorizontally(
-                animationSpec = tween(250),
-                targetOffsetX = { -1000 }
-            ) + fadeOut(animationSpec = tween(250))
-        },
-        popEnterTransition = {
-            slideInHorizontally(
-                animationSpec = tween(250),
-                initialOffsetX = { -1000 }
-            ) + fadeIn(animationSpec = tween(250))
-        },
-        popExitTransition = {
-            slideOutHorizontally(
-                animationSpec = tween(250),
-                targetOffsetX = { 1000 }
-            ) + fadeOut(animationSpec = tween(250))
-        }
+        route = AppScreen.SignIn.route
     ) {
         Timber.v("Composing SignIn Screen")
         BackHandler { (context as? Activity)?.finish() }
@@ -73,31 +44,7 @@ fun NavGraphBuilder.authGraph(
     }
 
     composable(
-        route = AppScreen.SignUp.route,
-        enterTransition = {
-            slideInHorizontally(
-                animationSpec = tween(250),
-                initialOffsetX = { 1000 }
-            ) + fadeIn(animationSpec = tween(250))
-        },
-        exitTransition = {
-            slideOutHorizontally(
-                animationSpec = tween(250),
-                targetOffsetX = { -1000 }
-            ) + fadeOut(animationSpec = tween(250))
-        },
-        popEnterTransition = {
-            slideInHorizontally(
-                animationSpec = tween(250),
-                initialOffsetX = { -1000 }
-            ) + fadeIn(animationSpec = tween(250))
-        },
-        popExitTransition = {
-            slideOutHorizontally(
-                animationSpec = tween(250),
-                targetOffsetX = { 1000 }
-            ) + fadeOut(animationSpec = tween(250))
-        }
+        route = AppScreen.SignUp.route
     ) {
         Timber.v("Composing SignUp Screen")
         BackHandler { navController.popBackStack() }

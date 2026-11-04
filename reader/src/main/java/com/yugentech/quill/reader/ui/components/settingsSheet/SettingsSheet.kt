@@ -54,7 +54,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,9 +67,7 @@ import com.yugentech.quill.reader.ui.components.settingsSheet.components.Section
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.SettingsSwitchItem
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.ThemeOption
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.ThemePreset
-import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.spacing
-import org.koin.compose.koinInject
 import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.navigator.preferences.Theme
 import org.readium.r2.shared.ExperimentalReadiumApi
@@ -90,8 +89,7 @@ fun SettingsSheet(
     onNightLightChange: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
     val epub = preferences.epub
     val fontOptions = remember {
         listOf(
@@ -229,7 +227,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = !isScroll,
                                 onClick = {
-                                    haptic.performHaptic(view)
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     onPreferencesChange(epub.copy(scroll = false))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
@@ -237,7 +235,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = isScroll,
                                 onClick = {
-                                    haptic.performHaptic(view)
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     onPreferencesChange(epub.copy(scroll = true))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
@@ -311,7 +309,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.LEFT || currentAlign == R2TextAlign.START,
                                 onClick = {
-                                    haptic.performHaptic(view)
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     onPreferencesChange(epub.copy(textAlign = R2TextAlign.LEFT))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 4)
@@ -320,7 +318,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.CENTER,
                                 onClick = {
-                                    haptic.performHaptic(view)
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     onPreferencesChange(epub.copy(textAlign = R2TextAlign.CENTER))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 4)
@@ -329,7 +327,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.JUSTIFY,
                                 onClick = {
-                                    haptic.performHaptic(view)
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     onPreferencesChange(epub.copy(textAlign = R2TextAlign.JUSTIFY))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 2, count = 4)
@@ -338,7 +336,7 @@ fun SettingsSheet(
                             SegmentedButton(
                                 selected = currentAlign == R2TextAlign.RIGHT,
                                 onClick = {
-                                    haptic.performHaptic(view)
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     onPreferencesChange(epub.copy(textAlign = R2TextAlign.RIGHT))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = 3, count = 4)
@@ -479,7 +477,7 @@ fun SettingsSheet(
                         Button(
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             onClick = {
-                                haptic.performHaptic(view)
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                 showResetDialog = true
                             }) {
                             Text("Reset to Defaults")
@@ -499,7 +497,7 @@ fun SettingsSheet(
             confirmButton = {
                 Button(
                     onClick = {
-                        haptic.performHaptic(view)
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                         onPreferencesChange(ReaderDefaults.getPreferences())
                         onVolumeNavigationChange(false)
                         onNightLightChange(false)

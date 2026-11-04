@@ -16,15 +16,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.quill.ui.main.components.SectionHeader
 import com.yugentech.theme.AppFont
 import com.yugentech.theme.builder.getFontFamily
-import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.spacing
-import org.koin.compose.koinInject
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -32,8 +31,7 @@ fun FontSelector(
     modifier: Modifier = Modifier,
     viewModel: ThemeViewModel
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
     val currentFont by viewModel.currentFont.collectAsState()
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -50,7 +48,7 @@ fun FontSelector(
                 FilterChip(
                     selected = currentFont == font,
                     onClick = {
-                        haptic.performHaptic(view)
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                         viewModel.setFont(font)
                     },
                     label = {

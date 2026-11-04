@@ -12,11 +12,8 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -55,12 +52,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
@@ -73,7 +71,7 @@ import com.yugentech.quill.reader.ui.components.aira.components.PeekDragHandle
 import com.yugentech.quill.reader.ui.components.aira.components.PeekResponseArea
 import com.yugentech.quill.reader.ui.components.aira.components.QuotaLimitBar
 import com.yugentech.quill.reader.ui.components.aira.components.resolveChips
-import com.yugentech.theme.service.HapticService
+import com.yugentech.theme.tokens.dimensions.AppAnimations
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.readium.r2.shared.publication.Locator
@@ -81,7 +79,6 @@ import org.readium.r2.shared.publication.Locator
 private val STATUS_BAR_CLEARANCE = 16.dp
 private val EDGE_FADE_HEIGHT = 20.dp
 private val MIN_SHEET_HEIGHT = 220.dp
-private val MAX_DRAG_UP_SLACK = 16.dp
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -97,8 +94,8 @@ fun AiraPeekBar(
     onDismiss: () -> Unit,
     onStop: () -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
+    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
     val voiceOutputManager: VoiceOutputManager = koinInject()
     val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
@@ -161,7 +158,7 @@ fun AiraPeekBar(
 
     // Natural (unclamped) heights of each sibling, tracked independently of whatever height the
     // user has manually forced the sheet to -- these feed the drag handle's upward limit so it
-    // never opens more than MAX_DRAG_UP_SLACK of empty space below the actual content.
+    // never opens past the content's own natural height.
     // Seeded with a reasonable guess so the header-sized top padding on the response content
     // (added below, so the header can overlay it) is roughly correct from the very first frame
     // instead of visibly snapping once the real measurement lands.
@@ -173,7 +170,10 @@ fun AiraPeekBar(
     var responseContentHeightPx by remember { mutableStateOf(0f) }
     // Hoisted so the drag handle's callback (defined further up the tree) can read it.
     val responseScrollState = rememberScrollState()
-    val maxDragUpSlackPx = with(density) { MAX_DRAG_UP_SLACK.toPx() }
+    // Matches the sheet Column's windowInsetsPadding(navigationBars) + padding(bottom = 4.dp).
+    val sheetBottomChromePx = with(density) {
+        WindowInsets.navigationBars.getBottom(this) + 4.dp.toPx()
+    }
 
     val visibleState = remember { MutableTransitionState(isVisible) }
     visibleState.targetState = isVisible
@@ -322,8 +322,16 @@ fun AiraPeekBar(
                                 // opening/closing (the sheet's height ceiling shrinking or
                                 // growing with it, see maxSheetHeight above) the catch-up
                                 // resolves quickly instead of reading as a separate, delayed
-                                // motion after the keyboard's own animation finishes.
-                                .animateContentSize(animationSpec = tween(150, easing = FastOutSlowInEasing))
+                                // motion after the keyboard's own animation finishes. A spring
+                                // rather than a tween: a reply growing line by line retargets this
+                                // every frame, and a tween restarts its easing from zero speed on
+                                // each retarget (a visible stutter) while a spring keeps its velocity.
+                                .animateContentSize(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioNoBouncy,
+                                        stiffness = Spring.StiffnessMedium
+                                    )
+                                )
                         ) {
                             LaunchedEffect(contentKind) {
                                 responseScrollState.scrollTo(0)
@@ -351,7 +359,7 @@ fun AiraPeekBar(
                                         shownUiState.response == lastRevealedResponse,
                                     onResponseRevealed = { lastRevealedResponse = it },
                                     onChipClick = { intent ->
-                                        haptic.performHaptic(view)
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                         if (!shownUiState.canSendQuery) {
                                             enforceLimitUi = true
                                         } else {
@@ -426,11 +434,19 @@ fun AiraPeekBar(
                                                 // content below, so its height is already folded
                                                 // into responseContentHeightPx via the content's
                                                 // own top padding -- adding it again here would
-                                                // double-count it.
+                                                // double-count it. The sheet's own bottom chrome
+                                                // (nav bar inset + 4dp padding on the Column) does
+                                                // count though -- leaving it out capped the drag
+                                                // short of the natural height, so a shrunk sheet
+                                                // could never be dragged fully open again and its
+                                                // response stayed scrollable by that difference.
                                                 val naturalContentHeightPx =
-                                                    responseContentHeightPx + inputRowHeightPx
-                                                val maxAllowedPx = (naturalContentHeightPx + maxDragUpSlackPx)
+                                                    responseContentHeightPx + inputRowHeightPx + sheetBottomChromePx
+                                                // Never below the minimum, or coerceIn would throw
+                                                // for a reply shorter than MIN_SHEET_HEIGHT.
+                                                val maxAllowedPx = naturalContentHeightPx
                                                     .coerceAtMost(maxSheetHeightPx)
+                                                    .coerceAtLeast(minSheetHeightPx)
                                                 manualHeightPx = (base - deltaPx)
                                                     .coerceIn(minSheetHeightPx, maxAllowedPx)
                                             }
@@ -447,11 +463,11 @@ fun AiraPeekBar(
                                     isLoading = shownUiState.isLoading,
                                     hasResponse = shownUiState.response != null,
                                     onDismiss = {
-                                        haptic.performHaptic(view)
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                         onDismiss()
                                     },
                                     onSpeak = {
-                                        haptic.performHaptic(view)
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                         contentToActUpon.let { text ->
                                             if (text.isNotBlank()) {
                                                 scope.launch { voiceOutputManager.speak(text) }
@@ -459,7 +475,7 @@ fun AiraPeekBar(
                                         }
                                     },
                                     onCopy = {
-                                        haptic.performHaptic(view)
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                         onCopyResponse()
                                     }
                                 )
@@ -469,11 +485,7 @@ fun AiraPeekBar(
                         AnimatedContent(
                             modifier = Modifier.onSizeChanged { inputRowHeightPx = it.height.toFloat() },
                             targetState = enforceLimitUi,
-                            transitionSpec = {
-                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(
-                                    animationSpec = tween(300)
-                                )
-                            },
+                            transitionSpec = { fadeThrough() },
                             label = "InputBarSwap"
                         ) { isLimitReached ->
                             if (!isLimitReached) {
@@ -488,11 +500,11 @@ fun AiraPeekBar(
                                     focusRequester = focusRequester,
                                     onFocusChanged = { isFocused = it },
                                     onSend = {
-                                        haptic.performHaptic(view)
+                                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                                         send(it)
                                     },
                                     onStop = {
-                                        haptic.performHaptic(view)
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                         onStop()
                                     }
                                 )

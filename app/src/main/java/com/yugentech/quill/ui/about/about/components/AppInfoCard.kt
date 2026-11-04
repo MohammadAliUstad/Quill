@@ -98,7 +98,8 @@ fun AppInfoCard() {
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
 
             Text(
-                text = "Version 4.0.0",
+                // From the build (versionName), so it never falls behind a release.
+                text = "Version ${com.yugentech.quill.BuildConfig.VERSION_NAME}",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )

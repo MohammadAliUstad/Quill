@@ -7,6 +7,7 @@ import com.yugentech.quill.aira.intent.repository.IntentDetectionRepository
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.database.dao.AiraMessageDao
 import com.yugentech.quill.database.dao.BookDao
+import com.yugentech.quill.database.dao.UserDao
 import com.yugentech.quill.database.entity.AiraMessageEntity
 import com.yugentech.quill.database.entity.AiraMessageRole
 import com.yugentech.quill.domain.AuthRepository
@@ -20,13 +21,17 @@ class AiraChatService(
     private val bookChatRepository: BookChatRepository,
     private val bookDao: BookDao,
     private val airaMessageDao: AiraMessageDao,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val userDao: UserDao
 ) {
 
     fun ask(bookId: String, query: String, selectedText: String? = null): Flow<AiraResponse> = flow {
         val book = bookDao.getBookEntity(bookId)!!
         val recentHistory = airaMessageDao.getRecentMessagesForBook(bookId)
-        val userName = authRepository.currentUserName
+        val currentUserId = authRepository.currentUser
+        val userName = currentUserId?.let { userId ->
+            userDao.getUser(userId)?.name?.takeIf { it.isNotBlank() }
+        } ?: authRepository.currentUserName
 
         try {
             val intent = intentDetectionRepository.detectIntent(
@@ -67,20 +72,18 @@ class AiraChatService(
             responseFlow.collect { response ->
                 emit(response)
                 if (response is AiraResponse.Success) {
-                    // Save User message
-                    airaMessageDao.insertMessage(
-                        AiraMessageEntity(
-                            bookId = bookId,
-                            role = AiraMessageRole.USER,
-                            content = query.trim()
-                        )
-                    )
-                    // Save Aira message
-                    airaMessageDao.insertMessage(
-                        AiraMessageEntity(
-                            bookId = bookId,
-                            role = AiraMessageRole.AIRA,
-                            content = response.text.trim()
+                    airaMessageDao.insertMessages(
+                        listOf(
+                            AiraMessageEntity(
+                                bookId = bookId,
+                                role = AiraMessageRole.USER,
+                                content = query.trim()
+                            ),
+                            AiraMessageEntity(
+                                bookId = bookId,
+                                role = AiraMessageRole.AIRA,
+                                content = response.text.trim()
+                            )
                         )
                     )
                 }

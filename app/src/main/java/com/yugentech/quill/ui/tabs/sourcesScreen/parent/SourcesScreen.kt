@@ -1,15 +1,17 @@
 package com.yugentech.quill.ui.tabs.sourcesScreen.parent
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
-import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -26,16 +28,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.database.model.BookSource
+import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.CatalogInfo
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.FilePickerBottomSheet
+import com.yugentech.quill.ui.tabs.sourcesScreen.components.ImportFromDeviceCard
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.ImportStatusSheet
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.LargeCatalogCard
+import com.yugentech.quill.ui.tabs.sourcesScreen.components.SourcesParallaxBackground
 import com.yugentech.quill.ui.tabs.sourcesScreen.result.ImportResult
 import com.yugentech.quill.ui.tabs.sourcesScreen.viewmodel.SourcesViewModel
 
@@ -54,20 +61,10 @@ fun SourcesScreen(
 
     var showFilePickerSheet by remember { mutableStateOf(false) }
 
+    val libraryCounts by viewModel.libraryCounts.collectAsStateWithLifecycle()
+    val coverPreviews by viewModel.coverPreviews.collectAsStateWithLifecycle()
+
     val catalogs = listOf(
-        CatalogInfo(
-            source = BookSource.USER_IMPORTED,
-            title = "Import from Device",
-            subtitle = "Supports EPUB files",
-            description = "Import and read your own book collection. Select EPUB files stored anywhere on your device.",
-            icon = Icons.Default.FolderOpen,
-            shape = MaterialShapes.Bun.toShape(),
-            containerColor = { MaterialTheme.colorScheme.tertiaryContainer },
-            contentColor = { MaterialTheme.colorScheme.onTertiaryContainer },
-            buttonContainerColor = { MaterialTheme.colorScheme.tertiary },
-            buttonContentColor = { MaterialTheme.colorScheme.onTertiary },
-            buttonText = if (isImporting) "Importing..." else "Browse Device",
-        ),
         CatalogInfo(
             source = BookSource.STANDARD_EBOOKS,
             title = "Standard Ebooks",
@@ -75,6 +72,7 @@ fun SourcesScreen(
             description = "Carefully formatted and typeset public domain ebooks with professional-grade quality and modern design.",
             icon = Icons.Default.AutoStories,
             shape = MaterialShapes.SoftBurst.toShape(),
+            stats = listOf("1,000+ books", "Hand-typeset"),
             containerColor = { MaterialTheme.colorScheme.primaryContainer },
             contentColor = { MaterialTheme.colorScheme.onPrimaryContainer },
             buttonContainerColor = { MaterialTheme.colorScheme.primary },
@@ -88,6 +86,7 @@ fun SourcesScreen(
             description = "The first and largest single collection of free eBooks. Literature from around the world in multiple languages.",
             icon = Icons.Default.Public,
             shape = MaterialShapes.Cookie9Sided.toShape(),
+            stats = listOf("60,000+ books", "Many languages"),
             containerColor = { MaterialTheme.colorScheme.secondaryContainer },
             contentColor = { MaterialTheme.colorScheme.onSecondaryContainer },
             buttonContainerColor = { MaterialTheme.colorScheme.secondary },
@@ -97,50 +96,82 @@ fun SourcesScreen(
     )
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollState = rememberScrollState()
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Sources",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-                scrollBehavior = scrollBehavior
-            )
+            // Same treatment as the Library tab: a transparent bar over the content, with a
+            // surface gradient that fades in once the content scrolls underneath.
+            val surfaceColor = MaterialTheme.colorScheme.surface
+            val scrimBrush = rememberSmoothScrimBrush(surfaceColor)
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .graphicsLayer {
+                            alpha = (scrollState.value / 100f).coerceIn(0f, 1f)
+                        }
+                        .background(scrimBrush)
+                )
+
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Sources",
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                    scrollBehavior = scrollBehavior
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = contentPadding.calculateBottomPadding() + 8.dp
-                ),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            catalogs.forEach { catalog ->
-                LargeCatalogCard(
-                    catalog = catalog,
-                    onClick = {
-                        when (catalog.source) {
-                            BookSource.USER_IMPORTED -> showFilePickerSheet = true
-                            else -> onSourceClick(catalog.source)
-                        }
-                    },
+        Box(modifier = Modifier.fillMaxSize()) {
+            SourcesParallaxBackground(
+                scrollOffset = scrollState.value,
+                headerHeight = 420.dp
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = innerPadding.calculateTopPadding(),
+                        bottom = contentPadding.calculateBottomPadding() + 8.dp
+                    ),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Carries its own "Your files" label beside the illustration.
+                ImportFromDeviceCard(
+                    isImporting = isImporting,
+                    importedCount = libraryCounts[BookSource.USER_IMPORTED] ?: 0,
+                    onClick = { showFilePickerSheet = true },
                 )
+
+                SectionLabel(text = "Free catalogues")
+
+                catalogs.forEachIndexed { index, catalog ->
+                    LargeCatalogCard(
+                        catalog = catalog,
+                        libraryCount = libraryCounts[catalog.source] ?: 0,
+                        coverUrls = coverPreviews[catalog.source].orEmpty(),
+                        // Stagger the cards so their cover stacks don't shuffle in lockstep.
+                        shuffleOffsetMillis = index * 1_600L,
+                        onClick = { onSourceClick(catalog.source) },
+                    )
+                }
             }
         }
 
@@ -169,4 +200,15 @@ fun SourcesScreen(
             )
         }
     }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp)
+    )
 }

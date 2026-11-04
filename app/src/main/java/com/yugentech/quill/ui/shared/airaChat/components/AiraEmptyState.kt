@@ -3,6 +3,7 @@ package com.yugentech.quill.ui.shared.airaChat.components
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,6 +26,8 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,6 +36,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -41,11 +46,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.R
 import com.yugentech.theme.WindSongFont
+import kotlin.math.roundToInt
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AiraEmptyState(
     lastChapterTitle: String?,
     isIndexing: Boolean,
+    indexingProgress: Int,
     spoilerLockEnabled: Boolean,
     hasStartedReading: Boolean,
     modifier: Modifier = Modifier,
@@ -58,27 +66,96 @@ fun AiraEmptyState(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // While Aira reads the book: how far she's got, a few dp above her circle. The line keeps
+        // its space when hidden, so the circle doesn't jump when indexing finishes.
+        val animatedProgress by animateFloatAsState(
+            targetValue = indexingProgress / 100f,
+            animationSpec = tween(durationMillis = 600),
+            label = "IndexingProgress"
+        )
+        val percentAlpha by animateFloatAsState(
+            targetValue = if (isIndexing && indexingProgress > 0) 1f else 0f,
+            animationSpec = tween(durationMillis = 300),
+            label = "IndexingPercentAlpha"
+        )
+        Text(
+            text = "${(animatedProgress * 100).roundToInt()}%",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.graphicsLayer { alpha = percentAlpha }
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // The wave runs from one edge of the screen to the other (past this column's 16dp padding),
+        // through the middle of the circle and behind it.
         Box(
             modifier = Modifier
-                .size(160.dp)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = CircleShape
-                )
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.BottomCenter
+                .fillMaxWidth()
+                .layout { measurable, constraints ->
+                    val bleed = (16.dp * 2).roundToPx()
+                    val fullWidth = constraints.maxWidth + bleed
+                    val placeable = measurable.measure(
+                        constraints.copy(minWidth = fullWidth, maxWidth = fullWidth)
+                    )
+                    layout(constraints.maxWidth, placeable.height) {
+                        placeable.place(-bleed / 2, 0)
+                    }
+                },
+            contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(
-                    id = if (isIndexing) R.drawable.preading else R.drawable.psmile_calm
-                ),
-                contentDescription = "Aira",
-                modifier = Modifier
-                    .requiredSize(180.dp)
-                    .offset(x = (-2).dp, y = 16.dp)
+            // Fades out when indexing ends, then leaves the composition.
+            val waveAlpha by animateFloatAsState(
+                targetValue = if (isIndexing) 1f else 0f,
+                animationSpec = tween(durationMillis = 300),
+                label = "IndexingWaveAlpha"
             )
+            if (isIndexing || waveAlpha > 0f) {
+                val waveModifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = waveAlpha }
+                if (indexingProgress > 0) {
+                    LinearWavyProgressIndicator(
+                        progress = { animatedProgress },
+                        modifier = waveModifier,
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    )
+                } else {
+                    LinearWavyProgressIndicator(
+                        modifier = waveModifier,
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(160.dp)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = CircleShape
+                    )
+                    .clip(CircleShape)
+                    // An opaque base under the tint, so the wave passes behind the circle
+                    // instead of showing through it.
+                    .background(MaterialTheme.colorScheme.surface)
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Image(
+                    painter = painterResource(
+                        id = if (isIndexing) R.drawable.preading else R.drawable.psmile_calm
+                    ),
+                    contentDescription = "Aira",
+                    modifier = Modifier
+                        .requiredSize(180.dp)
+                        .offset(x = (-2).dp, y = 16.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))

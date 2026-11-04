@@ -14,12 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.yugentech.theme.service.HapticService
-import org.koin.compose.koinInject
 
 @Composable
 fun DeleteCategoryDialog(
@@ -27,8 +26,7 @@ fun DeleteCategoryDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -70,7 +68,7 @@ fun DeleteCategoryDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    haptic.performHaptic(view)
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                     onConfirm()
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -84,7 +82,7 @@ fun DeleteCategoryDialog(
         dismissButton = {
             TextButton(
                 onClick = {
-                    haptic.performHaptic(view)
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     onDismiss()
                 }
             ) {

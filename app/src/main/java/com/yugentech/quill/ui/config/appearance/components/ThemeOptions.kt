@@ -1,98 +1,20 @@
 package com.yugentech.quill.ui.config.appearance.components
 
-import androidx.compose.ui.graphics.Color
-import com.yugentech.theme.AppColorSchemes
 import com.yugentech.theme.models.ColorTheme
 
+// The colour themes offered in Appearance; their colours come from the real schemes
 data class ThemeOption(
     val colorTheme: ColorTheme,
-    val displayName: String,
-    val primaryColor: Color,
-    val gradientColors: List<Color>
+    val displayName: String
 )
 
-fun themeOptions(
-    currentPrimary: Color,
-    currentPrimaryContainer: Color
-): List<ThemeOption> = listOf(
-
-    ThemeOption(
-        colorTheme = ColorTheme.DYNAMIC,
-        displayName = "Dynamic",
-        primaryColor = currentPrimary,
-        gradientColors = listOf(
-            currentPrimary,
-            currentPrimaryContainer
-        )
-    ),
-
-    ThemeOption(
-        colorTheme = ColorTheme.QUILL,
-        displayName = "Quill",
-        primaryColor = AppColorSchemes.QuillLightColorScheme.primary,
-        gradientColors = listOf(
-            AppColorSchemes.QuillLightColorScheme.primary,
-            AppColorSchemes.QuillLightColorScheme.primaryContainer
-        )
-    ),
-
-    ThemeOption(
-        colorTheme = ColorTheme.CANYON,
-        displayName = "Canyon",
-        primaryColor = AppColorSchemes.CanyonLightColorScheme.primary,
-        gradientColors = listOf(
-            AppColorSchemes.CanyonLightColorScheme.primary,
-            AppColorSchemes.CanyonLightColorScheme.primaryContainer
-        )
-    ),
-
-    ThemeOption(
-        colorTheme = ColorTheme.HARVEST,
-        displayName = "Harvest",
-        primaryColor = AppColorSchemes.HarvestLightColorScheme.primary,
-        gradientColors = listOf(
-            AppColorSchemes.HarvestLightColorScheme.primary,
-            AppColorSchemes.HarvestLightColorScheme.primaryContainer
-        )
-    ),
-
-    ThemeOption(
-        colorTheme = ColorTheme.HARBOR,
-        displayName = "Harbor",
-        primaryColor = AppColorSchemes.HarborLightColorScheme.primary,
-        gradientColors = listOf(
-            AppColorSchemes.HarborLightColorScheme.primary,
-            AppColorSchemes.HarborLightColorScheme.primaryContainer
-        )
-    ),
-
-    ThemeOption(
-        colorTheme = ColorTheme.SAKURA,
-        displayName = "Sakura",
-        primaryColor = AppColorSchemes.SakuraLightColorScheme.primary,
-        gradientColors = listOf(
-            AppColorSchemes.SakuraLightColorScheme.primary,
-            AppColorSchemes.SakuraLightColorScheme.primaryContainer
-        )
-    ),
-
-    ThemeOption(
-        colorTheme = ColorTheme.ALPINE,
-        displayName = "Alpine",
-        primaryColor = AppColorSchemes.AlpineLightColorScheme.primary,
-        gradientColors = listOf(
-            AppColorSchemes.AlpineLightColorScheme.primary,
-            AppColorSchemes.AlpineLightColorScheme.primaryContainer
-        )
-    ),
-
-    ThemeOption(
-        colorTheme = ColorTheme.TWILIGHT,
-        displayName = "Twilight",
-        primaryColor = AppColorSchemes.TwilightLightColorScheme.primary,
-        gradientColors = listOf(
-            AppColorSchemes.TwilightLightColorScheme.primary,
-            AppColorSchemes.TwilightLightColorScheme.primaryContainer
-        )
-    )
+val themeOptions = listOf(
+    ThemeOption(ColorTheme.DYNAMIC, "Dynamic"),
+    ThemeOption(ColorTheme.QUILL, "Quill"),
+    ThemeOption(ColorTheme.LAGOON, "Lagoon"),
+    ThemeOption(ColorTheme.CANYON, "Canyon"),
+    ThemeOption(ColorTheme.HARVEST, "Harvest"),
+    ThemeOption(ColorTheme.SAKURA, "Sakura"),
+    ThemeOption(ColorTheme.ALPINE, "Alpine"),
+    ThemeOption(ColorTheme.TWILIGHT, "Twilight")
 )

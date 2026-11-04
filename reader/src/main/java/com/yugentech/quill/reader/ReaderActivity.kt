@@ -19,13 +19,16 @@ import com.yugentech.quill.reader.viewmodel.reader.ReaderViewModel
 import com.yugentech.theme.QuillTheme
 import com.yugentech.theme.ThemeRepository
 import com.yugentech.theme.models.ThemeConfiguration
+import kotlinx.coroutines.flow.Flow
 import org.koin.android.ext.android.inject
+import org.koin.core.qualifier.named
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ReaderActivity : AppCompatActivity() {
 
     private val viewModel: ReaderViewModel by viewModel()
     private val themeRepository: ThemeRepository by inject()
+    private val hapticsEnabledFlow: Flow<Boolean> by inject(named("hapticsEnabled"))
     private lateinit var insetsController: WindowInsetsControllerCompat
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,11 +50,12 @@ class ReaderActivity : AppCompatActivity() {
             val currentThemeConfig by themeRepository.themeConfiguration.collectAsState(
                 initial = ThemeConfiguration()
             )
+            val hapticsEnabled by hapticsEnabledFlow.collectAsState(initial = true)
 
             val density = androidx.compose.ui.platform.LocalDensity.current
             val statusBarHeightDp = with(density) { statusBarHeightPx.toDp() }
 
-            QuillTheme(themeConfiguration = currentThemeConfig) {
+            QuillTheme(themeConfiguration = currentThemeConfig, hapticsEnabled = hapticsEnabled) {
                 ReaderScreen(
                     viewModel = viewModel,
                     uiState = uiState,

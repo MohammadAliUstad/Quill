@@ -125,7 +125,7 @@ fun PeekResponseArea(
                     is ResponseAreaState.Loading -> {
                         Column {
                             Spacer(Modifier.height(20.dp))
-                            ThinkingIndicator(modifier = Modifier.padding(horizontal = 16.dp))
+                            ThinkingIndicator(modifier = Modifier.padding(start = 24.dp, end = 16.dp))
                             Spacer(Modifier.height(20.dp))
                         }
                     }
@@ -176,6 +176,7 @@ fun PeekResponseArea(
                                 text = state.text,
                                 resetKey = state.text,
                                 startRevealed = startRevealed,
+                                growWithReveal = true,
                                 onTypingStateChange = { isTyping ->
                                     if (!isTyping) onResponseRevealed(state.text)
                                 },

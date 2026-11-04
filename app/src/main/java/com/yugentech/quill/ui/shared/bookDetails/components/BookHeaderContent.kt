@@ -7,7 +7,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -65,6 +64,7 @@ import com.yugentech.quill.R
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.ui.tabs.discoverScreen.util.thumbnailCoverUrl
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.theme.tokens.dimensions.AppAnimations
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -348,6 +348,7 @@ fun ActionButton(
     isTop: Boolean,
     customIcon: @Composable (() -> Unit)? = null
 ) {
+    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
     val shape = if (isTop) {
         RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
     } else {
@@ -389,9 +390,7 @@ fun ActionButton(
             Spacer(modifier = Modifier.width(12.dp))
             AnimatedContent(
                 targetState = label,
-                transitionSpec = {
-                    fadeIn().togetherWith(fadeOut())
-                },
+                transitionSpec = { fadeThrough() },
                 label = "ActionButtonLabel"
             ) { targetLabel ->
                 Text(

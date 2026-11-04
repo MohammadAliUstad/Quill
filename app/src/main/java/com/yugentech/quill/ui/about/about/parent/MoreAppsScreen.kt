@@ -24,9 +24,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Analytics
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.CloudOff
@@ -35,28 +37,37 @@ import androidx.compose.material.icons.outlined.Eco
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Kitchen
 import androidx.compose.material.icons.outlined.LocalBar
 import androidx.compose.material.icons.outlined.LunchDining
+import androidx.compose.material.icons.outlined.RecordVoiceOver
+import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -76,6 +87,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.yugentech.quill.ui.about.about.components.AnimatedRyoriIcon
+import com.yugentech.quill.ui.about.about.components.AnimatedHajimeIcon
 import com.yugentech.quill.ui.about.about.components.AnimatedSessionsIcon
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -122,6 +134,18 @@ fun MoreAppsScreen(
         ) {
             item { IntroText() }
 
+            // --- Hajime ---
+            item { HajimeHeroSection() }
+
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SectionLabel("Key Features")
+                    HajimeCapabilitiesCarousel()
+                }
+            }
+
+            item { SectionDivider() }
+
             // --- Sessions ---
             item {
                 SessionsHeroSection(
@@ -139,11 +163,7 @@ fun MoreAppsScreen(
             item { SectionDivider() }
 
             // --- Ryori ---
-            item {
-                RyoriHeroSection(
-                    onDownloadClick = { openPlayStore(context, "com.yugentech.ryori") }
-                )
-            }
+            item { RyoriHeroSection() }
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -166,13 +186,13 @@ private fun IntroText() {
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
-            text = "Two more apps, made with the same care",
+            text = "Three more apps, made with the same care",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "If you enjoy reading with Quill, you might like focusing with Sessions and cooking with Ryori.",
+            text = "If you enjoy reading with Quill, you might like learning Japanese with Hajime, focusing with Sessions and cooking with Ryori.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -301,11 +321,13 @@ private fun StoreStat(
 @Composable
 private fun SessionsCapabilitiesCarousel() {
     CapabilitiesCarousel(
+        // Second carousel on the screen: tertiary, primary, secondary.
+        colorOffset = 2,
         items = listOf(
             CapabilityItem(
                 icon = Icons.Outlined.Timer,
                 title = "Smart Engine",
-                description = "Customizable cycles and smart intervals that calculate when to trigger long breaks.",
+                description = "Customizable cycles and smart intervals that work out when to trigger long breaks.",
                 slot = 0
             ),
             CapabilityItem(
@@ -317,25 +339,25 @@ private fun SessionsCapabilitiesCarousel() {
             CapabilityItem(
                 icon = Icons.Outlined.Analytics,
                 title = "Deep Analytics",
-                description = "Visual insights featuring heatmaps, total focus time, and peak productivity hours.",
+                description = "Heatmaps, total focus time and your peak productivity hours at a glance.",
                 slot = 2
             ),
             CapabilityItem(
                 icon = Icons.Outlined.Security,
                 title = "Unkillable",
-                description = "Engineered to resist aggressive battery optimization, ensuring your timer never drops.",
+                description = "Built to resist aggressive battery optimization, so your timer never drops.",
                 slot = 0
             ),
             CapabilityItem(
                 icon = Icons.Outlined.ColorLens,
                 title = "Deep Theming",
-                description = "8 Color Themes, Dynamic Material You, OLED Black Mode, and 6 Font options.",
+                description = "8 color themes, dynamic Material You, OLED black mode and 6 font options.",
                 slot = 1
             ),
             CapabilityItem(
                 icon = Icons.Outlined.History,
                 title = "Task History",
-                description = "Assign names to sessions to track, recognize, and review exactly what you worked on.",
+                description = "Name your sessions to track and review exactly what you worked on.",
                 slot = 2
             )
         )
@@ -345,17 +367,19 @@ private fun SessionsCapabilitiesCarousel() {
 // ============================== Ryori ==============================
 
 @Composable
-private fun RyoriHeroSection(onDownloadClick: () -> Unit) {
+private fun RyoriHeroSection() {
     AppHeroSection(
         name = "Ryori",
         tagline = "Cook Something Wonderful",
         iconBackground = RyoriIconBackground,
         animationMillis = 1200,
-        onDownloadClick = onDownloadClick,
+        onDownloadClick = null,
         icon = { isAnimating ->
+            // Fills the tile: the drawable has a margin round the burger (still 64dp), so the
+            // buns slide in from the tile's edges.
             AnimatedRyoriIcon(
                 isAnimating = isAnimating,
-                modifier = Modifier.requiredSize(64.dp)
+                modifier = Modifier.requiredSize(88.dp)
             )
         }
     )
@@ -364,8 +388,8 @@ private fun RyoriHeroSection(onDownloadClick: () -> Unit) {
 @Composable
 private fun RyoriCapabilitiesCarousel() {
     CapabilitiesCarousel(
-        // Second carousel on the screen: tertiary, primary, secondary.
-        colorOffset = 2,
+        // Third carousel on the screen: secondary, tertiary, primary.
+        colorOffset = 1,
         items = listOf(
             CapabilityItem(
                 icon = Icons.Outlined.Home,
@@ -407,17 +431,81 @@ private fun RyoriCapabilitiesCarousel() {
     )
 }
 
+// ============================== Hajime ==============================
+
+@Composable
+private fun HajimeHeroSection() {
+    AppHeroSection(
+        name = "Hajime",
+        tagline = "Learn to Read Japanese",
+        iconBackground = HajimeIconBackground,
+        animationMillis = 1660,
+        onDownloadClick = null,
+        icon = { isAnimating ->
+            AnimatedHajimeIcon(
+                isAnimating = isAnimating,
+                modifier = Modifier.requiredSize(156.dp)
+            )
+        }
+    )
+}
+
+@Composable
+private fun HajimeCapabilitiesCarousel() {
+    CapabilitiesCarousel(
+        items = listOf(
+            CapabilityItem(
+                icon = Icons.Outlined.Translate,
+                title = "Learn to Read Japanese",
+                description = "Hiragana and katakana first, then kanji, words and sentences, one short lesson at a time.",
+                slot = 0
+            ),
+            CapabilityItem(
+                icon = Icons.Outlined.School,
+                title = "Every JLPT Kanji",
+                description = "N5 to N1 kanji with readings, meanings, parts, common words and example sentences with furigana.",
+                slot = 1
+            ),
+            CapabilityItem(
+                icon = Icons.Outlined.History,
+                title = "Reviews That Remember",
+                description = "Spaced repetition brings each item back just before you'd forget it, so what you learn sticks.",
+                slot = 2
+            ),
+            CapabilityItem(
+                icon = Icons.Outlined.AutoAwesome,
+                title = "Sensei, Your AI Tutor",
+                description = "Ask anything about Japanese and get stories, sentence breakdowns and quizzes built from what you've learned.",
+                slot = 0
+            ),
+            CapabilityItem(
+                icon = Icons.Outlined.RecordVoiceOver,
+                title = "Hear Every Word",
+                description = "Every kana, kanji, word and sentence can be read aloud in a Japanese voice.",
+                slot = 1
+            ),
+            CapabilityItem(
+                icon = Icons.Outlined.Insights,
+                title = "Study Insights",
+                description = "Streaks, a study heatmap, your trickiest mix-ups and progress through every JLPT level.",
+                slot = 2
+            )
+        )
+    )
+}
+
 // ============================== Shared ==============================
 
 // App tile with the icon on its launcher background colour; tap to replay the animation.
-// An optional footer (e.g. the Play Store stats strip) sits under a divider.
+// An optional footer (e.g. the Play Store stats strip) sits under a divider. With no
+// onDownloadClick the app isn't out yet, so it shows Coming soon instead of the button.
 @Composable
 private fun AppHeroSection(
     name: String,
     tagline: String,
     iconBackground: Color,
     animationMillis: Long,
-    onDownloadClick: () -> Unit,
+    onDownloadClick: (() -> Unit)?,
     icon: @Composable (isAnimating: Boolean) -> Unit,
     footer: (@Composable () -> Unit)? = null
 ) {
@@ -482,28 +570,32 @@ private fun AppHeroSection(
                         )
                     }
 
-                    Button(
-                        onClick = onDownloadClick,
-                        modifier = Modifier.height(40.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Get on Play Store",
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.SemiBold
+                    if (onDownloadClick == null) {
+                        ComingSoonLabel()
+                    } else {
+                        Button(
+                            onClick = onDownloadClick,
+                            modifier = Modifier.height(40.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
-                        )
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Get on Play Store",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -516,6 +608,22 @@ private fun AppHeroSection(
                 footer()
             }
         }
+    }
+}
+
+// Stands in for the Play Store button until an app is out.
+@Composable
+private fun ComingSoonLabel() {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+    ) {
+        Text(
+            text = "Coming soon",
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+        )
     }
 }
 
@@ -606,18 +714,19 @@ private fun ClosingCard() {
             // One simple icon per app, in the same order as the headline below.
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OverviewIcon(icon = Icons.Outlined.AutoStories, contentDescription = "Quill")
+                OverviewIcon(icon = Icons.Outlined.Translate, contentDescription = "Hajime")
                 OverviewIcon(icon = Icons.Outlined.Timer, contentDescription = "Sessions")
                 OverviewIcon(icon = Icons.Outlined.LunchDining, contentDescription = "Ryori")
             }
             Text(
-                text = "Read. Focus. Cook.",
+                text = "Read. Learn. Focus. Cook.",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center
             )
             Text(
-                text = "Quill, Sessions and Ryori are made by YugenTech: small, thoughtful apps built to make everyday moments a little calmer.",
+                text = "Quill, Hajime, Sessions and Ryori are made by YugenTech: small, thoughtful apps built to make everyday moments a little calmer.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center,
@@ -645,6 +754,201 @@ private fun OverviewIcon(icon: ImageVector, contentDescription: String) {
     }
 }
 
+// ============================== Sheet ==============================
+
+// One app in the sheet. The icon is drawn in a 56dp tile, so each is scaled from its 88dp one.
+// A null packageName means the app isn't out yet.
+private class SheetEntry(
+    val name: String,
+    val tagline: String,
+    val packageName: String?,
+    val iconBackground: Color,
+    val animationMillis: Long,
+    val icon: @Composable (isAnimating: Boolean) -> Unit
+)
+
+/**
+ * The short version of this screen, opened from the More tab's About section: each app's icon,
+ * name and tagline with a Play Store button, then a link to the full screen. Tapping an icon
+ * plays its animation.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MoreFromUsSheet(onDismiss: () -> Unit, onSeeAll: () -> Unit) {
+    val context = LocalContext.current
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    val apps = listOf(
+        SheetEntry("Hajime", "Learn to Read Japanese", null, HajimeIconBackground, 1660) {
+            AnimatedHajimeIcon(isAnimating = it, modifier = Modifier.requiredSize(100.dp))
+        },
+        SheetEntry("Sessions", "Ultimate Pomodoro Timer", "com.yugentech.sessions", SessionsIconBackground, 900) {
+            AnimatedSessionsIcon(isAnimating = it, modifier = Modifier.requiredSize(100.dp))
+        },
+        SheetEntry("Ryori", "Cook Something Wonderful", null, RyoriIconBackground, 1200) {
+            AnimatedRyoriIcon(isAnimating = it, modifier = Modifier.requiredSize(56.dp))
+        }
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        // Sessions' sheet handle: a small pill with roomy padding, so it's easy to grab.
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {}
+                    )
+                    .padding(vertical = 22.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 32.dp, height = 6.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            shape = CircleShape
+                        )
+                )
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 16.dp)
+        ) {
+            Text(
+                text = "More from us",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "Three more apps, made with the same care.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            Column(
+                modifier = Modifier.padding(top = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                apps.forEachIndexed { index, app ->
+                    SheetAppRow(
+                        app = app,
+                        index = index,
+                        count = apps.size,
+                        onGetApp = app.packageName?.let { pkg -> { openPlayStore(context, pkg) } }
+                    )
+                }
+            }
+
+            TextButton(
+                onClick = {
+                    // Slides the sheet away first, so it doesn't vanish under the new screen.
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        onDismiss()
+                        onSeeAll()
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 12.dp)
+            ) {
+                Text("See all features")
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SheetAppRow(app: SheetEntry, index: Int, count: Int, onGetApp: (() -> Unit)?) {
+    var isAnimating by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val play: () -> Unit = {
+        if (!isAnimating) {
+            isAnimating = true
+            scope.launch {
+                delay(app.animationMillis)
+                isAnimating = false
+            }
+        }
+    }
+    val large = 20.dp
+    val small = 6.dp
+    Surface(
+        shape = RoundedCornerShape(
+            topStart = if (index == 0) large else small,
+            topEnd = if (index == 0) large else small,
+            bottomStart = if (index == count - 1) large else small,
+            bottomEnd = if (index == count - 1) large else small
+        ),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(app.iconBackground)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = play
+                    )
+            ) {
+                app.icon(isAnimating)
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = app.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = app.tagline,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (onGetApp == null) {
+                ComingSoonLabel()
+            } else {
+                FilledTonalButton(
+                    onClick = onGetApp,
+                    contentPadding = PaddingValues(horizontal = 18.dp)
+                ) {
+                    Text("Get")
+                }
+            }
+        }
+    }
+}
+
 // Play Store app if installed, otherwise the store's web page.
 private fun openPlayStore(context: Context, packageName: String) {
     val market = Intent(Intent.ACTION_VIEW, "market://details?id=$packageName".toUri())
@@ -656,6 +960,7 @@ private fun openPlayStore(context: Context, packageName: String) {
 // Launcher background colours, so each icon sits on the same tile as on the home screen.
 private val SessionsIconBackground = Color(0xFFFFE6C7)
 private val RyoriIconBackground = Color(0xFFFFFBEB)
+private val HajimeIconBackground = Color(0xFFF5F0E8)
 
 private data class CapabilityItem(
     val icon: ImageVector,

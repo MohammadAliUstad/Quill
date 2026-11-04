@@ -19,19 +19,26 @@ interface AiraMessageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: AiraMessageEntity)
 
-    @Query("SELECT * FROM aira_messages WHERE bookId = :bookId ORDER BY timestamp ASC")
+    // A question and its reply go in together, in one transaction, so observers of
+    // getMessagesForBook never see the question without its reply.
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMessages(messages: List<AiraMessageEntity>)
+
+    // A question and its reply are often stamped in the same millisecond; id breaks the tie so
+    // the reply always sorts after its question.
+    @Query("SELECT * FROM aira_messages WHERE bookId = :bookId ORDER BY timestamp ASC, id ASC")
     fun getMessagesForBook(bookId: String): Flow<List<AiraMessageEntity>>
 
-    @Query("SELECT * FROM aira_messages WHERE bookId = :bookId ORDER BY timestamp ASC")
+    @Query("SELECT * FROM aira_messages WHERE bookId = :bookId ORDER BY timestamp ASC, id ASC")
     suspend fun getMessagesForBookOnce(bookId: String): List<AiraMessageEntity>
 
     @Query("""
     SELECT * FROM (
-        SELECT * FROM aira_messages 
-        WHERE bookId = :bookId 
-        ORDER BY timestamp DESC 
+        SELECT * FROM aira_messages
+        WHERE bookId = :bookId
+        ORDER BY timestamp DESC, id DESC
         LIMIT 6
-    ) ORDER BY timestamp ASC
+    ) ORDER BY timestamp ASC, id ASC
 """)
     suspend fun getRecentMessagesForBook(bookId: String): List<AiraMessageEntity>
 

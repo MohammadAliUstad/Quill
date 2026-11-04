@@ -310,18 +310,18 @@ class QuickChatRepositoryImpl(
                 // get recorded under a premade stand-in statement -- this is what makes them show
                 // up in the full chat history/transcript alongside typed messages, instead of
                 // vanishing once the peek bar closes.
-                airaMessageDao.insertMessage(
-                    AiraMessageEntity(
-                        bookId = bookId,
-                        role = AiraMessageRole.USER,
-                        content = quickPrompt.toHistoryStatement()
-                    )
-                )
-                airaMessageDao.insertMessage(
-                    AiraMessageEntity(
-                        bookId = bookId,
-                        role = AiraMessageRole.AIRA,
-                        content = responseText.trim()
+                airaMessageDao.insertMessages(
+                    listOf(
+                        AiraMessageEntity(
+                            bookId = bookId,
+                            role = AiraMessageRole.USER,
+                            content = quickPrompt.toHistoryStatement()
+                        ),
+                        AiraMessageEntity(
+                            bookId = bookId,
+                            role = AiraMessageRole.AIRA,
+                            content = responseText.trim()
+                        )
                     )
                 )
                 emit(AiraResponse.Success(responseText.trim()))

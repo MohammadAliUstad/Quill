@@ -11,7 +11,6 @@ import com.yugentech.quill.reader.sound.repository.BackgroundSoundRepository
 import com.yugentech.quill.reader.repository.session.ReadingSessionRepository
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.sound.model.BackgroundSound
-import com.yugentech.theme.service.HapticService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -51,8 +50,7 @@ class ReaderViewModel(
     private val readerRepository: ReaderBookRepository,
     private val sessionRepository: ReadingSessionRepository,
     private val preferencesRepository: ReaderSettingsRepository,
-    private val backgroundSoundRepository: BackgroundSoundRepository,
-    private val hapticService: HapticService
+    private val backgroundSoundRepository: BackgroundSoundRepository
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<ReaderUiState>(ReaderUiState.Idle)

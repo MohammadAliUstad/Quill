@@ -21,10 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import com.yugentech.theme.service.HapticService
-import org.koin.compose.koinInject
 
 @Composable
 fun SettingsSwitchItem(
@@ -34,8 +33,7 @@ fun SettingsSwitchItem(
     enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
 
     Row(
         modifier = Modifier
@@ -68,7 +66,7 @@ fun SettingsSwitchItem(
         Switch(
             checked = checked,
             onCheckedChange = {
-                haptic.performHaptic(view)
+                haptic.performHapticFeedback(if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
                 onCheckedChange(it)
             },
             enabled = enabled,

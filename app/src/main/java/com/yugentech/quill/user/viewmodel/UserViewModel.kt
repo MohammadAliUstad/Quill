@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class UserViewModel(
@@ -51,6 +52,17 @@ class UserViewModel(
                 Timber.e(e, "Error loading streak flow")
             }
             .launchIn(viewModelScope)
+    }
+
+    // Used by the name and avatar sheets on the More screen's profile card.
+    fun updateName(name: String) {
+        val user = _uiState.value.user ?: return
+        if (name != user.name) viewModelScope.launch { upsertUser(user.copy(name = name)) }
+    }
+
+    fun updateAvatar(avatarId: Int) {
+        val user = _uiState.value.user ?: return
+        if (avatarId != user.avatarId) viewModelScope.launch { upsertUser(user.copy(avatarId = avatarId)) }
     }
 
     suspend fun upsertUser(userData: UserData) {

@@ -23,12 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
 import com.yugentech.quill.ui.tabs.libraryScreen.viewmodel.SeeAllViewModel
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.mapper.toBook
@@ -61,14 +61,7 @@ fun AllBooksScreen(
                         .graphicsLayer {
                             alpha = (-scrollBehavior.state.contentOffset / 100f).coerceIn(0f, 1f)
                         }
-                        .background(
-                            Brush.verticalGradient(
-                                0.0f to surfaceColor.copy(alpha = 0.9f),
-                                0.4f to surfaceColor.copy(alpha = 0.7f),
-                                0.7f to surfaceColor.copy(alpha = 0.30f),
-                                1.0f to surfaceColor.copy(alpha = 0.0f)
-                            )
-                        )
+                        .background(rememberSmoothScrimBrush(surfaceColor))
                 )
 
                 TopAppBar(

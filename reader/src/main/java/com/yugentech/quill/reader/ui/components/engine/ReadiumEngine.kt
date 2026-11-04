@@ -20,9 +20,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -32,7 +34,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.yugentech.quill.reader.ui.components.highlightSheet.luminance
 import com.yugentech.quill.reader.viewmodel.reader.ReaderCommand
-import com.yugentech.theme.service.HapticService
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.delay
@@ -40,7 +41,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import org.koin.compose.koinInject
 import org.readium.r2.navigator.DecorableNavigator
 import org.readium.r2.navigator.Decoration
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
@@ -85,7 +85,7 @@ fun ReadiumEngine(
     onTargetLocatorComplete: () -> Unit = {},
     onLocatorChange: (Locator) -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
+    val haptic = LocalHapticFeedback.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val fragmentTag = remember(bookId, preferences.scroll) {
         "readium_${bookId}_${if (preferences.scroll == true) "scroll" else "paged"}"
@@ -222,7 +222,7 @@ fun ReadiumEngine(
             },
             onSelectionChanged = { text ->
                 if (text.isNotBlank() && text != lastBridgeText) {
-                    haptic.performTickHaptic()
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     lastBridgeText = text
                 }
             },

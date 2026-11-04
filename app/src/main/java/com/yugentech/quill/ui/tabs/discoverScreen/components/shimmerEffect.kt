@@ -106,7 +106,8 @@ fun HeroCarouselSkeleton(title: String, subtitle: String) {
 // 3. The Bookshelf Skeleton
 @Composable
 fun BookShelfSkeleton(title: String, subtitle: String) {
-    Column(modifier = Modifier.padding(vertical = 12.dp)) {
+    // Match the 8.dp vertical padding of the real BookShelfRow
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
                 text = title,

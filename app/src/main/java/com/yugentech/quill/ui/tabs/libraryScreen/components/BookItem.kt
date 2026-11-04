@@ -35,7 +35,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,8 +47,6 @@ import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.quill.database.view.LibraryBookView
 import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
 import com.yugentech.quill.ui.tabs.discoverScreen.components.shimmerEffect
-import com.yugentech.theme.service.HapticService
-import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -56,7 +56,7 @@ fun BookItem(
     needsTwoLines: Boolean = false,
     onClick: () -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
+    val haptic = LocalHapticFeedback.current
     var imageState by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
     val isLoaded = imageState is AsyncImagePainter.State.Success
     val imageAlpha by animateFloatAsState(
@@ -75,7 +75,7 @@ fun BookItem(
             .width(115.dp)
             .clip(RoundedCornerShape(8.dp))
             .clickable {
-                haptic.performHaptic()
+                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                 onClick()
             }
             .padding(2.dp)

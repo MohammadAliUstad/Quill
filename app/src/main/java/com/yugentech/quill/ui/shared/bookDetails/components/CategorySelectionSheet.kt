@@ -42,17 +42,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.entity.CategoryEntity
 import com.yugentech.quill.ui.main.components.itemShape
-import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.AppConstants.SHELF
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
-import org.koin.compose.koinInject
 
 // Shared by the "Manage Categories" button and the Remove/Save column beside it, so the single
 // tall button on the left lines up exactly with the two stacked buttons on the right.
@@ -221,8 +220,7 @@ private fun CategoryListItem(
     totalCount: Int,
     onClick: () -> Unit
 ) {
-    val haptic = koinInject<HapticService>()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
     val shape = itemShape(index, totalCount)
 
     val icon: ImageVector = if (isDefault) Icons.AutoMirrored.Rounded.LibraryBooks else Icons.Rounded.Folder
@@ -270,7 +268,7 @@ private fun CategoryListItem(
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable {
-                haptic.performHaptic(view)
+                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                 onClick()
             },
         colors = ListItemDefaults.colors(

@@ -65,14 +65,6 @@ fun BooksGrid(
         if (shouldLoadMore) onLoadMore?.invoke()
     }
 
-    // Always pad to complete the last row, regardless of pagination state.
-    // This keeps the last row stable during load transitions and prevents
-    // the 2-book flash when isPaginating toggles.
-    val trailingPadding = if (visibleBooks.isNotEmpty()) {
-        val rem = visibleBooks.size % COLUMNS
-        if (rem != 0) COLUMNS - rem else 0
-    } else 0
-
     LazyVerticalGrid(
         state = gridState,
         columns = GridCells.Fixed(COLUMNS),
@@ -95,21 +87,6 @@ fun BooksGrid(
                 onClick = { onBookClick(book) },
                 modifier = Modifier.animateItem()
             )
-        }
-
-        repeat(trailingPadding) { index ->
-            item(key = "padding_$index") {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(0.65f),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {}
-            }
         }
 
         if (isPaginating) {

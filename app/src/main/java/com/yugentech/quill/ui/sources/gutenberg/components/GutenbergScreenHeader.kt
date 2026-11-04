@@ -23,10 +23,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -69,15 +69,7 @@ fun GutenbergScreenHeader(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    0.0f to surfaceColor.copy(alpha = 1.0f),
-                    0.3f to surfaceColor.copy(alpha = 0.95f),
-                    0.6f to surfaceColor.copy(alpha = 0.80f),
-                    0.85f to surfaceColor.copy(alpha = 0.30f),
-                    1.0f to surfaceColor.copy(alpha = 0.0f)
-                )
-            )
+            .background(rememberSmoothScrimBrush(surfaceColor))
             .padding(bottom = if (searchActive) 0.dp else 16.dp),
         contentAlignment = Alignment.TopCenter
     ) {

@@ -32,14 +32,11 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Category
 import com.yugentech.quill.ui.main.components.itemShape
-import com.yugentech.theme.service.HapticService
 import com.yugentech.theme.tokens.corners
-import org.koin.compose.koinInject
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -52,8 +49,6 @@ fun DragDropList(
     onRename: (Category) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    val hapticService = koinInject<HapticService>()
-    val view = LocalView.current
 
     val lazyListState = rememberLazyListState()
     val localList = remember { mutableStateListOf<Category>() }
@@ -109,7 +104,7 @@ fun DragDropList(
                             Row {
                                 IconButton(
                                     onClick = {
-                                        hapticService.performHaptic(view)
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                         onRename(category)
                                     }
                                 ) {
@@ -121,7 +116,7 @@ fun DragDropList(
                                 }
                                 IconButton(
                                     onClick = {
-                                        hapticService.performHaptic(view)
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                         onDelete(category)
                                     }
                                 ) {

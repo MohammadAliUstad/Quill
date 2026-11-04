@@ -132,7 +132,7 @@ Select text while reading and the Aira peek bar offers quick actions based on wh
 
 ### Personalization & Account
 
-- Multiple **color themes** (including Harbor), light and dark modes, **AMOLED black**, and dynamic color.
+- Multiple **color themes** (including Lagoon), light and dark modes, **AMOLED black**, and dynamic color.
 - **Cloud sync** of your library and categories across devices via Firebase.
 - Profile with display name and avatar.
 
