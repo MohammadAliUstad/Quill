@@ -94,6 +94,9 @@ fun NavGraphBuilder.mainGraph(
             onMoreApps = {
                 navController.navigate(AppScreen.MoreApps.route) { launchSingleTop = true }
             },
+            onReplayOnboarding = {
+                navController.navigate(AppScreen.OnboardingReplay.route) { launchSingleTop = true }
+            },
         )
     }
 

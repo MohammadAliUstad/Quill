@@ -1,17 +1,22 @@
 package com.yugentech.quill.ui.config.appearance.components
 
-import com.yugentech.theme.LocalThemeReveal
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.yugentech.quill.theme.viewmodel.ThemeViewModel
-import com.yugentech.quill.ui.main.components.SectionHeader
+import com.yugentech.theme.LocalThemeReveal
 import com.yugentech.theme.builder.getColorScheme
+import com.yugentech.quill.theme.viewmodel.ThemeViewModel
+import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.ui.main.components.SectionHeader
 
 @Composable
 fun ThemeColorSelector(
@@ -29,17 +34,32 @@ fun ThemeColorSelector(
             title = "Color Theme"
         )
 
-        // Each card is drawn in the scheme its theme would give, in the current mode
-        ThemePaletteTiles(
-            themes = themeOptions.map { option ->
-                option.displayName to getColorScheme(themeConfig.copy(colorTheme = option.colorTheme))
-            },
-            selectedIndex = themeOptions.indexOfFirst { it.colorTheme == themeConfig.colorTheme },
-            onSelect = { index ->
-                // A simple fade from the old colours to the new, across the whole screen
-                val apply = { viewModel.updateTheme(themeConfig.copy(colorTheme = themeOptions[index].colorTheme)) }
-                reveal?.fade(apply) ?: apply()
+        Column(
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)
+        ) {
+            themeOptions.chunked(2).forEach { rowOptions ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)
+                ) {
+                    rowOptions.forEach { option ->
+                        // Each tile is drawn in the scheme it would give, in the current mode
+                        ThemeCard(
+                            name = option.displayName,
+                            scheme = getColorScheme(themeConfig.copy(colorTheme = option.colorTheme)),
+                            isSelected = themeConfig.colorTheme == option.colorTheme,
+                            onClick = {
+                                // A simple fade from the old colours to the new, across the whole screen
+                                val apply = { viewModel.updateTheme(themeConfig.copy(colorTheme = option.colorTheme)) }
+                                reveal?.fade(apply, COLOR_THEME_FADE_MS) ?: apply()
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // An odd last theme keeps its half width
+                    if (rowOptions.size == 1) Spacer(Modifier.weight(1f))
+                }
             }
-        )
+        }
     }
 }

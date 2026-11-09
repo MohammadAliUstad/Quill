@@ -88,7 +88,7 @@ fun SignInForm(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 2.dp),
+                    .padding(top = 4.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 TextButton(

@@ -41,12 +41,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.ui.access.onboarding.components.AuraTheme
 import com.yugentech.quill.ui.access.onboarding.components.OnPaper
@@ -56,40 +56,45 @@ import com.yugentech.theme.tokens.spacing
 private val MaxFormWidth = 440.dp
 
 /**
- * The frame both auth screens share, laid out as Hajime's, on the aura the nav host draws behind
- * them and the onboarding (as Amatyaa's auth screens sit on its blue): the screen's own animated
- * [header], a serif [greeting] with a short [accent] line and the [subtitle] under it, then the
- * screen's [content] on a floating card in the app's own colours. Each part rises in after the
- * one above it, with Amatyaa's entrance ([riseIn]). [overlay] sits above everything, for toasts.
+ * The frame both auth screens share, on the aura the nav host draws behind them: the screen's own
+ * animated [header], a bold [title] and one supporting [subtitle] line, then the screen's
+ * [content] on a floating card in the app's own colours, headed by a plain [formTitle] at its top
+ * left. Each part rises in after the one above it, with [riseIn]. [overlay] sits above everything,
+ * for toasts. [titleSize] shrinks the headline when given; it is displaySmall otherwise.
+ * [headerGap] is the space between the header and the headline (spacing.m when not given).
  */
 @Composable
 fun AuthScaffold(
     header: @Composable () -> Unit,
-    greeting: String,
-    accent: String,
+    formTitle: String,
+    title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
+    titleSize: TextUnit = TextUnit.Unspecified,
+    headerGap: Dp = Dp.Unspecified,
     overlay: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
     // White on the shared aura, which the nav host draws behind this screen
-    AuraTheme { AuthFrame(header, greeting, accent, subtitle, modifier, overlay, content) }
+    AuraTheme { AuthFrame(header, formTitle, title, subtitle, modifier, titleSize, headerGap, overlay, content) }
 }
 
 @Composable
 private fun AuthFrame(
     header: @Composable () -> Unit,
-    greeting: String,
-    accent: String,
+    formTitle: String,
+    title: String,
     subtitle: String,
     modifier: Modifier,
+    titleSize: TextUnit,
+    headerGap: Dp,
     overlay: @Composable () -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val colors = MaterialTheme.colorScheme
-    // Amatyaa's entrance: everything starts hidden and, once the screen is up, each block rises
-    // in after the one above it. Plays each time the screen opens (switching between sign-in and
-    // sign-up too), while the shared background behind stays put.
+    // Everything starts hidden and, once the screen is up, each block rises in after the one
+    // above it. Plays each time the screen opens (switching between sign-in and sign-up too),
+    // while the shared background behind stays put.
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { shown = true }
     val rise = with(LocalDensity.current) { 24.dp.toPx() }
@@ -122,42 +127,41 @@ private fun AuthFrame(
                             .riseIn(shown, order = 0, rise = rise)
                     ) { header() }
 
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.xl))
+                    Spacer(
+                        modifier = Modifier.height(
+                            if (headerGap == Dp.Unspecified) MaterialTheme.spacing.m else headerGap
+                        )
+                    )
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        // The headline: bold, modern and tight
                         Text(
-                            text = greeting,
-                            style = MaterialTheme.typography.displaySmall,
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Bold,
+                            text = title,
+                            style = MaterialTheme.typography.displaySmall.let { base ->
+                                if (titleSize == TextUnit.Unspecified) base
+                                else base.copy(fontSize = titleSize, lineHeight = titleSize * 1.2f)
+                            },
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.5).sp,
                             color = colors.onBackground,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.riseIn(shown, order = 1, rise = rise)
                         )
-                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
-                        Text(
-                            text = accent,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontFamily = FontFamily.Serif,
-                            fontStyle = FontStyle.Italic,
-                            letterSpacing = 0.5.sp,
-                            color = colors.primary,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.riseIn(shown, order = 2, rise = rise)
-                        )
-                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm))
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.s))
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = colors.onBackground.copy(alpha = 0.82f),
+                            color = colors.onBackground.copy(alpha = 0.78f),
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.riseIn(shown, order = 3, rise = rise)
+                            modifier = Modifier
+                                .widthIn(max = 320.dp)
+                                .riseIn(shown, order = 2, rise = rise)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.xl))
 
-                    // The form on a floating card in the app's own colours, as Amatyaa's sits on its blue
+                    // The form on a floating card in the app's own colours
                     OnPaper {
                         Surface(
                             shape = RoundedCornerShape(28.dp),
@@ -165,8 +169,8 @@ private fun AuthFrame(
                             modifier = Modifier
                                 .widthIn(max = MaxFormWidth)
                                 .fillMaxWidth()
-                                // The card rises further and a little quicker, as Amatyaa's does
-                                .riseIn(shown, order = 4, rise = rise * 2, durationMs = CARD_ENTRANCE_MS)
+                                // The card rises further and a little quicker
+                                .riseIn(shown, order = 3, rise = rise * 2, durationMs = CARD_ENTRANCE_MS)
                         ) {
                             Column(
                                 modifier = Modifier.padding(
@@ -175,9 +179,23 @@ private fun AuthFrame(
                                     top = MaterialTheme.spacing.l,
                                     bottom = MaterialTheme.spacing.s
                                 ),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                content = content
-                            )
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = formTitle,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontSize = 28.sp,
+                                    lineHeight = 34.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Start,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = MaterialTheme.spacing.xs)
+                                )
+                                Spacer(modifier = Modifier.height(MaterialTheme.spacing.m))
+                                content()
+                            }
                         }
                     }
                 }
@@ -199,9 +217,9 @@ private const val CARD_ENTRANCE_MS = 450
 private val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
 
 /**
- * Amatyaa's entrance for its sign-in screens: fades in while rising [rise] px, [order] ×
- * [staggerMs] after [shown] turns true. ModulateAlpha fades each drawing directly instead of
- * through an offscreen buffer the size of the element, which would cut off a card's edges.
+ * Fades in while rising [rise] px, [order] × [staggerMs] after [shown] turns true. ModulateAlpha
+ * fades each drawing directly instead of through an offscreen buffer the size of the element,
+ * which would cut off a card's edges.
  */
 @Composable
 private fun Modifier.riseIn(

@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Color
 import com.yugentech.theme.tokens.spacing
 import com.yugentech.quill.ui.main.components.itemShape
@@ -27,6 +28,7 @@ fun SettingsSwitchItem(
     subtitle: String? = null,
     checked: Boolean,
     enabled: Boolean = true,
+    checkedIcon: ImageVector? = null,
     index: Int,
     totalCount: Int,
     onCheckedChange: (Boolean) -> Unit,
@@ -72,19 +74,11 @@ fun SettingsSwitchItem(
                     uncheckedIconColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
                 thumbContent = {
-                    if (checked) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(SwitchDefaults.IconSize)
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = null,
-                            modifier = Modifier.size(SwitchDefaults.IconSize)
-                        )
-                    }
+                    Icon(
+                        imageVector = if (checked) checkedIcon ?: Icons.Filled.Check else Icons.Filled.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(SwitchDefaults.IconSize)
+                    )
                 }
             )
         },

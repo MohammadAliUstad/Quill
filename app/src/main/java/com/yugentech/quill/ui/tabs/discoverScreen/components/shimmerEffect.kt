@@ -1,49 +1,65 @@
 package com.yugentech.quill.ui.tabs.discoverScreen.components
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-// 1. A reusable, high-performance shimmer animation modifier
+private const val SHIMMER_SWEEP_MS = 1100L
+private const val SHIMMER_PAUSE_MS = 500L
+
+/**
+ * The standard loading placeholder: a solid surface tone with a soft, lighter band sweeping
+ * across it from left to right, then a short pause. The band is sized to the item, and every
+ * placeholder runs off the same frame clock, so a row of them sweeps in step.
+ */
 fun Modifier.shimmerEffect(): Modifier = composed {
-    val transition = rememberInfiniteTransition(label = "shimmer")
-    val translateAnim by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 2000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmer_translate"
-    )
+    val scheme = MaterialTheme.colorScheme
+    val isDark = scheme.surface.luminance() < 0.5f
+    val base = scheme.surfaceContainerHigh
+    val highlight = if (isDark) scheme.surfaceContainerHighest else scheme.surfaceContainerLowest
 
-    val shimmerColors = listOf(
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-    )
+    var frameTimeMs by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(Unit) {
+        while (true) withFrameMillis { frameTimeMs = it }
+    }
 
-    val brush = Brush.linearGradient(
-        colors = shimmerColors,
-        start = Offset(translateAnim - 500f, translateAnim - 500f),
-        end = Offset(translateAnim, translateAnim)
-    )
-
-    this.background(brush)
+    drawBehind {
+        drawRect(base)
+        val cycle = SHIMMER_SWEEP_MS + SHIMMER_PAUSE_MS
+        val elapsed = frameTimeMs % cycle
+        if (elapsed >= SHIMMER_SWEEP_MS) return@drawBehind
+        val progress = FastOutSlowInEasing.transform(elapsed / SHIMMER_SWEEP_MS.toFloat())
+        val bandWidth = size.width
+        // The band travels from fully off the left edge to fully off the right edge
+        val bandStart = -bandWidth + (size.width + bandWidth) * progress
+        drawRect(
+            Brush.horizontalGradient(
+                colors = listOf(Color.Transparent, highlight, Color.Transparent),
+                startX = bandStart,
+                endX = bandStart + bandWidth
+            )
+        )
+    }
 }
 
 @Composable

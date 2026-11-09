@@ -2,6 +2,13 @@ package com.yugentech.quill.ui.access.onboarding
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -10,6 +17,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +36,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -34,8 +44,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -49,13 +57,12 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.ui.access.onboarding.components.AuraTheme
 import com.yugentech.quill.ui.access.onboarding.components.AiraScene
 import com.yugentech.quill.ui.access.onboarding.components.FirstLineScene
 import com.yugentech.quill.ui.access.onboarding.components.HabitScene
 import com.yugentech.quill.ui.access.onboarding.components.LibraryScene
 import com.yugentech.quill.ui.access.onboarding.components.ReaderScene
-import com.yugentech.quill.ui.access.onboarding.components.AuraTheme
-import com.yugentech.quill.ui.access.onboarding.components.LocalAuraBackground
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -63,36 +70,33 @@ import kotlin.math.abs
 private enum class Scene { FirstLine, Library, Reader, Aira, Habit }
 
 /**
- * Quill's first run: five short, interactive scenes rather than a feature list. A famous first
- * line writes itself onto a page that turns at a tap, classics slide onto a shelf, a page of the
- * reader changes theme and size live, Aira answers a question without spoiling the book, and a
- * reading heatmap fills in.
+ * Quill's first run, laid out and animated as Sessions': five short, interactive scenes rather
+ * than a feature list. A famous first line writes itself onto a page that turns at a tap,
+ * classics slide onto a shelf, a page of the reader changes theme and size live, Aira answers a
+ * question without spoiling the book, and a reading heatmap fills in.
  *
- * It sits on the aura the nav host draws behind it (shared with the sign-in screens), whose
- * glows glide with each step; everything on it is white (AuraTheme). Story-style bars at the top fill as they go; Skip leaves at any point, and the button
- * at the bottom moves on, then starts reading on the last scene.
+ * It sits on the still aura the nav host draws behind it (shared with the sign-in screens).
+ * Story-style bars at the top fill as the reader swipes; Skip leaves at any point, a back button
+ * appears beside the main button from the second scene, and the main button moves on, then
+ * [finishLabel] finishes on the last scene. More opens it again later, with "Done" in place of
+ * the first run's label.
  */
 @Composable
 fun OnboardingScreen(
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
+    finishLabel: String = "Start reading"
 ) {
-    // White on the shared aura, which the nav host draws behind this screen
-    AuraTheme { OnboardingContent(onFinish) }
+    // The aura's colours, which the nav host draws behind this screen
+    AuraTheme { OnboardingContent(onFinish, finishLabel) }
 }
 
 @Composable
-private fun OnboardingContent(onFinish: () -> Unit) {
+private fun OnboardingContent(onFinish: () -> Unit, finishLabel: String) {
     val scenes = Scene.entries
     val pager = rememberPagerState { scenes.size }
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
     val onLast = pager.currentPage == scenes.lastIndex
-    // The glows glide with each step, following the swipe
-    val aura = LocalAuraBackground.current
-    LaunchedEffect(pager) {
-        snapshotFlow { pager.currentPage + pager.currentPageOffsetFraction }.collect { aura.travel = it }
-    }
-
     BackHandler(enabled = pager.currentPage > 0) {
         scope.launch { pager.animateScrollToPage(pager.currentPage - 1) }
     }
@@ -115,7 +119,7 @@ private fun OnboardingContent(onFinish: () -> Unit) {
                 val skipAlpha by animateFloatAsState(if (onLast) 0f else 1f, tween(200), label = "skip")
                 TextButton(
                     onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                         onFinish()
                     },
                     enabled = !onLast,
@@ -130,9 +134,8 @@ private fun OnboardingContent(onFinish: () -> Unit) {
                 modifier = Modifier.weight(1f)
             ) { page ->
                 // A little depth while swiping: the scene drifts more slowly than the page and
-                // eases back as it goes. It's fully faded out before the swipe ends: held back
-                // like this it's still partly on screen at the end, and a scene the pager drops
-                // while still visible vanishes in one frame.
+                // eases back as it goes. It's fully faded out before the swipe ends, so a scene
+                // the pager drops is never still on screen when it goes.
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -156,36 +159,70 @@ private fun OnboardingContent(onFinish: () -> Unit) {
                 }
             }
 
-            Button(
-                onClick = {
-                    if (onLast) {
-                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        onFinish()
-                    } else {
-                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                        scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
-                    }
-                },
-                shape = CircleShape,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
-                    .height(58.dp)
+            // Back (from the second scene) + the main button
+            Row(
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                AnimatedContent(
-                    targetState = onLast,
-                    transitionSpec = {
-                        (fadeIn(tween(220)) + slideInVertically(tween(220)) { it / 2 })
-                            .togetherWith(fadeOut(tween(120)) + slideOutVertically(tween(120)) { -it / 2 })
+                AnimatedVisibility(
+                    visible = pager.currentPage > 0,
+                    // clip = false: the slot widens without slicing the round button; it
+                    // grows into place instead of being uncovered.
+                    enter = expandHorizontally(tween(300, easing = FastOutSlowInEasing), clip = false) +
+                        scaleIn(tween(300, easing = FastOutSlowInEasing), initialScale = 0.7f) +
+                        fadeIn(tween(300)),
+                    exit = shrinkHorizontally(tween(300, easing = FastOutSlowInEasing), clip = false) +
+                        scaleOut(tween(200), targetScale = 0.7f) +
+                        fadeOut(tween(150))
+                ) {
+                    Row {
+                        BackAction(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            scope.launch { pager.animateScrollToPage(pager.currentPage - 1) }
+                        })
+                        Spacer(Modifier.width(12.dp))
+                    }
+                }
+                Button(
+                    onClick = {
+                        if (onLast) {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            onFinish()
+                        } else {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
+                        }
                     },
-                    label = "onboardingButton"
-                ) { last ->
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(58.dp)
+                ) {
+                    // Only the label swaps; the arrow stays put beside it and glides to its new
+                    // place as the label's width eases to the new text's
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = if (last) "Start reading" else "Continue",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        AnimatedContent(
+                            targetState = onLast,
+                            // A plain vertical swap: the new label pushes the old one out, upward on
+                            // the way to the last scene and downward on the way back
+                            transitionSpec = {
+                                val direction = if (targetState) 1 else -1
+                                (slideInVertically(tween(300)) { it * direction } + fadeIn(tween(300)))
+                                    .togetherWith(slideOutVertically(tween(300)) { -it * direction } + fadeOut(tween(300)))
+                                    // clip = false, as for the back button: the label area widens without
+                                    // slicing the longer text; the button's own shape still bounds it
+                                    .using(SizeTransform(clip = false) { _, _ -> tween(300) })
+                            },
+                            contentAlignment = Alignment.Center,
+                            label = "onboardingButton"
+                        ) { last ->
+                            Text(
+                                text = if (last) finishLabel else "Continue",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1
+                            )
+                        }
                         Spacer(Modifier.width(8.dp))
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -196,6 +233,28 @@ private fun OnboardingContent(onFinish: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+/** The round back button left of the main button, tinted with the theme's primary. */
+@Composable
+private fun BackAction(onClick: () -> Unit) {
+    val primary = MaterialTheme.colorScheme.primary
+    Box(
+        modifier = Modifier
+            .size(58.dp)
+            .clip(CircleShape)
+            .background(primary.copy(alpha = 0.12f))
+            .border(1.dp, primary.copy(alpha = 0.3f), CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = "Back",
+            modifier = Modifier.size(22.dp),
+            tint = primary
+        )
     }
 }
 

@@ -50,7 +50,7 @@ fun AvatarOption(
                 .then(
                     if (isSelected) {
                         Modifier.border(
-                            width = MaterialTheme.strokes.thick,
+                            width = MaterialTheme.strokes.medium,
                             color = MaterialTheme.colorScheme.primary,
                             shape = CircleShape
                         )

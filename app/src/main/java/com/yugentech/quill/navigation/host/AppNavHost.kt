@@ -132,7 +132,7 @@ fun AppNavHost(
 
     // Onboarding, sign-in and sign-up all sit on the one aura drawn here, as in Amatyaa, so
     // moving between them changes only their content: the background never jumps or shows an
-    // edge, and keeps drifting while they slide over it. It fades with the switch into the app.
+    // edge, and stays still while they slide over it. It fades with the switch into the app.
     val currentEntry by navController.currentBackStackEntryAsState()
     val onAura = currentEntry?.destination?.route in AuraRoutes
     val auraBackground = remember { AuraBackgroundState() }
@@ -145,10 +145,7 @@ fun AppNavHost(
         exit = fadeOut(animationSpec = tween(300))
     ) {
         AuraTheme {
-            QuillAuraBackground(
-                modifier = Modifier.fillMaxSize(),
-                travel = { auraBackground.travel }
-            )
+            QuillAuraBackground(modifier = Modifier.fillMaxSize())
         }
     }
 
@@ -165,6 +162,14 @@ fun AppNavHost(
         composable(AppScreen.Onboarding.route) {
             OnboardingScreen(
                 onFinish = onOnboardingComplete
+            )
+        }
+
+        // The onboarding again, from More: finishing, skipping or backing out returns there
+        composable(AppScreen.OnboardingReplay.route) {
+            OnboardingScreen(
+                onFinish = { navController.popBackStack() },
+                finishLabel = "Done"
             )
         }
 

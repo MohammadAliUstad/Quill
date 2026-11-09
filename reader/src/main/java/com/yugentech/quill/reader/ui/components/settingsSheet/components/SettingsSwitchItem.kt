@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,7 @@ fun SettingsSwitchItem(
     subtitle: String? = null,
     checked: Boolean,
     enabled: Boolean = true,
+    checkedIcon: ImageVector? = null,
     onCheckedChange: (Boolean) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
@@ -79,19 +81,11 @@ fun SettingsSwitchItem(
                 uncheckedIconColor = MaterialTheme.colorScheme.surfaceVariant
             ),
             thumbContent = {
-                if (checked) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(SwitchDefaults.IconSize)
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = null,
-                        modifier = Modifier.size(SwitchDefaults.IconSize)
-                    )
-                }
+                Icon(
+                    imageVector = if (checked) checkedIcon ?: Icons.Filled.Check else Icons.Filled.Close,
+                    contentDescription = null,
+                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                )
             }
         )
     }

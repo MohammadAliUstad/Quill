@@ -87,6 +87,7 @@ fun MainScreen(
     onViewIndexingQueue: () -> Unit,
     onWhatsNew: () -> Unit,
     onMoreApps: () -> Unit,
+    onReplayOnboarding: () -> Unit,
     indexingViewModel: IndexingViewModel = koinViewModel()
 ) {
     val userId = remember { FirebaseAuth.getInstance().currentUser?.uid.orEmpty() }
@@ -254,6 +255,7 @@ fun MainScreen(
                             onViewIndexingQueue = onViewIndexingQueue,
                             onWhatsNew = onWhatsNew,
                             onMoreApps = onMoreApps,
+                            onReplayOnboarding = onReplayOnboarding,
                         )
                     }
                 }

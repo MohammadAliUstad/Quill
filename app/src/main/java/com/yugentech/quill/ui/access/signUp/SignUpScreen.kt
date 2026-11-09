@@ -20,7 +20,7 @@ import com.yugentech.quill.ui.access.signIn.components.forms.SignUpForm
 import com.yugentech.quill.ui.main.components.ToastMessage
 import com.yugentech.theme.tokens.spacing
 
-/** Begin your story, under a pile of first books building up: laid out as Hajime's sign-up. */
+/** Begin your story, under a pile of first books building up: laid out as Sessions' sign-up. */
 @Composable
 fun SignUpScreen(
     authViewModel: AuthViewModel,
@@ -32,9 +32,9 @@ fun SignUpScreen(
 
     AuthScaffold(
         header = { StackingBooks() },
-        greeting = "Begin your story",
-        accent = "once upon a time, a first book…",
-        subtitle = "Experience the best of e-reading.",
+        formTitle = "Sign up",
+        title = "Begin your story",
+        subtitle = "Once upon a time, a first book… Experience the best of e-reading.",
         overlay = {
             Box(modifier = Modifier.fillMaxSize()) {
                 ToastMessage(
@@ -55,7 +55,8 @@ fun SignUpScreen(
             onClearError = { authViewModel.clearError() }
         )
 
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.m))
+        // Matches the card's bottom padding, so the link sits evenly between form and edge
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.s))
 
         AuthSwitchLink(
             prompt = "Already reading with us?",

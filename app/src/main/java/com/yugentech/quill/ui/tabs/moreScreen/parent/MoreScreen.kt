@@ -18,10 +18,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -86,6 +88,7 @@ fun MoreScreen(
     onViewIndexingQueue: () -> Unit,
     onWhatsNew: () -> Unit,
     onMoreApps: () -> Unit,
+    onReplayOnboarding: () -> Unit,
     notificationViewModel: NotificationViewModel = koinViewModel(),
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
@@ -255,6 +258,7 @@ fun MoreScreen(
                     title = "Enable Notifications",
                     subtitle = "Allow Quill to send you updates",
                     checked = notificationConfig.notificationsEnabled,
+                    checkedIcon = Icons.Default.Notifications,
                     index = 0,
                     totalCount = 4,
                     onCheckedChange = { enabled ->
@@ -280,6 +284,7 @@ fun MoreScreen(
                     title = "Daily Reading Reminder",
                     subtitle = notificationViewModel.formatReminderTime(),
                     checked = notificationConfig.dailyReminderEnabled,
+                    checkedIcon = Icons.Default.Alarm,
                     enabled = notificationConfig.notificationsEnabled,
                     index = 1,
                     totalCount = 4,
@@ -305,6 +310,7 @@ fun MoreScreen(
                     title = "Playful Reminders",
                     subtitle = "Friendly nudges now and then",
                     checked = notificationConfig.playfulRemindersEnabled,
+                    checkedIcon = Icons.Default.AutoAwesome,
                     enabled = notificationConfig.notificationsEnabled,
                     index = 2,
                     totalCount = 4,
@@ -319,6 +325,7 @@ fun MoreScreen(
                     title = "Haptic Feedback",
                     subtitle = "Feel vibrations throughout the app",
                     checked = hapticsEnabled,
+                    checkedIcon = Icons.Default.Vibration,
                     index = 3,
                     totalCount = 4,
                     onCheckedChange = {
@@ -335,7 +342,7 @@ fun MoreScreen(
                     title = "About Quill",
                     subtitle = "Version ${com.yugentech.quill.BuildConfig.VERSION_NAME}",
                     index = 0,
-                    totalCount = 3,
+                    totalCount = 4,
                     onClick = onAbout,
                 )
             }
@@ -344,16 +351,25 @@ fun MoreScreen(
                     title = "What's New",
                     subtitle = "See the latest changes and features",
                     index = 1,
-                    totalCount = 3,
+                    totalCount = 4,
                     onClick = onWhatsNew,
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = "Replay Onboarding",
+                    subtitle = "Take the tour of Quill again",
+                    index = 2,
+                    totalCount = 4,
+                    onClick = onReplayOnboarding,
                 )
             }
             item {
                 SettingsListItem(
                     title = "More from us",
                     subtitle = "Explore our other apps",
-                    index = 2,
-                    totalCount = 3,
+                    index = 3,
+                    totalCount = 4,
                     onClick = { showMoreApps = true },
                 )
             }

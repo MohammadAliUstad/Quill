@@ -27,8 +27,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
 import androidx.compose.material.icons.automirrored.filled.FormatAlignRight
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.FormatAlignCenter
 import androidx.compose.material.icons.filled.FormatAlignJustify
+import androidx.compose.material.icons.filled.Nightlight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -455,6 +457,7 @@ fun SettingsSheet(
                             title = "Night Light",
                             subtitle = "Warm amber tint for eye comfort",
                             checked = preferences.nightLight,
+                            checkedIcon = Icons.Default.Nightlight,
                             onCheckedChange = onNightLightChange
                         )
 
@@ -462,6 +465,7 @@ fun SettingsSheet(
                             title = "Volume Button Navigation",
                             subtitle = "Turn pages using physical volume keys",
                             checked = preferences.volumeNavigation,
+                            checkedIcon = Icons.AutoMirrored.Filled.VolumeUp,
                             onCheckedChange = onVolumeNavigationChange
                         )
                     }

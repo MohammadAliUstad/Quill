@@ -1,14 +1,9 @@
 package com.yugentech.quill.ui.tabs.sourcesScreen.components
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -38,7 +33,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -51,7 +45,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -220,8 +213,7 @@ private val HiddenSlot = FanSlot(x = 0f, y = 10f, rotation = 0f, scale = 0.8f, a
 // Covers fanned out like a hand of cards. Every few seconds the stack shuffles: the right cover
 // swings to the front, the front one tucks to the left, the left one slips away behind, and the
 // next cover in line fans out on the right. Until three covers exist, blank covers hold the shape
-// (and nothing shuffles) so the card doesn't change size when the feed arrives; a soft shimmer
-// runs across them meanwhile, so they read as loading rather than missing.
+// (and nothing shuffles) so the card doesn't change size when the feed arrives.
 @Composable
 private fun CoverFan(
     coverUrls: List<String>,
@@ -232,17 +224,6 @@ private fun CoverFan(
     val canShuffle = coverUrls.size >= 3
     val covers: List<String?> = if (canShuffle) coverUrls else List(3) { coverUrls.getOrNull(it) }
     val count = covers.size
-    // One sweep shared by the whole fan, so the covers shimmer together
-    val shimmer = if (!canShuffle) {
-        rememberInfiniteTransition(label = "fanShimmer").animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(tween(durationMillis = 1400, easing = LinearEasing), RepeatMode.Restart),
-            label = "fanShimmerSweep",
-        )
-    } else {
-        null
-    }
 
     var shift by remember(coverUrls) { mutableIntStateOf(0) }
 
@@ -273,7 +254,6 @@ private fun CoverFan(
                     slot = slot,
                     placeholderColor = placeholderColor,
                     detailColor = detailColor,
-                    shimmer = shimmer,
                 )
             }
         }
@@ -286,7 +266,6 @@ private fun FanCover(
     slot: FanSlot,
     placeholderColor: Color,
     detailColor: Color,
-    shimmer: State<Float>?,
 ) {
     val coverShape = RoundedCornerShape(6.dp)
     val motion = spring<Float>(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow)
@@ -314,7 +293,7 @@ private fun FanCover(
             .size(width = 56.dp, height = 84.dp)
             .background(placeholderColor)
             // A blank cover until the real one fades in over it
-            .drawBehind { drawBlankCover(detailColor, shimmer?.value) }
+            .drawBehind { drawBlankCover(detailColor) }
     ) {
         if (url != null) {
             // The cover fades in over its placeholder once it arrives. One already in memory
@@ -342,10 +321,9 @@ private fun FanCover(
 }
 
 /**
- * A cover with nothing printed on it yet: a shaded spine, bars where the title and author go,
- * and while [shimmer] runs, a soft band of light sweeping across.
+ * A cover with nothing printed on it yet: a shaded spine and bars where the title and author go.
  */
-private fun DrawScope.drawBlankCover(detail: Color, shimmer: Float?) {
+private fun DrawScope.drawBlankCover(detail: Color) {
     val spine = size.width * 0.10f
     drawRect(detail.copy(alpha = 0.10f), size = Size(spine, size.height))
 
@@ -370,18 +348,6 @@ private fun DrawScope.drawBlankCover(detail: Color, shimmer: Float?) {
         size = Size(size.width * 0.44f, bar * 0.8f),
         cornerRadius = round,
     )
-
-    if (shimmer != null) {
-        // From fully off the left edge to fully off the right
-        val x = -size.width + shimmer * size.width * 3
-        drawRect(
-            Brush.linearGradient(
-                listOf(Color.Transparent, Color.White.copy(alpha = 0.18f), Color.Transparent),
-                start = Offset(x, 0f),
-                end = Offset(x + size.width, size.height),
-            )
-        )
-    }
 }
 
 @Composable

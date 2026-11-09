@@ -22,7 +22,7 @@ import com.yugentech.quill.ui.access.signIn.state.ForgotPasswordState
 import com.yugentech.quill.ui.main.components.ToastMessage
 import com.yugentech.theme.tokens.spacing
 
-/** Welcome back, under a book held open at its bookmark: laid out as Hajime's sign-in. */
+/** Welcome back, under a book held open at its bookmark: laid out as Sessions' sign-in. */
 @Composable
 fun SignInScreen(
     authViewModel: AuthViewModel,
@@ -36,9 +36,9 @@ fun SignInScreen(
 
     AuthScaffold(
         header = { BookmarkedPage() },
-        greeting = "Welcome back",
-        accent = "your bookmark is right where you left it",
-        subtitle = "Ready for the next chapter?",
+        formTitle = "Sign in",
+        title = "Welcome back",
+        subtitle = "Your bookmark is right where you left it. Ready for the next chapter?",
         overlay = {
             Box(modifier = Modifier.fillMaxSize()) {
                 ToastMessage(
@@ -71,7 +71,8 @@ fun SignInScreen(
             onForgotPassword = onForgotPassword
         )
 
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.m))
+        // Matches the card's bottom padding, so the link sits evenly between form and edge
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.s))
 
         AuthSwitchLink(
             prompt = "New to Quill?",

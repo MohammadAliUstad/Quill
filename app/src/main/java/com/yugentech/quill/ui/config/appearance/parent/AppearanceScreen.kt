@@ -3,7 +3,12 @@ package com.yugentech.quill.ui.config.appearance.parent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -21,13 +26,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalLayoutDirection
+import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.quill.ui.config.appearance.components.AmoledThemeSelector
 import com.yugentech.quill.ui.config.appearance.components.FontSelector
 import com.yugentech.quill.ui.config.appearance.components.ThemeColorSelector
 import com.yugentech.quill.ui.config.appearance.components.ThemeModeSelector
-import com.yugentech.quill.theme.viewmodel.ThemeViewModel
-import com.yugentech.theme.tokens.spacing
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +41,7 @@ fun AppearanceScreen(
     themeViewModel: ThemeViewModel
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val layoutDirection = LocalLayoutDirection.current
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -69,42 +75,30 @@ fun AppearanceScreen(
             )
         },
         containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
+    ) { scaffoldPadding ->
+        val navBarPadding = WindowInsets.navigationBars.asPaddingValues()
+
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = scaffoldPadding.calculateTopPadding()),
             contentPadding = PaddingValues(
-                top = paddingValues.calculateTopPadding(),
-                bottom = paddingValues.calculateBottomPadding(),
-                start = MaterialTheme.spacing.m,
-                end = MaterialTheme.spacing.m
+                bottom = navBarPadding.calculateBottomPadding(),
+                start = MaterialTheme.spacing.m + scaffoldPadding.calculateStartPadding(layoutDirection),
+                end = MaterialTheme.spacing.m + scaffoldPadding.calculateEndPadding(layoutDirection)
             ),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                ThemeModeSelector(
-                    themeViewModel = themeViewModel
-                )
-            }
-
+            item { ThemeModeSelector(themeViewModel = themeViewModel) }
             item {
                 AmoledThemeSelector(
                     viewModel = themeViewModel,
                     modifier = Modifier.padding(top = MaterialTheme.spacing.s)
                 )
             }
-
-            item {
-                FontSelector(
-                    viewModel = themeViewModel
-                )
-            }
-
-            item {
-                ThemeColorSelector(
-                    viewModel = themeViewModel
-                )
-            }
+            item { FontSelector(viewModel = themeViewModel) }
+            item { ThemeColorSelector(viewModel = themeViewModel) }
         }
     }
 }

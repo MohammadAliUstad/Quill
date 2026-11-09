@@ -23,6 +23,8 @@ import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
 import androidx.compose.material.icons.rounded.BlurOn
 import androidx.compose.material.icons.rounded.Forest
 import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Water
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -133,6 +135,7 @@ fun SoundSelectionSheet(
                 title = "Turn On Sounds",
                 subtitle = "Enable to preview and pick a sound below",
                 checked = isSoundOn,
+                checkedIcon = Icons.Rounded.MusicNote,
                 onCheckedChange = onSoundEnabledChange
             )
 
@@ -140,6 +143,7 @@ fun SoundSelectionSheet(
                 title = "Auto-play on Open",
                 subtitle = "Start sound automatically when opening a book",
                 checked = autoPlayEnabled,
+                checkedIcon = Icons.Rounded.PlayArrow,
                 enabled = isSoundOn,
                 onCheckedChange = onAutoPlayChange
             )
