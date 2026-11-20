@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.shared.airaChat.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,12 +27,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun QuotaLimitBar(
     isPro: Boolean,
     onUpgradeClick: () -> Unit = {}
 ) {
+    val haptic = LocalHapticFeedback.current
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 3.dp,
@@ -46,22 +51,22 @@ fun QuotaLimitBar(
         ) {
             Icon(
                 imageVector = if (isPro) Icons.Default.Schedule else Icons.Default.Lock,
-                contentDescription = "Limit Reached",
+                contentDescription = stringResource(R.string.limit_reached),
                 tint = if (isPro) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(24.dp)
             )
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Daily limit reached",
+                    text = stringResource(R.string.daily_limit_reached),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = if (isPro) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
                 )
 
                 Text(
-                    text = if (isPro) "You've used your 50 daily queries. Reset at midnight." 
-                           else "Used your 5 free queries. Upgrade for 50/day.",
+                    text = if (isPro) stringResource(R.string.quota_pro_used) 
+                           else stringResource(R.string.quota_free_used),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -69,7 +74,10 @@ fun QuotaLimitBar(
 
             if (!isPro) {
                 FilledTonalButton(
-                    onClick = onUpgradeClick,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onUpgradeClick()
+                    },
                     shape = CircleShape,
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     modifier = Modifier.size(height = 40.dp, width = 80.dp)
@@ -81,7 +89,7 @@ fun QuotaLimitBar(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        text = "Pro",
+                        text = stringResource(R.string.pro),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )

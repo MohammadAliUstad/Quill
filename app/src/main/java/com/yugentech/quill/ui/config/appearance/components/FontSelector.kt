@@ -30,6 +30,8 @@ import com.yugentech.theme.builder.getFontFamily
 import com.yugentech.theme.tokens.spacing
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.quill.ui.main.components.SectionHeader
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +46,7 @@ fun FontSelector(
     Column(modifier = modifier.fillMaxWidth()) {
         SectionHeader(
             icon = Icons.Default.TextFields,
-            title = "App Font"
+            title = stringResource(R.string.font_title)
         )
 
         // No ripple on the chips either

@@ -11,6 +11,8 @@ interface LibraryRepository {
     fun getBooksByCategory(category: String): Flow<List<LibraryBookView>>
     fun getBookShelf(): Flow<List<LibraryBookView>>
     fun getFavoriteBooks(): Flow<List<LibraryBookView>>
+    /** Whether the Library has any book to show; emits again whenever that changes. */
+    fun hasLibraryBooks(): Flow<Boolean>
     suspend fun getBook(bookId: String): BookEntity?
     suspend fun deleteBook(bookId: String)
 }

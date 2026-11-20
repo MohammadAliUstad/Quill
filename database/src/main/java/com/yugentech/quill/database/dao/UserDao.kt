@@ -15,4 +15,8 @@ interface UserDao {
 
     @Query("SELECT * FROM users WHERE userId = :userId")
     fun getUserFlow(userId: String): Flow<UserEntity?>
+
+    // Removes a user profile (a guest's, when they leave guest mode)
+    @Query("DELETE FROM users WHERE userId = :userId")
+    suspend fun deleteUser(userId: String)
 }

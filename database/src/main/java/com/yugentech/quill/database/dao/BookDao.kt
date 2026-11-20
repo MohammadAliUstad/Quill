@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.yugentech.quill.database.entity.BookEntity
+import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.BookStorageBreakdown
 import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.database.model.DownloadStatus
@@ -68,6 +69,18 @@ interface BookDao {
     @Query("SELECT * FROM library_view WHERE userCategory = :category ORDER BY addedAt DESC")
     fun getBooksByCategory(category: String): Flow<List<LibraryBookView>>
 
+    /**
+     * Whether the Library has any book to show: one the reader has opened, a favourite, one on
+     * the default shelf, or one in a shelf the Library lists. The same filters as its sections,
+     * in one query, so the screen can tell empty from not as soon as the database answers.
+     */
+    @Query(
+        """SELECT EXISTS(SELECT 1 FROM library_view WHERE lastReadTime > 0 OR isFavorite = 1
+           OR userCategory = :shelf
+           OR userCategory IN (SELECT name FROM user_categories WHERE isSystem = 0))"""
+    )
+    fun hasLibraryBooks(shelf: String = "Shelf"): Flow<Boolean>
+
     @Query("SELECT * FROM books WHERE id = :bookId")
     fun getBookEntityFlow(bookId: String): Flow<BookEntity?>
 
@@ -76,6 +89,17 @@ interface BookDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBook(book: BookEntity)
+
+    /** An imported book with this title and author, ignoring case: the same book picked from another file. */
+    @Query(
+        """SELECT * FROM books WHERE source = :source
+           AND title = :title COLLATE NOCASE AND author = :author COLLATE NOCASE LIMIT 1"""
+    )
+    suspend fun findImportedBook(
+        title: String,
+        author: String,
+        source: BookSource = BookSource.USER_IMPORTED
+    ): BookEntity?
 
     @Query("UPDATE books SET isFavorite = :isFavorite, isSynced = 0 WHERE id = :bookId")
     suspend fun updateFavorite(bookId: String, isFavorite: Boolean)
@@ -147,4 +171,12 @@ interface BookDao {
 """
     )
     fun getBookStorageBreakdown(): Flow<List<BookStorageBreakdown>>
+
+    // A one-off read of every book, for writing a guest's backup file
+    @Query("SELECT * FROM books")
+    suspend fun getAllBooksOnce(): List<BookEntity>
+
+    // Which of these book IDs are already on this phone, so an import skips them
+    @Query("SELECT id FROM books WHERE id IN (:bookIds)")
+    suspend fun getExistingIds(bookIds: List<String>): List<String>
 }

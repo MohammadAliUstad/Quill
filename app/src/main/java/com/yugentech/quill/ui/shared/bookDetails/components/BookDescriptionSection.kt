@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -45,8 +44,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun BookDescriptionSection(
@@ -54,8 +56,10 @@ fun BookDescriptionSection(
     description: String?,
     subjects: List<String> = emptyList(),
     isExpanded: Boolean,
-    isGutenberg: Boolean = false,
     isDescriptionLoading: Boolean = false,
+    // The page's side margin: the title and text sit inside it, while the subjects row runs out
+    // to the screen's edges and only starts at it
+    horizontalPadding: Dp = 0.dp,
     onExpandedChange: (Boolean) -> Unit
 ) {
     val cleanedSubjects = remember(subjects) {
@@ -92,11 +96,11 @@ fun BookDescriptionSection(
         modifier = modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Description",
+            text = stringResource(R.string.description),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 8.dp)
         )
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -104,6 +108,7 @@ fun BookDescriptionSection(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = horizontalPadding)
                 .animateContentSize(
                     animationSpec = if (allowAnimations || isUserInitiated) {
                         spring(
@@ -152,12 +157,12 @@ fun BookDescriptionSection(
                             }
                         )
 
+                        // The arrow sits exactly midway between the text and the subjects, expanded or
+                        // not, for every book: the same gap above it as below, and nothing nudged
                         if (showExpandToggle) {
-                            val yOffset = if (!isGutenberg && isExpanded) (-8).dp else 0.dp
-
+                            Spacer(modifier = Modifier.height(ArrowGap))
                             Box(
                                 modifier = Modifier
-                                    .offset(y = yOffset)
                                     .clip(CircleShape)
                                     .clickable {
                                         isUserInitiated = true
@@ -168,10 +173,13 @@ fun BookDescriptionSection(
                             ) {
                                 Icon(
                                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                    contentDescription = if (isExpanded) stringResource(R.string.collapse) else stringResource(R.string.expand),
                                     tint = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.size(32.dp)
                                 )
+                            }
+                            if (cleanedSubjects.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(ArrowGap))
                             }
                         }
                     }
@@ -180,10 +188,13 @@ fun BookDescriptionSection(
         }
 
         if (cleanedSubjects.isNotEmpty() && !isDescriptionLoading) {
-            Spacer(modifier = Modifier.height(8.dp))
+            // With the arrow, its own gap below it is the space; without, the text's
+            if (!showExpandToggle) {
+                Spacer(modifier = Modifier.height(TextToSubjectsGap))
+            }
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp)
+                contentPadding = PaddingValues(horizontal = horizontalPadding)
             ) {
                 items(cleanedSubjects) { subject ->
                     Box(
@@ -206,6 +217,12 @@ fun BookDescriptionSection(
         }
     }
 }
+
+// Above and below the expand arrow alike; its 40dp tap target already pads the 32dp icon
+private val ArrowGap = 4.dp
+
+// Between the text and the subjects when there's no arrow between them
+private val TextToSubjectsGap = 12.dp
 
 /** Three soft lines where the description will go, gently pulsing while it loads. */
 @Composable

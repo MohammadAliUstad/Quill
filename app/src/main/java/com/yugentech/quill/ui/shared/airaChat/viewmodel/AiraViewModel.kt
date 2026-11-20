@@ -11,6 +11,8 @@ import com.yugentech.quill.ui.shared.airaChat.state.AiraUiState
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.aira.rag.BookEmbeddingWorker
 import com.yugentech.quill.aira.response.AiraResponse
+import com.yugentech.quill.aira.util.AiraLog
+import kotlinx.coroutines.CancellationException
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.domain.QuotaRepository
@@ -19,10 +21,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.yugentech.quill.R
+import com.yugentech.quill.localization.AppStrings
 
 class AiraViewModel(
     val bookId: String,
@@ -58,75 +64,73 @@ class AiraViewModel(
     }
 
     private fun observeBookAndIndexing() {
+        // Followed, not read once: reading a few pages with this screen in the back stack opens
+        // it up on the way back
         viewModelScope.launch {
-            val book = bookRepository.getBookOnce(bookId)
-            _uiState.update {
-                it.copy(
-                    bookTitle = book?.title ?: EMPTY,
-                    bookAuthor = book?.author ?: EMPTY,
-                    lastChapterTitle = book?.lastChapterTitle,
-                    hasStartedReading = book?.lastChapterTitle != null,
-                    spoilerLockEnabled = book?.spoilerLockEnabled ?: true,
-                    isBookLoaded = true
-                )
+            bookRepository.getBook(bookId).collect { book ->
+                _uiState.update {
+                    it.copy(
+                        bookTitle = book?.title ?: EMPTY,
+                        bookAuthor = book?.author ?: EMPTY,
+                        lastChapterTitle = book?.lastChapterTitle,
+                        hasStartedReading = book?.lastChapterTitle != null,
+                        spoilerLockEnabled = book?.spoilerLockEnabled ?: true,
+                        isBookLoaded = true
+                    )
+                }
             }
         }
 
-        workManager
-            .getWorkInfosByTagLiveData("index_$bookId")
-            .asFlow()
-            .onEach { workInfoList ->
-                val info = workInfoList.firstOrNull {
-                    it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED
-                } ?: workInfoList.lastOrNull()
+        // Ready only once the book's whole index is saved, which the worker marks as its very
+        // last step. The work's own states can't say that: a guest's work "succeeds" without
+        // indexing anything, and a book's chunks exist long before its index is finished.
+        val isComplete = bookRepository.observeIsReady(bookId)
+        val work = workManager.getWorkInfosByTagLiveData(BookEmbeddingWorker.tagFor(bookId)).asFlow()
 
-                when {
-                    info == null -> {
-                        val ready = bookRepository.isReady(bookId)
-                        _uiState.update { it.copy(isReady = ready, isIndexing = !ready) }
-                    }
-
-                    info.state == WorkInfo.State.RUNNING || info.state == WorkInfo.State.ENQUEUED -> {
-                        val progress = info.progress.getInt(BookEmbeddingWorker.KEY_PROGRESS, 0)
-                        _uiState.update {
-                            it.copy(
-                                isReady = false,
-                                isIndexing = true,
-                                indexingProgress = progress
-                            )
-                        }
-                    }
-
-                    info.state == WorkInfo.State.SUCCEEDED -> {
-                        _uiState.update {
-                            it.copy(
-                                isReady = true,
-                                isIndexing = false,
-                                indexingProgress = 100
-                            )
-                        }
-                    }
-
-                    info.state == WorkInfo.State.FAILED -> {
-                        _uiState.update {
-                            it.copy(
-                                isReady = false,
-                                isIndexing = false,
-                                error = "Indexing failed. Please try again."
-                            )
-                        }
-                    }
-
-                    info.state == WorkInfo.State.CANCELLED -> {
-                        _uiState.update { it.copy(isIndexing = false) }
-                    }
-
-                    else -> Unit
+        combine(isComplete, work) { complete, workInfos ->
+            // Running beats waiting: a book can have more than one request for it at a time.
+            // Waiting is ENQUEUED (about to start, or retrying) or BLOCKED (queued behind other
+            // books in the indexing queue).
+            val running = workInfos.firstOrNull { it.state == WorkInfo.State.RUNNING }
+            val waiting = workInfos.any {
+                it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.BLOCKED
+            }
+            val failed = workInfos.lastOrNull()?.state == WorkInfo.State.FAILED
+            // A finished index wins over any request still around for the book: a fresh download
+            // clears it before indexing again, and a request for an indexed book just ends at once
+            IndexStatus(
+                ready = complete,
+                running = !complete && running != null,
+                queued = !complete && running == null && waiting,
+                progress = running?.progress?.getInt(BookEmbeddingWorker.KEY_PROGRESS, 0) ?: 0,
+                failed = !complete && running == null && !waiting && failed
+            )
+        }
+            .distinctUntilChanged()
+            .onEach { status ->
+                _uiState.update {
+                    it.copy(
+                        isReady = status.ready,
+                        // Not ready and nothing to wait on (not asked for yet) shows as reading
+                        // too, as it always has: it's about to be
+                        isIndexing = status.running || (!status.ready && !status.queued && !status.failed),
+                        isQueued = status.queued,
+                        indexingProgress = if (status.ready) 100 else status.progress,
+                        error = if (status.failed) AppStrings.get(R.string.indexing_failed) else it.error,
+                        isIndexStatusLoaded = true
+                    )
                 }
-                _uiState.update { it.copy(isIndexStatusLoaded = true) }
             }
             .launchIn(viewModelScope)
     }
+
+    private data class IndexStatus(
+        val ready: Boolean,
+        val running: Boolean,
+        val queued: Boolean,
+        val progress: Int,
+        val failed: Boolean
+    )
 
     private fun observeChatHistory() {
         viewModelScope.launch {
@@ -174,6 +178,9 @@ class AiraViewModel(
 
                     handleStreamResponse(response)
                 }
+            } catch (e: Exception) {
+                if (e !is CancellationException) AiraLog.failure("ChatScreen ask", e)
+                throw e
             } finally {
                 isCurrentlyStreaming = false
                 _uiState.update { it.copy(isLoading = false, isStreaming = false) }
@@ -187,7 +194,7 @@ class AiraViewModel(
             val updatedMessages = state.messages.toMutableList()
             if (updatedMessages.isNotEmpty() && updatedMessages.last().role == AiraMessage.Role.AIRA) {
                 updatedMessages[updatedMessages.lastIndex] = updatedMessages.last().copy(
-                    content = "Stopped on your request. Let me know if you've got more questions!"
+                    content = AppStrings.get(R.string.aira_stopped)
                 )
             }
             state.copy(messages = updatedMessages)
@@ -261,6 +268,7 @@ class AiraViewModel(
             }
 
             is AiraResponse.Error -> {
+                AiraLog.w("ChatScreen showing error: ${response.message}")
                 _uiState.update { airaUiState ->
                     airaUiState.copy(
                         messages = airaUiState.messages.dropLast(1),

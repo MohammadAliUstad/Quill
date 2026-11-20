@@ -56,4 +56,8 @@ abstract class CategoryDao {
 
     @Query("DELETE FROM user_categories WHERE isSystem = 0")
     abstract suspend fun deleteAllUserCategories()
+
+    // A one-off read of every category, for writing a guest's backup file
+    @Query("SELECT * FROM user_categories ORDER BY sortOrder ASC")
+    abstract suspend fun getAllCategoriesOnce(): List<CategoryEntity>
 }

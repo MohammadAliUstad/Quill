@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.pluralStringResource
 
 @Composable
 fun GenreDistributionCard(
@@ -78,7 +80,7 @@ private fun GenreRow(
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = "$count ${if (count == 1) "book" else "books"}",
+                text = pluralStringResource(R.plurals.book_count, count, count),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

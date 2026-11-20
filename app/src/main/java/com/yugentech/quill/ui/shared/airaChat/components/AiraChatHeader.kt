@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun AiraChatHeader(
@@ -106,7 +107,7 @@ fun AiraChatHeader(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Current Chapter",
+                    text = stringResource(R.string.current_chapter),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
@@ -115,7 +116,7 @@ fun AiraChatHeader(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = lastChapterTitle ?: "Start of book",
+                    text = lastChapterTitle ?: stringResource(R.string.start_of_book),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -155,7 +156,7 @@ fun AiraChatHeader(
                         label = "spoilerTextAnimation"
                     ) { isLocked ->
                         Text(
-                            text = if (isLocked) "Spoiler lock active" else "Spoiler lock disabled",
+                            text = if (isLocked) stringResource(R.string.spoiler_lock_active) else stringResource(R.string.spoiler_lock_disabled),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = textColor,

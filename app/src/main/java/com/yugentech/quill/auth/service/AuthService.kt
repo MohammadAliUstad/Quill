@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
+import com.yugentech.quill.R
+import com.yugentech.quill.localization.AppStrings
 
 // Service class handling direct interactions with Firebase Authentication and Google Sign-In
 class AuthService(
@@ -115,12 +117,12 @@ class AuthService(
         return try {
             if (data == null) {
                 Timber.w("Google Sign-In result data was null")
-                return AuthResult.Error("Google Sign-In cancelled")
+                return AuthResult.Error(AppStrings.get(R.string.google_error_cancelled_short))
             }
 
             val credential = oneTapClient.getSignInCredentialFromIntent(data)
             val idToken = credential.googleIdToken
-                ?: return AuthResult.Error("Google ID token is missing")
+                ?: return AuthResult.Error(AppStrings.get(R.string.google_error_no_token))
                     .also { Timber.e("Missing Google ID Token") }
 
             Timber.d("Google ID Token retrieved, exchanging for Firebase Credential")

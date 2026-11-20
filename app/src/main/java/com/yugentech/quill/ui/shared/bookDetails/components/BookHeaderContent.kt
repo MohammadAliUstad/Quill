@@ -1,5 +1,8 @@
 package com.yugentech.quill.ui.shared.bookDetails.components
 
+import com.yugentech.quill.localization.asString
+import com.yugentech.quill.bookDetails.model.DownloadError
+import com.yugentech.quill.ui.shared.maintenance.MaintenanceAwareCover
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -47,6 +50,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -64,17 +69,24 @@ import com.yugentech.quill.R
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.ui.tabs.discoverScreen.util.thumbnailCoverUrl
 import com.yugentech.quill.database.model.DownloadStatus
+import androidx.compose.material.icons.rounded.Construction
 import com.yugentech.theme.tokens.dimensions.AppAnimations
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.ui.tabs.libraryScreen.components.shelfTitle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookHeaderContent(
     book: Book,
     topPadding: Dp,
+    // The book's source is down for maintenance: until it's back it can't be downloaded (the
+    // page says why, in place of the description)
+    isSourceDown: Boolean,
     onCategoryClick: () -> Unit,
     onDownloadClick: () -> Unit,
     onReadClick: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     var wasDownloading by remember { mutableStateOf(false) }
     var showCoverDialog by remember { mutableStateOf(false) }
 
@@ -82,11 +94,17 @@ fun BookHeaderContent(
         if (book.downloadStatus == DownloadStatus.DOWNLOADING) {
             wasDownloading = true
         }
+        // A download watched to the end lands with a tap
+        if (wasDownloading && book.downloadStatus == DownloadStatus.DOWNLOADED) {
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        }
     }
 
     val isSaved = book.userCategory != null
     val isDownloaded = book.downloadStatus == DownloadStatus.DOWNLOADED
     val isDownloadEnabled = book.downloadStatus != DownloadStatus.DOWNLOADING && !isDownloaded
+    // A download already running is left to finish or fail on its own
+    val isUnavailable = isSourceDown && !isDownloaded && book.downloadStatus != DownloadStatus.DOWNLOADING
 
     Row(
         modifier = Modifier
@@ -95,17 +113,21 @@ fun BookHeaderContent(
         verticalAlignment = Alignment.CenterVertically
     ) {
         ElevatedCard(
-            onClick = { showCoverDialog = true },
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                showCoverDialog = true
+            },
             modifier = Modifier
                 .width(160.dp)
                 .height(240.dp),
             shape = RoundedCornerShape(12.dp),
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 12.dp)
         ) {
-            AsyncImage(
-                model = book.thumbnailCoverUrl,
-                contentDescription = "Book Cover",
+            MaintenanceAwareCover(
+                url = book.thumbnailCoverUrl,
+                contentDescription = stringResource(R.string.book_cover),
                 contentScale = ContentScale.Crop,
+                iconSize = 56.dp,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -133,7 +155,7 @@ fun BookHeaderContent(
             }
 
             Column {
-                if (book.downloadStatus == DownloadStatus.FAILED && book.downloadError != null) {
+                if (!isUnavailable && book.downloadStatus == DownloadStatus.FAILED && book.downloadError != null) {
                     Row(
                         modifier = Modifier.padding(bottom = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -146,7 +168,7 @@ fun BookHeaderContent(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = book.downloadError!!,
+                            text = DownloadError.message(book.downloadError!!).asString(),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.error,
                             maxLines = 2,
@@ -155,27 +177,42 @@ fun BookHeaderContent(
                     }
                 }
 
-                val categoryLabel = book.userCategory ?: "Add to Library"
+                val categoryLabel = book.userCategory?.let { shelfTitle(it) } ?: stringResource(R.string.add_to_library)
                 val categoryIcon = if (isSaved) Icons.Default.FolderOpen else Icons.Default.LibraryAdd
 
                 ActionButton(
                     icon = categoryIcon,
                     label = categoryLabel,
-                    onClick = onCategoryClick,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onCategoryClick()
+                    },
                     isTop = true
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
 
                 ActionButton(
-                    icon = if (book.downloadStatus == DownloadStatus.FAILED) Icons.Default.Refresh else Icons.Default.Download,
-                    label = when (book.downloadStatus) {
-                        DownloadStatus.DOWNLOADED -> "Downloaded"
-                        DownloadStatus.DOWNLOADING -> "Downloading"
-                        DownloadStatus.FAILED -> "Retry Download"
-                        else -> "Download"
+                    icon = when {
+                        isUnavailable -> Icons.Rounded.Construction
+                        book.downloadStatus == DownloadStatus.FAILED -> Icons.Default.Refresh
+                        else -> Icons.Default.Download
                     },
-                    onClick = { if (isDownloadEnabled || book.downloadStatus == DownloadStatus.FAILED) onDownloadClick() },
+                    label = when {
+                        isUnavailable -> stringResource(R.string.download_unavailable)
+                        else -> when (book.downloadStatus) {
+                            DownloadStatus.DOWNLOADED -> stringResource(R.string.downloaded)
+                            DownloadStatus.DOWNLOADING -> stringResource(R.string.downloading)
+                            DownloadStatus.FAILED -> stringResource(R.string.retry_download)
+                            else -> stringResource(R.string.download)
+                        }
+                    },
+                    onClick = {
+                        if (!isUnavailable && (isDownloadEnabled || book.downloadStatus == DownloadStatus.FAILED)) {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            onDownloadClick()
+                        }
+                    },
                     isTop = false,
                     customIcon = {
                         when (book.downloadStatus) {
@@ -194,7 +231,7 @@ fun BookHeaderContent(
                                 } else {
                                     Icon(
                                         painter = painterResource(id = R.drawable.download_mark),
-                                        contentDescription = "Downloaded",
+                                        contentDescription = stringResource(R.string.downloaded),
                                         modifier = Modifier.size(32.dp)
                                     )
                                 }
@@ -215,7 +252,13 @@ fun BookHeaderContent(
                 ) {
                     Column {
                         Spacer(modifier = Modifier.height(2.dp))
-                        DetachedReadButton(book = book, onClick = onReadClick)
+                        DetachedReadButton(
+                            book = book,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                onReadClick()
+                            }
+                        )
                     }
                 }
             }
@@ -257,7 +300,7 @@ fun CoverImageDialog(
         ) {
             AsyncImage(
                 model = coverUrl,
-                contentDescription = "Full Book Cover",
+                contentDescription = stringResource(R.string.full_book_cover),
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxWidth(0.70f)
@@ -408,9 +451,8 @@ fun DetachedReadButton(
     book: Book,
     onClick: () -> Unit
 ) {
-    val buttonText = remember(book.progressPercent) {
-        if (book.progressPercent > 0f) "Continue" else "Read"
-    }
+    val buttonText =
+        if (book.progressPercent > 0f) stringResource(R.string.onboarding_continue) else stringResource(R.string.read)
 
     Card(
         onClick = onClick,

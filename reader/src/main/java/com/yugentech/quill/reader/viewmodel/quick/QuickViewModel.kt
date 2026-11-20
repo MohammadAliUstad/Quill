@@ -8,6 +8,8 @@ import com.yugentech.quill.aira.chat.quickChat.prompt.QuickPrompt
 import com.yugentech.quill.aira.chat.quickChat.prompt.quotaCost
 import com.yugentech.quill.aira.chat.quickChat.repository.QuickChatRepository
 import com.yugentech.quill.aira.response.AiraResponse
+import com.yugentech.quill.aira.util.AiraLog
+import kotlinx.coroutines.CancellationException
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.domain.QuotaRepository
@@ -18,6 +20,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.yugentech.quill.reader.localization.ReaderStrings
+import com.yugentech.quill.reader.R
 
 class QuickViewModel(
     private val airaChatRepository: AiraChatRepository,
@@ -50,7 +54,9 @@ class QuickViewModel(
     fun observeIndexingStatus(bookId: String) {
         viewModelScope.launch {
             readerRepository.observeIsReady(bookId).collectLatest { isIndexed ->
-                _uiState.update { it.copy(isReady = isIndexed) }
+                // Aira needs an account: for a guest she never becomes ready, so the reader shows
+                // no Ask Aira button and the selection menu no Ask Aira
+                _uiState.update { it.copy(isReady = isIndexed && !authRepository.isGuest) }
             }
         }
     }
@@ -72,6 +78,9 @@ class QuickViewModel(
                         }
                     }
                 }
+            } catch (e: Exception) {
+                if (e !is CancellationException) AiraLog.failure("PeekBar ask", e)
+                throw e
             } finally {
                 _uiState.update { it.copy(isLoading = false, isStreaming = false) }
             }
@@ -95,6 +104,9 @@ class QuickViewModel(
                         }
                     }
                 }
+            } catch (e: Exception) {
+                if (e !is CancellationException) AiraLog.failure("PeekBar quick action ${intent.javaClass.simpleName}", e)
+                throw e
             } finally {
                 _uiState.update { it.copy(isLoading = false, isStreaming = false) }
             }
@@ -130,6 +142,7 @@ class QuickViewModel(
             }
 
             is AiraResponse.Error -> {
+                AiraLog.w("PeekBar showing error: ${response.message}")
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -174,7 +187,7 @@ class QuickViewModel(
         activeJob = null
         _uiState.update { state ->
             val stoppedMsg = if (state.response.isNullOrBlank()) {
-                "Stopped on your request."
+                ReaderStrings.get(R.string.reader_stopped)
             } else state.response
 
             state.copy(

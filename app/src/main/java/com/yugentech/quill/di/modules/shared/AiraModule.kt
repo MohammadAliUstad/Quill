@@ -18,7 +18,6 @@ import com.yugentech.quill.aira.rag.EpubTextExtractor
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.repository.AiraChatRepository
 import com.yugentech.quill.aira.repository.AiraChatRepositoryImpl
-import com.yugentech.quill.aira.util.VoiceOutputManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -44,12 +43,6 @@ val airaModule = module {
         )
     }
 
-    single {
-        VoiceOutputManager(
-            functions = get(),
-            cacheDir = androidContext().cacheDir
-        )
-    }
 
     // --- Intent Detection ---
     single { IntentDetectionService(functions = get()) }

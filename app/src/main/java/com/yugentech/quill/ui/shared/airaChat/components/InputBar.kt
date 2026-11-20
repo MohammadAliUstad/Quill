@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.shared.airaChat.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -47,7 +49,10 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
+import com.yugentech.theme.effects.airaBeam
 import com.yugentech.theme.tokens.dimensions.AppAnimations
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -60,6 +65,7 @@ fun InputBar(
     onSend: () -> Unit,
     onStop: () -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
     val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
     val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
     val isImeVisible = WindowInsets.isImeVisible
@@ -73,7 +79,9 @@ fun InputBar(
         if (!isImeVisible) focusManager.clearFocus()
     }
 
-    val collapsedHPadding = 32.dp
+    // The same widths as the reader's peek bar input: 24dp in from each side with the keyboard
+    // closed, widening to 8dp as it opens
+    val collapsedHPadding = 24.dp
     val expandedHPadding = 8.dp
     val collapsedVPadding = 0.dp
     val expandedVPadding = 4.dp
@@ -135,7 +143,7 @@ fun InputBar(
                 enabled = isEnabled,
                 placeholder = {
                     Text(
-                        text = if (isEnabled) "Ask Aira anything…" else "Aira is thinking…",
+                        text = if (isEnabled) stringResource(R.string.aira_input_hint) else stringResource(R.string.aira_thinking),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
@@ -163,8 +171,10 @@ fun InputBar(
                             .background(buttonContainerColor)
                             .clickable(enabled = canSend || isStreaming) {
                                 if (isStreaming) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     onStop()
                                 } else {
+                                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                                     onSend()
                                     keyboardController?.hide()
                                     focusManager.clearFocus()
@@ -179,7 +189,7 @@ fun InputBar(
                         ) { streaming ->
                             Icon(
                                 imageVector = if (streaming) Icons.Default.Stop else Icons.Default.ArrowUpward,
-                                contentDescription = if (streaming) "Stop" else "Send",
+                                contentDescription = if (streaming) stringResource(R.string.stop) else stringResource(R.string.send),
                                 tint = buttonContentColor,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -188,6 +198,8 @@ fun InputBar(
                 },
                 modifier = Modifier
                     .weight(1f)
+                    // A light circles the field while Aira is answering (loading and streaming)
+                    .airaBeam(active = isStreaming)
                     .focusRequester(focusRequester)
                     .onFocusChanged { isFocused = it.isFocused },
                 shape = CircleShape,

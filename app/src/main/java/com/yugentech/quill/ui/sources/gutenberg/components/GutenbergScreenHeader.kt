@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.sources.gutenberg.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,6 +32,8 @@ import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,24 +50,32 @@ fun GutenbergScreenHeader(
     onSearchClear: () -> Unit,
     onBackOrClose: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val surfaceColor = MaterialTheme.colorScheme.surface
 
+    // Faded in and out from a see-through copy of the same colour: fading from
+    // Color.Transparent (see-through black) passes through dark grey, a flash in light mode
     val animatedContainerColor by animateColorAsState(
         targetValue = if (searchActive) {
             MaterialTheme.colorScheme.surfaceContainer
         } else {
-            Color.Transparent
+            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0f)
         },
         label = "container_color"
     )
 
     val animatedBorderColor by animateColorAsState(
         targetValue = if (searchActive) {
-            Color.Transparent
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0f)
         } else {
             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         },
         label = "border_color"
+    )
+
+    val hazeAlpha by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (searchActive) 0f else 1f,
+        label = "haze_alpha"
     )
 
     Box(
@@ -91,34 +103,37 @@ fun GutenbergScreenHeader(
                     onSearch = onSearchSubmit,
                     expanded = searchActive,
                     onExpandedChange = onSearchActiveChange,
-                    placeholder = { Text("Search Gutenberg") },
+                    placeholder = { Text(stringResource(R.string.search_gutenberg)) },
                     leadingIcon = {
-                        IconButton(onClick = onBackOrClose) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onBackOrClose()
+                        }) {
                             com.yugentech.quill.ui.sources.standard.components.AnimatedSearchIcon(isSearchActive = searchActive)
                         }
                     },
                     trailingIcon = {
                         if (searchText.isNotEmpty()) {
-                            IconButton(onClick = onSearchClear) {
-                                Icon(Icons.Default.Close, contentDescription = "Clear")
+                            IconButton(onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                onSearchClear()
+                            }) {
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.clear))
                             }
                         }
                     },
+                    // The frosted backdrop fades out as the bar's own fill fades in, rather than
+                    // vanishing on the first frame (a see-through flicker on tap).
                     modifier = Modifier
-                        .then(
-                            if (!searchActive) {
-                                Modifier
-                                    .clip(RoundedCornerShape(28.dp))
-                                    .hazeEffect(
-                                        state = hazeState,
-                                        style = HazeDefaults.style(
-                                            backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f),
-                                            blurRadius = 20.dp,
-                                            noiseFactor = 0.05f
-                                        )
-                                    )
-                            } else Modifier
-                        )
+                        .clip(RoundedCornerShape(28.dp))
+                        .hazeEffect(
+                            state = hazeState,
+                            style = HazeDefaults.style(
+                                backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f),
+                                blurRadius = 20.dp,
+                                noiseFactor = 0.05f
+                            )
+                        ) { alpha = hazeAlpha }
                         .border(
                             width = 1.dp,
                             color = animatedBorderColor,

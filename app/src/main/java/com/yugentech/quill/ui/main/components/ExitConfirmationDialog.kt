@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.main.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +32,8 @@ import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.elevation
 import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +41,7 @@ fun ExitConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     BasicAlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxWidth(0.84f),
@@ -69,7 +74,7 @@ fun ExitConfirmationDialog(
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.m))
 
                     Text(
-                        text = "Exit App",
+                        text = stringResource(R.string.exit_app_title),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center
@@ -78,7 +83,7 @@ fun ExitConfirmationDialog(
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.s))
 
                     Text(
-                        text = "Are you sure you want to exit the app?",
+                        text = stringResource(R.string.exit_app_confirm),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -91,21 +96,27 @@ fun ExitConfirmationDialog(
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
                     ) {
                         TextButton(
-                            onClick = onDismiss,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                onDismiss()
+                            },
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "Cancel",
+                                text = stringResource(R.string.cancel),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
                         Button(
-                            onClick = onConfirm,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                onConfirm()
+                            },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text(text = "Exit")
+                            Text(text = stringResource(R.string.more_exit))
                         }
                     }
                 }

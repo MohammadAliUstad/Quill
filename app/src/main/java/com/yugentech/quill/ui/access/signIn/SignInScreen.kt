@@ -21,6 +21,8 @@ import com.yugentech.quill.ui.access.signIn.components.forms.SignInForm
 import com.yugentech.quill.ui.access.signIn.state.ForgotPasswordState
 import com.yugentech.quill.ui.main.components.ToastMessage
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 /** Welcome back, under a book held open at its bookmark: laid out as Sessions' sign-in. */
 @Composable
@@ -30,15 +32,16 @@ fun SignInScreen(
     onGoogleSignIn: () -> Unit,
     onNavigateToSignUp: () -> Unit,
     onForgotPassword: (email: String) -> Unit,
+    onContinueAsGuest: () -> Unit = {},
 ) {
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
     val forgotPasswordState by authViewModel.forgotPasswordState.collectAsStateWithLifecycle()
 
     AuthScaffold(
         header = { BookmarkedPage() },
-        formTitle = "Sign in",
-        title = "Welcome back",
-        subtitle = "Your bookmark is right where you left it. Ready for the next chapter?",
+        formTitle = stringResource(R.string.auth_sign_in),
+        title = stringResource(R.string.sign_in_title),
+        subtitle = stringResource(R.string.sign_in_subtitle),
         overlay = {
             Box(modifier = Modifier.fillMaxSize()) {
                 ToastMessage(
@@ -68,15 +71,16 @@ fun SignInScreen(
             onClearError = { authViewModel.clearError() },
             onSignIn = onSignIn,
             onGoogleSignIn = onGoogleSignIn,
-            onForgotPassword = onForgotPassword
+            onForgotPassword = onForgotPassword,
+            onContinueAsGuest = onContinueAsGuest
         )
 
         // Matches the card's bottom padding, so the link sits evenly between form and edge
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.s))
 
         AuthSwitchLink(
-            prompt = "New to Quill?",
-            action = "Create an account",
+            prompt = stringResource(R.string.sign_in_prompt),
+            action = stringResource(R.string.sign_in_prompt_action),
             onClick = onNavigateToSignUp
         )
     }

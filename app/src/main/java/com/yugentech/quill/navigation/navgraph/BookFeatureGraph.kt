@@ -18,6 +18,9 @@ import com.yugentech.quill.ui.shared.bookDetails.parent.VisualsScreen
 import com.yugentech.quill.ui.shared.bookDetails.parent.VisualsViewModel
 import com.yugentech.theme.tokens.AppConstants.EMPTY
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
+import com.yugentech.quill.domain.AuthRepository
+import androidx.compose.runtime.remember
 import org.koin.core.parameter.parametersOf
 
 fun NavGraphBuilder.bookFeatureGraph(
@@ -29,8 +32,10 @@ fun NavGraphBuilder.bookFeatureGraph(
         arguments = AppScreen.BookDetailsScreen.arguments
     ) {
         val bookDetailsViewModel: BookDetailsViewModel = koinViewModel()
+        val authRepository: AuthRepository = koinInject()
         BookDetailsScreen(
             bookDetailsViewModel = bookDetailsViewModel,
+            airaEnabled = remember { !authRepository.isGuest },
             onBackClick = { navController.popBackStack() },
             onReadClick = { bookId, chapterHref ->
                 context.startActivity(

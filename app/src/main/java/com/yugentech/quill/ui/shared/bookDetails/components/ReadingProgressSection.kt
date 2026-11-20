@@ -1,5 +1,10 @@
 package com.yugentech.quill.ui.shared.bookDetails.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +24,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,17 +35,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.theme.tokens.dimensions.AppAnimations
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+
+/** What sits at the end of the Last Read header. */
+private enum class LastReadTrailing { Deleted, Time, None }
 
 @Composable
 fun ReadingProgressSection(
     book: Book,
     onContinueClick: () -> Unit
 ) {
-    val timeAgo = remember(book.lastReadTime) {
-        if (book.lastReadTime <= 0) return@remember "Not started"
+    val timeAgo = run {
+        if (book.lastReadTime <= 0) return@run stringResource(R.string.not_started)
         val now = Instant.now()
         val readTime = Instant.ofEpochMilli(book.lastReadTime)
         val zone = ZoneId.systemDefault()
@@ -46,18 +61,18 @@ fun ReadingProgressSection(
         val diffDays = ChronoUnit.DAYS.between(readTime.atZone(zone).toLocalDate(), now.atZone(zone).toLocalDate())
 
         when {
-            diffMinutes < 1 -> "Just now"
-            diffMinutes < 60 -> "${diffMinutes}m ago"
-            diffHours < 24 && diffDays == 0L -> "${diffHours}h ago"
-            diffDays == 1L -> "Yesterday"
-            else -> "$diffDays days ago"
+            diffMinutes < 1 -> stringResource(R.string.just_now)
+            diffMinutes < 60 -> stringResource(R.string.minutes_ago, diffMinutes.toInt())
+            diffHours < 24 && diffDays == 0L -> stringResource(R.string.hours_ago, diffHours.toInt())
+            diffDays == 1L -> stringResource(R.string.yesterday)
+            else -> pluralStringResource(R.plurals.days_ago, diffDays.toInt(), diffDays.toInt())
         }
     }
 
-    val progressLabel = remember(book.progressPercent, book.totalPages) {
+    val progressLabel = run {
         if (book.totalPages > 0) {
             val currentPage = (book.progressPercent * book.totalPages).toInt()
-            "Page $currentPage of ${book.totalPages}"
+            stringResource(R.string.page_of, currentPage, book.totalPages)
         } else {
             "${(book.progressPercent * 100).toInt()}%"
         }
@@ -92,33 +107,57 @@ fun ReadingProgressSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Last Read",
+                    text = stringResource(R.string.last_read),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                if (!isDownloaded) {
-                    Text(
-                        text = "Book deleted",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                } else if (book.lastReadTime > 0) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.AccessTime,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .padding(end = 4.dp)
-                                .size(14.dp)
-                        )
-                        Text(
-                            text = timeAgo,
+                // "Book deleted" (or the time it was last read) fades in and out as the
+                // download is removed or comes back, instead of popping. A plain crossfade: no
+                // size animation, which clipped the text and slid it while it faded.
+                //
+                // The last real time it was read, held while it fades away: deleting the book
+                // also clears its last-read time, which would otherwise turn the fading label
+                // into "Not started" on its way out to "Book deleted"
+                var shownTimeAgo by remember { mutableStateOf(timeAgo) }
+                if (book.lastReadTime > 0) shownTimeAgo = timeAgo
+                val trailing = when {
+                    !isDownloaded -> LastReadTrailing.Deleted
+                    book.lastReadTime > 0 -> LastReadTrailing.Time
+                    else -> LastReadTrailing.None
+                }
+                AnimatedContent(
+                    targetState = trailing,
+                    transitionSpec = {
+                        fadeIn(tween(AppAnimations.Durations.Standard)) togetherWith
+                            fadeOut(tween(AppAnimations.Durations.Standard)) using null
+                    },
+                    contentAlignment = Alignment.CenterEnd,
+                    label = "lastReadTrailing"
+                ) { state ->
+                    when (state) {
+                        LastReadTrailing.Deleted -> Text(
+                            text = stringResource(R.string.book_deleted),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.error
                         )
+                        LastReadTrailing.Time -> Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.AccessTime,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .padding(end = 4.dp)
+                                    .size(14.dp)
+                            )
+                            Text(
+                                text = shownTimeAgo,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        LastReadTrailing.None -> Unit
                     }
                 }
             }
@@ -136,7 +175,7 @@ fun ReadingProgressSection(
                 // Left: Current Chapter (allows text wrapping)
                 StatItem(
                     icon = Icons.Default.Bookmark,
-                    text = book.lastChapterTitle ?: "Chapter ${book.lastChapterIndex + 1}",
+                    text = book.lastChapterTitle ?: stringResource(R.string.chapter_number, book.lastChapterIndex + 1),
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 16.dp) // Keep space between text and page count

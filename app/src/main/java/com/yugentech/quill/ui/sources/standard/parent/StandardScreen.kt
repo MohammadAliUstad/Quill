@@ -1,7 +1,6 @@
 package com.yugentech.quill.ui.sources.standard.parent
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -10,13 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -28,41 +24,34 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.sources.standard.viewmodel.NEW_ARRIVALS
 import com.yugentech.quill.sources.standard.viewmodel.StandardNavigationEvent
 import com.yugentech.quill.sources.standard.viewmodel.StandardViewModel
+import com.yugentech.quill.ui.main.components.ObserveAsEvents
 import com.yugentech.quill.ui.sources.standard.components.BooksGrid
-import com.yugentech.quill.ui.sources.standard.components.SourceEmptyState
+import com.yugentech.quill.ui.sources.standard.components.STANDARD_MIN_CELL
+import com.yugentech.quill.ui.sources.standard.components.SourceContentHost
 import com.yugentech.quill.ui.sources.standard.components.StandardScreenHeader
-import com.yugentech.theme.tokens.dimensions.AppAnimations
-import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
-private enum class SourceScreenState {
-    Loading, Empty, Content
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Standard Ebooks: a header with search and the category chips over the books. Everything below
+ * the header comes from [StandardViewModel.uiState]; the screen only keeps what's being typed.
+ */
 @Composable
 fun StandardScreen(
     onNavigateById: (String) -> Unit,
     onNavigateByContent: (Book) -> Unit,
     viewModel: StandardViewModel = koinViewModel()
 ) {
-    val books by viewModel.booksState.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val displayTitle by viewModel.displayTitle.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val selectedCategory by viewModel.selectedCategory.collectAsState()
-    val categories by viewModel.categories.collectAsState()
-    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(key1 = true) {
-        viewModel.navigationEvent.collectLatest { event ->
-            when (event) {
-                is StandardNavigationEvent.NavigateById -> onNavigateById(event.id)
-                is StandardNavigationEvent.NavigateByContent -> onNavigateByContent(event.book)
-            }
+    ObserveAsEvents(viewModel.navigationEvents) { event ->
+        when (event) {
+            is StandardNavigationEvent.NavigateById -> onNavigateById(event.id)
+            is StandardNavigationEvent.NavigateByContent -> onNavigateByContent(event.book)
         }
     }
 
@@ -73,7 +62,7 @@ fun StandardScreen(
     val updateSearchActive = { active: Boolean ->
         searchActive = active
         if (!active && searchText.isEmpty()) {
-            viewModel.onCategorySelected("New Arrivals")
+            viewModel.onCategorySelected(NEW_ARRIVALS)
         }
     }
 
@@ -83,12 +72,11 @@ fun StandardScreen(
     val dockedWidth = screenWidth - 32.dp
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 8.dp
+    // Below the search bar (56) and the category chips (64)
     val gridTopPadding = statusBarHeight + 56.dp + 64.dp
 
-    BackHandler(
-        enabled = searchActive
-    ) {
+    BackHandler(enabled = searchActive) {
         updateSearchActive(false)
     }
 
@@ -102,37 +90,18 @@ fun StandardScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            AnimatedContent(
-                targetState = when {
-                    isLoading && books.isEmpty() -> SourceScreenState.Loading
-                    !isLoading && books.isEmpty() -> SourceScreenState.Empty
-                    else -> SourceScreenState.Content
-                },
-                transitionSpec = { fadeThrough() },
-                label = "StandardContentAnimation"
-            ) { state ->
-                when (state) {
-                    SourceScreenState.Loading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularWavyProgressIndicator()
-                        }
-                    }
-                    SourceScreenState.Empty -> {
-                        SourceEmptyState(
-                            title = displayTitle,
-                            message = error,
-                            modifier = Modifier.padding(top = gridTopPadding)
-                        )
-                    }
-                    SourceScreenState.Content -> {
-                        BooksGrid(
-                            books = books,
-                            topPadding = gridTopPadding,
-                            bottomPadding = navBarHeight,
-                            onBookClick = { book -> viewModel.onBookClick(book) }
-                        )
-                    }
-                }
+            SourceContentHost(
+                content = uiState.content,
+                skeletonColumns = GridCells.Adaptive(minSize = STANDARD_MIN_CELL),
+                topPadding = gridTopPadding,
+                bottomPadding = bottomPadding
+            ) { books ->
+                BooksGrid(
+                    books = books,
+                    topPadding = gridTopPadding,
+                    bottomPadding = bottomPadding,
+                    onBookClick = viewModel::onBookClick
+                )
             }
 
             StandardScreenHeader(
@@ -153,8 +122,8 @@ fun StandardScreen(
                 onBackOrClose = {
                     updateSearchActive(!searchActive)
                 },
-                categories = categories,
-                selectedCategory = selectedCategory,
+                categories = uiState.categories,
+                selectedCategory = uiState.selectedCategory,
                 onCategorySelected = { category ->
                     viewModel.onCategorySelected(category)
                     if (searchText.isNotEmpty()) searchText = ""

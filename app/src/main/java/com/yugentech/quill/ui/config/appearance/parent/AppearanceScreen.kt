@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.config.appearance.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,6 +27,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import com.yugentech.theme.tokens.spacing
@@ -33,6 +36,8 @@ import com.yugentech.quill.ui.config.appearance.components.AmoledThemeSelector
 import com.yugentech.quill.ui.config.appearance.components.FontSelector
 import com.yugentech.quill.ui.config.appearance.components.ThemeColorSelector
 import com.yugentech.quill.ui.config.appearance.components.ThemeModeSelector
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +45,7 @@ fun AppearanceScreen(
     onNavigateBack: () -> Unit,
     themeViewModel: ThemeViewModel
 ) {
+    val haptic = LocalHapticFeedback.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val layoutDirection = LocalLayoutDirection.current
 
@@ -49,19 +55,22 @@ fun AppearanceScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Appearance")
+                        Text(stringResource(R.string.appearance_title))
                         Text(
-                            "Choose your preferred look",
+                            stringResource(R.string.appearance_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onNavigateBack()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -83,7 +92,7 @@ fun AppearanceScreen(
                 .fillMaxSize()
                 .padding(top = scaffoldPadding.calculateTopPadding()),
             contentPadding = PaddingValues(
-                bottom = navBarPadding.calculateBottomPadding(),
+                bottom = navBarPadding.calculateBottomPadding() + 8.dp,
                 start = MaterialTheme.spacing.m + scaffoldPadding.calculateStartPadding(layoutDirection),
                 end = MaterialTheme.spacing.m + scaffoldPadding.calculateEndPadding(layoutDirection)
             ),

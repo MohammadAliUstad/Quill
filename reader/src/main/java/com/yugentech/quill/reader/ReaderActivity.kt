@@ -2,6 +2,7 @@ package com.yugentech.quill.reader
 
 import android.content.Context
 import android.content.Intent
+import com.yugentech.theme.locale.LocaleContext
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -30,6 +31,11 @@ class ReaderActivity : AppCompatActivity() {
     private val themeRepository: ThemeRepository by inject()
     private val hapticsEnabledFlow: Flow<Boolean> by inject(named("hapticsEnabled"))
     private lateinit var insetsController: WindowInsetsControllerCompat
+
+    // Below Android 13, the language picked in the app; from 13 the system applies it
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleContext.wrap(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,6 +74,13 @@ class ReaderActivity : AppCompatActivity() {
                 )
             }
         }
+    }
+
+    // Every way out (the back arrow, the system back) ends here. Stop the sound now: waiting for
+    // the view model to be cleared lets it play on through the exit animation
+    override fun finish() {
+        viewModel.stopSoundOnExit()
+        super.finish()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {

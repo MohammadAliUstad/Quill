@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.tabs.moreScreen.components.dialogs
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -24,6 +26,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun AlarmPermissionDialog(
@@ -31,11 +35,12 @@ fun AlarmPermissionDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
         modifier = Modifier.fillMaxWidth(0.84f),
-        title = { Text(text = "Permission Required") },
+        title = { Text(text = stringResource(R.string.alarm_permission_title)) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m),
@@ -47,7 +52,7 @@ fun AlarmPermissionDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Alarms & Reminders",
+                        text = stringResource(R.string.alarm_permission_name),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -60,7 +65,7 @@ fun AlarmPermissionDialog(
                 }
 
                 Text(
-                    text = "To ensure your reading reminder rings at the exact time you set, please allow this permission in the next screen.",
+                    text = stringResource(R.string.alarm_permission_body),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -70,6 +75,7 @@ fun AlarmPermissionDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                     onConfirm()
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -90,11 +96,14 @@ fun AlarmPermissionDialog(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
-            ) { Text(text = "Go to Settings") }
+            ) { Text(text = stringResource(R.string.go_to_settings)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = "Cancel")
+            TextButton(onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                onDismiss()
+            }) {
+                Text(text = stringResource(R.string.cancel))
             }
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainer,

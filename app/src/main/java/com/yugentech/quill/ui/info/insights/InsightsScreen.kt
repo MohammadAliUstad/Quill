@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.info.insights
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,20 +56,25 @@ import com.yugentech.quill.ui.info.insights.components.TopAuthorsCard
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InsightsScreen(
     uiState: InsightsUiState,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    // Off for a guest: Aira needs an account, so there's nothing to show
+    showAira: Boolean = true
 ) {
+    val haptic = LocalHapticFeedback.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    val totalTimeFormatted = remember(uiState.totalReadingTimeMillis) {
+    val totalTimeFormatted = run {
         val totalMinutes = (uiState.totalReadingTimeMillis / (1000 * 60)).toInt()
         val hours = totalMinutes / 60
         val mins = totalMinutes % 60
-        if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
+        if (hours > 0) stringResource(R.string.duration_hours_minutes, hours, mins) else stringResource(R.string.duration_minutes, mins)
     }
 
     val layoutDirection = LocalLayoutDirection.current
@@ -80,17 +87,20 @@ fun InsightsScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Insights")
+                        Text(stringResource(R.string.profile_insights))
                         Text(
-                            "Your reading habits",
+                            stringResource(R.string.insights_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onBack()
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -110,7 +120,7 @@ fun InsightsScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
                         top = MaterialTheme.spacing.s,
-                        bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                        bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 8.dp,
                         start = MaterialTheme.spacing.m + paddingValues.calculateStartPadding(layoutDirection),
                         end = MaterialTheme.spacing.m + paddingValues.calculateEndPadding(layoutDirection)
                     ),
@@ -202,15 +212,15 @@ fun InsightsScreen(
                         ) {
                             Column(Modifier.padding(MaterialTheme.spacing.m)) {
                                 InsightSectionHeader(
-                                    title = "Your Library",
-                                    subtitle = "Progress across your books"
+                                    title = stringResource(R.string.insights_library_title),
+                                    subtitle = stringResource(R.string.insights_library_subtitle)
                                 )
                                 Spacer(Modifier.height(MaterialTheme.spacing.m))
                                 val totalBooks = uiState.progressBrackets.notStarted +
                                         uiState.progressBrackets.inProgress +
                                         uiState.progressBrackets.finished
                                 if (totalBooks == 0) {
-                                    EmptyDistributionPlaceholder("Add books to see your library breakdown")
+                                    EmptyDistributionPlaceholder(stringResource(R.string.insights_library_empty))
                                 } else {
                                     ProgressBracketsCard(progressBrackets = uiState.progressBrackets)
                                 }
@@ -228,12 +238,12 @@ fun InsightsScreen(
                         ) {
                             Column(Modifier.padding(MaterialTheme.spacing.m)) {
                                 InsightSectionHeader(
-                                    title = "Authors You Read",
-                                    subtitle = "Writers you keep coming back to"
+                                    title = stringResource(R.string.insights_authors_title),
+                                    subtitle = stringResource(R.string.insights_authors_subtitle)
                                 )
                                 Spacer(Modifier.height(MaterialTheme.spacing.m))
                                 if (uiState.topAuthors.isEmpty()) {
-                                    EmptyDistributionPlaceholder("Add books to see your top authors")
+                                    EmptyDistributionPlaceholder(stringResource(R.string.insights_authors_empty))
                                 } else {
                                     TopAuthorsCard(topAuthors = uiState.topAuthors)
                                 }
@@ -241,7 +251,7 @@ fun InsightsScreen(
                         }
                     }
 
-                    item {
+                    if (showAira) item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = sectionShape,
@@ -251,8 +261,8 @@ fun InsightsScreen(
                         ) {
                             Column(Modifier.padding(MaterialTheme.spacing.m)) {
                                 InsightSectionHeader(
-                                    title = "With Aira",
-                                    subtitle = "Your reading assistant activity"
+                                    title = stringResource(R.string.insights_aira_title),
+                                    subtitle = stringResource(R.string.insights_aira_subtitle)
                                 )
                                 Spacer(Modifier.height(MaterialTheme.spacing.m))
                                 AiraEngagementCard(

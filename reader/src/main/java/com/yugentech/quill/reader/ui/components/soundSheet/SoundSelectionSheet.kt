@@ -1,6 +1,7 @@
 package com.yugentech.quill.reader.ui.components.soundSheet
 
 import androidx.compose.animation.core.Spring
+import com.yugentech.theme.SheetTheme
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -53,6 +54,8 @@ import com.yugentech.quill.reader.sound.model.BackgroundSound
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.SettingsSwitchItem
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -73,102 +76,104 @@ fun SoundSelectionSheet(
     )
 
     val options = listOf(
-        SoundOption("Forest", BackgroundSound.FOREST, Icons.Rounded.Forest),
-        SoundOption("Rain", BackgroundSound.RAIN, Icons.Rounded.WaterDrop),
-        SoundOption("Brown Noise", BackgroundSound.BROWN_NOISE, Icons.Rounded.BlurOn),
-        SoundOption("Fireplace", BackgroundSound.FIREPLACE, Icons.Rounded.LocalFireDepartment),
-        SoundOption("Library", BackgroundSound.LIBRARY, Icons.AutoMirrored.Rounded.LibraryBooks),
-        SoundOption("Riverside", BackgroundSound.RIVERSIDE, Icons.Rounded.Water)
+        SoundOption(stringResource(R.string.reader_sound_forest), BackgroundSound.FOREST, Icons.Rounded.Forest),
+        SoundOption(stringResource(R.string.reader_sound_rain), BackgroundSound.RAIN, Icons.Rounded.WaterDrop),
+        SoundOption(stringResource(R.string.reader_sound_brown_noise), BackgroundSound.BROWN_NOISE, Icons.Rounded.BlurOn),
+        SoundOption(stringResource(R.string.reader_sound_fireplace), BackgroundSound.FIREPLACE, Icons.Rounded.LocalFireDepartment),
+        SoundOption(stringResource(R.string.reader_sound_library), BackgroundSound.LIBRARY, Icons.AutoMirrored.Rounded.LibraryBooks),
+        SoundOption(stringResource(R.string.reader_sound_riverside), BackgroundSound.RIVERSIDE, Icons.Rounded.Water)
     )
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
-        dragHandle = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {}
-                    )
-                    .padding(vertical = 22.dp),
-                contentAlignment = Alignment.Center
-            ) {
+    SheetTheme {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
+            dragHandle = {
                 Box(
                     modifier = Modifier
-                        .size(width = 32.dp, height = 6.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            shape = CircleShape
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {}
                         )
-                )
-            }
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, bottom = 40.dp)
-        ) {
-            Column {
-                Text(
-                    text = "Ambient Sounds",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Choose a soothing ambience to stay immersed in your reads.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            SettingsSwitchItem(
-                title = "Turn On Sounds",
-                subtitle = "Enable to preview and pick a sound below",
-                checked = isSoundOn,
-                checkedIcon = Icons.Rounded.MusicNote,
-                onCheckedChange = onSoundEnabledChange
-            )
-
-            SettingsSwitchItem(
-                title = "Auto-play on Open",
-                subtitle = "Start sound automatically when opening a book",
-                checked = autoPlayEnabled,
-                checkedIcon = Icons.Rounded.PlayArrow,
-                enabled = isSoundOn,
-                onCheckedChange = onAutoPlayChange
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Sounds are only pickable while ambient sound is on; while it's off the grid stays
-            // visible (dimmed) so the user can still see which sound will play when they turn it on.
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
-            ) {
-                options.chunked(2).forEach { rowOptions ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
-                    ) {
-                        rowOptions.forEach { option ->
-                            SoundToggleCard(
-                                option = option,
-                                isSelected = selectedSound == option.sound,
-                                enabled = isSoundOn,
-                                onClick = { onSoundToggle(option.sound) },
-                                modifier = Modifier.weight(1f)
+                        .padding(vertical = 22.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 32.dp, height = 6.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                shape = CircleShape
                             )
+                    )
+                }
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp, bottom = 40.dp)
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.reader_ambient_sounds),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.reader_ambient_sounds_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                SettingsSwitchItem(
+                    title = stringResource(R.string.reader_sounds_on),
+                    subtitle = stringResource(R.string.reader_sounds_on_subtitle),
+                    checked = isSoundOn,
+                    checkedIcon = Icons.Rounded.MusicNote,
+                    onCheckedChange = onSoundEnabledChange
+                )
+
+                SettingsSwitchItem(
+                    title = stringResource(R.string.reader_sounds_autoplay),
+                    subtitle = stringResource(R.string.reader_sounds_autoplay_subtitle),
+                    checked = autoPlayEnabled,
+                    checkedIcon = Icons.Rounded.PlayArrow,
+                    enabled = isSoundOn,
+                    onCheckedChange = onAutoPlayChange
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Sounds are only pickable while ambient sound is on; while it's off the grid stays
+                // visible (dimmed) so the user can still see which sound will play when they turn it on.
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+                ) {
+                    options.chunked(2).forEach { rowOptions ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+                        ) {
+                            rowOptions.forEach { option ->
+                                SoundToggleCard(
+                                    option = option,
+                                    isSelected = selectedSound == option.sound,
+                                    enabled = isSoundOn,
+                                    onClick = { onSoundToggle(option.sound) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                     }
                 }

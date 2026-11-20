@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import com.yugentech.quill.R
+import com.yugentech.quill.localization.AppStrings
 
 class InsightsRepositoryImpl(
     private val bookDao: BookDao,
@@ -37,7 +39,7 @@ class InsightsRepositoryImpl(
         airaMessageDao.getQuestionsPerBookFlow()
 
     override suspend fun getBookTitle(bookId: String): String {
-        return bookDao.getBookEntity(bookId)?.title ?: "Unknown Book"
+        return bookDao.getBookEntity(bookId)?.title ?: AppStrings.get(R.string.unknown_book)
     }
 
     private fun calculateStreak(sessions: List<ReadingSessionEntity>): Int {

@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.about.about.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +42,8 @@ import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun DonationDialog(
@@ -48,6 +52,7 @@ fun DonationDialog(
     onLunchClick: () -> Unit,
     onWebClick: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -95,14 +100,14 @@ fun DonationDialog(
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
                     ) {
                         Text(
-                            text = "Fuel the Development",
+                            text = stringResource(R.string.donate_title),
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center
                         )
 
                         Text(
-                            text = "Quill is free and open source. If you enjoy the reads, consider supporting the journey!",
+                            text = stringResource(R.string.donate_body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -115,27 +120,30 @@ fun DonationDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     PaymentOptionButton(
-                        text = "Buy me a Coffee",
+                        text = stringResource(R.string.donate_coffee),
                         icon = Icons.Default.Coffee,
                         onClick = onCoffeeClick
                     )
 
                     PaymentOptionButton(
-                        text = "Buy me Lunch",
+                        text = stringResource(R.string.donate_lunch),
                         icon = Icons.Default.ShoppingBag,
                         onClick = onLunchClick
                     )
 
                     PaymentOptionButton(
-                        text = "Ko-fi (PayPal / International)",
+                        text = stringResource(R.string.donate_kofi),
                         icon = Icons.Default.Public,
                         onClick = onWebClick
                     )
                 }
 
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                    onDismiss()
+                }) {
                     Text(
-                        text = "Maybe Later",
+                        text = stringResource(R.string.maybe_later),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -150,8 +158,12 @@ private fun PaymentOptionButton(
     icon: ImageVector,
     onClick: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     FilledTonalButton(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            onClick()
+        },
         modifier = Modifier
             .fillMaxWidth()
             .height(MaterialTheme.components.buttonLarge),

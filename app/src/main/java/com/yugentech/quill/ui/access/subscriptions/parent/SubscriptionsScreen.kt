@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.access.subscriptions.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.app.Activity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -36,25 +38,55 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Info
+import com.yugentech.quill.billing.viewmodel.RestoreResult
 import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
+import com.yugentech.quill.ui.main.components.QuillDialog
 import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.ui.access.subscriptions.components.SubscribeBottomBar
 import com.yugentech.quill.ui.access.subscriptions.components.SubscribedContent
 import com.yugentech.quill.ui.access.subscriptions.components.UnsubscribedContent
+import androidx.annotation.StringRes
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.localization.AppStrings
+
+/** Why Restore didn't bring Pro back. Only an OK button: there's nothing to choose. */
+@Composable
+private fun RestoreResultDialog(result: RestoreResult, onDismiss: () -> Unit) {
+    val notFound = result == RestoreResult.NotFound
+    QuillDialog(
+        icon = if (notFound) Icons.Outlined.Info else Icons.Outlined.ErrorOutline,
+        title = stringResource(if (notFound) R.string.restore_not_found_title else R.string.restore_failed_title),
+        message = stringResource(
+            when (result) {
+                RestoreResult.NotFound -> R.string.restore_not_found_message
+                RestoreResult.ConnectionFailed -> R.string.billing_connect_failed
+                RestoreResult.NeedsAccount -> R.string.guest_subscribe_needs_account
+                RestoreResult.NotSignedIn -> R.string.billing_login_restore
+            }
+        ),
+        primaryLabel = stringResource(R.string.ok),
+        onPrimary = onDismiss,
+        onDismiss = onDismiss
+    )
+}
 
 data class PlanOption(
     val basePlanId: String,
-    val label: String,
+    @param:StringRes val label: Int,
     val tag: String? = null
 )
 
 val planOptions = listOf(
-    PlanOption("monthly-base", "Monthly"),
-    PlanOption("yearly-base", "Yearly")
+    PlanOption("monthly-base", R.string.plan_monthly),
+    PlanOption("yearly-base", R.string.plan_yearly)
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -63,12 +95,14 @@ fun SubscriptionsScreen(
     onBack: () -> Unit,
     subscriptionViewModel: SubscriptionViewModel
 ) {
+    val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val activity = context as? Activity
 
     val isPro by subscriptionViewModel.isPro.collectAsStateWithLifecycle()
     val subProducts by subscriptionViewModel.subProducts.collectAsStateWithLifecycle()
     val isRestoring by subscriptionViewModel.isRestoring.collectAsStateWithLifecycle()
+    val restoreResult by subscriptionViewModel.restoreResult.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -77,12 +111,17 @@ fun SubscriptionsScreen(
     LaunchedEffect(Unit) {
         subscriptionViewModel.events.collect { event ->
             val message = when (event) {
-                is BillingEvent.NoSubscriptionFound -> "No active subscription found."
+                is BillingEvent.PurchasePending -> AppStrings.get(R.string.billing_payment_pending)
                 is BillingEvent.Error -> event.message
                 else -> null
             }
             message?.let { snackbarHostState.showSnackbar(it) }
         }
+    }
+
+    // How a restore ended, in a dialog rather than a passing snackbar
+    restoreResult?.let { result ->
+        RestoreResultDialog(result = result, onDismiss = subscriptionViewModel::dismissRestoreResult)
     }
 
     Scaffold(
@@ -120,36 +159,48 @@ fun SubscriptionsScreen(
                 TopAppBar(
                     title = {
                         Column {
-                            Text(text = "Subscription")
+                            Text(text = stringResource(R.string.subscription))
                             Text(
-                                text = "Premium Purchased",
+                                text = stringResource(R.string.premium_purchased),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onBack()
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     },
-                    scrollBehavior = scrollBehavior
+                    // A fixed bar on a full screen: no scroll behaviour (the one shared with the
+                    // large bar could leave it collapsed and tinted) and no fill of its own, so
+                    // the screen's background runs straight up under the status bar
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent
+                    )
                 )
             } else {
                 LargeTopAppBar(
                     title = {
                         Column {
-                            Text(text = "Quill Pro")
+                            Text(text = stringResource(R.string.quill_pro))
                             Text(
-                                text = "Ask Aira without limits",
+                                text = stringResource(R.string.subscription_subtitle),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onBack()
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     },
                     scrollBehavior = scrollBehavior

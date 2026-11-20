@@ -12,16 +12,14 @@ data class UserEntity(
     val userId: String,
     val name: String?,
     val email: String?,
-    val avatarId: Int?,
-    val isPro: Boolean
+    val avatarId: Int?
 ) {
     fun toUserData(): UserData {
         return UserData(
             userId = userId,
             name = name,
             email = email,
-            avatarId = avatarId,
-            isPro = isPro
+            avatarId = avatarId
         )
     }
 
@@ -31,8 +29,7 @@ data class UserEntity(
                 userId = userData.userId,
                 name = userData.name,
                 email = userData.email,
-                avatarId = userData.avatarId,
-                isPro = userData.isPro
+                avatarId = userData.avatarId
             )
         }
     }

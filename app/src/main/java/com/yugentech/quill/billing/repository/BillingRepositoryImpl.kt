@@ -19,15 +19,15 @@ class BillingRepositoryImpl(
 
     override fun startConnection() = service.connect()
 
-    override fun setUserId(userId: String?) {
-        service.setCurrentUser(userId)
-    }
+    override fun setUserId(userId: String?) = service.setCurrentUser(userId)
 
     override fun launchSubscriptionFlow(activity: Activity, basePlanId: String, userId: String) =
         service.launchSubscriptionFlow(activity, basePlanId, userId)
 
     override fun launchTipFlow(activity: Activity, productId: String) =
         service.launchTipFlow(activity, productId)
+
+    override suspend fun refreshPurchases(): Boolean? = service.refreshPurchases()
 
     override suspend fun restorePurchases(userId: String): Boolean? =
         service.restorePurchases(userId)

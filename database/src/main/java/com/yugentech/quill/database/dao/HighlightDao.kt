@@ -37,4 +37,15 @@ interface HighlightDao {
     
     @Query("DELETE FROM highlights WHERE bookId = :bookId")
     suspend fun deleteAllHighlightsForBook(bookId: String)
+
+    // A one-off read of every highlight, for writing a guest's backup file
+    @Query("SELECT * FROM highlights")
+    suspend fun getAllHighlightsOnce(): List<HighlightEntity>
+
+    // Which of these highlight IDs are already on this phone, so an import skips them
+    @Query("SELECT id FROM highlights WHERE id IN (:highlightIds)")
+    suspend fun getExistingIds(highlightIds: List<String>): List<String>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertHighlights(highlights: List<HighlightEntity>)
 }

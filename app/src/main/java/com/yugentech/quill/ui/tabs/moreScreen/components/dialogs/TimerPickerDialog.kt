@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.tabs.moreScreen.components.dialogs
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +29,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
 import java.util.Calendar
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +40,7 @@ fun TimerPickerDialog(
     onTimeSelected: (hour: Int, minute: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val timePickerState = rememberTimePickerState(
         initialHour = initialHour,
         initialMinute = initialMinute,
@@ -63,7 +68,7 @@ fun TimerPickerDialog(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
             ) {
                 Text(
-                    text = "Select Reminder Time",
+                    text = stringResource(R.string.reminder_time_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -87,9 +92,12 @@ fun TimerPickerDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismiss) {
+                    TextButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                        onDismiss()
+                    }) {
                         Text(
-                            text = "Cancel",
+                            text = stringResource(R.string.cancel),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -100,7 +108,7 @@ fun TimerPickerDialog(
                         }
                     ) {
                         Text(
-                            text = "Set Time",
+                            text = stringResource(R.string.reminder_set_time),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold
                         )

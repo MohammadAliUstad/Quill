@@ -19,6 +19,8 @@ import com.yugentech.quill.ui.access.signIn.components.AuthSwitchLink
 import com.yugentech.quill.ui.access.signIn.components.forms.SignUpForm
 import com.yugentech.quill.ui.main.components.ToastMessage
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 /** Begin your story, under a pile of first books building up: laid out as Sessions' sign-up. */
 @Composable
@@ -32,9 +34,9 @@ fun SignUpScreen(
 
     AuthScaffold(
         header = { StackingBooks() },
-        formTitle = "Sign up",
-        title = "Begin your story",
-        subtitle = "Once upon a time, a first book… Experience the best of e-reading.",
+        formTitle = stringResource(R.string.sign_up_form_title),
+        title = stringResource(R.string.sign_up_title),
+        subtitle = stringResource(R.string.sign_up_subtitle),
         overlay = {
             Box(modifier = Modifier.fillMaxSize()) {
                 ToastMessage(
@@ -59,8 +61,8 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.s))
 
         AuthSwitchLink(
-            prompt = "Already reading with us?",
-            action = "Sign in",
+            prompt = stringResource(R.string.sign_up_prompt),
+            action = stringResource(R.string.auth_sign_in),
             onClick = onNavigateToSignIn
         )
     }

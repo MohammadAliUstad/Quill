@@ -11,7 +11,8 @@ interface BookIndexingStateDao {
     @Query("SELECT * FROM book_indexing_state WHERE bookId = :bookId LIMIT 1")
     suspend fun getState(bookId: String): BookIndexingStateEntity?
 
-    @Query("SELECT COALESCE(isComplete, 0) FROM book_indexing_state WHERE bookId = :bookId")
+    // Always one row, so a book with no indexing state yet reads as false rather than nothing
+    @Query("SELECT EXISTS(SELECT 1 FROM book_indexing_state WHERE bookId = :bookId AND isComplete = 1)")
     fun observeIsComplete(bookId: String): Flow<Boolean>
 
     @Upsert

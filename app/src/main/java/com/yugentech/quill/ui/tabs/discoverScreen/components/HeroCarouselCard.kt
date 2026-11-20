@@ -37,10 +37,10 @@ fun HeroCarouselCard(
         animationSpec = tween(600),
         label = "heroImageAlpha"
     )
-    val shimmerAlpha by animateFloatAsState(
+    val placeholderAlpha by animateFloatAsState(
         targetValue = if (isLoaded) 0f else 1f,
         animationSpec = tween(600),
-        label = "heroShimmerAlpha"
+        label = "heroPlaceholderAlpha"
     )
 
     val coverShape = RoundedCornerShape(12.dp)
@@ -51,12 +51,12 @@ fun HeroCarouselCard(
             .aspectRatio(2f / 3f)
             .clip(coverShape)
     ) {
-        // Shimmer placeholder — visible until image loads
+        // Pulsing placeholder — visible until image loads
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .alpha(shimmerAlpha)
-                .shimmerEffect()
+                .alpha(placeholderAlpha)
+                .loadingPulse()
         )
 
         // Actual image — fades in on top

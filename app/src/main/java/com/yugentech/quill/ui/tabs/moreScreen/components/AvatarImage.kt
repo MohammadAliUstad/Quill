@@ -15,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yugentech.theme.tokens.components
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun AvatarImage(
@@ -38,7 +39,7 @@ fun AvatarImage(
     ) {
         Image(
             painter = painterResource(id = avatar.drawableRes),
-            contentDescription = contentDescription ?: avatar.name,
+            contentDescription = contentDescription ?: stringResource(avatar.name),
             modifier = Modifier
                 .requiredSize(imageSize)
                 .offset(y = imageOffsetY)
@@ -60,7 +61,7 @@ fun AvatarPortrait(
 
     Image(
         painter = painterResource(id = avatar.drawableRes),
-        contentDescription = contentDescription ?: avatar.name,
+        contentDescription = contentDescription ?: stringResource(avatar.name),
         modifier = modifier.size(size)
     )
 }

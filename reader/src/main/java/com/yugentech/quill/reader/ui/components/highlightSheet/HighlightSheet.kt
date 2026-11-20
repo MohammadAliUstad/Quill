@@ -1,6 +1,9 @@
 package com.yugentech.quill.reader.ui.components.highlightSheet
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedVisibility
+import com.yugentech.theme.SheetTheme
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -46,6 +49,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import kotlin.math.pow
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +59,7 @@ fun HighlightSheet(
     onDismiss: () -> Unit,
     onSave: (colorInt: Int) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val cornerRadius by animateDpAsState(
         targetValue = if (sheetState.targetValue == SheetValue.Expanded) 0.dp else 28.dp,
         label = "annotateSheetCornerRadius"
@@ -74,94 +80,109 @@ fun HighlightSheet(
         defaultColors.find { it.toArgb() == selectedColorInt } ?: defaultColors[0]
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        dragHandle = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {}
-                    )
-                    .padding(vertical = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
+    SheetTheme {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            dragHandle = {
                 Box(
                     modifier = Modifier
-                        .size(width = 32.dp, height = 4.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                            shape = CircleShape
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {}
                         )
-                )
-            }
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 36.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            Text(
-                text = "Highlight",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
-            ) {
-                Text(
-                    text = buildAnnotatedString {
-                        append("The sky above the port was ")
-                        withStyle(SpanStyle(background = selectedColor.copy(alpha = 0.5f))) {
-                            append("the color of television")
-                        }
-                        append(", tuned to a dead channel.")
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            Text(
-                text = "Choose a color",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                defaultColors.forEach { color ->
-                    HighlightColorSwatch(
-                        color = color,
-                        isSelected = selectedColorInt == color.toArgb(),
-                        onClick = { selectedColorInt = color.toArgb() }
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 32.dp, height = 4.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                                shape = CircleShape
+                            )
                     )
                 }
             }
-
-            Button(
-                onClick = { onSave(selectedColorInt) },
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 36.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                Text("Save Highlight")
+                Text(
+                    text = stringResource(R.string.reader_highlight),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
+                ) {
+                    Text(
+                        text = buildAnnotatedString {
+                            append("The sky above the port was ")
+                            withStyle(SpanStyle(background = selectedColor.copy(alpha = 0.5f))) {
+                                append("the color of television")
+                            }
+                            append(", tuned to a dead channel.")
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Text(
+                    text = stringResource(R.string.reader_choose_color),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    defaultColors.forEach { color ->
+                        HighlightColorSwatch(
+                            color = color,
+                            isSelected = selectedColorInt == color.toArgb(),
+                            onClick = {
+                                if (selectedColorInt != color.toArgb()) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                }
+                                selectedColorInt = color.toArgb()
+                            }
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        onSave(selectedColorInt)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.reader_save_highlight),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }
@@ -210,7 +231,7 @@ private fun HighlightColorSwatch(
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Selected",
+                    contentDescription = stringResource(R.string.reader_selected),
                     tint = if (color.luminance() > 0.5f) Color.Black.copy(alpha = 0.6f) else Color.White,
                     modifier = Modifier.size(20.dp)
                 )

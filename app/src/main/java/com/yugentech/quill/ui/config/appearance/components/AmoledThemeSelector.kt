@@ -51,6 +51,8 @@ import kotlin.math.PI
 import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.sin
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 private val TAU = (2 * PI).toFloat()
 private const val STARS = 26
@@ -139,12 +141,12 @@ fun AmoledThemeSelector(
                     .graphicsLayer { alpha = contentAlpha }
             ) {
                 Text(
-                    text = "AMOLED Black",
+                    text = stringResource(R.string.amoled_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = scheme.onSurface
                 )
                 Text(
-                    text = if (isDarkThemeActive) "Pure black background" else "Available in dark mode",
+                    text = if (isDarkThemeActive) stringResource(R.string.amoled_subtitle) else stringResource(R.string.amoled_unavailable),
                     style = MaterialTheme.typography.bodyMedium,
                     color = scheme.onSurfaceVariant
                 )

@@ -17,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 
 @Composable
 fun AiraEngagementCard(
@@ -41,14 +44,14 @@ fun AiraEngagementCard(
             )
             Column {
                 Text(
-                    text = if (totalQuestionsAsked == 0) "No questions yet"
-                           else "$totalQuestionsAsked ${if (totalQuestionsAsked == 1) "question" else "questions"} asked",
+                    text = if (totalQuestionsAsked == 0) stringResource(R.string.no_questions_yet)
+                           else pluralStringResource(R.plurals.questions_asked, totalQuestionsAsked, totalQuestionsAsked),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Total conversations with Aira",
+                    text = stringResource(R.string.total_conversations),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -75,7 +78,7 @@ fun AiraEngagementCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Most explored with Aira",
+                        text = stringResource(R.string.most_explored),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

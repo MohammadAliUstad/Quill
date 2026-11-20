@@ -15,7 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.billingclient.api.ProductDetails
+import com.yugentech.quill.billing.model.recurringPrice
 import com.yugentech.quill.ui.access.subscriptions.parent.PlanOption
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun PriceCard(
@@ -24,12 +27,8 @@ fun PriceCard(
 ) {
     val product = subProducts.firstOrNull()
     val formattedPrice = remember(product, selectedPlan.basePlanId) {
-        product?.subscriptionOfferDetails
-            ?.firstOrNull { it.basePlanId == selectedPlan.basePlanId }
-            ?.pricingPhases
-            ?.pricingPhaseList
-            ?.firstOrNull()
-            ?.formattedPrice
+        // The renewal price, not a trial's or an introductory one
+        product?.recurringPrice(selectedPlan.basePlanId)
     }
 
     Card(
@@ -54,7 +53,7 @@ fun PriceCard(
 
             Text(
                 text = if (selectedPlan.basePlanId == "monthly-base")
-                    "billed monthly" else "billed annually",
+                    stringResource(R.string.billed_monthly) else stringResource(R.string.billed_annually),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
             )

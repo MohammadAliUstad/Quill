@@ -1,112 +1,131 @@
 package com.yugentech.quill.ui.about.attributions.components
 
-import android.content.Intent
+import com.yugentech.quill.R
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.core.net.toUri
-import com.yugentech.theme.tokens.AppConstants.PABLO_STANLEY_URL
-import com.yugentech.theme.tokens.components
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.unit.dp
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.theme.tokens.AppConstants.PABLO_STANLEY_URL
 
 @Composable
-fun DesignCreditCard() {
-    val context = LocalContext.current
-
+fun DesignCreditCard(modifier: Modifier = Modifier) {
     Card(
         shape = RoundedCornerShape(MaterialTheme.corners.extraLarge),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         ),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = MaterialTheme.spacing.s)
     ) {
-        Column(
+        // Bueno stands on the card's bottom edge on the leading side: the drawable is trimmed so
+        // the lowest point of the art is its bottom, and nothing pads it there. The text keeps its own
+        // column beside it, so the art never sits behind any of it. Its own black and white
+        // reads on the card in light and dark.
+        // Fills the card when the carousel stretches it to the taller card, so Bueno stays
+        // on the bottom edge
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(MaterialTheme.spacing.l),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
+                .fillMaxHeight(),
+            verticalAlignment = Alignment.Bottom
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(MaterialTheme.components.imageSizeSmall)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Brush,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondary
-                        )
-                    }
-                }
+            Image(
+                painter = painterResource(R.drawable.illustration_bueno),
+                contentDescription = null,
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .padding(start = MaterialTheme.spacing.l, top = MaterialTheme.spacing.l)
+                    .width(IllustrationWidth)
+            )
 
-                Spacer(Modifier.width(MaterialTheme.spacing.m))
-
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(
+                        start = MaterialTheme.spacing.m,
+                        top = MaterialTheme.spacing.l,
+                        end = MaterialTheme.spacing.l,
+                        bottom = MaterialTheme.spacing.xl
+                    ),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.l)
+            ) {
                 Column {
                     Text(
-                        "Design & Illustrations",
+                        stringResource(R.string.credit_design_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                     Text(
-                        "Artwork by Pablo Stanley",
+                        stringResource(R.string.credit_design_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
                     )
+                    // His name on its own line, larger, as a link to his site
+                    val artist = stringResource(R.string.credit_design_artist)
+                    val linkColor = MaterialTheme.colorScheme.secondary
+                    Text(
+                        text = buildAnnotatedString {
+                            withLink(
+                                LinkAnnotation.Url(
+                                    url = PABLO_STANLEY_URL,
+                                    styles = TextLinkStyles(
+                                        style = SpanStyle(
+                                            color = linkColor,
+                                            textDecoration = TextDecoration.Underline
+                                        ),
+                                        pressedStyle = SpanStyle(
+                                            color = linkColor.copy(alpha = 0.6f),
+                                            textDecoration = TextDecoration.Underline
+                                        )
+                                    )
+                                )
+                            ) { append(artist) }
+                        },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = MaterialTheme.spacing.xs)
+                    )
                 }
-            }
 
-            Text(
-                "The beautiful illustrations and doodles used throughout Quill are created by Pablo Stanley. Big thanks for his amazing contributions to the open design community!",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
-                minLines = 4,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            FilledTonalButton(
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, PABLO_STANLEY_URL.toUri())
-                    context.startActivity(intent)
-                },
-                modifier = Modifier.align(Alignment.End),
-                shape = RoundedCornerShape(MaterialTheme.corners.medium),
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                Text(
+                    stringResource(R.string.credit_design_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                    minLines = 4,
+                    overflow = TextOverflow.Ellipsis
                 )
-            ) {
-                Text("Visit Portfolio")
             }
         }
     }
 }
+
+/** Bueno's width beside the text; its height follows from the art (about 1.35 times as tall). */
+private val IllustrationWidth = 144.dp

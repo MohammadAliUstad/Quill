@@ -1,7 +1,5 @@
 package com.yugentech.quill.ui.about.aira.components
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.yugentech.quill.R
 import com.yugentech.theme.WindSongFont
 import kotlinx.coroutines.delay
+import androidx.compose.ui.res.stringResource
 
 private val airaImages = listOf(
     R.drawable.psmile_calm,
@@ -84,19 +83,14 @@ fun HeroSection() {
                     .background(primaryContainer.copy(alpha = 0.55f)),
                 contentAlignment = Alignment.BottomCenter
             ) {
-                Crossfade(
-                    targetState = currentImage,
-                    animationSpec = tween(durationMillis = 400),
-                    label = "aira-avatar"
-                ) { imageRes ->
-                    Image(
-                        painter = painterResource(imageRes),
-                        contentDescription = "Aira",
-                        modifier = Modifier
-                            .requiredSize(176.dp)
-                            .offset(x = (-1).dp, y = 18.dp)
-                    )
-                }
+                // Swaps straight to the next expression, with no transition between them
+                Image(
+                    painter = painterResource(currentImage),
+                    contentDescription = "Aira",
+                    modifier = Modifier
+                        .requiredSize(176.dp)
+                        .offset(x = (-1).dp, y = 18.dp)
+                )
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -113,7 +107,7 @@ fun HeroSection() {
                     color = MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Text(
-                        text = "Your AI Reading Assistant",
+                        text = stringResource(R.string.aira_hero_tagline),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,

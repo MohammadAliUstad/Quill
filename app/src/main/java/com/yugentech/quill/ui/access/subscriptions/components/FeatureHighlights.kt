@@ -21,43 +21,45 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun FeatureHighlights() {
     val features = listOf(
         FeatureItem(
-            title = "Smart Chapter Summaries",
-            description = "Get instant recaps of any chapter to keep the plot fresh in your mind.",
+            title = stringResource(R.string.feature_summaries_title),
+            description = stringResource(R.string.feature_summaries_body),
             icon = Icons.Default.Description
         ),
         FeatureItem(
-            title = "Character & Identity Tracking",
-            description = "Identify who's speaking and understand the significance of every character.",
+            title = stringResource(R.string.feature_characters_title),
+            description = stringResource(R.string.feature_characters_body),
             icon = Icons.Default.Psychology
         ),
         FeatureItem(
-            title = "Reading & Linguistic Aid",
-            description = "Simplify difficult passages and get instant definitions for unfamiliar words.",
+            title = stringResource(R.string.feature_language_title),
+            description = stringResource(R.string.feature_language_body),
             icon = Icons.Default.Translate
         ),
         FeatureItem(
-            title = "Interactive Story Chat",
-            description = "Ask Aira anything about the book's themes, plot, or narrative significance.",
+            title = stringResource(R.string.feature_chat_title),
+            description = stringResource(R.string.feature_chat_body),
             icon = Icons.Default.ChatBubbleOutline
         ),
         FeatureItem(
-            title = "Visualize Scenes",
-            description = "Turn any passage into a painted illustration and revisit it anytime in your Visuals gallery. Each image uses 3 queries.",
+            title = stringResource(R.string.feature_visualize_title),
+            description = stringResource(R.string.feature_visualize_body),
             icon = Icons.Default.Brush
         ),
         FeatureItem(
-            title = "Active Spoiler Protection",
-            description = "Aira's knowledge is locked to your progress, preventing accidental spoilers.",
+            title = stringResource(R.string.feature_spoilers_title),
+            description = stringResource(R.string.feature_spoilers_body),
             icon = Icons.Default.Lock
         ),
         FeatureItem(
-            title = "AI Can Make Mistakes",
-            description = "Aira is an AI, so answers may not always be accurate.",
+            title = stringResource(R.string.feature_mistakes_title),
+            description = stringResource(R.string.feature_mistakes_body),
             icon = Icons.Default.Info
         )
     )

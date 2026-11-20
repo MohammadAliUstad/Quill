@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.info.storage.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +31,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.model.BookStorageBreakdown
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 // Compact text-only row: title and author on the left, size and delete on the right.
 @Composable
@@ -39,6 +43,7 @@ fun BookStorageItem(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = shape,
@@ -91,7 +96,10 @@ fun BookStorageItem(
             Spacer(modifier = Modifier.width(8.dp))
 
             IconButton(
-                onClick = onDeleteClick,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                    onDeleteClick()
+                },
                 modifier = Modifier.size(40.dp),
                 colors = IconButtonDefaults.iconButtonColors(
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -100,7 +108,7 @@ fun BookStorageItem(
             ) {
                 Icon(
                     Icons.Filled.Delete,
-                    contentDescription = "Delete File",
+                    contentDescription = stringResource(R.string.delete_file),
                     modifier = Modifier.size(20.dp)
                 )
             }

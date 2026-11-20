@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.tabs.libraryScreen.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,6 +27,8 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.view.LibraryBookView
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 private const val MAX_ROW_BOOKS = 8
 
@@ -35,6 +39,7 @@ fun BookRow(
     onBookClick: (LibraryBookView) -> Unit,
     onSeeAllClick: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     if (books.isEmpty()) return
 
     val displayedBooks = remember(books) { books.take(MAX_ROW_BOOKS) }
@@ -82,8 +87,11 @@ fun BookRow(
                 fontWeight = FontWeight.Bold
             )
             if (hasMore) {
-                TextButton(onClick = onSeeAllClick) {
-                    Text("See all")
+                TextButton(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                    onSeeAllClick()
+                }) {
+                    Text(stringResource(R.string.see_all))
                 }
             }
         }

@@ -1,5 +1,10 @@
 package com.yugentech.quill.ui.tabs.moreScreen.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
@@ -15,10 +20,12 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import com.yugentech.theme.tokens.spacing
 import com.yugentech.quill.ui.main.components.itemShape
 
@@ -34,7 +41,14 @@ fun SettingsSwitchItem(
     onCheckedChange: (Boolean) -> Unit,
     onClick: (() -> Unit)? = null
 ) {
+    val haptic = LocalHapticFeedback.current
     val shape = itemShape(index, totalCount)
+    // Disabled, the whole row fades back rather than the switch going grey
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (enabled) 1f else 0.45f,
+        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        label = "settingsSwitchContentAlpha"
+    )
 
     ListItem(
         headlineContent = {
@@ -71,7 +85,13 @@ fun SettingsSwitchItem(
                     uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
                     checkedIconColor = MaterialTheme.colorScheme.primaryContainer,
-                    uncheckedIconColor = MaterialTheme.colorScheme.surfaceVariant
+                    uncheckedIconColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledCheckedThumbColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    disabledCheckedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                    disabledUncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledUncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledCheckedIconColor = MaterialTheme.colorScheme.primaryContainer,
+                    disabledUncheckedIconColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
                 thumbContent = {
                     Icon(
@@ -85,7 +105,11 @@ fun SettingsSwitchItem(
         modifier = Modifier
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+            .graphicsLayer { alpha = contentAlpha }
+            .then(if ((onClick != null) && enabled) Modifier.clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                onClick()
+            } else Modifier),
         colors = ListItemDefaults.colors(
             containerColor = Color.Transparent
         )

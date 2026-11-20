@@ -37,6 +37,8 @@ class LibraryRepositoryImpl(
         return bookDao.getFavoriteBooks()
     }
 
+    override fun hasLibraryBooks(): Flow<Boolean> = bookDao.hasLibraryBooks()
+
     override suspend fun getBook(bookId: String): BookEntity? {
         return bookDao.getBookEntity(bookId)
     }

@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.about.about.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -36,9 +38,11 @@ import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun AppInfoCard() {
+    val haptic = LocalHapticFeedback.current
     var isAnimating by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -71,6 +75,7 @@ fun AppInfoCard() {
                         indication = null
                     ) {
                         if (!isAnimating) {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                             isAnimating = true
                             scope.launch {
                                 delay(1900) // matches avd_quill.xml total duration (trace outside+inside in parallel, then fill both together)
@@ -99,7 +104,7 @@ fun AppInfoCard() {
 
             Text(
                 // From the build (versionName), so it never falls behind a release.
-                text = "Version ${com.yugentech.quill.BuildConfig.VERSION_NAME}",
+                text = stringResource(R.string.more_version, com.yugentech.quill.BuildConfig.VERSION_NAME),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -107,7 +112,7 @@ fun AppInfoCard() {
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.m))
 
             Text(
-                text = "Quill makes every read feel special. Pick up a light novel or a timeless classic, settle in, and let every page take you somewhere new.",
+                text = stringResource(R.string.app_info_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

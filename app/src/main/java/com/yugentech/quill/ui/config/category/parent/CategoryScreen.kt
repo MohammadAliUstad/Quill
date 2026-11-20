@@ -58,6 +58,8 @@ import com.yugentech.quill.ui.config.category.components.DeleteCategoryDialog
 import com.yugentech.quill.ui.config.category.components.DragDropList
 import com.yugentech.quill.ui.config.category.components.PinnedShelfItem
 import com.yugentech.quill.ui.config.category.components.RenameCategoryDialog
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.ui.main.components.ResumeFab
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,9 +91,9 @@ fun CategoryScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Categories")
+                        Text(stringResource(R.string.categories))
                         Text(
-                            text = "Organize your library",
+                            text = stringResource(R.string.categories_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -104,57 +106,25 @@ fun CategoryScreen(
                             onBack()
                         }
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            // The Library's FAB: scales in with the screen, and folds to its icon while the
+            // list is scrolled (the top bar collapsed)
+            ResumeFab(
+                visible = true,
+                isScrollingDown = !isFabExpanded,
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     activeDialog = CategoryDialogType.Add
                 },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                elevation = FloatingActionButtonDefaults.elevation(0.dp),
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .height(64.dp)
-                    .widthIn(min = 64.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Category",
-                        modifier = Modifier.size(26.dp)
-                    )
-
-                    AnimatedVisibility(
-                        visible = isFabExpanded,
-                        enter = fadeIn(animationSpec = tween(200)) + expandHorizontally(
-                            animationSpec = tween(200),
-                            expandFrom = Alignment.Start
-                        ),
-                        exit = fadeOut(animationSpec = tween(200)) + shrinkHorizontally(
-                            animationSpec = tween(200),
-                            shrinkTowards = Alignment.Start
-                        )
-                    ) {
-                        Text(
-                            text = "Add Category",
-                            style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp),
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(start = 12.dp)
-                        )
-                    }
-                }
-            }
+                icon = Icons.Default.Add,
+                label = stringResource(R.string.add_category)
+            )
         }
     ) { innerPadding ->
         if (categories.none { !it.isSystem }) {
@@ -171,14 +141,14 @@ fun CategoryScreen(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.empty_categories),
-                        contentDescription = "No categories",
+                        contentDescription = stringResource(R.string.no_categories_cd),
                         modifier = Modifier.size(240.dp)
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "No categories yet",
+                        text = stringResource(R.string.no_categories_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -186,7 +156,7 @@ fun CategoryScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Tap the button below to create\nyour first category",
+                        text = stringResource(R.string.no_categories_body),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -212,7 +182,7 @@ fun CategoryScreen(
                 DragDropList(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(bottom = innerPadding.calculateBottomPadding()),
+                        .padding(bottom = innerPadding.calculateBottomPadding() + 8.dp),
                     items = draggableCategories,
                     onReorderFinished = { newOrder ->
                         categoryViewModel.updateOrder(newOrder)

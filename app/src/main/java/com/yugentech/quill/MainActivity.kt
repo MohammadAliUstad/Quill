@@ -1,5 +1,11 @@
 package com.yugentech.quill
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import com.yugentech.quill.sources.shared.SourceMaintenanceMonitor
+import com.yugentech.quill.ui.shared.maintenance.LocalSourcesDown
+import org.koin.compose.koinInject
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
@@ -19,6 +25,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
+import com.yugentech.quill.domain.BillingRepository
+import com.yugentech.quill.localization.AppLocale
 import com.yugentech.quill.navigation.host.AppNavHost
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.theme.QuillTheme
@@ -37,13 +45,33 @@ class MainActivity : FragmentActivity() {
     private val authViewModel: AuthViewModel by viewModel()
     private var shouldNavigateToHome by mutableStateOf(false)
 
+    // Below Android 13, the language picked in the app (see AppLocale); from 13 the system's
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocale.wrap(newBase))
+    }
+
+    // Something may have been bought, redeemed or cancelled in the Play Store while the app
+    // was in the background, so Play is asked again each time it comes back to the front
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch { get<BillingRepository>().refreshPurchases() }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
 
-        val animationReady = MutableStateFlow(false)
-        lifecycleScope.launch {
-            delay(1000.milliseconds)
-            animationReady.value = true
+        // The splash's minimum time is for launching the app only. When the activity is created
+        // again (savedInstanceState is set: a configuration change Android applied by recreating
+        // it, which a language change can do), there's no splash to show, and holding the first
+        // frame back for a second just leaves the window blank. The view models survive the
+        // recreation, so the screen is ready to draw straight away.
+        val isLaunch = savedInstanceState == null
+        val animationReady = MutableStateFlow(!isLaunch)
+        if (isLaunch) {
+            lifecycleScope.launch {
+                delay(1000.milliseconds)
+                animationReady.value = true
+            }
         }
 
         super.onCreate(savedInstanceState)
@@ -81,10 +109,16 @@ class MainActivity : FragmentActivity() {
                 }
             )
 
+            // Which sources are down for maintenance, for every cover in the app
+            val maintenanceMonitor = koinInject<SourceMaintenanceMonitor>()
+            val sourcesDown by maintenanceMonitor.down.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) { maintenanceMonitor.checkAllIfDue() }
+
             QuillTheme(
                 themeConfiguration = themeConfiguration,
                 hapticsEnabled = hapticsEnabled
             ) {
+              CompositionLocalProvider(LocalSourcesDown provides sourcesDown.keys) {
                 // Outermost, so a light/dark wipe covers the whole screen.
                 ThemeRevealHost {
                     Surface(
@@ -111,6 +145,7 @@ class MainActivity : FragmentActivity() {
                         }
                     }
                 }
+              }
             }
         }
     }

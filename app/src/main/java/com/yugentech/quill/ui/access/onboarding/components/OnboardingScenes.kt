@@ -2,8 +2,6 @@ package com.yugentech.quill.ui.access.onboarding.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -57,6 +55,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,11 +86,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.R
+import com.yugentech.quill.ui.config.appearance.components.crossfadeSelectionOutline
 import com.yugentech.quill.ui.main.components.pressClickable
 import com.yugentech.quill.ui.shared.airaChat.components.TightText
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
+import androidx.compose.ui.res.stringResource
 
 // ---------------------------------------------------------------- Shared pieces
 
@@ -145,27 +146,17 @@ private fun SceneText(title: String, body: String, active: Boolean, delayMs: Int
     }
 }
 
-/** A small pill with an icon, for hints. */
+/** A hint with an icon: plain primary text straight on the aura, no container. */
 @Composable
-private fun Pill(text: String, icon: ImageVector, modifier: Modifier = Modifier) {
-    // A soft wash of the primary over the aura, with a faint primary edge: light in light themes
-    // and dark ones alike (a surface chip turns near-black in a dark theme)
+private fun Hint(text: String, icon: ImageVector, modifier: Modifier = Modifier) {
     val primary = MaterialTheme.colorScheme.primary
-    Surface(
-        shape = CircleShape,
-        color = primary.copy(alpha = 0.12f),
-        contentColor = primary,
-        border = BorderStroke(1.dp, primary.copy(alpha = 0.25f)),
-        modifier = modifier
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 9.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp)
-        ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
-            Text(text, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-        }
+        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = primary)
+        Text(text, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = primary)
     }
 }
 
@@ -208,8 +199,17 @@ internal fun FirstLineScene(active: Boolean) {
     // 0 = the page at rest on the stack, 1 = lifted away, the page beneath risen into its place
     val lift = remember { Animatable(0f) }
     // The next page beneath, easing into place once the last one has risen: 0 = not there yet
-    // (a little lower still, and transparent), 1 = resting under the top page
-    val underIn = remember { Animatable(1f) }
+    // (a little lower still, and transparent), 1 = resting under the top page. It starts out of
+    // sight too, so on the scene's first look it eases up under the top page exactly as it does
+    // after every tap, rather than arriving already in place.
+    val underIn = remember { Animatable(0f) }
+    LaunchedEffect(active) {
+        if (active && underIn.value < 1f && !lift.isRunning) {
+            // Once the top page has mostly risen in
+            delay(UNDER_FIRST_DELAY_MS)
+            underIn.animateTo(1f, tween(UNDER_SETTLE_MS, easing = FastOutSlowInEasing))
+        }
+    }
 
     SceneColumn {
         Box(
@@ -256,7 +256,8 @@ internal fun FirstLineScene(active: Boolean) {
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) {
-                        if (lift.isRunning || underIn.isRunning) return@clickable
+                        // Not until the page beneath is in place, so every lift starts from the same stack
+                        if (lift.isRunning || underIn.value < 1f) return@clickable
                         haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                         scope.launch {
                             lift.animateTo(1f, tween(460, easing = FastOutSlowInEasing))
@@ -266,7 +267,7 @@ internal fun FirstLineScene(active: Boolean) {
                             // The next page beneath starts out of sight, then eases up into place
                             underIn.snapTo(0f)
                             lift.snapTo(0f)
-                            underIn.animateTo(1f, tween(420, easing = FastOutSlowInEasing))
+                            underIn.animateTo(1f, tween(UNDER_SETTLE_MS, easing = FastOutSlowInEasing))
                         }
                     }
             ) {
@@ -274,11 +275,11 @@ internal fun FirstLineScene(active: Boolean) {
             }
         }
         Spacer(Modifier.height(20.dp))
-        Pill("Tap the page for the next one", Icons.Default.TouchApp, Modifier.rise({ hintIn.value }, 12.dp))
+        Hint(stringResource(R.string.onboarding_firstline_tap), Icons.Default.TouchApp, Modifier.rise({ hintIn.value }, 12.dp))
         Spacer(Modifier.height(44.dp))
         SceneText(
-            title = "Every story starts\nwith a first line",
-            body = "Quill is a calm place to read: your own books and thousands of free classics, with a companion who reads along.",
+            title = stringResource(R.string.onboarding_firstline_title),
+            body = stringResource(R.string.onboarding_firstline_body),
             active = active,
             delayMs = 1400
         )
@@ -289,6 +290,12 @@ internal fun FirstLineScene(active: Boolean) {
 private const val UNDER_SCALE = 0.94f
 private val UNDER_DROP = 12.dp
 private const val UNDER_ALPHA = 0.6f
+
+/** How long the page beneath takes to ease up into place, the first time and after each tap. */
+private const val UNDER_SETTLE_MS = 420
+
+/** On the scene's first look, how long after it opens the page beneath starts easing up. */
+private const val UNDER_FIRST_DELAY_MS = 550L
 
 /** A sheet of the book: paper-coloured, a faint spine shadow down its left edge, [content] inset. */
 @Composable
@@ -436,7 +443,7 @@ internal fun LibraryScene(active: Boolean) {
                 ) { index ->
                     if (index == null) {
                         Text(
-                            text = "Tap a book",
+                            text = stringResource(R.string.onboarding_library_tap),
                             style = MaterialTheme.typography.labelLarge,
                             color = colors.onBackground.copy(alpha = 0.8f)
                         )
@@ -451,8 +458,8 @@ internal fun LibraryScene(active: Boolean) {
         }
         Spacer(Modifier.height(28.dp))
         SceneText(
-            title = "A library that's yours",
-            body = "Import your own EPUBs or download free classics from Project Gutenberg and Standard Ebooks, then sort them into your own shelves.",
+            title = stringResource(R.string.onboarding_library_title),
+            body = stringResource(R.string.onboarding_library_body),
             active = active,
             delayMs = 1100
         )
@@ -518,7 +525,7 @@ private const val PASSAGE_HIGHLIGHT = "a single man in possession of a good fort
 private const val PASSAGE_END = ", must be in want of a wife."
 
 /**
- * A page of the reader, live: switch its theme and text size and watch it change, while a line
+ * A page of the reader, live: switch its theme and watch it change, while a line
  * gets highlighted as a reader would.
  */
 @Composable
@@ -528,7 +535,6 @@ internal fun ReaderScene(active: Boolean) {
     val pageIn = rememberEntrance(active, 150)
     val controlsIn = rememberEntrance(active, 450)
     var theme by remember { mutableIntStateOf(0) }
-    var large by remember { mutableStateOf(false) }
     val highlight = remember { Animatable(0f) }
     LaunchedEffect(active) {
         if (!active) return@LaunchedEffect
@@ -537,7 +543,6 @@ internal fun ReaderScene(active: Boolean) {
     }
     val paper by animateColorAsState(PageThemes[theme].paper, tween(400), label = "readerPaper")
     val ink by animateColorAsState(PageThemes[theme].ink, tween(400), label = "readerInk")
-    val textSize by animateFloatAsState(if (large) 23f else 18f, spring(dampingRatio = 0.8f), label = "readerSize")
     val marker = colors.tertiary
 
     SceneColumn {
@@ -547,9 +552,7 @@ internal fun ReaderScene(active: Boolean) {
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
             modifier = Modifier
                 .fillMaxWidth()
-                // At least this tall, and otherwise as tall as its text. The text size itself
-                // animates, so the page grows with it frame by frame, its rounded corners intact.
-                // (animateContentSize here would clip the page square while it caught up.)
+                // At least this tall, and otherwise as tall as its text
                 .heightIn(min = 200.dp)
                 .rise({ pageIn.value }, 36.dp)
         ) {
@@ -561,8 +564,8 @@ internal fun ReaderScene(active: Boolean) {
                 },
                 color = ink,
                 fontFamily = FontFamily.Serif,
-                fontSize = textSize.sp,
-                lineHeight = (textSize * 1.5f).sp,
+                fontSize = 19.sp,
+                lineHeight = 28.sp,
                 modifier = Modifier.padding(24.dp)
             )
         }
@@ -578,27 +581,11 @@ internal fun ReaderScene(active: Boolean) {
                     theme = i
                 }
             }
-            Spacer(Modifier.width(6.dp))
-            Surface(
-                shape = CircleShape,
-                color = if (large) colors.primary else colors.surfaceContainerHigh,
-                contentColor = if (large) colors.onPrimary else colors.onSurface,
-                modifier = Modifier
-                    .size(48.dp)
-                    .pressClickable(shape = CircleShape) {
-                        haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                        large = !large
-                    }
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("Aa", fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                }
-            }
         }
         Spacer(Modifier.height(36.dp))
         SceneText(
-            title = "Read it your way",
-            body = "Fonts, spacing, page themes, ambient sounds and a warm night light. Highlight the lines that stay with you.",
+            title = stringResource(R.string.onboarding_reader_title),
+            body = stringResource(R.string.onboarding_reader_body),
             active = active,
             delayMs = 700
         )
@@ -607,7 +594,6 @@ internal fun ReaderScene(active: Boolean) {
 
 @Composable
 private fun ThemeSwatch(theme: PageTheme, selected: Boolean, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -615,7 +601,13 @@ private fun ThemeSwatch(theme: PageTheme, selected: Boolean, onClick: () -> Unit
             .pressClickable(shape = CircleShape, onClick = onClick)
             .clip(CircleShape)
             .background(theme.paper)
-            .border(if (selected) 3.dp else 1.dp, if (selected) colors.primary else colors.outlineVariant, CircleShape)
+            // The Appearance screen's theme-card outline: the thin resting ring always drawn,
+            // the selected one crossfading in or out over it
+            .crossfadeSelectionOutline(
+                isSelected = selected,
+                shape = CircleShape,
+                selectedWidth = 3.dp
+            )
     ) {
         Text("A", fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, color = theme.ink)
     }
@@ -623,9 +615,6 @@ private fun ThemeSwatch(theme: PageTheme, selected: Boolean, onClick: () -> Unit
 
 // ---------------------------------------------------------------- 4. Aira
 
-private const val DEMO_QUESTION = "Who is Mr. Darcy so far?"
-private const val DEMO_REPLY = "Mr. Bingley's proud, wealthy friend. At the Meryton ball he calls Elizabeth only " +
-    "\"tolerable\", and she hasn't forgiven him yet."
 
 /** The reply appears a few words at a time: this many words per step, this far apart, each fading in over [CHUNK_FADE_MS]. */
 private const val WORDS_PER_CHUNK = 3
@@ -635,7 +624,8 @@ private const val CHUNK_FADE_MS = 250
 /**
  * Aira, still in her circle, answering a question the way Hajime's Sensei does in its onboarding:
  * the reader's bubble arrives, the thinking dots pulse, then the reply grows across the full
- * width a few words at a time, each group fading in.
+ * width a few words at a time, each group fading in. It plays once; coming back to the scene
+ * shows the finished exchange.
  */
 @Composable
 internal fun AiraScene(active: Boolean) {
@@ -643,19 +633,25 @@ internal fun AiraScene(active: Boolean) {
     val portraitIn = rememberEntrance(active, 100)
     val lockIn = rememberEntrance(active, 350)
     val ruleIn = rememberEntrance(active, 250)
-    var asked by remember { mutableStateOf(false) }
+    var played by rememberSaveable { mutableStateOf(false) }
+    // Whether the exchange had already played when this scene was composed: then it's shown finished
+    val alreadyPlayed = remember { played }
+    var asked by remember { mutableStateOf(played) }
     var thinking by remember { mutableStateOf(false) }
-    var answered by remember { mutableStateOf(false) }
+    var answered by remember { mutableStateOf(played) }
     LaunchedEffect(active) {
-        if (!active) return@LaunchedEffect
+        if (!active || played) return@LaunchedEffect
         delay(600)
         asked = true
-        delay(500)
+        delay(400)
         thinking = true
-        delay(1100)
+        delay(900)
         thinking = false
         answered = true
+        played = true
     }
+    val questionAlpha by animateFloatAsState(if (asked) 1f else 0f, tween(250), label = "airaQuestion")
+    val dotsAlpha by animateFloatAsState(if (thinking) 1f else 0f, tween(if (thinking) 250 else 150), label = "airaThinking")
 
     SceneColumn {
         // Aira's circle from the chat's empty state, at 4/5 of its size. She stays still: she only
@@ -680,32 +676,38 @@ internal fun AiraScene(active: Boolean) {
         }
         Spacer(Modifier.height(12.dp))
         // How far into the book she's allowed to talk about
-        Pill("Spoiler lock · up to Chapter 3", Icons.Default.Lock, Modifier.rise({ lockIn.value }, 10.dp))
+        Hint(stringResource(R.string.onboarding_aira_lock), Icons.Default.Lock, Modifier.rise({ lockIn.value }, 10.dp))
         Spacer(Modifier.height(16.dp))
 
-        // The chat: 12dp between messages, the reader's bubble fading in
+        // The chat: 12dp between messages. Everything is laid out from the start (just unseen),
+        // so the scene never shifts as the exchange plays and the reply ends right above the rule.
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(176.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            AnimatedVisibility(visible = asked, enter = fadeIn(tween(250))) {
-                DemoQuestionBubble(DEMO_QUESTION)
+            Box(Modifier.graphicsLayer { alpha = questionAlpha }) {
+                DemoQuestionBubble(stringResource(R.string.onboarding_aira_question))
             }
-            AnimatedVisibility(visible = thinking, enter = fadeIn(tween(250)), exit = ExitTransition.None) {
-                DemoThinkingDots()
+            Box {
+                DemoReply(
+                    text = stringResource(R.string.onboarding_aira_reply),
+                    started = answered,
+                    animate = !alreadyPlayed
+                )
+                // The thinking dots sit where the reply will appear
+                if (dotsAlpha > 0f) {
+                    Box(Modifier.graphicsLayer { alpha = dotsAlpha }) { DemoThinkingDots() }
+                }
             }
-            if (answered) DemoReply(DEMO_REPLY)
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
         // A quiet rule setting the conversation apart from the words about it
         SceneRule(Modifier.graphicsLayer { alpha = ruleIn.value.coerceIn(0f, 1f) })
         Spacer(Modifier.height(20.dp))
         SceneText(
-            title = "Meet Aira",
-            body = "Your reading companion answers from the book itself, and never spoils what's ahead.",
+            title = stringResource(R.string.onboarding_aira_title),
+            body = stringResource(R.string.onboarding_aira_body),
             active = active,
             delayMs = 300
         )
@@ -765,24 +767,26 @@ private fun DemoThinkingDots() {
 }
 
 /**
- * Aira's reply across the full width, no bubble: it grows a few words at a time, each group
- * fading in, so it builds line by line as if arriving.
+ * Aira's reply across the full width, no bubble: once [started], it appears a few words at a
+ * time, each group fading in, so it builds line by line as if arriving. Without [animate] it's
+ * shown whole. The full text is always laid out, so its height never changes.
  */
 @Composable
-private fun DemoReply(text: String) {
+private fun DemoReply(text: String, started: Boolean, animate: Boolean) {
     val color = MaterialTheme.colorScheme.onBackground
     val chunks = remember(text) { text.split(" ").chunked(WORDS_PER_CHUNK).map { it.joinToString(" ") } }
     val total = (chunks.size - 1) * CHUNK_STEP_MS + CHUNK_FADE_MS
-    val elapsed = remember(text) { Animatable(0f) }
-    LaunchedEffect(text) { elapsed.animateTo(total.toFloat(), tween(total, easing = LinearEasing)) }
+    val elapsed = remember(text) { Animatable(if (animate) 0f else total.toFloat()) }
+    LaunchedEffect(started) {
+        if (started) elapsed.animateTo(total.toFloat(), tween(total, easing = LinearEasing))
+    }
 
     val now = elapsed.value
     Text(
         text = buildAnnotatedString {
             chunks.forEachIndexed { i, chunk ->
                 val since = now - i * CHUNK_STEP_MS
-                // Only the groups that have started are laid out, so the reply grows downwards
-                if (since < 0f) return@forEachIndexed
+                // Groups not started yet keep their place, unseen
                 val alpha = (since / CHUNK_FADE_MS).coerceIn(0f, 1f)
                 withStyle(SpanStyle(color = color.copy(alpha = alpha))) {
                     append(if (i == 0) chunk else " $chunk")
@@ -867,8 +871,8 @@ internal fun HabitScene(active: Boolean) {
 
     SceneColumn {
         SceneText(
-            title = "Make reading a habit",
-            body = "Streaks, a reading heatmap and gentle daily reminders keep the pages turning.",
+            title = stringResource(R.string.onboarding_habit_title),
+            body = stringResource(R.string.onboarding_habit_body),
             active = active,
             delayMs = 100
         )
@@ -910,7 +914,7 @@ internal fun HabitScene(active: Boolean) {
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "day streak",
+                        text = stringResource(R.string.onboarding_day_streak),
                         style = MaterialTheme.typography.titleMedium,
                         color = colors.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 6.dp)

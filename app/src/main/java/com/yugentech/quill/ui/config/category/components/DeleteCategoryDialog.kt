@@ -19,6 +19,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun DeleteCategoryDialog(
@@ -32,7 +34,7 @@ fun DeleteCategoryDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Delete Category?",
+                text = stringResource(R.string.delete_category_title),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -57,7 +59,7 @@ fun DeleteCategoryDialog(
                 }
 
                 Text(
-                    text = "All books in this category will be moved back to the default Shelf. This action cannot be undone.",
+                    text = stringResource(R.string.delete_category_body),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -76,7 +78,7 @@ fun DeleteCategoryDialog(
                     contentColor = MaterialTheme.colorScheme.onError
                 )
             ) {
-                Text("Delete")
+                Text(stringResource(R.string.delete))
             }
         },
         dismissButton = {
@@ -87,7 +89,7 @@ fun DeleteCategoryDialog(
                 }
             ) {
                 Text(
-                    text = "Cancel",
+                    text = stringResource(R.string.cancel),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

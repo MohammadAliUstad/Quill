@@ -17,6 +17,8 @@ import com.yugentech.theme.builder.getColorScheme
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.theme.tokens.spacing
 import com.yugentech.quill.ui.main.components.SectionHeader
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ThemeColorSelector(
@@ -31,7 +33,7 @@ fun ThemeColorSelector(
     ) {
         SectionHeader(
             icon = Icons.Default.Palette,
-            title = "Color Theme"
+            title = stringResource(R.string.color_theme)
         )
 
         Column(
@@ -45,7 +47,7 @@ fun ThemeColorSelector(
                     rowOptions.forEach { option ->
                         // Each tile is drawn in the scheme it would give, in the current mode
                         ThemeCard(
-                            name = option.displayName,
+                            name = stringResource(option.displayName),
                             scheme = getColorScheme(themeConfig.copy(colorTheme = option.colorTheme)),
                             isSelected = themeConfig.colorTheme == option.colorTheme,
                             onClick = {

@@ -19,7 +19,8 @@ val cloudModule = module {
             bookDao = get(),
             categoryDao = get(),
             cloudSyncService = get(),
-            context = get()
+            context = get(),
+            authRepository = get()
         )
     }
 }

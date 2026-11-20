@@ -9,6 +9,8 @@ import androidx.core.view.size
 import com.yugentech.theme.tokens.AppConstants.ASKAIRA
 import com.yugentech.theme.tokens.AppConstants.HIGHLIGHT
 import org.readium.r2.shared.publication.Locator
+import com.yugentech.quill.reader.localization.ReaderStrings
+import com.yugentech.quill.reader.R
 
 class WrappedCallback(
     private val original: ActionMode.Callback,
@@ -46,7 +48,7 @@ class WrappedCallback(
             }
 
             ASKAIRA -> {
-                onAskAira(getSelectedText() ?: "Processing selection...", getSelectionLocator())
+                onAskAira(getSelectedText() ?: ReaderStrings.get(R.string.reader_processing_selection), getSelectionLocator())
                 mode.finish()
                 return true
             }

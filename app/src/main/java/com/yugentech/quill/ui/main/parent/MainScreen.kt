@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.main.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -32,7 +34,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.firebase.auth.FirebaseAuth
 import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.BookSource
@@ -56,6 +57,10 @@ import com.yugentech.quill.ui.tabs.sourcesScreen.viewmodel.SourcesViewModel
 import com.yugentech.quill.user.viewmodel.UserViewModel
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.localization.AppStrings
+import com.yugentech.quill.announcements.ui.AnnouncementHost
 
 private val quillTabs = listOf(
     QuillTab.Library,
@@ -88,9 +93,14 @@ fun MainScreen(
     onWhatsNew: () -> Unit,
     onMoreApps: () -> Unit,
     onReplayOnboarding: () -> Unit,
+    onLanguage: () -> Unit,
+    onNavigateRoute: (String) -> Unit,
+    // The signed-in account's ID or the local guest's
+    userId: String,
+    isGuest: Boolean = false,
     indexingViewModel: IndexingViewModel = koinViewModel()
 ) {
-    val userId = remember { FirebaseAuth.getInstance().currentUser?.uid.orEmpty() }
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(userId) {
         if (userId.isNotEmpty()) userViewModel.loadUser(userId)
@@ -104,8 +114,7 @@ fun MainScreen(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (!isGranted) {
-                toastMessage =
-                    "Notification permission denied. Please enable notifications to get your reading reminders."
+                toastMessage = AppStrings.get(R.string.notification_permission_denied)
             }
         }
     )
@@ -132,7 +141,7 @@ fun MainScreen(
     val userData = userUiState.user ?: UserData()
 
     val queueState by indexingViewModel.queueState.collectAsStateWithLifecycle()
-    val isIndexingActive = queueState.isNotEmpty()
+    val isIndexingActive = !queueState.isNullOrEmpty()
 
     var currentTab by rememberSaveable { mutableStateOf(QuillTab.Library) }
     var scrollLibraryToBottom by remember { mutableStateOf(false) }
@@ -178,12 +187,13 @@ fun MainScreen(
             )
         },
         floatingActionButton = {
-            // Empty library: the FAB becomes "Add Books" and runs the same device import flow
+            // Empty library: the FAB becomes stringResource(R.string.add_books) and runs the same device import flow
             // as the Sources tab. Otherwise it's the usual Continue-reading FAB.
             ResumeFab(
                 visible = currentTab == QuillTab.Library && (isLibraryEmpty || lastReadBook != null),
                 isScrollingDown = isScrollingDown,
                 onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     if (isLibraryEmpty) {
                         showFilePickerSheet = true
                     } else {
@@ -191,7 +201,7 @@ fun MainScreen(
                     }
                 },
                 icon = if (isLibraryEmpty) Icons.Default.Add else Icons.AutoMirrored.Filled.MenuBook,
-                label = if (isLibraryEmpty) "Add Books" else "Continue",
+                label = if (isLibraryEmpty) stringResource(R.string.add_books) else stringResource(R.string.onboarding_continue),
             )
         },
     ) { innerPadding ->
@@ -256,6 +266,10 @@ fun MainScreen(
                             onWhatsNew = onWhatsNew,
                             onMoreApps = onMoreApps,
                             onReplayOnboarding = onReplayOnboarding,
+                            onLanguage = onLanguage,
+                            isGuest = isGuest,
+                            // A guest has no account to come back to, so leaving removes their library
+                            onExitGuest = onSignOut,
                         )
                     }
                 }
@@ -265,6 +279,12 @@ fun MainScreen(
                 message = toastMessage,
                 onDismiss = { toastMessage = null },
                 modifier = Modifier.align(Alignment.TopCenter)
+            )
+
+            // Centralized update announcements & dialogs (shown once per release)
+            AnnouncementHost(
+                onOpenWhatsNew = onWhatsNew,
+                onNavigateRoute = onNavigateRoute
             )
         }
     }

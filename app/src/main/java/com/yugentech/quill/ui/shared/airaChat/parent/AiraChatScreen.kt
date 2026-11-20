@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.shared.airaChat.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -33,14 +35,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +51,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import com.yugentech.quill.aira.util.VoiceOutputManager
 import com.yugentech.quill.ui.shared.airaChat.viewmodel.AiraViewModel
 import com.yugentech.quill.ui.shared.airaChat.components.AiraChatHistory
 import com.yugentech.quill.ui.shared.airaChat.components.AiraEmptyState
@@ -60,11 +60,12 @@ import com.yugentech.quill.ui.shared.airaChat.components.QuotaLimitBar
 import com.yugentech.quill.ui.shared.airaChat.components.StatusBanner
 import com.yugentech.theme.tokens.AppConstants.EMPTY
 import com.yugentech.theme.tokens.dimensions.AppAnimations
-import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 // Space between the bottom of the chat and the text field.
-private val ChatInputGap = 8.dp
+// The same space as under a reply in the reader's peek bar (its ReplyBottomGap)
+private val ChatInputGap = 16.dp
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -73,18 +74,19 @@ fun AiraChatScreen(
     onBackClick: () -> Unit,
     navigateToSubscriptions: () -> Unit
 ) {
-    val voiceOutputManager: VoiceOutputManager = koinInject()
-    val scope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
     val uiState by viewModel.uiState.collectAsState()
     val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
 
+    // The limit bar takes the input bar's place when the screen opens out of queries, or when a
+    // question is sent with none left. It isn't put up the moment the last one is used, so the
+    // answer to it finishes with its stop button. It goes as soon as queries are back: Pro
+    // bought, Play confirming Pro, or a new day.
     var enforceLimitUi by remember { mutableStateOf(!uiState.canSendQuery) }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            voiceOutputManager.stop()
-        }
+    LaunchedEffect(uiState.canSendQuery) {
+        if (uiState.canSendQuery) enforceLimitUi = false
     }
+
     val isChatEmpty = uiState.messages.isEmpty()
 
     var inputText by remember { mutableStateOf("") }
@@ -132,23 +134,34 @@ fun AiraChatScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onBackClick()
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
                     }
                 },
                 actions = {
                     if (!isChatEmpty) {
-                        IconButton(onClick = { showResetDialog = true }) {
-                            Icon(Icons.Default.History, "Reset Chat")
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            showResetDialog = true
+                        }) {
+                            Icon(Icons.Default.History, stringResource(R.string.reset_chat))
                         }
                     }
-                    // Hidden while Aira is still reading the book, or before the reader has read
-                    // anything (Aira is locked then): there's nothing to lock yet.
-                    if (uiState.isInitialized && !uiState.isIndexing && uiState.hasStartedReading) {
-                        IconButton(onClick = { viewModel.toggleSpoilerLock() }) {
+                    // Hidden until Aira has read the whole book (or while it waits its turn) and the
+                    // reader has read some of it: there's nothing to lock yet.
+                    if (uiState.canChat) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(
+                                if (uiState.spoilerLockEnabled) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn
+                            )
+                            viewModel.toggleSpoilerLock()
+                        }) {
                             Icon(
                                 imageVector = if (uiState.spoilerLockEnabled) Icons.Default.Lock else Icons.Default.LockOpen,
-                                contentDescription = "Toggle Spoiler Lock",
+                                contentDescription = stringResource(R.string.toggle_spoiler_lock),
                                 tint = if (uiState.spoilerLockEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -206,6 +219,8 @@ fun AiraChatScreen(
                             lastChapterTitle = uiState.lastChapterTitle,
                             spoilerLockEnabled = uiState.spoilerLockEnabled,
                             isIndexing = uiState.isIndexing,
+                            isQueued = uiState.isQueued,
+                            isReady = uiState.isReady,
                             indexingProgress = uiState.indexingProgress,
                             hasStartedReading = uiState.hasStartedReading,
                             onToggleSpoilerLock = { viewModel.toggleSpoilerLock() }
@@ -215,9 +230,6 @@ fun AiraChatScreen(
                             uiState = uiState,
                             listState = listState,
                             bottomPadding = bottomClearance,
-                            onSpeakClick = { text ->
-                                scope.launch { voiceOutputManager.speak(text) }
-                            },
                             modifier = Modifier.imePadding()
                         )
                     }
@@ -229,16 +241,16 @@ fun AiraChatScreen(
                     .fillMaxWidth()
                     .align(Alignment.TopCenter)
             ) {
-                // Errors only: indexing progress now shows around Aira's portrait in the empty state.
+                // The last error, so the banner keeps its text while it slides away
+                var shownError by remember { mutableStateOf("") }
+                uiState.error?.let { shownError = it }
                 AnimatedVisibility(
                     visible = uiState.error != null,
                     enter = fadeIn() + slideInVertically { -it },
                     exit = fadeOut() + slideOutVertically { -it }
                 ) {
                     StatusBanner(
-                        isIndexing = false,
-                        indexingProgress = uiState.indexingProgress,
-                        error = uiState.error,
+                        error = shownError,
                         onDismiss = { viewModel.clearError() }
                     )
                 }
@@ -254,7 +266,9 @@ fun AiraChatScreen(
             ) { isLimitReached ->
                 if (!isLimitReached) {
                     AnimatedVisibility(
-                        visible = uiState.isInitialized && !uiState.isIndexing && uiState.hasStartedReading,
+                        // Only once Aira can answer: her index of the book is finished and the
+                        // reader has started it. Never while it's being read or waiting its turn.
+                        visible = uiState.canChat,
                         modifier = Modifier
                             .imePadding()
                             .fillMaxWidth(),

@@ -1,6 +1,8 @@
 package com.yugentech.quill.di
 
+import com.yugentech.theme.locale.LocaleContext
 import android.app.Application
+import android.content.Context
 import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
@@ -9,12 +11,13 @@ import com.yugentech.quill.di.modules.access.authModule
 import com.yugentech.quill.di.modules.access.billingModule
 import com.yugentech.quill.di.modules.access.userModule
 import com.yugentech.quill.di.modules.books.booksModule
-import com.yugentech.quill.di.modules.books.indexingModule
+import com.yugentech.quill.di.modules.books.insightsModule
 import com.yugentech.quill.di.modules.books.sourcesModule
 import com.yugentech.quill.di.modules.books.storageModule
 import com.yugentech.quill.di.modules.config.categoryModule
 import com.yugentech.quill.di.modules.config.themeModule
 import com.yugentech.quill.di.modules.config.settingsModule
+import com.yugentech.quill.di.modules.config.announcementModule
 import com.yugentech.quill.di.modules.core.cloudModule
 import com.yugentech.quill.di.modules.notification.notificationModule
 import com.yugentech.quill.di.modules.core.dataStoreModule
@@ -25,6 +28,10 @@ import com.yugentech.quill.di.modules.core.workerModule
 import com.yugentech.quill.di.modules.shared.airaModule
 import com.yugentech.quill.di.modules.shared.bookDetailsModule
 import com.yugentech.quill.di.modules.shared.readerModule
+import com.yugentech.quill.localization.AppLocale
+import com.yugentech.quill.localization.AppStrings
+import com.yugentech.quill.aira.localization.AiraStrings
+import com.yugentech.quill.reader.localization.ReaderStrings
 import com.yugentech.quill.notification.reminders.ReminderManager
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
@@ -38,8 +45,17 @@ import timber.log.Timber
 
 class QuillApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
+    // Below Android 13, the language picked in the app (see AppLocale), so notifications and
+    // anything else read from the app context follow it too; from 13 the system applies it
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(AppLocale.wrap(base))
+    }
+
     override fun onCreate() {
         super.onCreate()
+        AppStrings.init(this)
+        ReaderStrings.init(this)
+        AiraStrings.init { LocaleContext.localized(this) }
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
@@ -54,7 +70,7 @@ class QuillApp : Application(), Configuration.Provider, ImageLoaderFactory {
                 billingModule,
                 userModule,
                 booksModule,
-                indexingModule,
+                insightsModule,
                 sourcesModule,
                 storageModule,
                 categoryModule,
@@ -69,7 +85,8 @@ class QuillApp : Application(), Configuration.Provider, ImageLoaderFactory {
                 bookDetailsModule,
                 readerModule,
                 notificationModule,
-                settingsModule
+                settingsModule,
+                announcementModule
             )
         }
 

@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
 import java.util.Calendar
+import com.yugentech.quill.R
+import com.yugentech.quill.localization.AppStrings
 
 class InsightsViewModel(
     private val insightsRepository: InsightsRepository
@@ -63,7 +65,7 @@ class InsightsViewModel(
             } else null
 
             val mostExploredBookId = questionsPerBook.maxByOrNull { it.count }?.bookId
-            val mostExploredBookName = books.find { it.id == mostExploredBookId }?.title ?: "None"
+            val mostExploredBookName = books.find { it.id == mostExploredBookId }?.title ?: AppStrings.get(R.string.none)
 
             InsightsUiState(
                 totalReadingTimeMillis = totalTime,

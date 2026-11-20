@@ -1,9 +1,8 @@
 package com.yugentech.quill.bookDetails.worker
 
+import com.yugentech.quill.bookDetails.model.DownloadError
 import android.content.Context
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager.Companion.getInstance
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
@@ -49,10 +48,10 @@ class BookDownloadWorker(
 
             if (connection.responseCode != HttpURLConnection.HTTP_OK) {
                 val errorMsg = when (connection.responseCode) {
-                    HttpURLConnection.HTTP_NOT_FOUND -> "Book file not found on server."
-                    HttpURLConnection.HTTP_FORBIDDEN -> "Access to book file denied."
-                    HttpURLConnection.HTTP_UNAVAILABLE -> "Server is currently unavailable. Please try again later."
-                    else -> "Server error (HTTP ${connection.responseCode})"
+                    HttpURLConnection.HTTP_NOT_FOUND -> DownloadError.NOT_FOUND
+                    HttpURLConnection.HTTP_FORBIDDEN -> DownloadError.FORBIDDEN
+                    HttpURLConnection.HTTP_UNAVAILABLE -> DownloadError.UNAVAILABLE
+                    else -> DownloadError.http(connection.responseCode)
                 }
                 bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, errorMsg)
                 return@withContext Result.failure()
@@ -108,17 +107,7 @@ class BookDownloadWorker(
 
                 bookDao.insertBook(updatedBook)
 
-                val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
-                    .setInputData(workDataOf(BookEmbeddingWorker.KEY_BOOK_ID to bookId))
-                    .addTag("AI_INDEXING")
-                    .addTag("index_${bookId}")
-                    .build()
-
-                getInstance(applicationContext).beginUniqueWork(
-                    "BOOK_PROCESSING_QUEUE",
-                    ExistingWorkPolicy.APPEND_OR_REPLACE,
-                    indexRequest
-                ).enqueue()
+                BookEmbeddingWorker.enqueue(getInstance(applicationContext), bookId)
 
                 Result.success()
             } else {
@@ -133,19 +122,19 @@ class BookDownloadWorker(
             return@withContext when (e) {
                 is UnknownHostException, is ConnectException -> {
                     // Network issue, let WorkManager retry
-                    bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, "No internet connection. Waiting for network...")
+                    bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, DownloadError.OFFLINE)
                     Result.retry()
                 }
                 is IOException -> {
                     if (e.message?.contains("ENOSPC", ignoreCase = true) == true) {
-                        bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, "Insufficient storage space on device.")
+                        bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, DownloadError.STORAGE)
                     } else {
-                        bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, "A network error occurred. Please try again.")
+                        bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, DownloadError.NETWORK)
                     }
                     Result.failure()
                 }
                 else -> {
-                    bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, "An unexpected error occurred during download.")
+                    bookDao.updateDownloadStatus(bookId, DownloadStatus.FAILED, DownloadError.UNEXPECTED)
                     Result.failure()
                 }
             }

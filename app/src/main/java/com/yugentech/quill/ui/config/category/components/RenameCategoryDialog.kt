@@ -1,6 +1,7 @@
 package com.yugentech.quill.ui.config.category.components
 
 import androidx.compose.animation.animateColorAsState
+import com.yugentech.theme.SheetTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -52,6 +53,8 @@ import androidx.compose.ui.unit.dp
 import com.yugentech.theme.tokens.corners
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -103,105 +106,107 @@ fun RenameCategoryDialog(
         focusRequester.requestFocus()
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        dragHandle = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {}
-                    )
-                    .padding(vertical = 22.dp),
-                contentAlignment = Alignment.Center
-            ) {
+    SheetTheme {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            dragHandle = {
                 Box(
                     modifier = Modifier
-                        .size(width = 32.dp, height = 6.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            shape = CircleShape
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {}
                         )
-                )
+                        .padding(vertical = 22.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 32.dp, height = 6.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                shape = CircleShape
+                            )
+                    )
+                }
             }
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
-                .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Text(
-                text = "Rename Category",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            TextField(
-                value = textFieldValue,
-                onValueChange = { textFieldValue = it },
-                label = { Text("New Name") },
-                isError = isReserved,
-                supportingText = if (isReserved) {
-                    { Text("Name reserved for system") }
-                } else null,
-                singleLine = true,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                shape = RoundedCornerShape(MaterialTheme.corners.medium),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    errorContainerColor = MaterialTheme.colorScheme.errorContainer,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    errorIndicatorColor = Color.Transparent
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        if (canSave) {
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp)
+                    .imePadding(),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.rename_category),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                TextField(
+                    value = textFieldValue,
+                    onValueChange = { textFieldValue = it },
+                    label = { Text(stringResource(R.string.new_name)) },
+                    isError = isReserved,
+                    supportingText = if (isReserved) {
+                        { Text(stringResource(R.string.name_reserved)) }
+                    } else null,
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    shape = RoundedCornerShape(MaterialTheme.corners.medium),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        errorContainerColor = MaterialTheme.colorScheme.errorContainer,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (canSave) {
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                onConfirm(currentText.trim())
+                            }
+                        }
+                    )
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onDismiss()
+                        }
+                    ) { Text(stringResource(R.string.cancel)) }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                             onConfirm(currentText.trim())
-                        }
-                    }
-                )
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                        onDismiss()
-                    }
-                ) { Text("Cancel") }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        onConfirm(currentText.trim())
-                    },
-                    enabled = canSave,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = saveContainerColor,
-                        contentColor = saveContentColor,
-                        disabledContainerColor = saveContainerColor,
-                        disabledContentColor = saveContentColor
-                    )
-                ) { Text("Save") }
+                        },
+                        enabled = canSave,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = saveContainerColor,
+                            contentColor = saveContentColor,
+                            disabledContainerColor = saveContainerColor,
+                            disabledContentColor = saveContentColor
+                        )
+                    ) { Text(stringResource(R.string.save)) }
+                }
             }
         }
     }

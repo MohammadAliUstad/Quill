@@ -15,15 +15,6 @@ interface BookChunkDao {
     @Query("DELETE FROM book_chunks WHERE bookId = :bookId")
     suspend fun deleteChunksForBook(bookId: String)
 
-    @Query("SELECT * FROM book_chunks WHERE bookId = :bookId AND chapterIndex <= :maxChapterIndex ORDER BY chapterIndex ASC, chunkIndex ASC")
-    suspend fun getChunksUpToChapter(bookId: String, maxChapterIndex: Int): List<BookChunkEntity>
-
-    @Query("SELECT COUNT(*) FROM book_chunks WHERE bookId = :bookId")
-    suspend fun getChunkCount(bookId: String): Int
-
-    @Query("SELECT EXISTS(SELECT 1 FROM book_chunks WHERE bookId = :bookId LIMIT 1)")
-    suspend fun isBookIndexed(bookId: String): Boolean
-
     @Query("""
     SELECT * FROM book_chunks 
     WHERE bookId = :bookId 
@@ -76,13 +67,6 @@ interface BookChunkDao {
         ORDER BY chapterIndex ASC, chunkIndex ASC
     """)
     suspend fun getCandidateVectorsInRange(bookId: String, fromChapter: Int, toChapter: Int): List<ChunkVectorTuple>
-
-    @Query("""
-    SELECT * FROM book_chunks
-    WHERE bookId = :bookId AND chapterIndex = :chapterIndex
-    ORDER BY chunkIndex ASC
-""")
-    suspend fun getChunksForChapter(bookId: String, chapterIndex: Int): List<BookChunkEntity>
 }
 
 data class ChunkVectorTuple(

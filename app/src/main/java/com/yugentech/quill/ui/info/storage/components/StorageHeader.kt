@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import java.util.Locale
 import kotlin.math.log10
 import kotlin.math.pow
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun StorageHeader(
@@ -58,7 +60,7 @@ fun StorageHeader(
         modifier = modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Downloads Size",
+            text = stringResource(R.string.downloads_size),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -74,7 +76,7 @@ fun StorageHeader(
         Spacer(modifier = Modifier.height(36.dp))
 
         Text(
-            text = "Device Storage",
+            text = stringResource(R.string.device_storage),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onBackground

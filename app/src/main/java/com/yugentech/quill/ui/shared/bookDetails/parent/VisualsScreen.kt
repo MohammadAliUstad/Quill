@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.shared.bookDetails.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +60,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.yugentech.quill.localization.currentLocale
+import java.text.DateFormat
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,6 +72,7 @@ fun VisualsScreen(
     onVisualClick: (bookId: String, locatorJson: String?) -> Unit,
     viewModel: VisualsViewModel = koinViewModel()
 ) {
+    val haptic = LocalHapticFeedback.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var visualToDelete by remember { mutableStateOf<VisualEntity?>(null) }
 
@@ -82,19 +88,22 @@ fun VisualsScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Visuals")
+                        Text(stringResource(R.string.visuals))
                         Text(
-                            text = "Scenes you've brought to life",
+                            text = stringResource(R.string.visuals_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onBackClick()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate back"
+                            contentDescription = stringResource(R.string.navigate_back)
                         )
                     }
                 },
@@ -124,14 +133,14 @@ fun VisualsScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.plants),
-                            contentDescription = "No visuals",
+                            contentDescription = stringResource(R.string.no_visuals_cd),
                             modifier = Modifier.size(240.dp)
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            text = "No visuals yet",
+                            text = stringResource(R.string.no_visuals_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -139,7 +148,7 @@ fun VisualsScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Images you generate from a passage\nwill appear here.",
+                            text = stringResource(R.string.no_visuals_body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -153,7 +162,7 @@ fun VisualsScreen(
                         start = 16.dp,
                         end = 16.dp,
                         top = paddingValues.calculateTopPadding() + 8.dp,
-                        bottom = paddingValues.calculateBottomPadding()
+                        bottom = paddingValues.calculateBottomPadding() + 8.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -191,8 +200,10 @@ private fun VisualCard(
     onCardClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    val dateString = remember(visual.createdAt) {
-        val formatter = SimpleDateFormat("MMM dd, yyyy • h:mm a", Locale.getDefault())
+    val haptic = LocalHapticFeedback.current
+    val locale = currentLocale()
+    val dateString = remember(visual.createdAt, locale) {
+        val formatter = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, locale)
         formatter.format(Date(visual.createdAt))
     }
 
@@ -207,7 +218,7 @@ private fun VisualCard(
         Column {
             AsyncImage(
                 model = File(visual.imagePath),
-                contentDescription = "Generated illustration",
+                contentDescription = stringResource(R.string.generated_illustration),
                 // FillWidth (rather than a fixed aspect ratio + Crop) lets the image's own
                 // native aspect ratio decide the height, so the full picture always shows --
                 // no cropping, and no letterboxed bars for images that aren't square.
@@ -251,7 +262,10 @@ private fun VisualCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(
-                            onClick = onCardClick,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                onCardClick()
+                            },
                             modifier = Modifier.height(32.dp),
                             contentPadding = PaddingValues(horizontal = 16.dp),
                             colors = ButtonDefaults.buttonColors(
@@ -260,13 +274,16 @@ private fun VisualCard(
                             )
                         ) {
                             Text(
-                                text = "Go to Passage",
+                                text = stringResource(R.string.go_to_passage),
                                 style = MaterialTheme.typography.labelLarge
                             )
                         }
 
                         FilledIconButton(
-                            onClick = onDeleteClick,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                onDeleteClick()
+                            },
                             modifier = Modifier.size(32.dp),
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -275,7 +292,7 @@ private fun VisualCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Delete,
-                                contentDescription = "Delete visual",
+                                contentDescription = stringResource(R.string.delete_visual_cd),
                                 modifier = Modifier.size(18.dp)
                             )
                         }

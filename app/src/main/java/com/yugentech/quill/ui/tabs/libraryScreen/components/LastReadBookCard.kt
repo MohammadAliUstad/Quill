@@ -1,5 +1,8 @@
 package com.yugentech.quill.ui.tabs.libraryScreen.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import com.yugentech.quill.ui.shared.maintenance.MaintenanceAwareCover
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +46,11 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
+import java.time.format.FormatStyle
+import com.yugentech.quill.localization.currentLocale
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 
 @Composable
 fun LastReadBookCard(
@@ -50,6 +58,7 @@ fun LastReadBookCard(
     onCardClick: () -> Unit,
     onCoverClick: (LibraryBookView) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val currentPage = remember(book.progressPercent, book.totalPages) {
         if (book.totalPages > 0) {
             ((book.progressPercent * (book.totalPages - 1)).roundToInt()).coerceIn(
@@ -59,22 +68,23 @@ fun LastReadBookCard(
         } else 0
     }
 
-    val formattedLastRead = remember(book.lastReadTime) {
-        if (book.lastReadTime == 0L) return@remember "Not read yet"
+    val locale = currentLocale()
+    val formattedLastRead = run {
+        if (book.lastReadTime == 0L) return@run stringResource(R.string.not_read_yet)
 
         val zoneId = ZoneId.systemDefault()
         val lastReadDateTime =
             Instant.ofEpochMilli(book.lastReadTime).atZone(zoneId).toLocalDateTime()
         val now = LocalDateTime.now(zoneId)
 
-        val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+        val timeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
         val timeStr = lastReadDateTime.format(timeFormatter)
         val daysBetween = ChronoUnit.DAYS.between(lastReadDateTime.toLocalDate(), now.toLocalDate())
 
         when {
             daysBetween <= 0L -> timeStr
-            daysBetween == 1L -> "$timeStr, Yesterday"
-            else -> "$timeStr, $daysBetween days ago"
+            daysBetween == 1L -> stringResource(R.string.time_yesterday, timeStr)
+            else -> pluralStringResource(R.plurals.time_days_ago, daysBetween.toInt(), timeStr, daysBetween.toInt())
         }
     }
 
@@ -85,16 +95,18 @@ fun LastReadBookCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        AsyncImage(
-            model = book.coverUrl?.toCoverThumbnailUrl(),
+        MaintenanceAwareCover(
+            url = book.coverUrl?.toCoverThumbnailUrl(),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
+            iconSize = 40.dp,
             modifier = Modifier
                 .width(120.dp)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(8.dp))
                 .clickable(
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                         onCoverClick(book)
                     }
                 )
@@ -102,7 +114,10 @@ fun LastReadBookCard(
 
         // UPDATED: Switched from ElevatedCard to standard Card with 0 elevation
         Card(
-            onClick = onCardClick,
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                onCardClick()
+            },
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight(),
@@ -153,7 +168,7 @@ fun LastReadBookCard(
                     )
 
                     Text(
-                        text = "by ${book.author}",
+                        text = stringResource(R.string.by_author, book.author),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -161,7 +176,7 @@ fun LastReadBookCard(
                     )
 
                     Text(
-                        text = book.lastChapterTitle ?: "Continuing...",
+                        text = book.lastChapterTitle ?: stringResource(R.string.continuing),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.Medium,
@@ -179,12 +194,12 @@ fun LastReadBookCard(
                     ) {
                         Column {
                             Text(
-                                text = "Page $currentPage of ${book.totalPages}",
+                                text = stringResource(R.string.page_of, currentPage, book.totalPages),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "${(book.progressPercent * 100).toInt()}% completed",
+                                text = stringResource(R.string.percent_completed, (book.progressPercent * 100).toInt()),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

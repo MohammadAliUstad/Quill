@@ -1,7 +1,6 @@
 package com.yugentech.quill.ui.sources.gutenberg.parent
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -10,21 +9,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -32,41 +25,35 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergNavigationEvent
 import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel
+import com.yugentech.quill.ui.main.components.ObserveAsEvents
 import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
-import com.yugentech.quill.ui.sources.standard.components.SourceEmptyState
+import com.yugentech.quill.ui.sources.gutenberg.components.GUTENBERG_COLUMNS
 import com.yugentech.quill.ui.sources.gutenberg.components.GutenbergScreenHeader
-import com.yugentech.theme.tokens.dimensions.AppAnimations
-import kotlinx.coroutines.flow.collectLatest
+import com.yugentech.quill.ui.sources.standard.components.SourceContentHost
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import org.koin.androidx.compose.koinViewModel
 
-private enum class SourceScreenState {
-    Loading, Empty, Content
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+/**
+ * Project Gutenberg: a frosted search header over the books. Everything below the header comes
+ * from [GutenbergViewModel.uiState]; the screen only keeps what's being typed.
+ */
 @Composable
 fun GutenbergScreen(
     onNavigateById: (String) -> Unit,
     onNavigateByContent: (Book) -> Unit,
     viewModel: GutenbergViewModel = koinViewModel()
 ) {
-    val books by viewModel.booksState.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val isPaginating by viewModel.isPaginating.collectAsState()
-    val hasMorePages by viewModel.hasMorePages.collectAsState()
-    val displayTitle by viewModel.displayTitle.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.navigationEvent.collectLatest { event ->
-            when (event) {
-                is GutenbergNavigationEvent.NavigateById -> onNavigateById(event.id)
-                is GutenbergNavigationEvent.NavigateByContent -> onNavigateByContent(event.book)
-            }
+    ObserveAsEvents(viewModel.navigationEvents) { event ->
+        when (event) {
+            is GutenbergNavigationEvent.NavigateById -> onNavigateById(event.id)
+            is GutenbergNavigationEvent.NavigateByContent -> onNavigateByContent(event.book)
         }
     }
 
@@ -87,9 +74,9 @@ fun GutenbergScreen(
     val dockedWidth = screenWidth - 32.dp
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 8.dp
     val hazeState = remember { HazeState() }
-
+    // Below the search bar
     val gridTopPadding = statusBarHeight + 80.dp
 
     BackHandler(enabled = searchActive) {
@@ -106,42 +93,23 @@ fun GutenbergScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            Box(modifier = Modifier.fillMaxSize().hazeSource(hazeState)) {
-                AnimatedContent(
-                    targetState = when {
-                        isLoading && books.isEmpty() -> SourceScreenState.Loading
-                        !isLoading && books.isEmpty() -> SourceScreenState.Empty
-                        else -> SourceScreenState.Content
-                    },
-                    transitionSpec = { fadeThrough() },
-                    label = "GutenbergContentAnimation"
-                ) { state ->
-                    when (state) {
-                        SourceScreenState.Loading -> {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularWavyProgressIndicator()
-                            }
-                        }
-                        SourceScreenState.Empty -> {
-                            SourceEmptyState(
-                                title = displayTitle,
-                                message = error,
-                                modifier = Modifier.padding(top = gridTopPadding)
-                            )
-                        }
-                        SourceScreenState.Content -> {
-                            BooksGrid(
-                                books = books,
-                                topPadding = gridTopPadding,
-                                bottomPadding = navBarHeight,
-                                isPaginating = isPaginating,
-                                onBookClick = { book -> viewModel.onBookClick(book) },
-                                onLoadMore = { viewModel.loadNextPage() },
-                                hideLastRow = hasMorePages
-                            )
-                        }
-                    }
-                }
+            // The header frosts whatever scrolls under it
+            SourceContentHost(
+                content = uiState.content,
+                skeletonColumns = GridCells.Fixed(GUTENBERG_COLUMNS),
+                topPadding = gridTopPadding,
+                bottomPadding = bottomPadding,
+                modifier = Modifier.hazeSource(hazeState)
+            ) { books ->
+                BooksGrid(
+                    books = books,
+                    topPadding = gridTopPadding,
+                    bottomPadding = bottomPadding,
+                    isPaginating = uiState.isPaginating,
+                    onBookClick = viewModel::onBookClick,
+                    onLoadMore = viewModel::loadNextPage,
+                    hideLastRow = uiState.hasMorePages
+                )
             }
 
             GutenbergScreenHeader(

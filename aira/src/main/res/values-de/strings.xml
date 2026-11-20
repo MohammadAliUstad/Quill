@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="airachat_limit">Du hast dein kostenloses Limit erreicht. Wechsle zu Quill Pro.</string>
+    <string name="airachat_error">Etwas ist schiefgelaufen. Bitte versuche es erneut.</string>
+    <string name="airachat_book_not_found">Buch nicht gefunden.</string>
+    <string name="airachat_no_chapter_content">Kein Inhalt für dieses Kapitel gefunden.</string>
+    <string name="airachat_no_response">Aira hatte keine Antwort.</string>
+    <string name="airachat_blocked">Dabei kann Aira nicht helfen. Es berührt Inhalte, über die ihr KI-Anbieter nicht spricht.</string>
+    <string name="airachat_image_no_detail">Diese Passage hat nicht genug visuelle Details, um ein Bild zu erzeugen.</string>
+    <string name="airachat_image_error">Beim Erzeugen des Bildes ist etwas schiefgelaufen. Bitte versuche es erneut.</string>
+    <string name="airachat_q_characters">Wer sind die Figuren in diesem Buch?</string>
+    <string name="airachat_q_themes">Was sind die Themen dieses Buches?</string>
+    <string name="airachat_q_summarize">Kannst du dieses Kapitel zusammenfassen?</string>
+    <string name="airachat_not_encountered">„%1$s“ ist mir in dem, was du bisher gelesen hast, noch nicht begegnet.</string>
+    <string name="airachat_q_who_is">Wer ist %1$s?</string>
+    <string name="airachat_q_recent_role">Was hat %1$s in letzter Zeit gemacht?</string>
+    <string name="airachat_q_journey">Wie verlief der Weg von %1$s bisher?</string>
+    <string name="airachat_q_significance">Welche Bedeutung hat „%1$s“?</string>
+    <string name="airachat_q_define">Was bedeutet %1$s?</string>
+    <string name="airachat_q_what_is">Was ist %1$s?</string>
+    <string name="airachat_q_explain">Kannst du „%1$s“ erklären?</string>
+    <string name="airachat_q_visualize">Kannst du „%1$s“ visualisieren?</string>
+</resources>

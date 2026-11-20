@@ -10,13 +10,14 @@ import com.yugentech.quill.database.mapper.toDomainModel
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.DownloadStatus
-import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.sources.gutenberg.mapper.GutenbergOpdsMapper
 import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
+import com.yugentech.quill.sources.shared.SourceMaintenanceMonitor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
@@ -24,9 +25,9 @@ import java.nio.charset.StandardCharsets
 
 class BookDetailsViewModel(
     savedStateHandle: SavedStateHandle,
-    billingRepository: BillingRepository,
     private val repository: BookDetailsRepository,
-    private val gutenbergRepository: GutenbergRepository
+    private val gutenbergRepository: GutenbergRepository,
+    private val maintenanceMonitor: SourceMaintenanceMonitor
 ) : ViewModel() {
 
     private val bookIdParam: String? = savedStateHandle["bookId"]
@@ -61,6 +62,14 @@ class BookDetailsViewModel(
     )
 
     init {
+        // A book not downloaded yet can only be fetched while its source is up: find out now, so
+        // the download button can say so instead of failing. Library books open by id, so the
+        // source comes from the saved copy.
+        viewModelScope.launch {
+            val source = passedBook?.source ?: repository.getBook(targetBookId).first()?.toDomainModel()?.source
+            if (source != null) maintenanceMonitor.checkIfDue(source)
+        }
+
         val book = passedBook
         if (book != null && book.source == BookSource.GUTENBERG && book.description == null) {
             // Usually already fetched while the search results were showing: use it at once.
@@ -79,13 +88,12 @@ class BookDetailsViewModel(
         }
     }
 
-    val uiState: StateFlow<BookDetailsUiState> = combine(
+    private val bookState = combine(
         repository.getBook(targetBookId),
         userExpandedOverride,
-        billingRepository.isPro,
         fetchedBook,
         isFetchingDescription
-    ) { dbEntity, userExpanded, isPro, fetched, fetchingDescription ->
+    ) { dbEntity, userExpanded, fetched, fetchingDescription ->
 
         val richBook = dbEntity?.toDomainModel() ?: fetched ?: passedBook
         if (richBook == null) return@combine BookDetailsUiState(isLoading = true)
@@ -99,9 +107,13 @@ class BookDetailsViewModel(
             isLoading = false,
             isDescriptionExpanded = shouldExpand,
             // A saved copy has whatever description it has; only a passed-in one is awaited.
-            isDescriptionLoading = dbEntity == null && fetchingDescription,
-            isPro = isPro
+            isDescriptionLoading = dbEntity == null && fetchingDescription
         )
+    }
+
+    val uiState: StateFlow<BookDetailsUiState> = combine(bookState, maintenanceMonitor.down) { state, down ->
+        val maintenance = state.book?.let { down[it.source] }
+        state.copy(isSourceDown = maintenance != null, sourceBackAfter = maintenance?.backAfter)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -123,10 +135,7 @@ class BookDetailsViewModel(
 
     fun onDownloadClick() {
         viewModelScope.launch {
-            val currentState = uiState.value
-            currentState.book?.let { book ->
-                repository.startDownload(book, currentState.isPro)
-            }
+            uiState.value.book?.let { repository.startDownload(it) }
         }
     }
 
@@ -144,7 +153,27 @@ class BookDetailsViewModel(
         }
     }
 
+    /**
+     * Takes the book out of the library: its download, progress, shelf and favourite go. A book
+     * from a catalogue stays on screen as it would be found there, fresh, to add again if
+     * wanted; an imported book has nothing to come back to, so the screen closes on it.
+     */
     fun removeFromLibrary() {
+        uiState.value.book?.takeIf { it.source != BookSource.USER_IMPORTED }?.let { book ->
+            // Shown once the saved copy is gone, in its place
+            fetchedBook.value = Book(
+                id = book.id,
+                title = book.title,
+                author = book.author,
+                description = book.description,
+                coverUrl = book.coverUrl,
+                downloadUrl = book.downloadUrl,
+                source = book.source,
+                subjects = book.subjects,
+                language = book.language
+            )
+            userExpandedOverride.value = true
+        }
         viewModelScope.launch {
             repository.deleteBook(targetBookId)
         }

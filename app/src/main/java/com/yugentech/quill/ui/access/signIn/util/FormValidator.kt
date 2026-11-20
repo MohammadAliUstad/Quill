@@ -2,22 +2,24 @@ package com.yugentech.quill.ui.access.signIn.util
 
 import android.util.Patterns
 import com.yugentech.theme.tokens.AppConstants.EMPTY
+import com.yugentech.quill.R
+import com.yugentech.quill.localization.AppStrings
 
 object FormValidator {
 
     fun validateName(name: String): String {
         return when {
-            name.isBlank() -> "Name cannot be empty"
-            name.length < 2 -> "Name must be at least 2 characters"
+            name.isBlank() -> AppStrings.get(R.string.error_name_empty)
+            name.length < 2 -> AppStrings.get(R.string.error_name_short)
             else -> EMPTY
         }
     }
 
     fun validateEmail(email: String): String {
         return when {
-            email.isBlank() -> "Email cannot be empty"
+            email.isBlank() -> AppStrings.get(R.string.error_email_empty)
             !Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
-                "Please enter a valid email"
+                AppStrings.get(R.string.error_email_invalid)
 
             else -> EMPTY
         }
@@ -25,11 +27,11 @@ object FormValidator {
 
     fun validatePassword(password: String): String {
         return when {
-            password.isBlank() -> "Password cannot be empty"
-            password.length < 8 -> "Password must be at least 8 characters"
-            !password.any { it.isDigit() } -> "Password must contain at least one number"
-            !password.any { it.isUpperCase() } -> "Password must contain at least one uppercase letter"
-            !password.any { it.isLowerCase() } -> "Password must contain at least one lowercase letter"
+            password.isBlank() -> AppStrings.get(R.string.error_password_empty)
+            password.length < 8 -> AppStrings.get(R.string.error_password_short)
+            !password.any { it.isDigit() } -> AppStrings.get(R.string.error_password_number)
+            !password.any { it.isUpperCase() } -> AppStrings.get(R.string.error_password_uppercase)
+            !password.any { it.isLowerCase() } -> AppStrings.get(R.string.error_password_lowercase)
             else -> EMPTY
         }
     }

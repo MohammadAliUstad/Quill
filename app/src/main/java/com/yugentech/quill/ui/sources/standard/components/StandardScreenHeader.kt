@@ -1,5 +1,12 @@
 package com.yugentech.quill.ui.sources.standard.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,6 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import getTitleForCategory
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +53,7 @@ fun StandardScreenHeader(
     onCategorySelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -57,16 +68,22 @@ fun StandardScreenHeader(
                     onSearch = onSearchSubmit,
                     expanded = searchActive,
                     onExpandedChange = onSearchActiveChange,
-                    placeholder = { Text("Search Standard Ebooks") },
+                    placeholder = { Text(stringResource(R.string.search_standard)) },
                     leadingIcon = {
-                        IconButton(onClick = onBackOrClose) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onBackOrClose()
+                        }) {
                             AnimatedSearchIcon(isSearchActive = searchActive)
                         }
                     },
                     trailingIcon = {
                         if (searchText.isNotEmpty()) {
-                            IconButton(onClick = onSearchClear) {
-                                Icon(Icons.Default.Close, contentDescription = "Clear")
+                            IconButton(onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                onSearchClear()
+                            }) {
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.clear))
                             }
                         }
                     },
@@ -82,19 +99,34 @@ fun StandardScreenHeader(
             }
         }
 
+        // The chips fade in together once the category cache answers (nothing until then, rather
+        // than New Arrivals alone). The row keeps a chip's height while empty, so the header
+        // doesn't grow under the search bar. Each chip is keyed, so a refresh that adds or drops
+        // a subject animates just that chip instead of the row jumping.
+        val rowAlpha by animateFloatAsState(
+            targetValue = if (categories.isEmpty()) 0f else 1f,
+            animationSpec = tween(220),
+            label = "categoryRowAlpha"
+        )
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 4.dp, bottom = 4.dp)
+                .heightIn(min = FilterChipDefaults.Height)
+                .graphicsLayer { alpha = rowAlpha }
         ) {
-            items(categories) { category ->
+            items(categories, key = { it }) { category ->
                 val isSelected = category == selectedCategory
                 FilterChip(
+                    modifier = Modifier.animateItem(),
                     selected = isSelected,
-                    onClick = { onCategorySelected(category) },
-                    label = { Text(category) },
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                        onCategorySelected(category)
+                    },
+                    label = { Text(getTitleForCategory(category)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,

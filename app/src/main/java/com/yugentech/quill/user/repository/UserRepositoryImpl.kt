@@ -1,6 +1,7 @@
 package com.yugentech.quill.user.repository
 
 import com.yugentech.quill.database.entity.UserEntity
+import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.database.model.UserData
 import com.yugentech.quill.user.service.SyncDataStore
 import com.yugentech.quill.database.dao.UserDao
@@ -14,8 +15,13 @@ import timber.log.Timber
 class UserRepositoryImpl(
     private val userDao: UserDao,
     private val userService: UserService,
-    private val syncDataStore: SyncDataStore
+    private val syncDataStore: SyncDataStore,
+    private val authRepository: AuthRepository
 ) : UserRepository {
+
+    // A guest's profile stays on this phone: it's never uploaded
+    private val isGuest: Boolean
+        get() = authRepository.isGuest
 
     override fun getUserFlow(userId: String): Flow<UserData?> {
         return userDao.getUserFlow(userId)
@@ -38,11 +44,17 @@ class UserRepositoryImpl(
     }
 
     override suspend fun syncUser(userData: UserData): UserResult<Unit> {
+        if (isGuest) return UserResult.Success(Unit)
         Timber.i("Syncing user data to cloud: ${userData.userId}")
         return userService.uploadUser(userData)
     }
 
     override suspend fun fetchUserOnce(userId: String): UserResult<Unit> {
+        // A guest has no cloud profile: the one on this phone, or none yet (then it's created)
+        if (isGuest) {
+            return if (userDao.getUser(userId) != null) UserResult.Success(Unit)
+            else UserResult.Error("No guest profile on this device yet")
+        }
         return try {
             val alreadyFetched = syncDataStore.isUserFetchDone.first()
 
@@ -82,14 +94,6 @@ class UserRepositoryImpl(
         } catch (e: Exception) {
             Timber.e(e, "Exception during user fetch")
             UserResult.Error(e.message ?: "Failed to fetch user")
-        }
-    }
-
-    override suspend fun updateProStatus(userId: String, isPro: Boolean) {
-        userService.updateProStatus(userId, isPro)
-        val currentEntity = userDao.getUser(userId)
-        if (currentEntity != null) {
-            userDao.saveUser(currentEntity.copy(isPro = isPro))
         }
     }
 }

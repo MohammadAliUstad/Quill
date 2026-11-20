@@ -20,6 +20,7 @@ sealed class AppScreen(val route: String) {
     data object Aira : AppScreen("aira")
     data object Queue : AppScreen("queue")
     data object Appearance : AppScreen("appearance")
+    data object Language : AppScreen("language")
     data object ManageCategories : AppScreen("manageCategories") {
         const val ROUTE = "manageCategories?openAdd={openAdd}"
         val arguments = listOf(

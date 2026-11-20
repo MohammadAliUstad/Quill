@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 
 @Composable
 fun ChapterProgressHeader(
@@ -24,7 +27,7 @@ fun ChapterProgressHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = chapterTitle.ifBlank { "Chapter" },
+            text = chapterTitle.ifBlank { stringResource(R.string.reader_chapter) },
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -35,9 +38,8 @@ fun ChapterProgressHeader(
 
         Text(
             text = when (chapterPagesLeft) {
-                0 -> "End"
-                1 -> "1 page left"
-                else -> "$chapterPagesLeft pages left"
+                0 -> stringResource(R.string.reader_chapter_end)
+                else -> pluralStringResource(R.plurals.reader_pages_left, chapterPagesLeft, chapterPagesLeft)
             },
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,

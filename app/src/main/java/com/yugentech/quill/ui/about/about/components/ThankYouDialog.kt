@@ -29,11 +29,17 @@ import androidx.compose.ui.window.DialogProperties
 import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 
 @Composable
 fun ThankYouDialog(
     onDismiss: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -73,7 +79,7 @@ fun ThankYouDialog(
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
                 ) {
                     Text(
-                        text = "You're Amazing!",
+                        text = stringResource(R.string.thanks_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -81,21 +87,25 @@ fun ThankYouDialog(
                     )
 
                     Text(
-                        text = "Thank you so much for your support! Your contribution helps keep Quill alive and improving. It really means a lot.",
+                        text = stringResource(R.string.thanks_body),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
                 }
 
+                // Pill-shaped, with a confirming tap, as in Sessions
                 Button(
-                    onClick = onDismiss,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        onDismiss()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(MaterialTheme.components.buttonLarge),
-                    shape = RoundedCornerShape(MaterialTheme.corners.medium)
+                    shape = CircleShape
                 ) {
-                    Text("You're Welcome!")
+                    Text(stringResource(R.string.thanks_button))
                 }
             }
         }

@@ -33,6 +33,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -51,22 +53,22 @@ fun PrinciplesSection() {
     val principles = listOf(
         PrincipleItem(
             icon = Icons.Outlined.FindInPage,
-            title = "Grounded in the Text",
-            body = "Aira doesn't guess. Her answers are strictly retrieved from the actual passages of the book you are reading.",
+            title = stringResource(R.string.aira_p1_title),
+            body = stringResource(R.string.aira_p1_body),
             iconShape = MaterialShapes.Arch.toShape(),
             colorSlot = 0
         ),
         PrincipleItem(
             icon = Icons.Outlined.Psychology,
-            title = "Context-Aware",
-            body = "She knows exactly which chapter you're on and remembers your ongoing conversation for a natural chat experience.",
+            title = stringResource(R.string.aira_p2_title),
+            body = stringResource(R.string.aira_p2_body),
             iconShape = MaterialShapes.Clover4Leaf.toShape(),
             colorSlot = 1
         ),
         PrincipleItem(
             icon = Icons.Outlined.Shield,
-            title = "Protects the Plot",
-            body = "Aira's knowledge is strictly locked to your reading progress. She will never reveal events or twists from chapters you haven't read.",
+            title = stringResource(R.string.aira_p3_title),
+            body = stringResource(R.string.aira_p3_body),
             iconShape = MaterialShapes.Cookie9Sided.toShape(),
             colorSlot = 2
         )

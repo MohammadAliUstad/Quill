@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -29,8 +30,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.ui.sources.standard.components.StandardBookItem
+import com.yugentech.quill.ui.sources.standard.components.BookCoverPlaceholder
+import com.yugentech.quill.ui.sources.standard.components.gridEntrance
+import com.yugentech.quill.ui.sources.standard.components.rememberGridEntrance
 
-private const val COLUMNS = 3
+/** Covers across in the Gutenberg grid (and its loading skeleton). */
+const val GUTENBERG_COLUMNS = 3
+private const val COLUMNS = GUTENBERG_COLUMNS
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -44,6 +50,9 @@ fun BooksGrid(
     hideLastRow: Boolean = false,
 ) {
     val gridState = rememberLazyGridState()
+    // The covers ripple in once, when this list's grid first appears. Each list (a category,
+    // a search) gets its own grid, so refreshes and new pages never replay it
+    val entrance = rememberGridEntrance(Unit)
 
     // While more pages are coming, hold back the final row: it only appears once the next
     // page has loaded beneath it (and the loading indicator is gone), so the grid never ends
@@ -78,30 +87,23 @@ fun BooksGrid(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        items(
+        itemsIndexed(
             items = visibleBooks,
-            key = { book -> book.id }
-        ) { book ->
+            key = { _, book -> book.id }
+        ) { index, book ->
             StandardBookItem(
                 book = book,
                 onClick = { onBookClick(book) },
-                modifier = Modifier.animateItem()
+                modifier = Modifier
+                    .animateItem()
+                    .gridEntrance(entrance, index)
             )
         }
 
         if (isPaginating) {
-            item(
-                key = "loading_indicator",
-                span = { GridItemSpan(maxLineSpan) }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 20.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularWavyProgressIndicator()
-                }
+            // The next page on its way: a row of pulsing covers where its books will land
+            items(count = COLUMNS, key = { index -> "loading_cover_$index" }) {
+                BookCoverPlaceholder(modifier = Modifier.animateItem())
             }
         }
     }

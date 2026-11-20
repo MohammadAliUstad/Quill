@@ -10,12 +10,15 @@ import androidx.navigation.navArgument
 import com.yugentech.quill.ui.tabs.libraryScreen.viewmodel.SeeAllViewModel
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.database.model.BookSource
+import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
 import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.reader.ReaderActivity
 import com.yugentech.quill.ui.main.parent.MainScreen
 import com.yugentech.quill.ui.tabs.libraryScreen.parent.AllBooksScreen
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
+import androidx.compose.runtime.remember
 import org.koin.core.parameter.parametersOf
 
 fun NavGraphBuilder.mainGraph(
@@ -25,7 +28,13 @@ fun NavGraphBuilder.mainGraph(
     composable(AppScreen.Main.route) {
         val libraryViewModel: LibraryViewModel = koinViewModel()
         val authViewModel: AuthViewModel = koinViewModel()
+        val authRepository: AuthRepository = koinInject()
+        // Fixed while this screen is up: entering or leaving guest mode always goes through sign-in
+        val userId = remember { authRepository.currentUser.orEmpty() }
+        val isGuest = remember { authRepository.isGuest }
         MainScreen(
+            userId = userId,
+            isGuest = isGuest,
             libraryViewModel = libraryViewModel,
             onLibraryBookClick = { book ->
                 navController.navigate(AppScreen.BookDetailsScreen.createRoute(book = book)) {
@@ -83,7 +92,8 @@ fun NavGraphBuilder.mainGraph(
                 (context as? Activity)?.finishAffinity()
             },
             onSignOut = {
-                authViewModel.signOut()
+                // A guest has no account to come back to, so leaving removes their library
+                if (isGuest) authViewModel.exitGuestMode() else authViewModel.signOut()
             },
             onViewIndexingQueue = {
                 navController.navigate(AppScreen.Queue.route) { launchSingleTop = true }
@@ -96,6 +106,12 @@ fun NavGraphBuilder.mainGraph(
             },
             onReplayOnboarding = {
                 navController.navigate(AppScreen.OnboardingReplay.route) { launchSingleTop = true }
+            },
+            onLanguage = {
+                navController.navigate(AppScreen.Language.route) { launchSingleTop = true }
+            },
+            onNavigateRoute = { route ->
+                navController.navigate(route) { launchSingleTop = true }
             },
         )
     }

@@ -65,6 +65,8 @@ import com.yugentech.quill.ui.access.onboarding.components.LibraryScene
 import com.yugentech.quill.ui.access.onboarding.components.ReaderScene
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 /** The onboarding's scenes, in order. */
 private enum class Scene { FirstLine, Library, Reader, Aira, Habit }
@@ -84,7 +86,7 @@ private enum class Scene { FirstLine, Library, Reader, Aira, Habit }
 @Composable
 fun OnboardingScreen(
     onFinish: () -> Unit,
-    finishLabel: String = "Start reading"
+    finishLabel: String = stringResource(R.string.onboarding_start_reading)
 ) {
     // The aura's colours, which the nav host draws behind this screen
     AuraTheme { OnboardingContent(onFinish, finishLabel) }
@@ -125,7 +127,7 @@ private fun OnboardingContent(onFinish: () -> Unit, finishLabel: String) {
                     enabled = !onLast,
                     modifier = Modifier.graphicsLayer { alpha = skipAlpha }
                 ) {
-                    Text("Skip", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.skip), style = MaterialTheme.typography.labelLarge)
                 }
             }
 
@@ -217,7 +219,7 @@ private fun OnboardingContent(onFinish: () -> Unit, finishLabel: String) {
                             label = "onboardingButton"
                         ) { last ->
                             Text(
-                                text = if (last) finishLabel else "Continue",
+                                text = if (last) finishLabel else stringResource(R.string.onboarding_continue),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 maxLines = 1
@@ -251,7 +253,7 @@ private fun BackAction(onClick: () -> Unit) {
     ) {
         Icon(
             Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "Back",
+            contentDescription = stringResource(R.string.back),
             modifier = Modifier.size(22.dp),
             tint = primary
         )

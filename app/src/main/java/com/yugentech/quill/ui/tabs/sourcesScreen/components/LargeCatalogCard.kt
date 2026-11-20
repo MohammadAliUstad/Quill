@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.rounded.Construction
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -60,6 +61,10 @@ import coil.decode.DataSource
 import com.yugentech.quill.database.model.BookSource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.yugentech.quill.ui.sources.standard.components.rememberBackAfterText
+import java.time.Instant
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -68,6 +73,10 @@ fun LargeCatalogCard(
     libraryCount: Int,
     coverUrls: List<String>,
     modifier: Modifier = Modifier,
+    // The catalogue's server is down for maintenance: the card can't be opened, and in place of
+    // its covers, stats and open button it says so (and when it should be back, if known)
+    isUnderMaintenance: Boolean = false,
+    backAfter: Instant? = null,
     shuffleOffsetMillis: Long = 0L,
     onClick: () -> Unit,
 ) {
@@ -75,8 +84,14 @@ fun LargeCatalogCard(
 
     Card(
         onClick = onClick,
+        enabled = !isUnderMaintenance,
         shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = catalog.containerColor()),
+        // Disabled only to stop taps: it keeps its own colours
+        colors = CardDefaults.cardColors(
+            containerColor = catalog.containerColor(),
+            disabledContainerColor = catalog.containerColor(),
+            disabledContentColor = contentColor,
+        ),
         modifier = modifier.fillMaxWidth(),
     ) {
         Box {
@@ -128,6 +143,19 @@ fun LargeCatalogCard(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                if (isUnderMaintenance) {
+                    Text(
+                        text = catalog.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = contentColor.copy(alpha = 0.9f),
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    MaintenanceMessage(backAfter = backAfter, contentColor = contentColor)
+                    return@Column
+                }
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = catalog.description,
@@ -165,7 +193,7 @@ fun LargeCatalogCard(
                         }
                         if (libraryCount > 0) {
                             StatChip(
-                                text = "$libraryCount in your library",
+                                text = stringResource(R.string.in_your_library, libraryCount),
                                 containerColor = catalog.buttonContainerColor(),
                                 contentColor = catalog.buttonContentColor(),
                             )
@@ -189,6 +217,38 @@ fun LargeCatalogCard(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * In place of the covers, stats and open button while the catalogue's server is down for
+ * maintenance: what's going on, and when it should be back if the server said.
+ */
+@Composable
+private fun MaintenanceMessage(backAfter: Instant?, contentColor: Color) {
+    val backAt = rememberBackAfterText(backAfter)
+    Row(verticalAlignment = Alignment.Top) {
+        Icon(
+            imageVector = Icons.Rounded.Construction,
+            contentDescription = null,
+            tint = contentColor,
+            modifier = Modifier.size(22.dp),
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(R.string.source_card_maintenance_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = contentColor,
+            )
+            Text(
+                text = if (backAt != null) stringResource(R.string.source_card_maintenance_body_until, backAt)
+                else stringResource(R.string.source_card_maintenance_body),
+                style = MaterialTheme.typography.bodySmall,
+                color = contentColor.copy(alpha = 0.8f),
+            )
         }
     }
 }
@@ -355,6 +415,7 @@ private fun StatChip(
     text: String,
     containerColor: Color,
     contentColor: Color,
+    icon: ImageVector? = null,
 ) {
     // Fixed height + centred box so every chip lines up regardless of font padding.
     Surface(
@@ -362,10 +423,19 @@ private fun StatChip(
         color = containerColor,
         modifier = Modifier.height(30.dp),
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 12.dp),
         ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+            }
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelMedium,

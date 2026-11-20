@@ -1,6 +1,7 @@
 package com.yugentech.quill.ui.tabs.moreScreen.components
 
 import androidx.compose.animation.animateColorAsState
+import com.yugentech.theme.SheetTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -35,7 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -57,7 +58,8 @@ import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 // The two profile edits, each in its own sheet (they replaced the Edit Profile screen), the same
 // as Sessions. Roomy drag handle, bold title, content below. The action (picking an avatar,
@@ -66,7 +68,8 @@ import kotlinx.coroutines.launch
 private const val MAX_NAME_LENGTH = 20
 private val NAME_ALLOWED = Regex("^[a-zA-Z0-9\\s._-]+$")
 
-// Tapping an avatar applies it straight away and closes the sheet, so there's no Save button.
+// Tapping an avatar applies it straight away, so there's no Save button. The sheet stays open so
+// you can try a few; swipe it down or tap outside when you're done.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AvatarPickerSheet(
@@ -76,40 +79,40 @@ fun AvatarPickerSheet(
 ) {
     val haptic = LocalHapticFeedback.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val scope = rememberCoroutineScope()
+    // Marked here the moment it's tapped, rather than once the save comes back round
+    var shownAvatarId by remember { mutableIntStateOf(selectedAvatarId) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        dragHandle = { SheetHandle() }
-    ) {
-        // No card around the picker: the title and grid sit on the sheet, the tabs run edge to edge.
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+    SheetTheme {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            dragHandle = { SheetHandle() }
         ) {
-            Text(
-                text = "Choose Your Avatar",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(horizontal = 24.dp)
-            )
+            // No card around the picker: the title and grid sit on the sheet, the tabs run edge to edge.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+            ) {
+                Text(
+                    text = stringResource(R.string.avatar_sheet_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
 
-            AvatarSection(
-                selectedAvatarId = selectedAvatarId,
-                onAvatarSelected = { avatarId ->
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                AvatarSection(
+                    selectedAvatarId = shownAvatarId,
+                    onAvatarSelected = { avatarId ->
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        shownAvatarId = avatarId
                     onAvatarSelected(avatarId)
-                    scope.launch {
-                        sheetState.hide()
-                        onDismiss()
                     }
-                }
-            )
+                )
+            }
         }
     }
 }
@@ -138,9 +141,9 @@ fun EditNameSheet(
 
     val currentText = textFieldValue.text
     val error = when {
-        currentText.isBlank() -> "Display name is required"
-        currentText.trim().length < 2 -> "At least 2 characters please"
-        !currentText.matches(NAME_ALLOWED) -> "Letters, numbers, and basic symbols only"
+        currentText.isBlank() -> stringResource(R.string.name_error_required)
+        currentText.trim().length < 2 -> stringResource(R.string.name_error_short)
+        !currentText.matches(NAME_ALLOWED) -> stringResource(R.string.name_error_symbols)
         else -> null
     }
     val canSave = error == null && currentText.trim() != currentName.trim()
@@ -173,78 +176,80 @@ fun EditNameSheet(
         focusRequester.requestFocus()
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        dragHandle = { SheetHandle() }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
-                .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+    SheetTheme {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            dragHandle = { SheetHandle() }
         ) {
-            Text(
-                text = "Change Your Name",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            TextField(
-                value = textFieldValue,
-                onValueChange = {
-                    if (it.text.length <= MAX_NAME_LENGTH) textFieldValue = it
-                },
-                label = { Text("Display Name") },
-                supportingText = {
-                    // Only complain once something has changed, so the sheet doesn't open on an error.
-                    val showError = error != null && currentText != currentName
-                    Text(
-                        text = if (showError) error.orEmpty() else "${currentText.length} / $MAX_NAME_LENGTH",
-                        color = if (showError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.End
-                    )
-                },
-                singleLine = true,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                shape = RoundedCornerShape(MaterialTheme.corners.medium),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Words,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(onDone = { if (canSave) save() })
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp)
+                    .imePadding(),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                TextButton(onClick = onDismiss) { Text("Cancel") }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = save,
-                    enabled = canSave,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = saveContainerColor,
-                        contentColor = saveContentColor,
-                        disabledContainerColor = saveContainerColor,
-                        disabledContentColor = saveContentColor
-                    )
-                ) { Text("Save") }
+                Text(
+                    text = stringResource(R.string.name_sheet_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                TextField(
+                    value = textFieldValue,
+                    onValueChange = {
+                        if (it.text.length <= MAX_NAME_LENGTH) textFieldValue = it
+                    },
+                    label = { Text(stringResource(R.string.name_label)) },
+                    supportingText = {
+                        // Only complain once something has changed, so the sheet doesn't open on an error.
+                        val showError = error != null && currentText != currentName
+                        Text(
+                            text = if (showError) error.orEmpty() else "${currentText.length} / $MAX_NAME_LENGTH",
+                            color = if (showError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.End
+                        )
+                    },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    shape = RoundedCornerShape(MaterialTheme.corners.medium),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { if (canSave) save() })
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = save,
+                        enabled = canSave,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = saveContainerColor,
+                            contentColor = saveContentColor,
+                            disabledContainerColor = saveContainerColor,
+                            disabledContentColor = saveContentColor
+                        )
+                    ) { Text(stringResource(R.string.save)) }
+                }
             }
         }
     }

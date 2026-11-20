@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.tabs.libraryScreen.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +35,9 @@ import com.yugentech.quill.ui.tabs.libraryScreen.viewmodel.SeeAllViewModel
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.ui.tabs.libraryScreen.components.BookItem
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.ui.tabs.libraryScreen.components.shelfTitle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +46,7 @@ fun AllBooksScreen(
     onBookClick: (Book) -> Unit,
     viewModel: SeeAllViewModel
 ) {
+    val haptic = LocalHapticFeedback.current
     val title by viewModel.title.collectAsState()
     val books by viewModel.books.collectAsState()
 
@@ -67,17 +73,20 @@ fun AllBooksScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = title,
+                            text = shelfTitle(title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = onBackClick) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onBackClick()
+                        }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
+                                contentDescription = stringResource(R.string.back)
                             )
                         }
                     },
@@ -96,7 +105,7 @@ fun AllBooksScreen(
                 top = innerPadding.calculateTopPadding() + 8.dp,
                 start = 16.dp,
                 end = 16.dp,
-                bottom = innerPadding.calculateBottomPadding()
+                bottom = innerPadding.calculateBottomPadding() + 8.dp
             ),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),

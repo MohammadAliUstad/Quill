@@ -50,6 +50,8 @@ import com.yugentech.theme.builder.getColorScheme
 import com.yugentech.theme.models.ThemeMode
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.quill.ui.main.components.SectionHeader
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 /**
  * Light, Dark and System as three tiny phones drawn in the colours each would give, System split
@@ -69,7 +71,7 @@ fun ThemeModeSelector(
     Column(modifier = modifier.fillMaxWidth()) {
         SectionHeader(
             icon = Icons.Default.Brightness6,
-            title = "Theme Mode"
+            title = stringResource(R.string.theme_mode)
         )
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -77,9 +79,9 @@ fun ThemeModeSelector(
                 val selected = themeConfig.themeMode == mode
                 val shape = RoundedCornerShape(20.dp)
                 val (icon, label) = when (mode) {
-                    ThemeMode.LIGHT -> Icons.Default.LightMode to "Light"
-                    ThemeMode.DARK -> Icons.Default.DarkMode to "Dark"
-                    ThemeMode.SYSTEM -> Icons.Default.AutoMode to "System"
+                    ThemeMode.LIGHT -> Icons.Default.LightMode to stringResource(R.string.light)
+                    ThemeMode.DARK -> Icons.Default.DarkMode to stringResource(R.string.dark)
+                    ThemeMode.SYSTEM -> Icons.Default.AutoMode to stringResource(R.string.system)
                 }
 
                 Column(

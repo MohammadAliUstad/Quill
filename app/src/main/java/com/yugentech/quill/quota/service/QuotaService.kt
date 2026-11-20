@@ -5,7 +5,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.yugentech.quill.quota.model.QuotaData
 import com.yugentech.quill.quota.model.QuotaFields
-import com.yugentech.quill.quota.model.QuotaLimits
 import com.yugentech.quill.quota.model.todayDateString
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -24,7 +23,6 @@ class QuotaService(
 
             QuotaData(
                 queriesUsed = doc.getLong(QuotaFields.QUERIES_USED)?.toInt() ?: 0,
-                queriesLimit = doc.getLong(QuotaFields.QUERIES_LIMIT)?.toInt() ?: QuotaLimits.FREE,
                 lastResetDate = doc.getString(QuotaFields.LAST_RESET_DATE)
             )
         } catch (e: Exception) {
@@ -33,15 +31,14 @@ class QuotaService(
         }
     }
 
-    suspend fun initQuota(userId: String, isPro: Boolean) {
+    suspend fun initQuota(userId: String) {
         try {
             val data = mapOf(
                 QuotaFields.QUERIES_USED to 0,
-                QuotaFields.QUERIES_LIMIT to if (isPro) QuotaLimits.PRO else QuotaLimits.FREE,
                 QuotaFields.LAST_RESET_DATE to todayDateString()
             )
             quotaDocRef(userId).set(data).await()
-            Timber.d("Quota initialized for user: $userId isPro=$isPro")
+            Timber.d("Quota initialized for user: $userId")
         } catch (e: Exception) {
             Timber.e(e, "Failed to init quota for user: $userId")
         }
@@ -68,21 +65,6 @@ class QuotaService(
             Timber.d("Quota incremented by $amount for user: $userId")
         } catch (e: Exception) {
             Timber.e(e, "Failed to increment quota for user: $userId")
-        }
-    }
-
-    suspend fun updateLimit(userId: String, isPro: Boolean) {
-        try {
-            val limit = if (isPro) QuotaLimits.PRO else QuotaLimits.FREE
-            quotaDocRef(userId).set(
-                mapOf(
-                    QuotaFields.QUERIES_LIMIT to limit
-                ),
-                SetOptions.merge()
-            ).await()
-            Timber.d("Quota limit updated for user: $userId isPro=$isPro limit=$limit")
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to update quota limit for user: $userId")
         }
     }
 }

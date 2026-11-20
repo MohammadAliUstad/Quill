@@ -25,8 +25,7 @@ fun AiraChatHistory(
     uiState: AiraUiState,
     listState: LazyListState,
     bottomPadding: Dp,
-    modifier: Modifier = Modifier,
-    onSpeakClick: (String) -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
     var isVisuallyTyping by remember { mutableStateOf(false) }
 
@@ -90,8 +89,7 @@ fun AiraChatHistory(
                                 isVisuallyTyping = isTyping
                             }
                             if (!isTyping && stableKey == liveReplyKey) liveReplyKey = null
-                        },
-                        onSpeakClick = onSpeakClick
+                        }
                     )
                 }
             }

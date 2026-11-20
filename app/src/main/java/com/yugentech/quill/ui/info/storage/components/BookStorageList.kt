@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.model.BookStorageBreakdown
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun BookStorageList(
@@ -26,7 +28,7 @@ fun BookStorageList(
     if (books.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                text = "No books currently downloaded.",
+                text = stringResource(R.string.no_downloads_list),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

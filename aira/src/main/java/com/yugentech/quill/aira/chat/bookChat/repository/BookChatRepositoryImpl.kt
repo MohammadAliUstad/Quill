@@ -8,6 +8,8 @@ import com.yugentech.quill.aira.rag.EpubTextExtractor
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.aira.util.AiraBuilder
+import com.yugentech.quill.aira.util.AiraErrors
+import com.yugentech.quill.aira.util.AiraLog
 import com.yugentech.quill.aira.util.ChatUtils
 import com.yugentech.quill.database.entity.AiraMessageEntity
 import com.yugentech.quill.database.entity.BookEntity
@@ -16,6 +18,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.json.JSONObject
 import timber.log.Timber
+import com.yugentech.quill.aira.localization.AiraStrings
+import com.yugentech.quill.aira.R
 
 class BookChatRepositoryImpl(
     private val chatService: BookChatService,
@@ -71,10 +75,12 @@ class BookChatRepositoryImpl(
                 emit(AiraResponse.Success(text = rawResponse))
             }
         } catch (e: Exception) {
+            AiraLog.failure("BookChat[${route.intent}] question=\"$question\"", e)
             val errorMsg = when {
+                AiraErrors.isContentBlocked(e) -> AiraStrings.get(R.string.airachat_blocked)
                 e.message?.contains("resource-exhausted") == true ->
-                    "You've reached your free limit. Upgrade to Quill Pro."
-                else -> "Something went wrong. Please try again."
+                    AiraStrings.get(R.string.airachat_limit)
+                else -> AiraStrings.get(R.string.airachat_error)
             }
             emit(AiraResponse.Error(errorMsg))
         }

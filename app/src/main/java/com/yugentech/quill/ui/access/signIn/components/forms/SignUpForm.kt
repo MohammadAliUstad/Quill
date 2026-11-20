@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.access.signIn.components.forms
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +27,8 @@ import com.yugentech.quill.ui.access.signIn.state.SignUpFormState
 import com.yugentech.quill.ui.access.signIn.util.FormValidator
 import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.launch
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 /** A name, email and password, then Google underneath, as on Hajime's sign-up. */
 @Composable
@@ -35,6 +39,7 @@ fun SignUpForm(
     onClearError: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     var formState by remember { mutableStateOf(SignUpFormState()) }
     val scope = rememberCoroutineScope()
     // isLoading is shared by both sign-up paths; remember which button started it so only
@@ -61,7 +66,7 @@ fun SignUpForm(
                     nameError = FormValidator.validateName(newName)
                 )
             },
-            label = "Your name",
+            label = stringResource(R.string.label_your_name),
             leadingIcon = Icons.Default.Person,
             error = formState.nameError
         )
@@ -74,7 +79,7 @@ fun SignUpForm(
                     emailError = FormValidator.validateEmail(newEmail)
                 )
             },
-            label = "Email",
+            label = stringResource(R.string.label_email),
             leadingIcon = Icons.Default.Email,
             error = formState.emailError
         )
@@ -87,14 +92,14 @@ fun SignUpForm(
                     passwordError = FormValidator.validatePassword(newPassword)
                 )
             },
-            label = "Password",
+            label = stringResource(R.string.label_password),
             leadingIcon = Icons.Default.Lock,
             error = formState.passwordError,
             isPassword = true
         )
 
         ActionButton(
-            text = "Create account",
+            text = stringResource(R.string.sign_up_action),
             isLoading = isLoading && !isGoogleSignIn,
             enabled = !isLoading,
             onClick = {
@@ -113,6 +118,10 @@ fun SignUpForm(
                         formState = formState.copy(passwordError = error)
                     }
                 )
+                // A tap for a form that goes through, a buzz for one with something to fix
+                haptic.performHapticFeedback(
+                    if (isValid) HapticFeedbackType.Confirm else HapticFeedbackType.Reject
+                )
 
                 if (isValid) {
                     scope.launch {
@@ -126,7 +135,7 @@ fun SignUpForm(
             }
         )
 
-        AuthDivider(text = "or")
+        AuthDivider(text = stringResource(R.string.auth_divider_or))
 
         GoogleSignInButton(
             isLoading = isLoading && isGoogleSignIn,

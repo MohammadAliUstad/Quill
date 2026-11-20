@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,44 +37,18 @@ import androidx.compose.ui.unit.sp
 import com.yugentech.quill.ui.access.onboarding.components.paperColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 /** A book lying on the pile: its title, how long it is and how it sits. */
 private class PiledBook(val title: String, val width: Dp, val shift: Dp, val tilt: Float)
 
-/** First piles, all free public-domain classics: what a new library starts with. */
-private val Piles = listOf(
-    listOf(
-        PiledBook("The Odyssey", 184.dp, (-6).dp, -1.5f),
-        PiledBook("Frankenstein", 168.dp, 8.dp, 2f),
-        PiledBook("Emma", 152.dp, (-4).dp, -1f),
-        PiledBook("Dracula", 160.dp, 6.dp, 2.5f)
-    ),
-    listOf(
-        PiledBook("Moby-Dick", 188.dp, 4.dp, 1.5f),
-        PiledBook("Jane Eyre", 160.dp, (-8).dp, -2f),
-        PiledBook("Little Women", 172.dp, 6.dp, 1f),
-        PiledBook("Walden", 148.dp, (-2).dp, -2.5f)
-    ),
-    listOf(
-        PiledBook("Middlemarch", 186.dp, (-4).dp, -1f),
-        PiledBook("The Iliad", 164.dp, 6.dp, 2f),
-        PiledBook("Persuasion", 156.dp, (-6).dp, -1.5f),
-        PiledBook("Ivanhoe", 166.dp, 4.dp, 2f)
-    )
-)
-
-/**
- * What's said under each finished pile, a different line every time. There are more lines than
- * piles and they're counted separately, so a pile rarely comes back with the same words.
- */
-private val Captions = listOf(
-    "Your library begins",
-    "One shelf at a time",
-    "Classics, free to keep",
-    "A pile worth reading",
-    "Room for one more",
-    "Every reader starts somewhere",
-    "Stories waiting for you"
+/** The first pile, all free public-domain classics: what a new library starts with. */
+private val Pile = listOf(
+    PiledBook("The Odyssey", 184.dp, (-6).dp, -1.5f),
+    PiledBook("Frankenstein", 168.dp, 8.dp, 2f),
+    PiledBook("Emma", 152.dp, (-4).dp, -1f),
+    PiledBook("Dracula", 160.dp, 6.dp, 2.5f)
 )
 
 private val BookHeight = 26.dp
@@ -83,42 +56,28 @@ private const val PILE_SIZE = 4
 
 /** Time between one book landing and the next. */
 private const val BOOK_STAGGER_MILLIS = 380L
-/** How long the finished pile rests, caption showing, before the books lift away. */
-private const val HOLD_MILLIS = 1800L
-private const val LIFT_MILLIS = 260
 
 /**
- * Sign-up's opener, as Hajime's spelling tiles are: books drop one at a time onto a growing pile,
- * each landing with a little bounce, then a line fades in underneath ("Your library begins", "One
- * shelf at a time", … a different one each time) before they
- * lift away for the next pile. A first library, built a book at a time.
+ * Sign-up's opener, as Hajime's spelling tiles are: books drop one at a time onto a pile, each
+ * landing with a little bounce, then "Your library begins" fades in underneath and everything
+ * stays put. A first library, built a book at a time.
  */
 @Composable
 fun StackingBooks(modifier: Modifier = Modifier) {
-    // How many piles have been built so far: picks both the pile and, separately, its caption
-    var round by remember { mutableIntStateOf(0) }
     var showCaption by remember { mutableStateOf(false) }
     val drops = remember { List(PILE_SIZE) { Animatable(0f) } }
 
     LaunchedEffect(Unit) {
-        while (true) {
-            for (i in 0 until PILE_SIZE) {
-                launch { drops[i].animateTo(1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMediumLow)) }
-                delay(BOOK_STAGGER_MILLIS)
-            }
+        for (i in 0 until PILE_SIZE) {
+            launch { drops[i].animateTo(1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMediumLow)) }
             delay(BOOK_STAGGER_MILLIS)
-            showCaption = true
-            delay(HOLD_MILLIS)
-            showCaption = false
-            drops.forEach { drop -> launch { drop.animateTo(0f, tween(LIFT_MILLIS)) } }
-            delay(LIFT_MILLIS + 120L)
-            // The caption is hidden here, so its words change unseen
-            round++
         }
+        delay(BOOK_STAGGER_MILLIS)
+        showCaption = true
     }
 
-    val pile = Piles[round % Piles.size]
-    val caption = Captions[round % Captions.size]
+    val pile = Pile
+    val caption = stringResource(R.string.pile_caption_1)
     // The books are in the app's own colours; the caption under them is white on the aura
     val colors = paperColors()
     val covers = listOf(

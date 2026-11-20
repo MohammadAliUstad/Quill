@@ -15,13 +15,13 @@ import timber.log.Timber
 import kotlin.math.cos
 import kotlin.math.sin
 
-// Manages playback of looping background sounds using two players for gapless crossfading
+// Manages playback of looping background sounds. Starting, stopping and volume changes are
+// immediate, with no fades; two players crossfade only where the track loops, so it has no gap
 class BackgroundSoundService(private val context: Context) {
 
     private var activePlayer: ExoPlayer? = null
     private var nextPlayer: ExoPlayer? = null
     private var currentSound = BackgroundSound.NONE
-    private var volumeAnimator: ValueAnimator? = null
     private var crossfadeAnimator: ValueAnimator? = null
     private var isLooping = false
     private var positionMonitor: Runnable? = null
@@ -32,16 +32,15 @@ class BackgroundSoundService(private val context: Context) {
     private val handler = Handler(Looper.getMainLooper())
 
     companion object {
-        private const val FADE_DURATION = 500L
         private const val CROSSFADE_START_OFFSET = 2000L
         private const val CROSSFADE_DURATION = 2000L
         private const val PREVIEW_DURATION = 2000L
-        private const val PREVIEW_FADE_DURATION = 500L
         private const val POSITION_CHECK_INTERVAL = 100L
         private const val MAX_VOLUME = 1.0f
     }
 
-    // Plays a short clip of the sound for user selection, then fades out
+    // Plays a short clip of the sound for user selection. No fades: it starts at full volume
+    // and stops dead when the clip is over
     fun playPreview(sound: BackgroundSound, volume: Float = MAX_VOLUME) {
         handler.post {
             Timber.d("playPreview() called with sound: ${sound.id}, volume: $volume")
@@ -59,34 +58,13 @@ class BackgroundSoundService(private val context: Context) {
 
                     activePlayer = ExoPlayer.Builder(context).build().apply {
                         setMediaItem(MediaItem.fromUri(uri))
-                        this.volume = 0f
+                        this.volume = volume
                         repeatMode = Player.REPEAT_MODE_OFF
                         prepare()
                         playWhenReady = true
                     }
 
-                    // Fade in
-                    volumeAnimator = ValueAnimator.ofFloat(0f, volume).apply {
-                        duration = PREVIEW_FADE_DURATION
-                        interpolator = LinearInterpolator()
-                        addUpdateListener { activePlayer?.volume = it.animatedValue as Float }
-                        start()
-                    }
-
-                    // Schedule fade out and cleanup
-                    handler.postDelayed({
-                        volumeAnimator?.cancel()
-                        volumeAnimator =
-                            ValueAnimator.ofFloat(activePlayer?.volume ?: volume, 0f).apply {
-                                duration = PREVIEW_FADE_DURATION
-                                interpolator = LinearInterpolator()
-                                addUpdateListener { activePlayer?.volume = it.animatedValue as Float }
-                                addListener(object : AnimatorListenerAdapter() {
-                                    override fun onAnimationEnd(animation: Animator) = releaseInternal()
-                                })
-                                start()
-                            }
-                    }, PREVIEW_DURATION - PREVIEW_FADE_DURATION)
+                    handler.postDelayed({ releaseInternal() }, PREVIEW_DURATION)
 
                 } catch (e: Exception) {
                     Timber.e(e, "Preview failed")
@@ -113,7 +91,7 @@ class BackgroundSoundService(private val context: Context) {
 
             if (isLooping && currentSound == sound) {
                 Timber.d("Same sound already playing, adjusting volume")
-                fadeVolumeInternal(targetVolume, volume)
+                setVolumeInternal(volume)
                 return@post
             }
 
@@ -132,14 +110,12 @@ class BackgroundSoundService(private val context: Context) {
 
                     // Initialize two players for seamless looping via crossfading
                     activePlayer = createPlayer(uri).apply {
-                        this.volume = 0f
+                        this.volume = volume
                         playWhenReady = true
                     }
                     nextPlayer = createPlayer(uri)
 
                     startPositionMonitoring(uri)
-
-                    fadeVolumeInternal(0f, volume)
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to start background sound")
                     releaseInternal()
@@ -148,17 +124,23 @@ class BackgroundSoundService(private val context: Context) {
         }
     }
 
-    // Gradually fades out audio and releases resources
+    // Silences the sound at once and releases the players. No fade: called on the main thread
+    // (as the reader closes) it stops right there, without waiting behind queued work
     fun stop() {
-        handler.post {
-            Timber.d("stop() called")
-            releaseInternal()
-        }
+        Timber.d("stop() called")
+        runNow { releaseInternal() }
     }
 
     fun setVolume(volume: Float) {
-        handler.post {
-            fadeVolumeInternal(targetVolume, volume)
+        handler.post { setVolumeInternal(volume) }
+    }
+
+    private fun runNow(block: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            handler.removeCallbacksAndMessages(null)
+            block()
+        } else {
+            handler.post(block)
         }
     }
 
@@ -250,43 +232,18 @@ class BackgroundSoundService(private val context: Context) {
         }
     }
 
-    private fun fadeVolumeInternal(
-        from: Float,
-        to: Float,
-        duration: Long = FADE_DURATION,
-        onEnd: (() -> Unit)? = null
-    ) {
-        volumeAnimator?.cancel()
-        volumeAnimator?.removeAllListeners()
-        volumeAnimator?.removeAllUpdateListeners()
-
-        volumeAnimator = ValueAnimator.ofFloat(from, to).apply {
-            this.duration = duration
-            interpolator = LinearInterpolator()
-
-            addUpdateListener { animation ->
-                val newVolume = animation.animatedValue as Float
-                targetVolume = newVolume
-                try {
-                    activePlayer?.volume = newVolume
-                } catch (e: Exception) {
-                    Timber.e(e, "Error adjusting volume")
-                }
-            }
-
-            onEnd?.let {
-                addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) = it()
-                })
-            }
-
-            start()
+    private fun setVolumeInternal(volume: Float) {
+        targetVolume = volume
+        try {
+            activePlayer?.volume = volume
+        } catch (e: Exception) {
+            Timber.e(e, "Error adjusting volume")
         }
     }
 
     // Cleans up all players, animators, and handlers to prevent leaks
     fun release() {
-        handler.post { releaseInternal() }
+        runNow { releaseInternal() }
     }
 
     private fun releaseInternal() {
@@ -294,15 +251,10 @@ class BackgroundSoundService(private val context: Context) {
         try {
             positionMonitor?.let { handler.removeCallbacks(it) }
 
-            volumeAnimator?.cancel()
-            volumeAnimator?.removeAllListeners()
-            volumeAnimator?.removeAllUpdateListeners()
-
             crossfadeAnimator?.cancel()
             crossfadeAnimator?.removeAllListeners()
             crossfadeAnimator?.removeAllUpdateListeners()
 
-            volumeAnimator = null
             crossfadeAnimator = null
             isLooping = false
             isStopping = false

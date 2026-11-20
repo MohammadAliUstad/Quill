@@ -9,7 +9,9 @@ data class AiraUiState(
     val bookAuthor: String = EMPTY,
     val lastChapterTitle: String? = null,
     val isReady: Boolean = false,
+    // Reading the book now, or waiting its turn behind other books in the indexing queue
     val isIndexing: Boolean = false,
+    val isQueued: Boolean = false,
     val indexingProgress: Int = 0,
     val hasStartedReading: Boolean = false,
     val messages: List<AiraMessage> = emptyList(),
@@ -28,4 +30,7 @@ data class AiraUiState(
     val areMessagesLoaded: Boolean = false
 ) {
     val isInitialized: Boolean get() = isBookLoaded && isIndexStatusLoaded && areMessagesLoaded
+
+    /** Aira can be asked: her index of the book is finished and the reader has started it. */
+    val canChat: Boolean get() = isInitialized && isReady && hasStartedReading
 }

@@ -39,6 +39,8 @@ import org.readium.r2.streamer.PublicationOpener
 import org.readium.r2.streamer.parser.DefaultPublicationParser
 import java.io.File
 import java.util.UUID
+import com.yugentech.quill.reader.localization.ReaderStrings
+import com.yugentech.quill.reader.R
 
 sealed class ReaderCommand {
     object NextPage : ReaderCommand()
@@ -89,7 +91,7 @@ class ReaderViewModel(
                     val totalPages = bookEntity?.totalPages ?: 0
 
                     if (path == null) {
-                        _uiState.value = ReaderUiState.Error("Book path not found.")
+                        _uiState.value = ReaderUiState.Error(ReaderStrings.get(R.string.reader_book_path_missing))
                         return@withContext
                     }
 
@@ -158,7 +160,7 @@ class ReaderViewModel(
                     }
 
                 } catch (e: Exception) {
-                    _uiState.value = ReaderUiState.Error(e.message ?: "Failed to open book")
+                    _uiState.value = ReaderUiState.Error(e.message ?: ReaderStrings.get(R.string.reader_open_failed))
                 }
             }
         }
@@ -286,6 +288,11 @@ class ReaderViewModel(
         }
 
         backgroundSoundRepository.playPreview(sound, 1.0f)
+    }
+
+    /** Silences the background sound at once, as the reader closes (before its exit animation). */
+    fun stopSoundOnExit() {
+        backgroundSoundRepository.stop()
     }
 
     fun stopPreview() {

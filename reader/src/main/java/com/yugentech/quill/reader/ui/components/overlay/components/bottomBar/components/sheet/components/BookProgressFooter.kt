@@ -8,6 +8,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun BookProgressFooter(
@@ -20,7 +22,7 @@ fun BookProgressFooter(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "Page $currentPage of $totalPages",
+            text = stringResource(R.string.reader_page_of, currentPage, totalPages),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

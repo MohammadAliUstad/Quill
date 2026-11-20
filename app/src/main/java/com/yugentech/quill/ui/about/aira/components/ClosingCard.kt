@@ -27,11 +27,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 private val visionPoints = listOf(
-    "Books come alive with context, not spoilers.",
-    "Every question answered from the page itself.",
-    "A reading companion that grows with you."
+    R.string.aira_vision_1,
+    R.string.aira_vision_2,
+    R.string.aira_vision_3
 )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -73,7 +75,7 @@ fun ClosingCard() {
 
             // Manifesto headline
             Text(
-                text = "Built for the\nreaders who\nnever stop.",
+                text = stringResource(R.string.aira_closing_title),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Black,
                 color = onPrimaryContainer,
@@ -100,7 +102,7 @@ fun ClosingCard() {
                                 .background(onPrimaryContainer.copy(alpha = 0.45f))
                         )
                         Text(
-                            text = point,
+                            text = stringResource(point),
                             style = MaterialTheme.typography.bodyMedium,
                             color = onPrimaryContainer.copy(alpha = 0.78f),
                             lineHeight = 22.sp

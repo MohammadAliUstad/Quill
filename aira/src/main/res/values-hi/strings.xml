@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="airachat_limit">आप अपनी मुफ़्त सीमा तक पहुँच गए हैं। Quill Pro में अपग्रेड करें।</string>
+    <string name="airachat_error">कुछ गड़बड़ हो गई। कृपया फिर से कोशिश करें।</string>
+    <string name="airachat_book_not_found">किताब नहीं मिली।</string>
+    <string name="airachat_no_chapter_content">इस अध्याय के लिए कोई सामग्री नहीं मिली।</string>
+    <string name="airachat_no_response">Aira के पास कोई जवाब नहीं था।</string>
+    <string name="airachat_blocked">Aira इसमें मदद नहीं कर सकती। इसमें ऐसी सामग्री है जिस पर उसका AI प्रदाता बात नहीं करता।</string>
+    <string name="airachat_image_no_detail">इस अंश में चित्र बनाने लायक़ पर्याप्त दृश्य विवरण नहीं है।</string>
+    <string name="airachat_image_error">वह चित्र बनाने में कुछ गड़बड़ हो गई। फिर से कोशिश करें।</string>
+    <string name="airachat_q_characters">इस किताब के किरदार कौन हैं?</string>
+    <string name="airachat_q_themes">इस किताब के विषय क्या हैं?</string>
+    <string name="airachat_q_summarize">क्या आप इस अध्याय का सारांश बता सकती हैं?</string>
+    <string name="airachat_not_encountered">आपने अब तक जो पढ़ा है, उसमें मुझे “%1$s” नहीं मिला।</string>
+    <string name="airachat_q_who_is">%1$s कौन है?</string>
+    <string name="airachat_q_recent_role">%1$s हाल में क्या कर रहा है?</string>
+    <string name="airachat_q_journey">अब तक %1$s का सफ़र कैसा रहा है?</string>
+    <string name="airachat_q_significance">“%1$s” का क्या महत्व है?</string>
+    <string name="airachat_q_define">%1$s का क्या अर्थ है?</string>
+    <string name="airachat_q_what_is">%1$s क्या है?</string>
+    <string name="airachat_q_explain">क्या आप “%1$s” समझा सकती हैं?</string>
+    <string name="airachat_q_visualize">क्या आप “%1$s” का चित्र बना सकती हैं?</string>
+</resources>

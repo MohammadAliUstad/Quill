@@ -43,10 +43,10 @@ fun DiscoverBookCard(
         animationSpec = tween(400),
         label = "cardImageAlpha"
     )
-    val shimmerAlpha by animateFloatAsState(
+    val placeholderAlpha by animateFloatAsState(
         targetValue = if (isLoaded) 0f else 1f,
         animationSpec = tween(400),
-        label = "cardShimmerAlpha"
+        label = "cardPlaceholderAlpha"
     )
 
     val coverShape = RoundedCornerShape(8.dp)
@@ -67,8 +67,8 @@ fun DiscoverBookCard(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .alpha(shimmerAlpha)
-                    .shimmerEffect()
+                    .alpha(placeholderAlpha)
+                    .loadingPulse()
             )
 
             AsyncImage(

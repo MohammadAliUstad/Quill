@@ -5,6 +5,10 @@ import com.yugentech.quill.aira.chat.generalChat.repository.GeneralChatRepositor
 import com.yugentech.quill.aira.intent.model.Intent
 import com.yugentech.quill.aira.intent.repository.IntentDetectionRepository
 import com.yugentech.quill.aira.response.AiraResponse
+import com.yugentech.quill.aira.R
+import com.yugentech.quill.aira.localization.AiraStrings
+import com.yugentech.quill.aira.util.AiraErrors
+import com.yugentech.quill.aira.util.AiraLog
 import com.yugentech.quill.database.dao.AiraMessageDao
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.dao.UserDao
@@ -26,7 +30,15 @@ class AiraChatService(
 ) {
 
     fun ask(bookId: String, query: String, selectedText: String? = null): Flow<AiraResponse> = flow {
-        val book = bookDao.getBookEntity(bookId)!!
+        AiraLog.d(
+            "Ask book=$bookId query=\"$query\" selectedText=${selectedText?.let { "\"${it.take(60)}\"" } ?: "null"}"
+        )
+        val book = bookDao.getBookEntity(bookId)
+        if (book == null) {
+            AiraLog.w("Ask book=$bookId: the book isn't in the database")
+            emit(AiraResponse.Error(resolveErrorMessage(IllegalStateException("Book $bookId not found"))))
+            return@flow
+        }
         val recentHistory = airaMessageDao.getRecentMessagesForBook(bookId)
         val currentUserId = authRepository.currentUser
         val userName = currentUserId?.let { userId ->
@@ -90,11 +102,14 @@ class AiraChatService(
             }
 
         } catch (e: Exception) {
+            AiraLog.failure("Ask query=\"$query\"", e)
             emit(AiraResponse.Error(resolveErrorMessage(e)))
         }
     }
 
     private fun resolveErrorMessage(e: Exception): String = when {
+        AiraErrors.isContentBlocked(e) -> AiraStrings.get(R.string.airachat_blocked)
+
         e.message?.contains("MAX_TOKENS") == true ->
             "The answer was too long. Please try asking for a summary."
 

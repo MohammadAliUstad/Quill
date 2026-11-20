@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ResumeFab(
@@ -42,7 +44,7 @@ fun ResumeFab(
     isScrollingDown: Boolean,
     onClick: () -> Unit,
     icon: ImageVector = Icons.AutoMirrored.Filled.MenuBook,
-    label: String = "Continue"
+    label: String = stringResource(R.string.onboarding_continue)
 ) {
     var isVisible by remember { mutableStateOf(visible) }
     var isExpanded by remember { mutableStateOf(true) }

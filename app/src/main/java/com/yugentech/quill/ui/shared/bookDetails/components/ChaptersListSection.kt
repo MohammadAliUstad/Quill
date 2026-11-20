@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.ui.main.components.itemShape
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 // 1. Refactored into a LazyListScope extension
 fun LazyListScope.chaptersListSection(
@@ -42,7 +44,7 @@ fun LazyListScope.chaptersListSection(
     item {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Chapters",
+            text = stringResource(R.string.chapters),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -91,8 +93,11 @@ private fun ChapterItem(
             HeaderChapterItem(chapter, styling, onClick)
         }
 
-        // 3. Replaces the Arrangement.spacedBy(2.dp) from the original Column
-        Spacer(modifier = Modifier.height(2.dp))
+        // 3. Replaces the Arrangement.spacedBy(2.dp) from the original Column: between chapters
+        // only, so the list ends exactly the screen's 8dp above the navigation bar
+        if (index < chapters.lastIndex) {
+            Spacer(modifier = Modifier.height(2.dp))
+        }
     }
 }
 

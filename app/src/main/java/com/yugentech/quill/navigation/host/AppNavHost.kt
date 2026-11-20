@@ -15,7 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,6 +46,8 @@ import com.yugentech.quill.ui.access.onboarding.components.LocalAuraBackground
 import com.yugentech.quill.ui.access.onboarding.components.QuillAuraBackground
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -87,12 +92,24 @@ fun AppNavHost(
         }
     }
 
-    LaunchedEffect(authState.isUserLoggedIn, authState.userId, showOnboarding) {
+    // Set the moment onboarding is finished or skipped, so the move on to sign-in (or the app)
+    // starts on the very next frame instead of after the DataStore write has landed and its
+    // flow has emitted again. That round trip delayed the transition by a few frames and, if
+    // auth state changed in between, could briefly route back to onboarding.
+    var onboardingFinished by rememberSaveable { mutableStateOf(false) }
+    val onboardingPending = showOnboarding && !onboardingFinished
+    // Once the write has landed the flag has done its job; clear it so onboarding can be
+    // required again later (e.g. after its stored flag is reset).
+    LaunchedEffect(showOnboarding) {
+        if (!showOnboarding) onboardingFinished = false
+    }
+
+    LaunchedEffect(authState.isUserLoggedIn, authState.userId, onboardingPending) {
         if (!authState.isLoading && !authState.isInitializing) {
             val currentRoute = navController.currentDestination?.route
 
             when {
-                showOnboarding -> {
+                onboardingPending -> {
                     if (currentRoute != AppScreen.Onboarding.route) {
                         navController.navigate(AppScreen.Onboarding.route) {
                             popUpTo(0) { inclusive = true }
@@ -161,7 +178,13 @@ fun AppNavHost(
     ) {
         composable(AppScreen.Onboarding.route) {
             OnboardingScreen(
-                onFinish = onOnboardingComplete
+                onFinish = {
+                    // Once only: a second tap on Skip/Start while the screen is leaving does nothing
+                    if (!onboardingFinished) {
+                        onboardingFinished = true
+                        onOnboardingComplete()
+                    }
+                }
             )
         }
 
@@ -169,7 +192,7 @@ fun AppNavHost(
         composable(AppScreen.OnboardingReplay.route) {
             OnboardingScreen(
                 onFinish = { navController.popBackStack() },
-                finishLabel = "Done"
+                finishLabel = stringResource(R.string.onboarding_done)
             )
         }
 

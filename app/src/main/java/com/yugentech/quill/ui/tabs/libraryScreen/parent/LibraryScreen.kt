@@ -1,7 +1,10 @@
 package com.yugentech.quill.ui.tabs.libraryScreen.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -56,8 +59,27 @@ import com.yugentech.quill.ui.tabs.libraryScreen.components.HistoryCarousel
 import com.yugentech.quill.ui.tabs.libraryScreen.components.LastReadBookCard
 import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
 import com.yugentech.quill.ui.tabs.libraryScreen.components.LibraryParallaxBackground
-import com.yugentech.theme.tokens.dimensions.AppAnimations
 import kotlinx.coroutines.delay
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.ui.tabs.libraryScreen.components.shelfTitle
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.platform.LocalDensity
+import com.yugentech.quill.library.viewmodel.LibraryState
+
+/** The library's content rises in as the sign-in screens' blocks do: this long, this far. */
+private const val LIBRARY_RISE_MS = 550
+private val LIBRARY_RISE_DISTANCE = 24.dp
+
+/** Switching between the books and the empty state, the old one fades out over this first. */
+private const val LIBRARY_FADE_OUT_MS = 120
+
+/** Material 3's emphasized-decelerate easing, as the sign-in screens' rise-in uses. */
+private val LibraryRiseEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,13 +95,14 @@ fun LibraryScreen(
     onEmptyStateChange: (Boolean) -> Unit = {},
     onAddBooksClick: () -> Unit = {}
 ) {
+    val haptic = LocalHapticFeedback.current
     val lastReadBook by viewModel.lastReadBook.collectAsState()
     val historyBooks by viewModel.historyBooks.collectAsState()
     val allHistoryBooks by viewModel.allHistoryBooks.collectAsState()
     val favoriteBooks by viewModel.favoriteBooks.collectAsState()
     val bookShelf by viewModel.bookShelf.collectAsState()
     val userCategories by viewModel.userCategories.collectAsState()
-    val isInitializing by viewModel.isInitializing.collectAsState()
+    val libraryState by viewModel.libraryState.collectAsState()
 
     val scrollState = rememberScrollState()
 
@@ -105,38 +128,45 @@ fun LibraryScreen(
         }
     }
 
-    // After a book import, land the user at the very bottom so the freshly added book is
-    // visible. "My Shelf" was unsubscribed while the user was away on the Sources tab, so it
-    // re-queries from scratch on remount -- give that a moment to land before measuring.
+    // After a book import, glide down to the very bottom so the user sees where the freshly
+    // added book went. "My Shelf" was unsubscribed while the user was away on the Sources tab,
+    // so it re-queries from scratch on remount -- give that a moment to land before measuring.
     LaunchedEffect(scrollToBottom) {
         if (scrollToBottom) {
-            delay(400)
-            scrollState.scrollTo(scrollState.maxValue)
-            savedScroll = scrollState.maxValue
-            onScrollToBottomHandled()
+            try {
+                delay(400)
+                // If rows are still arriving and the end moves while it glides, carry on to the
+                // new end. A touch stops it (the scroll is cancelled), handled below all the same.
+                while (scrollState.value < scrollState.maxValue) {
+                    val distance = scrollState.maxValue - scrollState.value
+                    scrollState.animateScrollTo(
+                        value = scrollState.maxValue,
+                        animationSpec = tween(
+                            durationMillis = (distance / 3).coerceIn(450, 1100),
+                            easing = FastOutSlowInEasing
+                        )
+                    )
+                }
+            } finally {
+                savedScroll = scrollState.value
+                onScrollToBottomHandled()
+            }
         }
     }
 
-    LaunchedEffect(Unit) { viewModel.initializeDefaultCategories() }
-
-    val allCategoryBooks = userCategories.map { category ->
-        val booksFlow = remember(category.name) { viewModel.getBooksForCategory(category.name) }
-        booksFlow.collectAsState().value
+    LaunchedEffect(Unit) {
+        viewModel.initializeDefaultCategories()
     }
 
-    val isEmpty = !isInitializing &&
-            lastReadBook == null &&
-            historyBooks.isEmpty() &&
-            favoriteBooks.isEmpty() &&
-            bookShelf.isEmpty() &&
-            allCategoryBooks.all { it.isEmpty() }
-
-    // Lets the parent swap the Continue FAB for an Add Books FAB while the library is empty.
-    LaunchedEffect(isEmpty) { onEmptyStateChange(isEmpty) }
+    // Lets the parent swap the Continue FAB for an Add Books FAB while the library is empty
+    // (once that's known: nothing changes while it's still being worked out).
+    LaunchedEffect(libraryState) {
+        if (libraryState != LibraryState.Loading) onEmptyStateChange(libraryState == LibraryState.Empty)
+    }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val hazeState = remember { HazeState() }
-    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
+    val riseDistancePx = with(LocalDensity.current) { LIBRARY_RISE_DISTANCE.roundToPx() }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -156,7 +186,7 @@ fun LibraryScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Library",
+                            text = stringResource(R.string.tab_library),
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -164,11 +194,14 @@ fun LibraryScreen(
                     actions = {
                         // Only once the library has books -- the empty state has its own
                         // Add Books FAB instead.
-                        if (!isInitializing && !isEmpty) {
-                            IconButton(onClick = onAddBooksClick) {
+                        if (libraryState == LibraryState.Content) {
+                            IconButton(onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                onAddBooksClick()
+                            }) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
-                                    contentDescription = "Add books"
+                                    contentDescription = stringResource(R.string.add_books)
                                 )
                             }
                         }
@@ -186,41 +219,59 @@ fun LibraryScreen(
         containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
 
-        // Fades through between the empty state and the library when books arrive or leave
+        // The books (or the empty state) rise in as the sign-in screens' blocks do: the screen
+        // fades in while its content slides up into place (the slide is on the content itself,
+        // via riseIn below, so the cover backdrop only fades and never shows a gap). The same
+        // when it switches between the two (the first book added, the last one removed), with
+        // the old one fading out quickly first.
         AnimatedContent(
-            targetState = isEmpty,
-            transitionSpec = { fadeThrough() },
+            targetState = libraryState,
+            transitionSpec = {
+                if (initialState == LibraryState.Loading) {
+                    fadeIn(tween(LIBRARY_RISE_MS, easing = LibraryRiseEasing)) togetherWith ExitTransition.None
+                } else {
+                    fadeIn(tween(LIBRARY_RISE_MS - LIBRARY_FADE_OUT_MS, delayMillis = LIBRARY_FADE_OUT_MS, easing = LibraryRiseEasing)) togetherWith
+                        fadeOut(tween(LIBRARY_FADE_OUT_MS))
+                }
+            },
             label = "library_content_transition"
-        ) { currentlyEmpty ->
+        ) { state ->
+            val riseIn = Modifier.animateEnterExit(
+                enter = slideInVertically(tween(LIBRARY_RISE_MS, easing = LibraryRiseEasing)) { riseDistancePx },
+                exit = ExitTransition.None
+            )
 
-            if (currentlyEmpty) {
+            if (state == LibraryState.Loading) {
+                Box(modifier = Modifier.fillMaxSize())
+            } else if (state == LibraryState.Empty) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(
                             top = innerPadding.calculateTopPadding(),
-                            bottom = contentPadding.calculateBottomPadding() + 8.dp
+                            bottom = contentPadding.calculateBottomPadding() + 16.dp
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
+                        modifier = riseIn,
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.empty_library),
-                            contentDescription = "Empty library",
+                            contentDescription = stringResource(R.string.library_empty_cd),
                             modifier = Modifier.size(240.dp)
                         )
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            text = "Your library is empty",
+                            text = stringResource(R.string.library_empty_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Books you download or add\nwill appear here",
+                            text = stringResource(R.string.library_empty_body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -260,17 +311,18 @@ fun LibraryScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
+                            .then(riseIn)
                             .verticalScroll(scrollState)
                             .padding(
                                 top = innerPadding.calculateTopPadding(),
-                                bottom = contentPadding.calculateBottomPadding() + 8.dp
+                                bottom = contentPadding.calculateBottomPadding() + 16.dp
                             ),
                         verticalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
                         if (lastReadBook != null) {
                             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                                 Text(
-                                    text = "Continue Reading",
+                                    text = stringResource(R.string.continue_reading),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(bottom = 12.dp)
@@ -286,7 +338,7 @@ fun LibraryScreen(
                         if (historyBooks.isNotEmpty()) {
                             Column {
                                 Text(
-                                    text = "Recently Read",
+                                    text = stringResource(R.string.recently_read),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier
@@ -308,7 +360,7 @@ fun LibraryScreen(
 
                             if (categoryBooks.isNotEmpty()) {
                                 BookRow(
-                                    title = category.name,
+                                    title = shelfTitle(category.name),
                                     books = categoryBooks,
                                     onBookClick = { onLibraryBookClick(it.toBook()) },
                                     onSeeAllClick = { onSeeAllClick(category.name) }
@@ -318,7 +370,7 @@ fun LibraryScreen(
 
                         if (favoriteBooks.isNotEmpty()) {
                             BookRow(
-                                title = "Favorites",
+                                title = stringResource(R.string.shelf_favorites),
                                 books = favoriteBooks,
                                 onBookClick = { onLibraryBookClick(it.toBook()) },
                                 onSeeAllClick = { onSeeAllClick("Favorites") }
@@ -327,7 +379,7 @@ fun LibraryScreen(
 
                         if (bookShelf.isNotEmpty()) {
                             BookRow(
-                                title = "My Shelf",
+                                title = stringResource(R.string.shelf_my_shelf),
                                 books = bookShelf,
                                 onBookClick = { onLibraryBookClick(it.toBook()) },
                                 onSeeAllClick = { onSeeAllClick("My Shelf") }

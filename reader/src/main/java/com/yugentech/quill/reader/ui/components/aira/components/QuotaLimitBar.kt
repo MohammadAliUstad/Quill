@@ -19,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun QuotaLimitBar(
@@ -46,14 +48,14 @@ fun QuotaLimitBar(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Daily limit reached",
+                    text = stringResource(R.string.reader_daily_limit_reached),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = if (isPro) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
                 )
                 Text(
-                    text = if (isPro) "You've used your 50 daily queries. Resets at midnight."
-                           else "You've used your 5 free queries. Upgrade to Pro for 50/day.",
+                    text = if (isPro) stringResource(R.string.reader_quota_pro_used)
+                           else stringResource(R.string.reader_quota_free_used),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -10,7 +10,7 @@ interface BookDetailsRepository {
     fun getAllCategories(): Flow<List<CategoryEntity>>
     suspend fun isBookInLibrary(bookId: String): Boolean
     suspend fun getBookOnce(bookId: String): BookEntity?
-    suspend fun startDownload(book: Book, isPro: Boolean)
+    suspend fun startDownload(book: Book)
     suspend fun removeDownload(bookId: String)
     suspend fun deleteBook(bookId: String)
     suspend fun updateCategory(book: Book, newCategory: String)
@@ -19,11 +19,15 @@ interface BookDetailsRepository {
     suspend fun resetReadingProgress(bookId: String)
     suspend fun removeFromRecent(bookId: String)
 
-    // AI related
+    // Aira
+    /** Whether the book's index for Aira is finished. */
     fun observeIsReady(bookId: String): Flow<Boolean>
-    suspend fun isReady(bookId: String): Boolean
     suspend fun isSpoilerLockEnabled(bookId: String): Boolean
     suspend fun setSpoilerLock(bookId: String, enabled: Boolean)
-    suspend fun getUnindexedDownloadedBooks(): List<BookEntity>
-    suspend fun enqueueIndexing(bookId: String)
+
+    /**
+     * Queues every downloaded book whose index isn't finished and isn't already queued: books
+     * whose indexing failed, was cancelled, or was cut short pick up where they left off.
+     */
+    suspend fun indexUnfinishedBooks()
 }

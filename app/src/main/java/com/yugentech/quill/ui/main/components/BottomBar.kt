@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.main.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
@@ -9,18 +11,25 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun BottomBar(
     currentTab: QuillTab,
     onTabSelected: (QuillTab) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     NavigationBar {
         QuillTab.entries.forEach { tab ->
             val isSelected = currentTab == tab
             NavigationBarItem(
                 selected = isSelected,
-                onClick = { if (!isSelected) onTabSelected(tab) },
+                onClick = {
+                    if (!isSelected) {
+                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                        onTabSelected(tab)
+                    }
+                },
                 icon = {
                     val resId = when (tab) {
                         QuillTab.Library -> R.drawable.anim_library_enter
@@ -31,10 +40,10 @@ fun BottomBar(
                     AnimatedNavIcon(
                         selected = isSelected,
                         avdRes = resId,
-                        contentDescription = tab.title
+                        contentDescription = stringResource(tab.title)
                     )
                 },
-                label = { Text(tab.title) }
+                label = { Text(stringResource(tab.title)) }
             )
         }
     }

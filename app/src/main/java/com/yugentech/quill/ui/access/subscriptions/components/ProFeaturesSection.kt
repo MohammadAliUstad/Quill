@@ -26,9 +26,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
+/**
+ * The free and Pro tiers side by side as cards, then what a query costs. [freeLabel] and
+ * [proLabel] sit above the tier names: "Current plan" and "Upgrade to" on the subscription
+ * screen; a guest, who has no plan yet, gets labels about making an account instead.
+ */
 @Composable
-fun ProFeaturesSection() {
+fun ProFeaturesSection(
+    freeLabel: String = stringResource(R.string.tier_label_current),
+    proLabel: String = stringResource(R.string.tier_label_upgrade)
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
@@ -43,10 +53,10 @@ fun ProFeaturesSection() {
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = "Current Plan",
-            tierName = "Basic Reader",
-            subtitle = "Standard Library",
-            description = "Enjoy a beautiful, focused reading environment with 5 daily AI assistant queries.",
+            label = freeLabel,
+            tierName = stringResource(R.string.tier_basic),
+            subtitle = stringResource(R.string.tier_basic_subtitle),
+            description = stringResource(R.string.tier_basic_body),
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             borderColor = MaterialTheme.colorScheme.outlineVariant
@@ -62,10 +72,10 @@ fun ProFeaturesSection() {
                     modifier = Modifier.size(28.dp)
                 )
             },
-            label = "Upgrade to",
-            tierName = "Quill Pro",
-            subtitle = "AI Reading Companion",
-            description = "Supercharge Aira with 50 daily AI assistant queries. Deeply analyze themes, hidden plots, and character motivations, and bring more scenes to life as painted illustrations.",
+            label = proLabel,
+            tierName = stringResource(R.string.quill_pro),
+            subtitle = stringResource(R.string.tier_pro_subtitle),
+            description = stringResource(R.string.tier_pro_body),
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
@@ -73,10 +83,15 @@ fun ProFeaturesSection() {
 
         // Quota cost note: applies to both tiers
         Text(
-            text = "Each question to Aira uses 1 query. Each generated image uses 3 queries.",
+            text = stringResource(R.string.query_cost_note),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = MaterialTheme.spacing.xs)
+            // Further from the cards than they are from each other: a note on both, not part of the Pro one
+            modifier = Modifier.padding(
+                start = MaterialTheme.spacing.xs,
+                end = MaterialTheme.spacing.xs,
+                top = MaterialTheme.spacing.s
+            )
         )
     }
 }

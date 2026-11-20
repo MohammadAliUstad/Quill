@@ -1,5 +1,6 @@
 package com.yugentech.quill.ui.tabs.libraryScreen.components
 
+import com.yugentech.quill.ui.shared.maintenance.MaintenanceAwareCover
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -46,7 +47,9 @@ import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.quill.database.view.LibraryBookView
 import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
-import com.yugentech.quill.ui.tabs.discoverScreen.components.shimmerEffect
+import com.yugentech.quill.ui.tabs.discoverScreen.components.loadingPulse
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -64,10 +67,10 @@ fun BookItem(
         animationSpec = tween(500),
         label = "bookItemImageAlpha"
     )
-    val shimmerAlpha by animateFloatAsState(
+    val placeholderAlpha by animateFloatAsState(
         targetValue = if (isLoaded) 0f else 1f,
         animationSpec = tween(500),
-        label = "bookItemShimmerAlpha"
+        label = "bookItemPlaceholderAlpha"
     )
 
     Column(
@@ -90,19 +93,18 @@ fun BookItem(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .alpha(shimmerAlpha)
-                        .shimmerEffect()
+                        .alpha(placeholderAlpha)
+                        .loadingPulse()
                 )
 
-                // Image fades in
-                AsyncImage(
-                    model = book.coverUrl?.toCoverThumbnailUrl(),
+                // Image fades in; a maintenance icon instead if its source is down
+                MaintenanceAwareCover(
+                    url = book.coverUrl?.toCoverThumbnailUrl(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
+                    imageAlpha = imageAlpha,
                     onState = { imageState = it },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .alpha(imageAlpha)
+                    modifier = Modifier.fillMaxSize()
                 )
 
                 Box(
@@ -172,7 +174,7 @@ fun BookItem(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Error,
-                                contentDescription = "Download Failed",
+                                contentDescription = stringResource(R.string.download_failed),
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(28.dp)
                             )

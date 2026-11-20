@@ -4,21 +4,21 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.yugentech.quill.aira.rag.BookEmbeddingWorker
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.domain.BillingRepository
 import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
+import com.yugentech.quill.sources.shared.SourceMaintenanceMonitor
 import com.yugentech.quill.sources.standard.repository.StandardRepository
 import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
 import com.yugentech.quill.ui.tabs.sourcesScreen.result.ImportResult
 import com.yugentech.quill.ui.tabs.sourcesScreen.util.LocalBookImporter
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,14 +27,17 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.Instant
 
 private const val COVER_PREVIEW_COUNT = 6
+private const val RECHECK_WHILE_DOWN_MILLIS = 60_000L
 
 class SourcesViewModel(
     private val bookDao: BookDao,
     private val billingRepository: BillingRepository,
     private val standardRepository: StandardRepository,
-    private val gutenbergRepository: GutenbergRepository
+    private val gutenbergRepository: GutenbergRepository,
+    maintenanceMonitor: SourceMaintenanceMonitor
 ) : ViewModel() {
 
     private val _isImporting = MutableStateFlow(false)
@@ -59,7 +62,28 @@ class SourcesViewModel(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
+    /** The catalogues down for maintenance, and when each said it'd be back: their cards close. */
+    val sourcesDown: StateFlow<Map<BookSource, Instant?>> = maintenanceMonitor.down
+        .map { down -> down.mapValues { it.value.backAfter } }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            maintenanceMonitor.down.value.mapValues { it.value.backAfter }
+        )
+
     init {
+        // Ask each source's site itself, so its card can close before it's opened. While any is
+        // down, ask it again every minute, so its card opens again by itself once it's back.
+        // Apart, since the first check keeps retrying for a while when a site can't be reached
+        viewModelScope.launch { maintenanceMonitor.checkAllIfDue() }
+        viewModelScope.launch {
+            maintenanceMonitor.down.collectLatest { down ->
+                while (down.isNotEmpty()) {
+                    delay(RECHECK_WHILE_DOWN_MILLIS)
+                    down.keys.forEach { launch { maintenanceMonitor.check(it) } }
+                }
+            }
+        }
         // Only hit the network when a cache is empty (e.g. Discover or Gutenberg never opened yet).
         viewModelScope.launch {
             if (standardRepository.getNewReleasesFlow().first().isEmpty()) {
@@ -80,38 +104,21 @@ class SourcesViewModel(
         viewModelScope.launch {
             _isImporting.value = true
 
-            // 1. Run the generic import logic
             val results = LocalBookImporter.importFiles(
                 context = context,
                 bookDao = bookDao,
                 uris = uris
             )
 
-            // Filter only the successfully imported books to be indexed
-            results.filterIsInstance<ImportResult.Success>().forEach { success ->
-                scheduleBookIndexing(context, success.bookId)
+            // Each book that imported is queued for Aira, like a downloaded one
+            val workManager = WorkManager.getInstance(context)
+            results.filterIsInstance<ImportResult.Success>().forEach {
+                BookEmbeddingWorker.enqueue(workManager, it.bookId)
             }
 
             _importResults.value = results
             _isImporting.value = false
         }
-    }
-
-    private fun scheduleBookIndexing(context: Context, bookId: String) {
-        val indexRequest = OneTimeWorkRequestBuilder<BookEmbeddingWorker>()
-            .setInputData(
-                workDataOf(BookEmbeddingWorker.Companion.KEY_BOOK_ID to bookId)
-            )
-            .addTag("index_$bookId")
-            .addTag("AI_INDEXING")
-            .build()
-
-        // This correctly queues the indexing sequentially as you designed
-        WorkManager.Companion.getInstance(context).enqueueUniqueWork(
-            "global_book_processing_queue",
-            ExistingWorkPolicy.APPEND_OR_REPLACE,
-            indexRequest
-        )
     }
 
     fun clearResults() {

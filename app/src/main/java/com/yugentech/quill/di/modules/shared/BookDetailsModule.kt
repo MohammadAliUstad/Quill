@@ -15,7 +15,6 @@ val bookDetailsModule = module {
         BookDetailsRepositoryImpl(
             categoryDao = get(),
             bookDao = get(),
-            chunkDao = get(),
             indexingStateDao = get(),
             workManager = get(),
             cloudSyncRepository = get()
@@ -38,8 +37,8 @@ val bookDetailsModule = module {
         BookDetailsViewModel(
             repository = get(),
             savedStateHandle = get(),
-            billingRepository = get(),
-            gutenbergRepository = get()
+            gutenbergRepository = get(),
+            maintenanceMonitor = get()
         )
     }
 

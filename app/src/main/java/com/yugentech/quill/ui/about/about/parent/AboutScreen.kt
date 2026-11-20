@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.about.about.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -49,6 +51,9 @@ import com.yugentech.quill.ui.tabs.moreScreen.components.SettingsListItem
 import com.yugentech.theme.tokens.AppConstants
 import com.yugentech.theme.tokens.spacing
 import org.koin.androidx.compose.koinViewModel
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.localization.AppStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +63,7 @@ fun AboutScreen(
     onNavigateToMoreApps: () -> Unit,
     viewModel: AboutViewModel = koinViewModel()
 ) {
+    val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
 
     var toastMessage by remember { mutableStateOf<String?>(null) }
@@ -66,10 +72,12 @@ fun AboutScreen(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
+    val pendingMessage = stringResource(R.string.billing_payment_pending)
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is BillingEvent.TipThankYou -> showThankYouDialog = true
+                is BillingEvent.PurchasePending -> toastMessage = pendingMessage
                 is BillingEvent.Error -> toastMessage = event.message
                 else -> Unit
             }
@@ -101,17 +109,20 @@ fun AboutScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("About")
+                        Text(stringResource(R.string.more_section_about))
                         Text(
-                            "App information and credits",
+                            stringResource(R.string.about_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onNavigateBack()
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -135,7 +146,7 @@ fun AboutScreen(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs),
                 contentPadding = PaddingValues(
-                    bottom = innerpadding.calculateBottomPadding(),
+                    bottom = innerpadding.calculateBottomPadding() + 8.dp,
                     start = 16.dp,
                     end = 16.dp
                 )
@@ -147,7 +158,7 @@ fun AboutScreen(
                 item {
                     SectionHeader(
                         icon = Icons.Filled.Favorite,
-                        title = "Connect & Support"
+                        title = stringResource(R.string.about_section_connect)
                     )
                 }
                 itemsIndexed(supportItems) { index, item ->
@@ -164,7 +175,7 @@ fun AboutScreen(
                 item {
                     SectionHeader(
                         icon = Icons.Filled.ThumbUp,
-                        title = "Spread the Word"
+                        title = stringResource(R.string.about_section_share)
                     )
                 }
 
@@ -182,7 +193,7 @@ fun AboutScreen(
                 item {
                     SectionHeader(
                         icon = Icons.Filled.Info,
-                        title = "Legal"
+                        title = stringResource(R.string.about_section_legal)
                     )
                 }
 
@@ -223,7 +234,7 @@ fun AboutScreen(
                         val intent = Intent(Intent.ACTION_VIEW, AppConstants.KOFI_URL.toUri())
                         context.startActivity(intent)
                     } catch (e: Exception) {
-                        toastMessage = "Could not open link"
+                        toastMessage = AppStrings.get(R.string.could_not_open_link)
                     }
                     showDonationDialog = false
                 }

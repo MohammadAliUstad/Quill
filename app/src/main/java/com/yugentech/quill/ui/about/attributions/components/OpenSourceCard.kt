@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.about.attributions.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,10 +32,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.core.net.toUri
 import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun OpenSourceCard(githubUrl: String) {
+    val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
 
     Card(
@@ -59,7 +65,8 @@ fun OpenSourceCard(githubUrl: String) {
                         Icon(
                             imageVector = Icons.Default.Code,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(MaterialTheme.icons.large)
                         )
                     }
                 }
@@ -68,13 +75,13 @@ fun OpenSourceCard(githubUrl: String) {
 
                 Column {
                     Text(
-                        "Quill is Open Source",
+                        stringResource(R.string.credit_oss_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        "Licensed under Apache 2.0",
+                        stringResource(R.string.credit_oss_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -82,13 +89,14 @@ fun OpenSourceCard(githubUrl: String) {
             }
 
             Text(
-                "The source code is available on GitHub. You are free to view, learn from, and modify the code for personal use.",
+                stringResource(R.string.credit_oss_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             FilledTonalButton(
                 onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     val intent = Intent(Intent.ACTION_VIEW, githubUrl.toUri())
                     context.startActivity(intent)
                 },
@@ -99,7 +107,7 @@ fun OpenSourceCard(githubUrl: String) {
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             ) {
-                Text("View Source Code")
+                Text(stringResource(R.string.view_source_code))
             }
         }
     }

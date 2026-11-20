@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 /** Material's password eye (path_password_eye), on its 24-unit viewport. */
 private const val EYE_PATH =
@@ -41,11 +43,11 @@ private const val SHOW_MILLIS = 200
 private const val HIDE_MILLIS = 320
 
 /**
- * The password field's show/hide eye, drawn in Compose as on Hajime: the same trim-and-clip
- * animation as asl_trimclip_eye (a strike draws across the eye as the password hides and wipes
- * back as it shows, with a gap cut beside it).
+ * The password field's show/hide eye, drawn in Compose as on Hajime: a trim-and-clip animation
+ * (a strike draws across the eye as the password hides and wipes back as it shows, with a gap
+ * cut beside it).
  *
- * It used to play that drawable in an ImageView through AndroidView. An Android View inside the
+ * It used to play an animated vector drawable in an ImageView through AndroidView. An Android View inside the
  * password field joins the window's own focus handling, so moving between fields briefly took
  * focus away from the text editor and the keyboard closed and opened again. Drawn on a Canvas,
  * the field is pure Compose and the keyboard stays up.
@@ -67,7 +69,7 @@ fun AnimatedEyeIcon(
     )
     val eye = remember { PathParser().parsePathString(EYE_PATH).toPath() }
     val color = MaterialTheme.colorScheme.onSurfaceVariant
-    val description = if (isVisible) "Hide password" else "Show password"
+    val description = if (isVisible) stringResource(R.string.cd_hide_password) else stringResource(R.string.cd_show_password)
 
     Canvas(modifier = modifier.semantics { contentDescription = description }) {
         scale(size.minDimension / VIEWPORT, pivot = Offset.Zero) {

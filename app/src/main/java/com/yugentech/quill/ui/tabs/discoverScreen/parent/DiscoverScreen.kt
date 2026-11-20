@@ -1,7 +1,16 @@
 package com.yugentech.quill.ui.tabs.discoverScreen.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import com.yugentech.theme.tokens.dimensions.AppAnimations
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedContent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -58,6 +67,8 @@ import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.sources.discover.viewmodel.DiscoverViewModel
 import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
+import com.yugentech.quill.ui.shared.search.NoSearchResults
+import com.yugentech.quill.ui.shared.search.SearchStateLayout
 import com.yugentech.quill.ui.sources.standard.components.AnimatedSearchIcon
 import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
 import com.yugentech.quill.ui.sources.standard.components.SearchSuggestions
@@ -72,8 +83,11 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import getSubtitleForCategory
+import getTitleForCategory
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -86,6 +100,7 @@ fun DiscoverScreen(
     onBookClick: (Book) -> Unit,
     viewModel: DiscoverViewModel = koinViewModel()
 ) {
+    val haptic = LocalHapticFeedback.current
     val uiState by viewModel.uiState.collectAsState()
 
     var searchText by rememberSaveable { mutableStateOf("") }
@@ -169,14 +184,15 @@ fun DiscoverScreen(
                 .hazeSource(hazeState),
             contentPadding = PaddingValues(
                 top = statusBarHeight + 80.dp,
-                bottom = contentPadding.calculateBottomPadding()
+                // 8 here plus the last shelf row's own 8dp bottom padding: 16 like the other tabs
+                bottom = contentPadding.calculateBottomPadding() + 8.dp
             )
         ) {
             item(key = "hero_section") {
                 if (uiState.isFeedLoading) {
                     HeroCarouselSkeleton(
-                        title = "New Releases",
-                        subtitle = "Freshly curated classics for your reading pleasure"
+                        title = stringResource(R.string.new_releases),
+                        subtitle = stringResource(R.string.new_releases_subtitle)
                     )
                 } else if (uiState.heroBooks.isNotEmpty()) {
                     Column(
@@ -185,13 +201,13 @@ fun DiscoverScreen(
                             .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                     ) {
                         Text(
-                            text = "New Releases",
+                            text = stringResource(R.string.new_releases),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Freshly curated classics for your reading pleasure",
+                            text = stringResource(R.string.new_releases_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -210,14 +226,14 @@ fun DiscoverScreen(
                 item(key = categoryName) {
                     if (books.isNotEmpty()) {
                         BookShelfRow(
-                            title = categoryName,
+                            title = getTitleForCategory(categoryName),
                             subtitle = getSubtitleForCategory(categoryName),
                             books = books,
                             onBookClick = onBookClick
                         )
                     } else {
                         BookShelfSkeleton(
-                            title = categoryName,
+                            title = getTitleForCategory(categoryName),
                             subtitle = getSubtitleForCategory(categoryName)
                         )
                     }
@@ -241,24 +257,30 @@ fun DiscoverScreen(
                     .background(rememberSmoothScrimBrush(surfaceColor))
             )
 
+            // Faded in and out from a see-through copy of the same colour: fading from
+            // Color.Transparent (see-through black) passes through dark grey, a flash in light mode
             val animatedContainerColor by animateColorAsState(
                 targetValue = if (searchExpanded) {
                     MaterialTheme.colorScheme.surfaceContainer
                 } else {
-                    Color.Transparent
+                    MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0f)
                 },
                 label = "container_color"
             )
 
             val animatedBorderColor by animateColorAsState(
                 targetValue = if (searchExpanded) {
-                    Color.Transparent
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0f)
                 } else {
                     MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                 },
                 label = "border_color"
             )
 
+            val hazeAlpha by animateFloatAsState(
+                targetValue = if (searchExpanded) 0f else 1f,
+                label = "haze_alpha"
+            )
 
 
             SearchBar(
@@ -276,9 +298,10 @@ fun DiscoverScreen(
                         onSearch = { focusManager.clearFocus() },
                         expanded = searchExpanded,
                         onExpandedChange = { searchExpanded = it },
-                        placeholder = { Text("Search titles, authors...") },
+                        placeholder = { Text(stringResource(R.string.search_titles_authors)) },
                         leadingIcon = {
                             IconButton(onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                 if (searchExpanded) {
                                     searchExpanded = false
                                     searchText = ""
@@ -294,28 +317,27 @@ fun DiscoverScreen(
                         trailingIcon = {
                             if (searchText.isNotEmpty()) {
                                 IconButton(onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     searchText = ""
                                     viewModel.clearSearch()
                                 }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Clear")
+                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.clear))
                                 }
                             }
                         },
+                        // The frosted backdrop fades out as the bar's own fill fades in, rather
+                        // than vanishing on the first frame (which left the field see-through
+                        // for a moment: the flicker on tap).
                         modifier = Modifier
-                            .then(
-                                if (!searchExpanded) {
-                                    Modifier
-                                        .clip(RoundedCornerShape(28.dp))
-                                        .hazeEffect(
-                                            state = hazeState,
-                                            style = HazeDefaults.style(
-                                                backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f),
-                                                blurRadius = 20.dp,
-                                                noiseFactor = 0.05f
-                                            )
-                                        )
-                                } else Modifier
-                            )
+                            .clip(RoundedCornerShape(28.dp))
+                            .hazeEffect(
+                                state = hazeState,
+                                style = HazeDefaults.style(
+                                    backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f),
+                                    blurRadius = 20.dp,
+                                    noiseFactor = 0.05f
+                                )
+                            ) { alpha = hazeAlpha }
                             .border(
                                 width = 1.dp,
                                 color = animatedBorderColor,
@@ -339,47 +361,74 @@ fun DiscoverScreen(
                 ),
                 windowInsets = SearchBarDefaults.windowInsets
             ) {
-                if (searchText.isEmpty()) {
-                    SearchSuggestions(
-                        onSuggestionClick = { suggestion ->
-                            searchText = suggestion
-                            viewModel.onSearchQuery(suggestion)
-                            focusManager.clearFocus()
-                        }
-                    )
-                } else {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        if (uiState.isSearchLoading) {
-                            CircularWavyProgressIndicator(
-                                modifier = Modifier
-                                    .align(Alignment.TopCenter)
-                                    .padding(32.dp)
+                // As in Ryori: whatever's showing fades out before the next fades in, so typing
+                // doesn't snap the results away, and old books never linger under the spinner
+                val searchView = when {
+                    searchText.isEmpty() -> SearchView.Suggestions
+                    uiState.isSearchLoading -> SearchView.Loading
+                    uiState.searchResults.isEmpty() -> SearchView.NoResults
+                    else -> SearchView.Results(uiState.searchResults)
+                }
+                AnimatedContent(
+                    targetState = searchView,
+                    // Results from the second catalogue join the grid in place, not by a fade
+                    contentKey = { it::class },
+                    transitionSpec = {
+                        fadeIn(
+                            tween(
+                                durationMillis = AppAnimations.Durations.Smooth,
+                                delayMillis = AppAnimations.Durations.Rapid,
+                                easing = AppAnimations.Easings.Decelerate
                             )
-                        } else if (uiState.searchResults.isNotEmpty()) {
-                            BooksGrid(
-                                books = uiState.searchResults,
-                                onBookClick = { book ->
-                                    // The search stays as it is (query, results, open bar), so
-                                    // coming back from the book lands on the results again.
-                                    focusManager.clearFocus()
-                                    onBookClick(book)
-                                },
-                                topPadding = 16.dp,
-                                bottomPadding = contentPadding.calculateBottomPadding()
-                            )
-                        } else {
-                            Text(
-                                text = "No results found for '$searchText'",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier
-                                    .align(Alignment.TopCenter)
-                                    .padding(32.dp)
-                            )
-                        }
+                        ) togetherWith fadeOut(
+                            tween(durationMillis = AppAnimations.Durations.Rapid, easing = AppAnimations.Easings.Accelerate)
+                        )
+                    },
+                    label = "discoverSearch",
+                    modifier = Modifier.fillMaxSize()
+                ) { view ->
+                    when (view) {
+                        SearchView.Suggestions -> SearchSuggestions(
+                            onSuggestionClick = { suggestion ->
+                                searchText = suggestion
+                                viewModel.onSearchQuery(suggestion)
+                                focusManager.clearFocus()
+                            }
+                        )
+
+                        // In the icon's spot, with blank text keeping the layout the same height,
+                        // so the spinner sits exactly where the no-results icon does
+                        SearchView.Loading -> SearchStateLayout(
+                            title = "",
+                            message = "",
+                            icon = { CircularWavyProgressIndicator() }
+                        )
+
+                        SearchView.NoResults -> NoSearchResults()
+
+                        is SearchView.Results -> BooksGrid(
+                            books = view.books,
+                            onBookClick = { book ->
+                                // The search stays as it is (query, results, open bar), so
+                                // coming back from the book lands on the results again.
+                                focusManager.clearFocus()
+                                onBookClick(book)
+                            },
+                            topPadding = 16.dp,
+                            // 8dp over the navigation bar, as on the other tabs' lists
+                            bottomPadding = contentPadding.calculateBottomPadding() + 8.dp
+                        )
                     }
                 }
             }
         }
     }
+}
+
+/** What the open search shows. */
+private sealed interface SearchView {
+    data object Suggestions : SearchView
+    data object Loading : SearchView
+    data object NoResults : SearchView
+    data class Results(val books: List<Book>) : SearchView
 }

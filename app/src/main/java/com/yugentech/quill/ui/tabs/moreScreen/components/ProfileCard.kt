@@ -58,6 +58,9 @@ import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.dimensions.AppAnimations
 import com.yugentech.theme.tokens.icons
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 
 // Compact profile card (same as Sessions'): avatar on the left (tap it or its badge to change
 // it), name and avatar title beside it with a pencil to rename, then Insights and the streak.
@@ -112,7 +115,7 @@ fun ProfileCard(
                         .clickable(
                             interactionSource = null,
                             indication = ripple(bounded = false, radius = avatarDrawSize / 2),
-                            onClickLabel = "Change avatar",
+                            onClickLabel = stringResource(R.string.profile_change_avatar),
                             onClick = openAvatarSheet
                         ),
                     contentAlignment = Alignment.Center
@@ -149,7 +152,7 @@ fun ProfileCard(
                         AvatarPortrait(
                             avatarId = avatarId,
                             size = avatarImageSize,
-                            contentDescription = "Profile Avatar"
+                            contentDescription = stringResource(R.string.profile_avatar)
                         )
                     }
 
@@ -175,7 +178,7 @@ fun ProfileCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = "Change avatar",
+                                contentDescription = stringResource(R.string.profile_change_avatar),
                                 tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -204,7 +207,7 @@ fun ProfileCard(
                         label = "name"
                     ) { name ->
                         Text(
-                            text = name ?: "User",
+                            text = name ?: stringResource(R.string.profile_default_name),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -227,7 +230,7 @@ fun ProfileCard(
                         label = "avatarName"
                     ) { avatarId ->
                         Text(
-                            text = AvatarRepository.getAvatarName(avatarId) ?: "Wise Elder",
+                            text = stringResource(AvatarRepository.getAvatarName(avatarId) ?: R.string.avatar_wise_elder),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -249,7 +252,7 @@ fun ProfileCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Change name",
+                        contentDescription = stringResource(R.string.profile_change_name),
                         modifier = Modifier.size(MaterialTheme.icons.mediumSmall)
                     )
                 }
@@ -277,7 +280,7 @@ fun ProfileCard(
                     )
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.s))
                     Text(
-                        text = "Insights",
+                        text = stringResource(R.string.profile_insights),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -303,10 +306,9 @@ fun ProfileCard(
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.s))
 
                     val streakText = if (streakCount > 0) {
-                        val unit = if (streakCount == 1) "Day" else "Days"
-                        "$streakCount $unit"
+                        pluralStringResource(R.plurals.profile_streak_days, streakCount, streakCount)
                     } else {
-                        "No Streak"
+                        stringResource(R.string.profile_no_streak)
                     }
 
                     Text(

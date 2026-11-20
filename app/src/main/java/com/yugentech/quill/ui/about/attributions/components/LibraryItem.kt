@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.about.attributions.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,6 +29,7 @@ fun LibraryItem(
     lib: LibraryOption,
     shape: Shape
 ) {
+    val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
 
     ListItem(
@@ -58,6 +61,7 @@ fun LibraryItem(
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                 val intent = Intent(Intent.ACTION_VIEW, lib.url.toUri())
                 context.startActivity(intent)
             },

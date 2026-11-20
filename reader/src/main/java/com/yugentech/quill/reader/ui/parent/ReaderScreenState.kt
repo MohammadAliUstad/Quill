@@ -10,6 +10,8 @@ import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayStat
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
 import kotlin.math.abs
+import com.yugentech.quill.reader.localization.ReaderStrings
+import com.yugentech.quill.reader.R
 
 @Stable
 class ReaderScreenState(
@@ -45,7 +47,7 @@ class ReaderScreenState(
         }
 
     private val displayTitle: String
-        get() = currentLocator?.title ?: publication.metadata.title ?: "Chapter"
+        get() = currentLocator?.title ?: publication.metadata.title ?: ReaderStrings.get(R.string.reader_chapter)
 
     private val chapterPagesLeft: Int
         get() {
@@ -60,7 +62,7 @@ class ReaderScreenState(
 
     val overlayState: ReaderOverlayState
         get() = ReaderOverlayState(
-            bookTitle = publication.metadata.title ?: "Book",
+            bookTitle = publication.metadata.title ?: ReaderStrings.get(R.string.reader_book),
             chapterTitle = displayTitle,
             chapterPagesLeft = chapterPagesLeft,
             progress = (currentLocator?.locations?.totalProgression ?: 0.0).toFloat(),

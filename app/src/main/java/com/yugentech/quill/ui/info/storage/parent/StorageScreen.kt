@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.info.storage.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,11 +39,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.R
+import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.storage.viewmodel.StorageViewModel
 import com.yugentech.quill.ui.info.storage.components.BookStorageList
 import com.yugentech.quill.ui.info.storage.components.DeleteBookDialog
 import com.yugentech.quill.ui.info.storage.components.StorageHeader
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -49,6 +53,7 @@ fun StorageScreen(
     onBackClick: () -> Unit,
     storageViewModel: StorageViewModel
 ) {
+    val haptic = LocalHapticFeedback.current
     val uiState by storageViewModel.uiState.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -62,17 +67,20 @@ fun StorageScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Manage Storage", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.more_manage_storage), fontWeight = FontWeight.Bold)
                         Text(
-                            text = "Optimize your device space",
+                            text = stringResource(R.string.storage_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onBackClick()
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -106,14 +114,14 @@ fun StorageScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.empty_storage),
-                            contentDescription = "No downloads",
+                            contentDescription = stringResource(R.string.no_downloads_cd),
                             modifier = Modifier.size(240.dp)
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            text = "Your storage is empty",
+                            text = stringResource(R.string.storage_empty_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -121,7 +129,7 @@ fun StorageScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Books you download for offline\nreading will appear here",
+                            text = stringResource(R.string.storage_empty_body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -136,7 +144,7 @@ fun StorageScreen(
                         .fillMaxSize()
                         .padding(
                             top = innerPadding.calculateTopPadding(),
-                            bottom = innerPadding.calculateBottomPadding()
+                            bottom = innerPadding.calculateBottomPadding() + 8.dp
                         )
                 ) {
                     StorageHeader(
@@ -162,6 +170,7 @@ fun StorageScreen(
     bookToDelete?.let { book ->
         DeleteBookDialog(
             bookTitle = book.title,
+            isImported = book.source == BookSource.USER_IMPORTED,
             onConfirm = {
                 storageViewModel.deleteBook(book.id)
                 bookToDelete = null

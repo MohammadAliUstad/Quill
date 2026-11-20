@@ -13,7 +13,8 @@ val storageModule = module {
     single<StorageRepository> {
         StorageRepositoryImpl(
             context = androidContext() as Application,
-            bookDao = get()
+            bookDao = get(),
+            bookDetailsRepository = get()
         )
     }
 

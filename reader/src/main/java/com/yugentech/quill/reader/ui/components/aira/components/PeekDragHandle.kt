@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.dp
 fun PeekDragHandle(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(width = 32.dp, height = 4.dp)
-            .clip(RoundedCornerShape(2.dp))
+            .size(width = 32.dp, height = 5.dp)
+            .clip(RoundedCornerShape(2.5.dp))
             .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
     )
 }

@@ -12,6 +12,7 @@ private val Context.themeDataStore: DataStore<Preferences> by preferencesDataSto
 private val Context.userDataStore: DataStore<Preferences> by preferencesDataStore(name = "user")
 private val Context.syncDataStore: DataStore<Preferences> by preferencesDataStore(name = "sync")
 private val Context.readerDataStore: DataStore<Preferences> by preferencesDataStore(name = "reader")
+private val Context.announcementsDataStore: DataStore<Preferences> by preferencesDataStore(name = "announcements")
 
 val dataStoreModule = module {
 
@@ -29,5 +30,10 @@ val dataStoreModule = module {
 
     single<DataStore<Preferences>>(named("reader")) {
         androidContext().readerDataStore
+    }
+
+    // DataStore for release announcements and update dialogs
+    single<DataStore<Preferences>>(named("announcements")) {
+        androidContext().announcementsDataStore
     }
 }

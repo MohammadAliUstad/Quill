@@ -1,13 +1,15 @@
 package com.yugentech.quill.sources.gutenberg.repository
 
 import com.yugentech.quill.database.dao.CatalogDao
-import com.yugentech.quill.database.mapper.toCatalogEntity
+import com.yugentech.quill.database.mapper.toCatalogEntities
 import com.yugentech.quill.database.mapper.toDomainModel
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.sources.gutenberg.mapper.GutenbergMapper
 import com.yugentech.quill.sources.gutenberg.mapper.GutenbergOpdsMapper
 import com.yugentech.quill.sources.gutenberg.model.GutenbergFeedResult
 import com.yugentech.quill.sources.gutenberg.service.GutenbergApiService
+import com.yugentech.quill.sources.shared.CatalogMemory
+import com.yugentech.quill.sources.shared.ServerMaintenanceException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -25,27 +27,40 @@ class GutenbergRepositoryImpl(
     private val catalogDao: CatalogDao
 ) : GutenbergRepository {
 
-    override fun getPopularBooksFlow(): Flow<List<Book>> {
-        return catalogDao.getBooksByCategory(FEED_KEY).map { entities ->
+    private val memory = CatalogMemory()
+
+    override fun getPopularBooksFlow(): Flow<List<Book>> = memory.follow(
+        FEED_KEY,
+        catalogDao.getBooksByCategory(FEED_KEY).map { entities ->
             entities.map { it.toDomainModel() }
         }
-    }
+    )
 
     override suspend fun syncPopularFeed(): Result<String?> = try {
         val json = apiService.getPopularBooks(page = 1)
         val result = GutenbergMapper.parseFeed(json)
 
         if (result.books.isNotEmpty()) {
-            val newEntities = result.books.map { it.toCatalogEntity(FEED_KEY) }
-            val newIds = newEntities.map { it.id }.toSet()
-            catalogDao.insertBooks(newEntities)
-            catalogDao.deleteStaleBooks(FEED_KEY, newIds.toList())
+            catalogDao.replaceCategory(FEED_KEY, result.books.toCatalogEntities(FEED_KEY))
+            memory.remember(FEED_KEY, result.books)
         }
 
         Result.success(result.nextPageUrl)
     } catch (e: Exception) {
         if (e is kotlinx.coroutines.CancellationException) throw e
         Timber.e(e, "Gutenberg feed sync failed")
+        Result.failure(e)
+    }
+
+    override suspend fun checkMaintenance(): Result<ServerMaintenanceException?> = try {
+        apiService.checkSite()
+        Result.success(null)
+    } catch (e: ServerMaintenanceException) {
+        Timber.w("gutenberg.org is down for maintenance, back after ${e.backAfter}")
+        Result.success(e)
+    } catch (e: Exception) {
+        if (e is kotlinx.coroutines.CancellationException) throw e
+        Timber.w(e, "Couldn't ask gutenberg.org whether it's down")
         Result.failure(e)
     }
 

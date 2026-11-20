@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.yugentech.quill.R
+import com.yugentech.quill.localization.AppStrings
 
 /** Rings the daily reminder. NudgeWorker posts the nudges through [showReminder] directly. */
 class ReminderReceiver : BroadcastReceiver() {
@@ -19,7 +20,8 @@ class ReminderReceiver : BroadcastReceiver() {
             context = context,
             id = id,
             title = intent.getStringExtra(EXTRA_TITLE) ?: "Quill",
-            message = intent.getStringExtra(EXTRA_MESSAGE) ?: ""
+            // Worded now, in the app's language as it is today, not as it was when booked
+            message = dailyReminderMessage()
         )
         // Books tomorrow's as today's rings, from the latest saved time.
         ReminderStore.allDaily(context).firstOrNull { it.id == id }?.let { daily ->
@@ -54,19 +56,19 @@ class ReminderReceiver : BroadcastReceiver() {
                 notificationManager.createNotificationChannel(
                     NotificationChannel(
                         DAILY_CHANNEL_ID,
-                        "Reading reminder",
+                        AppStrings.get(R.string.channel_daily_name),
                         NotificationManager.IMPORTANCE_DEFAULT
                     ).apply {
-                        description = "Your daily reminder to read, at the time you choose"
+                        description = AppStrings.get(R.string.channel_daily_description)
                     }
                 )
                 notificationManager.createNotificationChannel(
                     NotificationChannel(
                         NUDGE_CHANNEL_ID,
-                        "Friendly nudges",
+                        AppStrings.get(R.string.channel_nudges_name),
                         NotificationManager.IMPORTANCE_LOW
                     ).apply {
-                        description = "Friendly nudges now and then, never more than one a day"
+                        description = AppStrings.get(R.string.channel_nudges_description)
                     }
                 )
             }

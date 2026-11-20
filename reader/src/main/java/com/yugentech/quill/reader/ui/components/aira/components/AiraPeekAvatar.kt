@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.R
@@ -30,7 +31,10 @@ fun AiraPeekAvatar(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
+            // The same soft tint as before, laid over the surface so it's opaque: the page's
+            // text no longer shows through the circle or Aira's unfilled parts
             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                .compositeOver(MaterialTheme.colorScheme.surface)
         ) {}
 
         Image(

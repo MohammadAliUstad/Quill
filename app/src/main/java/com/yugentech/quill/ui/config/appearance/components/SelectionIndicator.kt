@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import com.yugentech.theme.SLOW_FADE_MS
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 /** How long the outline takes to fade between its resting and selected looks. */
 const val SELECTION_FADE_MS = 280
@@ -162,7 +164,7 @@ fun SelectionTick(
         ) {
             Icon(
                 imageVector = Icons.Rounded.Check,
-                contentDescription = "Selected",
+                contentDescription = stringResource(R.string.selected),
                 tint = contentColor,
                 modifier = Modifier.size(iconSize)
             )

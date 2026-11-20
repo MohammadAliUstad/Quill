@@ -5,6 +5,7 @@ import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
 import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepositoryImpl
 import com.yugentech.quill.sources.gutenberg.service.GutenbergApiService
 import com.yugentech.quill.sources.gutenberg.viewmodel.GutenbergViewModel
+import com.yugentech.quill.sources.shared.SourceMaintenanceMonitor
 import com.yugentech.quill.sources.standard.repository.StandardRepository
 import com.yugentech.quill.sources.standard.repository.StandardRepositoryImpl
 import com.yugentech.quill.sources.standard.service.StandardApiService
@@ -32,7 +33,8 @@ val sourcesModule = module {
     viewModel {
         StandardViewModel(
             standardRepository = get(),
-            bookDetailsRepository = get()
+            bookDetailsRepository = get(),
+            maintenanceMonitor = get()
         )
     }
 
@@ -49,10 +51,19 @@ val sourcesModule = module {
         )
     }
 
+    // Which sources are down for maintenance, shared by every screen that shows it
+    single {
+        SourceMaintenanceMonitor(
+            gutenbergRepository = get(),
+            standardRepository = get()
+        )
+    }
+
     viewModel {
         GutenbergViewModel(
             gutenbergRepository = get(),
-            bookDetailsRepository = get()
+            bookDetailsRepository = get(),
+            maintenanceMonitor = get()
         )
     }
 
@@ -61,7 +72,8 @@ val sourcesModule = module {
             bookDao = get(),
             billingRepository = get(),
             standardRepository = get(),
-            gutenbergRepository = get()
+            gutenbergRepository = get(),
+            maintenanceMonitor = get()
         )
     }
 

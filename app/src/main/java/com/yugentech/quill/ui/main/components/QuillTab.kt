@@ -1,8 +1,11 @@
 package com.yugentech.quill.ui.main.components
 
-enum class QuillTab(val title: String) {
-    Library("Library"),
-    Discover("Discover"),
-    Sources("Sources"),
-    Settings("More")
+import androidx.annotation.StringRes
+import com.yugentech.quill.R
+
+enum class QuillTab(@param:StringRes val title: Int) {
+    Library(R.string.tab_library),
+    Discover(R.string.tab_discover),
+    Sources(R.string.tab_sources),
+    Settings(R.string.tab_more)
 }

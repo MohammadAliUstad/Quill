@@ -11,9 +11,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
+import android.text.format.DateFormat
+import com.yugentech.quill.R
+import com.yugentech.quill.localization.AppStrings
 
 /** The reminder switches and time on the settings screen, the same in Quill and Sessions. */
 class NotificationViewModel(
@@ -122,7 +123,7 @@ class NotificationViewModel(
     fun formatReminderTime(): String {
         val config = notificationConfig.value
         if (!config.dailyReminderEnabled) {
-            return "Pick a time for a daily nudge"
+            return AppStrings.get(R.string.reminder_pick_time)
         }
 
         val hour = config.reminderHour
@@ -130,14 +131,15 @@ class NotificationViewModel(
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, config.reminderMinute)
         }
-        val partOfDay = when (hour) {
-            in 5..11 -> "morning"
-            in 12..16 -> "afternoon"
-            in 17..20 -> "evening"
-            else -> "night"
+        val sentence = when (hour) {
+            in 5..11 -> R.string.reminder_every_morning
+            in 12..16 -> R.string.reminder_every_afternoon
+            in 17..20 -> R.string.reminder_every_evening
+            else -> R.string.reminder_every_night
         }
-
-        return "Every $partOfDay at " + SimpleDateFormat("h:mm a", Locale.getDefault()).format(calendar.time)
+        // The phone's own 12 or 24 hour clock, in the app's language
+        val time = DateFormat.getTimeFormat(AppStrings.context).format(calendar.time)
+        return AppStrings.get(sentence, time)
     }
 
     /** Cancels every reminder, for signing out. */

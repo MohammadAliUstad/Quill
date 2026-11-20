@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
@@ -31,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +53,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.yugentech.quill.auth.guest.GuestBackupViewModel
 import com.yugentech.quill.database.model.UserData
 import com.yugentech.quill.ui.about.about.parent.MoreFromUsSheet
 import com.yugentech.quill.ui.main.components.SectionHeader
@@ -61,11 +64,19 @@ import com.yugentech.quill.ui.tabs.moreScreen.components.ProfileCard
 import com.yugentech.quill.ui.tabs.moreScreen.components.SettingsListItem
 import com.yugentech.quill.ui.tabs.moreScreen.components.SettingsSwitchItem
 import com.yugentech.quill.ui.tabs.moreScreen.components.dialogs.AlarmPermissionDialog
+import com.yugentech.quill.ui.tabs.moreScreen.components.dialogs.BackupResultDialog
+import com.yugentech.quill.ui.tabs.moreScreen.components.dialogs.ExitGuestDialog
 import com.yugentech.quill.ui.tabs.moreScreen.components.dialogs.TimerPickerDialog
 import com.yugentech.quill.notification.viewmodel.NotificationViewModel
 import com.yugentech.quill.ui.tabs.moreScreen.viewmodel.SettingsViewModel
 import com.yugentech.theme.tokens.spacing
 import org.koin.androidx.compose.koinViewModel
+import com.yugentech.quill.localization.AppLocale
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,8 +100,12 @@ fun MoreScreen(
     onWhatsNew: () -> Unit,
     onMoreApps: () -> Unit,
     onReplayOnboarding: () -> Unit,
+    onLanguage: () -> Unit,
+    isGuest: Boolean = false,
+    onExitGuest: () -> Unit = {},
     notificationViewModel: NotificationViewModel = koinViewModel(),
-    settingsViewModel: SettingsViewModel = koinViewModel()
+    settingsViewModel: SettingsViewModel = koinViewModel(),
+    guestBackupViewModel: GuestBackupViewModel = koinViewModel()
 ) {
     val notificationConfig by notificationViewModel.notificationConfig.collectAsState()
     val showPermissionDialog by notificationViewModel.showExactAlarmDialog.collectAsStateWithLifecycle()
@@ -120,6 +135,47 @@ fun MoreScreen(
         }
     }
 
+    // A guest's backup file: saved where they choose, and read back from any file they pick
+    // (file managers don't all call .json files JSON, hence the wider list)
+    val backupState by guestBackupViewModel.state.collectAsStateWithLifecycle()
+    // Set by "Export and exit" in the exit-guest dialog: once the file is saved, guest mode ends.
+    // Cancelling the save or a failed export keeps them in guest mode. Plain remember, not
+    // rememberSaveable: the tabs restore saved state, so leaving More mid-export would bring
+    // this back later and sign them out by surprise. Dropping it there just shows "Backup saved".
+    var exitAfterExport by remember { mutableStateOf(false) }
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) guestBackupViewModel.export(uri) else exitAfterExport = false
+    }
+    LaunchedEffect(backupState.result, exitAfterExport) {
+        if (!exitAfterExport) return@LaunchedEffect
+        when (backupState.result) {
+            GuestBackupViewModel.Result.Exported -> {
+                exitAfterExport = false
+                guestBackupViewModel.dismissResult()
+                onExitGuest()
+            }
+            GuestBackupViewModel.Result.ExportFailed -> exitAfterExport = false
+            else -> {}
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri -> uri?.let(guestBackupViewModel::import) }
+    fun launchExport() {
+        val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        exportLauncher.launch("quill-backup-$date.json")
+    }
+    fun launchImport() {
+        importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+    }
+    var showExitGuestDialog by remember { mutableStateOf(false) }
+
+    // A guest has no name until they pick one, so they're shown as "Guest"
+    val guestName = stringResource(R.string.guest_name)
+    val shownUser = if (isGuest && userData.name.isNullOrBlank()) userData.copy(name = guestName) else userData
+
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyListState()
 
@@ -147,7 +203,7 @@ fun MoreScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "More",
+                            text = stringResource(R.string.more_title),
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -170,13 +226,13 @@ fun MoreScreen(
                 start = MaterialTheme.spacing.m,
                 end = MaterialTheme.spacing.m,
                 top = innerPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding() + 8.dp
+                bottom = contentPadding.calculateBottomPadding() + 16.dp
             ),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs),
         ) {
             item {
                 ProfileCard(
-                    userData = userData,
+                    userData = shownUser,
                     streakCount = streakCount,
                     onEditName = { showNameSheet = true },
                     onEditAvatar = { showAvatarSheet = true },
@@ -185,32 +241,40 @@ fun MoreScreen(
             }
 
             // --- AI SECTION ---
-            val aiItemCount = if (isIndexingActive) 3 else 2
-            item { SectionHeader(icon = Icons.Default.AutoAwesome, title = "AI") }
-            item {
-                SettingsListItem(
-                    title = "Meet Aira",
-                    subtitle = "Learn about your AI reading companion",
-                    index = 0,
-                    totalCount = aiItemCount,
-                    onClick = onAboutAira,
-                )
+            // Aira needs an account, so a guest has one row: Meet Aira, which opens her introduction
+            // in place of the subscription screen and says what an account brings
+            val aiItemCount = when {
+                isGuest -> 1
+                isIndexingActive -> 3
+                else -> 2
+            }
+            item { SectionHeader(icon = Icons.Default.AutoAwesome, title = stringResource(R.string.more_section_ai)) }
+            if (!isGuest) {
+                item {
+                    SettingsListItem(
+                        title = stringResource(R.string.more_meet_aira),
+                        subtitle = stringResource(R.string.more_meet_aira_subtitle),
+                        index = 0,
+                        totalCount = aiItemCount,
+                        onClick = onAboutAira,
+                    )
+                }
             }
             item {
                 SettingsListItem(
-                    title = "Subscriptions",
-                    subtitle = "Manage your plan and unlock pro features",
-                    index = 1,
+                    title = stringResource(if (isGuest) R.string.more_meet_aira else R.string.more_subscriptions),
+                    subtitle = stringResource(if (isGuest) R.string.more_meet_aira_subtitle else R.string.more_subscriptions_subtitle),
+                    index = if (isGuest) 0 else 1,
                     totalCount = aiItemCount,
                     onClick = onSubscriptions,
                 )
             }
-            if (isIndexingActive) {
+            if (isIndexingActive && !isGuest) {
                 item(key = "indexing_queue") {
                     SettingsListItem(
                         modifier = Modifier.animateItem(),
-                        title = "Indexing Library",
-                        subtitle = "Aira is reading your books.",
+                        title = stringResource(R.string.more_indexing),
+                        subtitle = stringResource(R.string.more_indexing_subtitle),
                         index = 2,
                         totalCount = aiItemCount,
                         onClick = onViewIndexingQueue,
@@ -219,11 +283,11 @@ fun MoreScreen(
             }
 
             // --- LIBRARY SECTION ---
-            item { SectionHeader(icon = Icons.AutoMirrored.Filled.List, title = "Library") }
+            item { SectionHeader(icon = Icons.AutoMirrored.Filled.List, title = stringResource(R.string.more_section_library)) }
             item {
                 SettingsListItem(
-                    title = "Manage Categories",
-                    subtitle = "Add, remove, or reorder your bookshelves",
+                    title = stringResource(R.string.more_manage_categories),
+                    subtitle = stringResource(R.string.more_manage_categories_subtitle),
                     index = 0,
                     totalCount = 2,
                     onClick = onManageCategories,
@@ -231,8 +295,8 @@ fun MoreScreen(
             }
             item {
                 SettingsListItem(
-                    title = "Manage Storage",
-                    subtitle = "View device storage and remove downloads",
+                    title = stringResource(R.string.more_manage_storage),
+                    subtitle = stringResource(R.string.more_manage_storage_subtitle),
                     index = 1,
                     totalCount = 2,
                     onClick = onManageStorage,
@@ -240,23 +304,34 @@ fun MoreScreen(
             }
 
             // --- APPEARANCE SECTION ---
-            item { SectionHeader(icon = Icons.Default.Palette, title = "Appearance") }
+            item { SectionHeader(icon = Icons.Default.Palette, title = stringResource(R.string.more_section_appearance)) }
             item {
                 SettingsListItem(
-                    title = "Theme & Colors",
-                    subtitle = "Customize your app's look and feel",
+                    title = stringResource(R.string.more_theme_colors),
+                    subtitle = stringResource(R.string.more_theme_colors_subtitle),
                     index = 0,
-                    totalCount = 1,
+                    totalCount = 2,
                     onClick = onAppearance,
+                )
+            }
+            item {
+                val context = LocalContext.current
+                SettingsListItem(
+                    title = stringResource(R.string.language_title),
+                    subtitle = AppLocale.current(context)?.nativeName
+                        ?: stringResource(R.string.language_system_default),
+                    index = 1,
+                    totalCount = 2,
+                    onClick = onLanguage,
                 )
             }
 
             // --- NOTIFICATIONS & HAPTICS SECTION ---
-            item { SectionHeader(icon = Icons.Default.Notifications, title = "Notifications & Haptics") }
+            item { SectionHeader(icon = Icons.Default.Notifications, title = stringResource(R.string.more_section_notifications)) }
             item {
                 SettingsSwitchItem(
-                    title = "Enable Notifications",
-                    subtitle = "Allow Quill to send you updates",
+                    title = stringResource(R.string.more_enable_notifications),
+                    subtitle = stringResource(R.string.more_enable_notifications_subtitle),
                     checked = notificationConfig.notificationsEnabled,
                     checkedIcon = Icons.Default.Notifications,
                     index = 0,
@@ -281,7 +356,7 @@ fun MoreScreen(
             }
             item {
                 SettingsSwitchItem(
-                    title = "Daily Reading Reminder",
+                    title = stringResource(R.string.more_daily_reminder),
                     subtitle = notificationViewModel.formatReminderTime(),
                     checked = notificationConfig.dailyReminderEnabled,
                     checkedIcon = Icons.Default.Alarm,
@@ -307,8 +382,8 @@ fun MoreScreen(
             }
             item {
                 SettingsSwitchItem(
-                    title = "Playful Reminders",
-                    subtitle = "Friendly nudges now and then",
+                    title = stringResource(R.string.more_playful_reminders),
+                    subtitle = stringResource(R.string.more_playful_reminders_subtitle),
                     checked = notificationConfig.playfulRemindersEnabled,
                     checkedIcon = Icons.Default.AutoAwesome,
                     enabled = notificationConfig.notificationsEnabled,
@@ -322,8 +397,8 @@ fun MoreScreen(
             }
             item {
                 SettingsSwitchItem(
-                    title = "Haptic Feedback",
-                    subtitle = "Feel vibrations throughout the app",
+                    title = stringResource(R.string.more_haptics),
+                    subtitle = stringResource(R.string.more_haptics_subtitle),
                     checked = hapticsEnabled,
                     checkedIcon = Icons.Default.Vibration,
                     index = 3,
@@ -336,11 +411,11 @@ fun MoreScreen(
             }
 
             // --- ABOUT SECTION ---
-            item { SectionHeader(icon = Icons.Default.Info, title = "About") }
+            item { SectionHeader(icon = Icons.Default.Info, title = stringResource(R.string.more_section_about)) }
             item {
                 SettingsListItem(
-                    title = "About Quill",
-                    subtitle = "Version ${com.yugentech.quill.BuildConfig.VERSION_NAME}",
+                    title = stringResource(R.string.more_about_quill),
+                    subtitle = stringResource(R.string.more_version, com.yugentech.quill.BuildConfig.VERSION_NAME),
                     index = 0,
                     totalCount = 4,
                     onClick = onAbout,
@@ -348,8 +423,8 @@ fun MoreScreen(
             }
             item {
                 SettingsListItem(
-                    title = "What's New",
-                    subtitle = "See the latest changes and features",
+                    title = stringResource(R.string.more_whats_new),
+                    subtitle = stringResource(R.string.more_whats_new_subtitle),
                     index = 1,
                     totalCount = 4,
                     onClick = onWhatsNew,
@@ -357,8 +432,8 @@ fun MoreScreen(
             }
             item {
                 SettingsListItem(
-                    title = "Replay Onboarding",
-                    subtitle = "Take the tour of Quill again",
+                    title = stringResource(R.string.more_replay_onboarding),
+                    subtitle = stringResource(R.string.more_replay_onboarding_subtitle),
                     index = 2,
                     totalCount = 4,
                     onClick = onReplayOnboarding,
@@ -366,32 +441,62 @@ fun MoreScreen(
             }
             item {
                 SettingsListItem(
-                    title = "More from us",
-                    subtitle = "Explore our other apps",
+                    title = stringResource(R.string.more_more_from_us),
+                    subtitle = stringResource(R.string.more_more_from_us_subtitle),
                     index = 3,
                     totalCount = 4,
                     onClick = { showMoreApps = true },
                 )
             }
 
-            // --- SESSION SECTION ---
-            item { SectionHeader(icon = Icons.AutoMirrored.Filled.ExitToApp, title = "Session") }
+            // --- BACKUP SECTION ---
+            // A library saved to a file and brought back. A guest's lives only on this phone, so
+            // it's their way to keep it; a signed-in user's file also holds what the cloud copy
+            // doesn't (highlights, reading time), and what they import syncs to their account
+            item {
+                SectionHeader(
+                    icon = Icons.Default.Backup,
+                    title = stringResource(R.string.guest_backup_section)
+                )
+            }
             item {
                 SettingsListItem(
-                    title = "Exit",
-                    subtitle = "Close the Quill app",
+                    title = stringResource(R.string.guest_export_title),
+                    subtitle = stringResource(if (isGuest) R.string.guest_export_subtitle else R.string.account_export_subtitle),
+                    index = 0,
+                    totalCount = 2,
+                    onClick = { if (!backupState.busy) launchExport() },
+                )
+            }
+            item {
+                SettingsListItem(
+                    title = stringResource(R.string.guest_import_title),
+                    subtitle = stringResource(if (isGuest) R.string.guest_import_subtitle else R.string.account_import_subtitle),
+                    index = 1,
+                    totalCount = 2,
+                    onClick = { if (!backupState.busy) launchImport() },
+                )
+            }
+
+            // --- SESSION SECTION ---
+            item { SectionHeader(icon = Icons.AutoMirrored.Filled.ExitToApp, title = stringResource(R.string.more_section_session)) }
+            item {
+                SettingsListItem(
+                    title = stringResource(R.string.more_exit),
+                    subtitle = stringResource(R.string.more_exit_subtitle),
                     index = 0,
                     totalCount = 2,
                     onClick = onExit,
                 )
             }
+            // For a guest, signing out becomes leaving guest mode, which says what it costs
             item {
                 SettingsListItem(
-                    title = "Sign Out",
-                    subtitle = "Log out of your current account",
+                    title = stringResource(if (isGuest) R.string.guest_exit_title else R.string.more_sign_out),
+                    subtitle = stringResource(if (isGuest) R.string.guest_exit_subtitle else R.string.more_sign_out_subtitle),
                     index = 1,
                     totalCount = 2,
-                    onClick = onSignOut,
+                    onClick = { if (isGuest) showExitGuestDialog = true else onSignOut() },
                 )
             }
         }
@@ -427,6 +532,54 @@ fun MoreScreen(
             onAvatarSelected = onUpdateAvatar,
             onDismiss = { showAvatarSheet = false }
         )
+    }
+
+    if (showExitGuestDialog) {
+        ExitGuestDialog(
+            onConfirm = {
+                showExitGuestDialog = false
+                onExitGuest()
+            },
+            onExportAndExit = {
+                showExitGuestDialog = false
+                if (!backupState.busy) {
+                    exitAfterExport = true
+                    launchExport()
+                }
+            },
+            onDismiss = { showExitGuestDialog = false }
+        )
+    }
+
+    // After "Export and exit" a successful save leads straight out, so no "Backup saved" first
+    backupState.result?.takeUnless { exitAfterExport && it == GuestBackupViewModel.Result.Exported }?.let { result ->
+        val dismiss = { guestBackupViewModel.dismissResult() }
+        when (result) {
+            GuestBackupViewModel.Result.Exported -> BackupResultDialog(
+                success = true,
+                title = stringResource(R.string.guest_export_done_title),
+                message = stringResource(R.string.guest_export_done_message),
+                onDismiss = dismiss
+            )
+            GuestBackupViewModel.Result.ExportFailed -> BackupResultDialog(
+                success = false,
+                title = stringResource(R.string.guest_export_failed_title),
+                message = stringResource(R.string.guest_export_failed_message),
+                onDismiss = dismiss
+            )
+            is GuestBackupViewModel.Result.Imported -> BackupResultDialog(
+                success = true,
+                title = stringResource(R.string.guest_import_done_title),
+                message = stringResource(R.string.guest_import_done_message, result.books, result.highlights),
+                onDismiss = dismiss
+            )
+            GuestBackupViewModel.Result.ImportFailed -> BackupResultDialog(
+                success = false,
+                title = stringResource(R.string.guest_import_failed_title),
+                message = stringResource(R.string.guest_import_failed_message),
+                onDismiss = dismiss
+            )
+        }
     }
 
     if (showMoreApps) {

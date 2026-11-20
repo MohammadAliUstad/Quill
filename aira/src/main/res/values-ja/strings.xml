@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="airachat_limit">無料の上限に達しました。Quill Pro にアップグレードしてください。</string>
+    <string name="airachat_error">問題が発生しました。もう一度お試しください。</string>
+    <string name="airachat_book_not_found">本が見つかりません。</string>
+    <string name="airachat_no_chapter_content">この章の内容が見つかりません。</string>
+    <string name="airachat_no_response">Aira から返答がありませんでした。</string>
+    <string name="airachat_blocked">この内容についてはAiraはお手伝いできません。AIプロバイダーが扱わない内容に触れています。</string>
+    <string name="airachat_image_no_detail">この文章には、イラストを生成できるだけの視覚的な描写がありません。</string>
+    <string name="airachat_image_error">イラストの生成中に問題が発生しました。もう一度お試しください。</string>
+    <string name="airachat_q_characters">この本の登場人物は？</string>
+    <string name="airachat_q_themes">この本のテーマは？</string>
+    <string name="airachat_q_summarize">この章を要約してくれる？</string>
+    <string name="airachat_not_encountered">ここまでに読んだ部分では、「%1$s」はまだ出てきていません。</string>
+    <string name="airachat_q_who_is">%1$sは誰？</string>
+    <string name="airachat_q_recent_role">%1$sは最近何をしている？</string>
+    <string name="airachat_q_journey">%1$sのこれまでの歩みは？</string>
+    <string name="airachat_q_significance">「%1$s」にはどんな意味がある？</string>
+    <string name="airachat_q_define">%1$sはどういう意味？</string>
+    <string name="airachat_q_what_is">%1$sとは何？</string>
+    <string name="airachat_q_explain">「%1$s」を説明してくれる？</string>
+    <string name="airachat_q_visualize">「%1$s」をイラストにしてくれる？</string>
+</resources>

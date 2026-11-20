@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.tabs.sourcesScreen.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +47,8 @@ import com.yugentech.quill.ui.tabs.sourcesScreen.components.LargeCatalogCard
 import com.yugentech.quill.ui.tabs.sourcesScreen.components.SourcesParallaxBackground
 import com.yugentech.quill.ui.tabs.sourcesScreen.result.ImportResult
 import com.yugentech.quill.ui.tabs.sourcesScreen.viewmodel.SourcesViewModel
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -54,6 +58,7 @@ fun SourcesScreen(
     onLocalFilesClick: () -> Unit,
     viewModel: SourcesViewModel
 ) {
+    val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
 
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
@@ -63,35 +68,36 @@ fun SourcesScreen(
 
     val libraryCounts by viewModel.libraryCounts.collectAsStateWithLifecycle()
     val coverPreviews by viewModel.coverPreviews.collectAsStateWithLifecycle()
+    val sourcesDown by viewModel.sourcesDown.collectAsStateWithLifecycle()
 
     val catalogs = listOf(
         CatalogInfo(
             source = BookSource.STANDARD_EBOOKS,
-            title = "Standard Ebooks",
-            subtitle = "High quality public domain",
-            description = "Carefully formatted and typeset public domain ebooks with professional-grade quality and modern design.",
+            title = stringResource(R.string.source_standard_name),
+            subtitle = stringResource(R.string.source_standard_subtitle),
+            description = stringResource(R.string.source_standard_description),
             icon = Icons.Default.AutoStories,
             shape = MaterialShapes.SoftBurst.toShape(),
-            stats = listOf("1,000+ books", "Hand-typeset"),
+            stats = listOf(stringResource(R.string.source_standard_stat_books), stringResource(R.string.source_standard_stat_typeset)),
             containerColor = { MaterialTheme.colorScheme.primaryContainer },
             contentColor = { MaterialTheme.colorScheme.onPrimaryContainer },
             buttonContainerColor = { MaterialTheme.colorScheme.primary },
             buttonContentColor = { MaterialTheme.colorScheme.onPrimary },
-            buttonText = "Browse Catalog",
+            buttonText = stringResource(R.string.browse_catalog),
         ),
         CatalogInfo(
             source = BookSource.GUTENBERG,
-            title = "Project Gutenberg",
-            subtitle = "60,000+ free eBooks",
-            description = "The first and largest single collection of free eBooks. Literature from around the world in multiple languages.",
+            title = stringResource(R.string.source_gutenberg_name),
+            subtitle = stringResource(R.string.source_gutenberg_subtitle),
+            description = stringResource(R.string.source_gutenberg_description),
             icon = Icons.Default.Public,
             shape = MaterialShapes.Cookie9Sided.toShape(),
-            stats = listOf("60,000+ books", "Many languages"),
+            stats = listOf(stringResource(R.string.source_gutenberg_stat_books), stringResource(R.string.source_gutenberg_stat_languages)),
             containerColor = { MaterialTheme.colorScheme.secondaryContainer },
             contentColor = { MaterialTheme.colorScheme.onSecondaryContainer },
             buttonContainerColor = { MaterialTheme.colorScheme.secondary },
             buttonContentColor = { MaterialTheme.colorScheme.onSecondary },
-            buttonText = "Explore Collection",
+            buttonText = stringResource(R.string.explore_collection),
         )
     )
 
@@ -119,7 +125,7 @@ fun SourcesScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Sources",
+                            text = stringResource(R.string.tab_sources),
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -149,7 +155,7 @@ fun SourcesScreen(
                         start = 16.dp,
                         end = 16.dp,
                         top = innerPadding.calculateTopPadding(),
-                        bottom = contentPadding.calculateBottomPadding() + 8.dp
+                        bottom = contentPadding.calculateBottomPadding() + 16.dp
                     ),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -157,19 +163,27 @@ fun SourcesScreen(
                 ImportFromDeviceCard(
                     isImporting = isImporting,
                     importedCount = libraryCounts[BookSource.USER_IMPORTED] ?: 0,
-                    onClick = { showFilePickerSheet = true },
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        showFilePickerSheet = true
+                    },
                 )
 
-                SectionLabel(text = "Free catalogues")
+                SectionLabel(text = stringResource(R.string.free_catalogues))
 
                 catalogs.forEachIndexed { index, catalog ->
                     LargeCatalogCard(
                         catalog = catalog,
                         libraryCount = libraryCounts[catalog.source] ?: 0,
                         coverUrls = coverPreviews[catalog.source].orEmpty(),
+                        isUnderMaintenance = catalog.source in sourcesDown,
+                        backAfter = sourcesDown[catalog.source],
                         // Stagger the cards so their cover stacks don't shuffle in lockstep.
                         shuffleOffsetMillis = index * 1_600L,
-                        onClick = { onSourceClick(catalog.source) },
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onSourceClick(catalog.source)
+                        },
                     )
                 }
             }

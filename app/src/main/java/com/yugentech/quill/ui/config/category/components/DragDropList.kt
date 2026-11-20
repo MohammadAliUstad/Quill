@@ -39,6 +39,9 @@ import com.yugentech.quill.ui.main.components.itemShape
 import com.yugentech.theme.tokens.corners
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.ui.tabs.libraryScreen.components.shelfTitle
 
 @Composable
 fun DragDropList(
@@ -98,7 +101,7 @@ fun DragDropList(
                 ) {
                     ListItem(
                         headlineContent = {
-                            Text(text = category.name)
+                            Text(text = shelfTitle(category.name))
                         },
                         trailingContent = {
                             Row {
@@ -110,7 +113,7 @@ fun DragDropList(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Edit,
-                                        contentDescription = "Rename",
+                                        contentDescription = stringResource(R.string.rename),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
@@ -122,7 +125,7 @@ fun DragDropList(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete",
+                                        contentDescription = stringResource(R.string.delete),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -145,7 +148,7 @@ fun DragDropList(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.DragHandle,
-                                    contentDescription = "Reorder",
+                                    contentDescription = stringResource(R.string.reorder),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -182,7 +185,7 @@ fun PinnedShelfItem(
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "DEFAULT",
+                        text = stringResource(R.string.category_default_badge),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         fontWeight = FontWeight.Bold

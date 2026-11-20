@@ -42,17 +42,19 @@ import androidx.compose.ui.unit.sp
 import com.yugentech.quill.ui.access.onboarding.components.OnPaper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 /** Where a reader might have left off: the book, the chapter, a line from there, and how far in. */
-private class Place(val book: String, val chapter: String, val line: String, val progress: Float)
+private class Place(val book: String, val chapter: Int, val line: String, val progress: Float)
 
 /** Coming-back places for sign-in, each a real line from that chapter of a public-domain classic. */
 private val Places = listOf(
-    Place("Pride and Prejudice", "Chapter 34", "“In vain have I struggled. It will not do.”", 0.56f),
-    Place("Jane Eyre", "Chapter 23", "“I am no bird; and no net ensnares me.”", 0.62f),
-    Place("Frankenstein", "Chapter 5", "It was on a dreary night of November that I beheld the accomplishment of my toils.", 0.24f),
-    Place("Little Women", "Chapter 1", "“Christmas won't be Christmas without any presents,” grumbled Jo.", 0.04f),
-    Place("Moby-Dick", "Chapter 1", "Call me Ishmael.", 0.01f)
+    Place("Pride and Prejudice", 34, "“In vain have I struggled. It will not do.”", 0.56f),
+    Place("Jane Eyre", 23, "“I am no bird; and no net ensnares me.”", 0.62f),
+    Place("Frankenstein", 5, "It was on a dreary night of November that I beheld the accomplishment of my toils.", 0.24f),
+    Place("Little Women", 1, "“Christmas won't be Christmas without any presents,” grumbled Jo.", 0.04f),
+    Place("Moby-Dick", 1, "Call me Ishmael.", 0.01f)
 )
 
 private val PageWidth = 232.dp
@@ -173,7 +175,7 @@ private fun BookmarkedPageContent(modifier: Modifier) {
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = place.chapter,
+                            text = stringResource(R.string.chapter_number, place.chapter),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = colors.primary

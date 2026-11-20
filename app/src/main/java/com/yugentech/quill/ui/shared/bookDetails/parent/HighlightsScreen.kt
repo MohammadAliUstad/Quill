@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.shared.bookDetails.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +60,9 @@ import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.yugentech.quill.localization.currentLocale
+import java.text.DateFormat
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,6 +72,7 @@ fun HighlightsScreen(
     onBackClick: () -> Unit,
     viewModel: HighlightsViewModel = koinViewModel()
 ) {
+    val haptic = LocalHapticFeedback.current
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var highlightToDelete by remember { mutableStateOf<HighlightEntity?>(null) }
@@ -83,19 +89,22 @@ fun HighlightsScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Highlights")
+                        Text(stringResource(R.string.highlights))
                         Text(
-                            text = "Review your highlights",
+                            text = stringResource(R.string.highlights_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onBackClick()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate back"
+                            contentDescription = stringResource(R.string.navigate_back)
                         )
                     }
                 },
@@ -125,14 +134,14 @@ fun HighlightsScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.empty_notes),
-                            contentDescription = "No highlights",
+                            contentDescription = stringResource(R.string.no_highlights_cd),
                             modifier = Modifier.size(240.dp)
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            text = "No highlights yet",
+                            text = stringResource(R.string.no_highlights_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -140,7 +149,7 @@ fun HighlightsScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Highlights you make while reading\nwill appear here.",
+                            text = stringResource(R.string.no_highlights_body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -154,7 +163,7 @@ fun HighlightsScreen(
                         start = 16.dp,
                         end = 16.dp,
                         top = paddingValues.calculateTopPadding() + 8.dp,
-                        bottom = paddingValues.calculateBottomPadding()
+                        bottom = paddingValues.calculateBottomPadding() + 8.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -196,32 +205,42 @@ fun HighlightCard(
     onCardClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    val parsedData = remember(highlight.locatorJson) {
+    val haptic = LocalHapticFeedback.current
+    val unreadable = stringResource(R.string.highlight_unreadable)
+    val unknownChapter = stringResource(R.string.unknown_chapter)
+    val pageFormat = stringResource(R.string.chapter_page)
+    val parseError = stringResource(R.string.highlight_parse_error)
+    val unknownLocation = stringResource(R.string.unknown_location)
+    val parsedData = remember(highlight.locatorJson, pageFormat) {
         try {
             val json = JSONObject(highlight.locatorJson)
-            val text = json.optJSONObject("text")?.optString("highlight") ?: "Content unreadable"
+            val text = json.optJSONObject("text")?.optString("highlight") ?: unreadable
 
-            val chapter = json.optString("title").let { it.ifBlank { "Unknown Chapter" } }
+            val chapter = json.optString("title").let { it.ifBlank { unknownChapter } }
             val position = json.optJSONObject("locations")?.optInt("position", -1) ?: -1
-            val location = if (position > 0) "$chapter • Page $position" else chapter
+            val location = if (position > 0) pageFormat.format(chapter, position) else chapter
 
             text to location
         } catch (e: Exception) {
-            "Error parsing highlight" to "Unknown Location"
+            parseError to unknownLocation
         }
     }
 
     val highlightText = parsedData.first
     val locationInfo = parsedData.second
 
-    val dateString = remember(highlight.createdAt) {
-        val formatter = SimpleDateFormat("MMM dd, yyyy • h:mm a", Locale.getDefault())
+    val locale = currentLocale()
+    val dateString = remember(highlight.createdAt, locale) {
+        val formatter = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, locale)
         formatter.format(Date(highlight.createdAt))
     }
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        onClick = onCardClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+            onCardClick()
+        },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -288,7 +307,10 @@ fun HighlightCard(
                     )
 
                     FilledIconButton(
-                        onClick = onDeleteClick,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onDeleteClick()
+                        },
                         modifier = Modifier.size(32.dp),
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -297,7 +319,7 @@ fun HighlightCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
-                            contentDescription = "Delete highlight",
+                            contentDescription = stringResource(R.string.delete_highlight_cd),
                             modifier = Modifier.size(18.dp)
                         )
                     }

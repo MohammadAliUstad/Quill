@@ -1,5 +1,7 @@
 package com.yugentech.quill.reader.ui.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
@@ -49,6 +51,8 @@ import org.readium.r2.navigator.Decoration
 import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.publication.Locator
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalReadiumApi::class)
 @Composable
@@ -66,7 +70,7 @@ fun ReaderScreen(
         is ReaderUiState.Idle -> Unit
         is ReaderUiState.Error -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Error: ${uiState.message}", color = Color.Red)
+                Text(text = stringResource(R.string.reader_error, uiState.message), color = Color.Red)
             }
         }
 
@@ -95,6 +99,7 @@ private fun ReaderSuccess(
     onLocatorChange: (Locator) -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val quickViewModel: QuickViewModel = koinViewModel()
     val airaUiState by quickViewModel.uiState.collectAsState()
     val isPro = airaUiState.isPro
@@ -237,6 +242,7 @@ private fun ReaderSuccess(
                     pendingHighlightLocator = locator
                 },
                 onDecorationTapped = { tappedDecoration ->
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     highlightToDelete = tappedDecoration
                 },
                 onJumpComplete = { screenState.targetJumpHref = null },
@@ -354,19 +360,20 @@ private fun ReaderSuccess(
             onDismissRequest = { highlightToDelete = null },
             title = {
                 Text(
-                    text = "Delete Highlight",
+                    text = stringResource(R.string.reader_delete_highlight),
                     style = MaterialTheme.typography.titleLarge
                 )
             },
             text = {
                 Text(
-                    text = "Are you sure you want to remove this highlight? This action cannot be undone.",
+                    text = stringResource(R.string.reader_delete_highlight_body),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
             confirmButton = {
                 Button(
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                         viewModel.deleteHighlight(highlightToDelete!!.id)
                         highlightToDelete = null
                     },
@@ -375,14 +382,17 @@ private fun ReaderSuccess(
                         contentColor = MaterialTheme.colorScheme.onError
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.reader_delete))
                 }
             },
             dismissButton = {
                 androidx.compose.material3.TextButton(
-                    onClick = { highlightToDelete = null }
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                        highlightToDelete = null
+                    }
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.reader_cancel))
                 }
             }
         )

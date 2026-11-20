@@ -1,17 +1,27 @@
 package com.yugentech.quill.sources.standard.viewmodel
 
+import com.yugentech.quill.sources.shared.SourceMaintenanceMonitor
+import com.yugentech.quill.database.model.BookSource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yugentech.quill.R
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.localization.UiText
+import com.yugentech.quill.sources.shared.SourceContent
+import com.yugentech.quill.sources.shared.loadCachedThenRefresh
 import com.yugentech.quill.sources.standard.repository.StandardRepository
-import com.yugentech.quill.util.toUserFriendlyMessage
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 sealed class StandardNavigationEvent {
@@ -19,190 +29,154 @@ sealed class StandardNavigationEvent {
     data class NavigateByContent(val book: Book) : StandardNavigationEvent()
 }
 
-private val BASE_CATEGORY = listOf("New Arrivals")
+const val NEW_ARRIVALS = "New Arrivals"
 
+/** Everything the Standard Ebooks screen shows, in one place, updated all at once. */
+data class StandardUiState(
+    // Blank until the cache answers, so opening doesn't flash the skeleton before cached books
+    val content: SourceContent = SourceContent.Pending,
+    // Empty until the category cache answers; then New Arrivals and the cached subjects arrive
+    // together, so the chip row fades in whole instead of New Arrivals sitting alone first
+    val categories: List<String> = emptyList(),
+    // The highlighted chip; a search ("Search: …") highlights none
+    val selectedCategory: String = NEW_ARRIVALS
+)
+
+/**
+ * Standard Ebooks: New Arrivals, the subject categories and search.
+ *
+ * One list is on screen at a time, loaded by one job: picking another cancels the job, so a
+ * slower earlier load can never land on the new list. New Arrivals and categories are kept in
+ * the database and shown cache first, refreshed from the network behind them. A category's books
+ * and each search's results are also kept for the session, so going back to one is instant.
+ */
 class StandardViewModel(
     private val standardRepository: StandardRepository,
-    private val bookDetailsRepository: BookDetailsRepository
+    private val bookDetailsRepository: BookDetailsRepository,
+    private val maintenanceMonitor: SourceMaintenanceMonitor
 ) : ViewModel() {
 
-    private val _booksState = MutableStateFlow<List<Book>>(emptyList())
-    val booksState = _booksState.asStateFlow()
+    private val _uiState = MutableStateFlow(StandardUiState())
+    val uiState: StateFlow<StandardUiState> = _uiState.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.asStateFlow()
-
-    private val _displayTitle = MutableStateFlow("")
-    val displayTitle = _displayTitle.asStateFlow()
-
-    private val _error = MutableStateFlow<String?>(null)
-    val error = _error.asStateFlow()
-
-    private val _navigationEvent = MutableSharedFlow<StandardNavigationEvent>()
-    val navigationEvent = _navigationEvent.asSharedFlow()
-
-    private val _selectedCategory = MutableStateFlow("New Arrivals")
-    val selectedCategory = _selectedCategory.asStateFlow()
-
-    private val _categories = MutableStateFlow(BASE_CATEGORY)
-    val categories = _categories.asStateFlow()
+    // One-off navigation, buffered so an event sent while the screen isn't listening isn't lost
+    private val _navigationEvents = Channel<StandardNavigationEvent>(Channel.BUFFERED)
+    val navigationEvents: Flow<StandardNavigationEvent> = _navigationEvents.receiveAsFlow()
 
     private var contentJob: Job? = null
-
     private val sessionCache = mutableMapOf<String, List<Book>>()
 
     init {
         viewModelScope.launch {
-            standardRepository.getNewReleasesFlow().collect { cachedBooks ->
-                if (_selectedCategory.value == "New Arrivals") {
-                    _booksState.value = cachedBooks
-                }
+            standardRepository.getCategoriesFlow().collect { cached ->
+                _uiState.update { it.copy(categories = (listOf(NEW_ARRIVALS) + cached).distinct()) }
             }
         }
-
-        viewModelScope.launch {
-            standardRepository.getCategoriesFlow().collect { cachedCategories ->
-                _categories.value = BASE_CATEGORY + cachedCategories
-            }
-        }
-
-        refreshNewReleases()
-        syncCategories()
+        viewModelScope.launch { standardRepository.syncCategories() }
+        viewModelScope.launch { maintenanceMonitor.checkIfDue(BookSource.STANDARD_EBOOKS) }
+        showNewArrivals()
     }
 
-    fun onBookClick(networkBook: Book) {
+    fun onBookClick(book: Book) {
         viewModelScope.launch {
-            val isLocal = bookDetailsRepository.isBookInLibrary(networkBook.id)
-            if (isLocal) {
-                _navigationEvent.emit(StandardNavigationEvent.NavigateById(networkBook.id))
+            val event = if (bookDetailsRepository.isBookInLibrary(book.id)) {
+                StandardNavigationEvent.NavigateById(book.id)
             } else {
-                _navigationEvent.emit(StandardNavigationEvent.NavigateByContent(networkBook))
+                StandardNavigationEvent.NavigateByContent(book)
             }
+            _navigationEvents.send(event)
         }
     }
 
     fun onCategorySelected(category: String) {
-        if (_selectedCategory.value == category) return
-
-        _selectedCategory.value = category
-        _error.value = null
-        contentJob?.cancel()
-
-        when (category) {
-            "New Arrivals" -> refreshNewReleases()
-            else -> loadCategory(category)
-        }
-    }
-
-    private fun loadCategory(category: String) {
-        val slug = category.toSlug()
-
-        sessionCache[slug]?.let { cachedBooks ->
-            _booksState.value = cachedBooks
-            _displayTitle.value = category
-            return
-        }
-
-        contentJob = viewModelScope.launch {
-            _error.value = null
-
-            val cached = standardRepository.getTopicBooksFlow(slug).firstOrNull() ?: emptyList()
-            _booksState.value = cached
-
-            if (cached.isEmpty()) {
-                _isLoading.value = true
-                _displayTitle.value = "Browsing $category..."
-            } else {
-                _displayTitle.value = category
-            }
-
-            standardRepository.syncTopicBooks(slug)
-                .onSuccess {
-                    val freshBooks = standardRepository.getTopicBooksFlow(slug).firstOrNull() ?: emptyList()
-                    _booksState.value = freshBooks
-                    _displayTitle.value = if (freshBooks.isEmpty()) "No books found" else category
-                    sessionCache[slug] = freshBooks
-                }
-                .onFailure { handleError(it) }
-
-            _isLoading.value = false
-        }
+        if (_uiState.value.selectedCategory == category) return
+        _uiState.update { it.copy(selectedCategory = category) }
+        if (category == NEW_ARRIVALS) showNewArrivals() else showCategory(category)
     }
 
     fun onSearchQuery(query: String) {
         if (query.isBlank()) {
-            onCategorySelected("New Arrivals")
+            onCategorySelected(NEW_ARRIVALS)
             return
         }
         val cacheKey = "Search: $query"
-        _selectedCategory.value = cacheKey
+        if (_uiState.value.selectedCategory == cacheKey) return
+        _uiState.update { it.copy(selectedCategory = cacheKey) }
+        val noResults = UiText.Res(R.string.no_books_found_for, query)
 
-        sessionCache[cacheKey]?.let { cachedBooks ->
-            _booksState.value = cachedBooks
-            _displayTitle.value = "Results for '$query'"
+        sessionCache[cacheKey]?.let { cached ->
+            showNow(SourceContent.of(cacheKey, cached, noResults, search = true))
             return
         }
 
-        _booksState.value = emptyList()
-        performSearch(query = query, cacheKey = cacheKey)
+        // Nothing cached for a new search, so the skeleton goes up straight away
+        setContent(SourceContent.Loading)
+        launchContent {
+            val result = standardRepository.searchBooks(query)
+            ensureActive()
+            result
+                .onSuccess { feed ->
+                    sessionCache[cacheKey] = feed.books
+                    setContent(SourceContent.of(cacheKey, feed.books, noResults, search = true))
+                }
+                .onFailure { setContent(SourceContent.of(cacheKey, emptyList(), noResults, failure = it)) }
+        }
     }
 
-    private fun refreshNewReleases() {
-        contentJob?.cancel()
-        contentJob = viewModelScope.launch {
-            _error.value = null
-
-            val cached = standardRepository.getNewReleasesFlow().firstOrNull() ?: emptyList()
-            _booksState.value = cached
-
-            if (cached.isEmpty()) {
-                _isLoading.value = true
+    /** The newest books, cache first; refreshed each time they're picked. */
+    private fun showNewArrivals() {
+        launchContent {
+            loadCachedThenRefresh(
+                cache = standardRepository.getNewReleasesFlow(),
+                refresh = { standardRepository.syncNewReleases() }
+            ) { books, refreshing, failure ->
+                setContent(SourceContent.of(NEW_ARRIVALS, books, NoBooks, refreshing, failure))
             }
-
-            _displayTitle.value = "Fetching new releases..."
-
-            standardRepository.syncNewReleases()
-                .onSuccess {
-                    _displayTitle.value = "Latest additions"
-                }
-                .onFailure {
-                    _displayTitle.value = "Showing offline cache"
-                }
-
-            _isLoading.value = false
         }
     }
 
-    private fun syncCategories() {
-        viewModelScope.launch {
-            standardRepository.syncCategories()
+    /** A subject: from this session's copy if it's been opened before, else cache first. */
+    private fun showCategory(category: String) {
+        val slug = category.toSlug()
+        val listKey = "Category: $slug"
+        sessionCache[slug]?.let { cached ->
+            showNow(SourceContent.of(listKey, cached, NoBooks))
+            return
+        }
+        val cache = standardRepository.getTopicBooksFlow(slug)
+        launchContent {
+            loadCachedThenRefresh(
+                cache = cache,
+                refresh = {
+                    standardRepository.syncTopicBooks(slug)
+                        .onSuccess { sessionCache[slug] = cache.first() }
+                }
+            ) { books, refreshing, failure ->
+                setContent(SourceContent.of(listKey, books, NoBooks, refreshing, failure))
+            }
         }
     }
 
-    private fun performSearch(query: String, cacheKey: String) {
+    /**
+     * Replaces the list's job: whatever was loading for the previous list stops. The previous
+     * list stays up until the new one's first books (or the skeleton) replace it, so switching
+     * between cached lists doesn't blink through the skeleton.
+     */
+    private fun launchContent(block: suspend CoroutineScope.() -> Unit) {
         contentJob?.cancel()
-        contentJob = viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-            _displayTitle.value = "Searching for '$query'..."
-
-            standardRepository.searchBooks(query)
-                .onSuccess { result ->
-                    _booksState.value = result.books
-                    _displayTitle.value =
-                        if (result.books.isEmpty()) "No books found for '$query'" else "Results for '$query'"
-                    sessionCache[cacheKey] = result.books
-                }
-                .onFailure { handleError(it) }
-
-            _isLoading.value = false
-        }
+        contentJob = viewModelScope.launch(block = block)
     }
 
-    private fun handleError(e: Throwable) {
-        if (e is kotlinx.coroutines.CancellationException) return
-        _error.value = e.toUserFriendlyMessage()
-        _displayTitle.value = "Something went wrong"
+    /** Shows [content] at once, with nothing left loading behind it. */
+    private fun showNow(content: SourceContent) {
+        contentJob?.cancel()
+        setContent(content)
+    }
+
+    private fun setContent(content: SourceContent) = _uiState.update { it.copy(content = content) }
+
+    private companion object {
+        val NoBooks = UiText.Res(R.string.no_books_found)
     }
 }
 

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="airachat_limit">무료 한도에 도달했습니다. Quill Pro로 업그레이드하세요.</string>
+    <string name="airachat_error">문제가 발생했어요. 다시 시도해 주세요.</string>
+    <string name="airachat_book_not_found">책을 찾을 수 없습니다.</string>
+    <string name="airachat_no_chapter_content">이 장의 내용을 찾을 수 없습니다.</string>
+    <string name="airachat_no_response">Aira가 답변하지 못했어요.</string>
+    <string name="airachat_blocked">Aira가 이 부분은 도와드릴 수 없어요. AI 제공업체가 다루지 않는 내용이 포함되어 있어요.</string>
+    <string name="airachat_image_no_detail">이 구절에는 그림을 만들 만큼의 시각적 묘사가 부족해요.</string>
+    <string name="airachat_image_error">그림을 만드는 중 문제가 발생했습니다. 다시 시도해 주세요.</string>
+    <string name="airachat_q_characters">이 책의 등장인물은 누구야?</string>
+    <string name="airachat_q_themes">이 책의 주제는 뭐야?</string>
+    <string name="airachat_q_summarize">이 장을 요약해 줄래?</string>
+    <string name="airachat_not_encountered">지금까지 읽은 부분에서는 ‘%1$s’을(를) 아직 보지 못했어요.</string>
+    <string name="airachat_q_who_is">%1$s은(는) 누구야?</string>
+    <string name="airachat_q_recent_role">%1$s은(는) 최근에 무엇을 하고 있어?</string>
+    <string name="airachat_q_journey">%1$s의 지금까지의 여정은 어땠어?</string>
+    <string name="airachat_q_significance">‘%1$s’은(는) 어떤 의미가 있어?</string>
+    <string name="airachat_q_define">%1$s은(는) 무슨 뜻이야?</string>
+    <string name="airachat_q_what_is">%1$s은(는) 뭐야?</string>
+    <string name="airachat_q_explain">‘%1$s’을(를) 설명해 줄래?</string>
+    <string name="airachat_q_visualize">‘%1$s’을(를) 그림으로 보여 줄래?</string>
+</resources>

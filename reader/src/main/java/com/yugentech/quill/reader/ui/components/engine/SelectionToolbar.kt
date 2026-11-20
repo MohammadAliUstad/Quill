@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun SelectionToolbar(
@@ -96,7 +98,7 @@ fun SelectionToolbar(
                 ToolbarAction(
                     modifier = Modifier.weight(1f),
                     icon = null,
-                    label = "Ask Aira",
+                    label = stringResource(R.string.reader_ask_aira),
                     tint = primaryColor,
                     customContent = { AiraBadge() },
                     onClick = {
@@ -171,7 +173,7 @@ private fun AiraBadge() {
         )
         Icon(
             imageVector = Icons.Rounded.AutoAwesome,
-            contentDescription = "Ask Aira",
+            contentDescription = stringResource(R.string.reader_ask_aira),
             tint = MaterialTheme.colorScheme.onPrimaryContainer,
             modifier = Modifier.size(18.dp)
         )

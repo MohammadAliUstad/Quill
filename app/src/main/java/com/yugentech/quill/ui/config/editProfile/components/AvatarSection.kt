@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.config.editProfile.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +36,7 @@ import com.yugentech.quill.ui.tabs.moreScreen.components.AvatarRepository
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
 
 // Category tabs over a grid of avatars (tap a tab to switch), drawn straight on the avatar sheet
 // (no card around it): the tabs run edge to edge and the grid lines up with the sheet title.
@@ -45,6 +48,7 @@ fun AvatarSection(
     onAvatarSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     val categories = remember { AvatarCategory.entries }
     val scope = rememberCoroutineScope()
 
@@ -89,6 +93,7 @@ fun AvatarSection(
                     Tab(
                         selected = pagerState.currentPage == index,
                         onClick = {
+                            if (pagerState.currentPage != index) haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                             scope.launch {
                                 pagerState.animateScrollToPage(index)
                             }
@@ -101,7 +106,7 @@ fun AvatarSection(
                         ),
                         text = {
                             Text(
-                                text = category.displayName,
+                                text = stringResource(category.displayName),
                                 style = MaterialTheme.typography.labelLarge
                             )
                         }

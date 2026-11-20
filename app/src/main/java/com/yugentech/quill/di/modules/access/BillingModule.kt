@@ -36,6 +36,7 @@ val billingModule = module {
     single<QuotaRepository> {
         QuotaRepositoryImpl(
             authRepository = get(),
+            billingRepository = get(),
             quotaService = get(),
             quotaDao = get()
         )
@@ -44,18 +45,16 @@ val billingModule = module {
     single(createdAtStart = true) {
         GlobalSyncManager(
             authRepository = get(),
-            userRepository = get(),
             quotaRepository = get(),
-            billingRepository = get()
+            billingRepository = get(),
+            bookRepository = get()
         )
     }
 
     viewModel {
         SubscriptionViewModel(
             billingRepository = get(),
-            authRepository = get(),
-            userRepository = get(),
-            bookRepository = get()
+            authRepository = get()
         )
     }
 

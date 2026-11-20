@@ -29,8 +29,8 @@ android {
         minSdk = 26
         targetSdk = 37
 
-        versionCode = 14
-        versionName = "4.5.0"
+        versionCode = 15
+        versionName = "5.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val webClientId = localProperties.getProperty("WEB_CLIENT_ID") ?: ""

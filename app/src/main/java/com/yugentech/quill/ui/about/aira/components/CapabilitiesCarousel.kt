@@ -30,17 +30,19 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CapabilitiesCarousel() {
     val items = listOf(
-        CapabilityItem(Icons.Outlined.ChatBubbleOutline, "Ask Anything", "Chat naturally about the plot, world-building, or confusing events directly from the book.", 0),
-        CapabilityItem(Icons.Outlined.AutoStories, "Chapter Summaries", "Get instant, spoiler-free recaps of specific chapters to refresh your memory.", 1),
-        CapabilityItem(Icons.Outlined.PeopleOutline, "Character Tracking", "Quickly identify who is speaking, who a character is, or recall their backstory.", 2),
-        CapabilityItem(Icons.Outlined.Translate, "Reading Aid", "Simplify complex passages and define archaic or difficult words right in context.", 0),
-        CapabilityItem(Icons.Outlined.Lightbulb, "Uncover Themes", "Explore the deeper significance behind symbols, motives, and author intent.", 1),
-        CapabilityItem(Icons.Outlined.Lock, "Spoiler Protection", "Aira locks her knowledge to your exact reading progress to protect the story.", 2)
+        CapabilityItem(Icons.Outlined.ChatBubbleOutline, stringResource(R.string.aira_cap_ask_title), stringResource(R.string.aira_cap_ask_body), 0),
+        CapabilityItem(Icons.Outlined.AutoStories, stringResource(R.string.aira_cap_summaries_title), stringResource(R.string.aira_cap_summaries_body), 1),
+        CapabilityItem(Icons.Outlined.PeopleOutline, stringResource(R.string.aira_cap_characters_title), stringResource(R.string.aira_cap_characters_body), 2),
+        CapabilityItem(Icons.Outlined.Translate, stringResource(R.string.aira_cap_aid_title), stringResource(R.string.aira_cap_aid_body), 0),
+        CapabilityItem(Icons.Outlined.Lightbulb, stringResource(R.string.aira_cap_themes_title), stringResource(R.string.aira_cap_themes_body), 1),
+        CapabilityItem(Icons.Outlined.Lock, stringResource(R.string.aira_cap_spoilers_title), stringResource(R.string.aira_cap_spoilers_body), 2)
     )
 
     val containerColors = listOf(

@@ -1,10 +1,21 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { GoogleGenAI, Modality } from "@google/genai";
+import { contentBlockedError } from "../../core/gemini";
 
 const geminiKey = defineSecret("GEMINI_API_KEY");
 
 const IMAGE_MODEL = "gemini-2.5-flash-image";
+
+/** Finish reasons that mean a safety filter refused the passage or the image. */
+const IMAGE_BLOCK_REASONS = new Set<string>([
+  "SAFETY",
+  "PROHIBITED_CONTENT",
+  "BLOCKLIST",
+  "SPII",
+  "IMAGE_SAFETY",
+  "IMAGE_PROHIBITED_CONTENT",
+]);
 
 export const visualizeScene = onCall(
   { secrets: [geminiKey] },
@@ -80,6 +91,15 @@ ${passage}
           responseText: response.text,
           partsSummary: parts.map((part) => Object.keys(part)),
         });
+
+        // A safety filter refused the passage or the picture: not a lack of visual detail
+        const finishReason = String(response.candidates?.[0]?.finishReason ?? "");
+        const blockReason =
+          response.promptFeedback?.blockReason ??
+          (IMAGE_BLOCK_REASONS.has(finishReason) ? finishReason : undefined);
+        if (blockReason) {
+          throw contentBlockedError(String(blockReason));
+        }
 
         // A clean STOP with no image is the model declining because the passage genuinely
         // has nothing visual to draw (per its own instructions) -- not a technical failure.

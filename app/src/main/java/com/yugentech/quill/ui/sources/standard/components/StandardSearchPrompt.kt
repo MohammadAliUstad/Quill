@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun StandardSearchPrompt(
@@ -42,7 +44,7 @@ fun StandardSearchPrompt(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Discover high-quality ebooks",
+            text = stringResource(R.string.standard_prompt_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -52,7 +54,7 @@ fun StandardSearchPrompt(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Search through thousands of free, carefully\nformatted ebooks from Standard Ebooks.",
+            text = stringResource(R.string.standard_prompt_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

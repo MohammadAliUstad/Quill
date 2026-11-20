@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.about.aira.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,10 +37,13 @@ import com.yugentech.quill.ui.about.aira.components.ClosingCard
 import com.yugentech.quill.ui.about.aira.components.HeroSection
 import com.yugentech.quill.ui.about.aira.components.SectionLabel
 import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiraAboutScreen(onBack: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val surfaceColor = MaterialTheme.colorScheme.surface
 
@@ -60,10 +65,13 @@ fun AiraAboutScreen(onBack: () -> Unit) {
                 TopAppBar(
                     title = { },
                     navigationIcon = {
-                        IconButton(onClick = onBack) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onBack()
+                        }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
+                                contentDescription = stringResource(R.string.back)
                             )
                         }
                     },
@@ -80,7 +88,7 @@ fun AiraAboutScreen(onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding(),
-                bottom = innerPadding.calculateBottomPadding()
+                bottom = innerPadding.calculateBottomPadding() + 8.dp
             ),
             verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
@@ -88,14 +96,14 @@ fun AiraAboutScreen(onBack: () -> Unit) {
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SectionLabel("Capabilities")
+                    SectionLabel(stringResource(R.string.capabilities))
                     CapabilitiesCarousel()
                 }
             }
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SectionLabel("Vision")
+                    SectionLabel(stringResource(R.string.vision))
                     ClosingCard()
                 }
             }
@@ -106,7 +114,7 @@ fun AiraAboutScreen(onBack: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp)
-                        .padding(bottom = 16.dp),
+                        .padding(bottom = 8.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -117,7 +125,7 @@ fun AiraAboutScreen(onBack: () -> Unit) {
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "Aira is an AI, so answers may not always be accurate.",
+                        text = stringResource(R.string.feature_mistakes_body),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,

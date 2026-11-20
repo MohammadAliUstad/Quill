@@ -22,16 +22,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun SourceEmptyState(
     title: String,
     message: String?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean = message != null
 ) {
-    val isError = title.contains("wrong", ignoreCase = true) || 
-                  title.contains("error", ignoreCase = true) ||
-                  message?.contains("failed", ignoreCase = true) == true
     
     val icon = if (isError) Icons.Rounded.CloudOff else Icons.Rounded.SearchOff
 
@@ -82,7 +82,7 @@ fun SourceEmptyState(
         } else {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Try searching for another book, author, or keyword\nto find what you're looking for.",
+                text = stringResource(R.string.source_empty_body),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

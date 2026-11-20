@@ -1,24 +1,32 @@
 package com.yugentech.quill.ui.access.signIn.components.dialog
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ForgotPasswordSuccessDialog(
     onDismiss: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Check your email") },
+        title = { Text(stringResource(R.string.forgot_password_sent_title)) },
         text = {
-            Text("We have sent a password reset link to your email address. Please check your inbox and spam folder to reset your password.")
+            Text(stringResource(R.string.forgot_password_sent_message))
         },
         confirmButton = {
-            Button(onClick = onDismiss) {
-                Text("OK")
+            Button(onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                onDismiss()
+            }) {
+                Text(stringResource(R.string.ok))
             }
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,

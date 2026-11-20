@@ -51,6 +51,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.yugentech.theme.tokens.corners
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 /**
  * A colour theme as a tile in its own theme's surface colours: a round palette disc split into
@@ -197,7 +199,7 @@ private fun ThemeCheck(
         ) {
             Icon(
                 imageVector = Icons.Rounded.Check,
-                contentDescription = "Selected",
+                contentDescription = stringResource(R.string.selected),
                 tint = contentColor,
                 modifier = Modifier.size(13.dp)
             )

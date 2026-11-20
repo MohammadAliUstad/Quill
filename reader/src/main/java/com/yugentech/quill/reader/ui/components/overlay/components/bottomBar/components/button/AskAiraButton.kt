@@ -21,6 +21,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun AskAiraButton(
@@ -48,13 +50,13 @@ fun AskAiraButton(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Default.AutoAwesome,
-                contentDescription = "Ask Aira",
+                contentDescription = stringResource(R.string.reader_ask_aira),
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .size(22.dp)
             )
             Text(
-                text = "Ask Aira",
+                text = stringResource(R.string.reader_ask_aira),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )

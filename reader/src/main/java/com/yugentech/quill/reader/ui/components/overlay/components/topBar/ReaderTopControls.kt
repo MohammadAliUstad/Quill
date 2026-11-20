@@ -24,6 +24,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +73,7 @@ fun ReaderTopBar(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.reader_back)
                         )
                     }
                 },
@@ -84,7 +86,7 @@ fun ReaderTopBar(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Menu,
-                            contentDescription = "TOC"
+                            contentDescription = stringResource(R.string.reader_toc)
                         )
                     }
 
@@ -96,7 +98,7 @@ fun ReaderTopBar(
                     ) {
                         Icon(
                             imageVector = Icons.Default.MusicNote,
-                            contentDescription = "Ambient Sounds"
+                            contentDescription = stringResource(R.string.reader_ambient_sounds)
                         )
                     }
 
@@ -108,7 +110,7 @@ fun ReaderTopBar(
                     ) {
                         Icon(
                             imageVector = Icons.Default.FormatSize,
-                            contentDescription = "Settings"
+                            contentDescription = stringResource(R.string.reader_settings)
                         )
                     }
                 },

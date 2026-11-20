@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.shared.bookDetails.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -49,6 +51,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -62,11 +66,13 @@ fun BookDetailsTopBar(
     onBackClick: () -> Unit,
     onFavoriteClick: () -> Unit,
     onHighlightsClick: () -> Unit,
-    onVisualsClick: () -> Unit,
+    // Null hides Visuals (Aira's images), for a guest
+    onVisualsClick: (() -> Unit)?,
     onResetProgressClick: () -> Unit,
     onDeleteClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior
 ) {
+    val haptic = LocalHapticFeedback.current
     var menuExpanded by remember { mutableStateOf(false) }
     val surfaceColor = MaterialTheme.colorScheme.surface
 
@@ -105,16 +111,24 @@ fun BookDetailsTopBar(
                 }
             },
             navigationIcon = {
-                IconButton(onClick = onBackClick) {
+                IconButton(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                    onBackClick()
+                }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
+                        contentDescription = stringResource(R.string.back)
                     )
                 }
             },
             actions = {
                 IconButton(
-                    onClick = onFavoriteClick,
+                    onClick = {
+                        haptic.performHapticFeedback(
+                            if (isFavorite) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn
+                        )
+                        onFavoriteClick()
+                    },
                     modifier = Modifier.size(44.dp)
                 ) {
                     AnimatedHeartIcon(
@@ -129,10 +143,13 @@ fun BookDetailsTopBar(
                     exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start) + slideOutHorizontally(targetOffsetX = { it })
                 ) {
                     Box {
-                        IconButton(onClick = { menuExpanded = true }) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            menuExpanded = true
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More Options",
+                                contentDescription = stringResource(R.string.more_options),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -149,14 +166,15 @@ fun BookDetailsTopBar(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "Highlights",
+                                        text = stringResource(R.string.highlights),
                                         fontWeight = FontWeight.Medium
                                     )
                                 },
                                 leadingIcon = {
-                                    Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = "Highlights")
+                                    Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = stringResource(R.string.highlights))
                                 },
                                 onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     menuExpanded = false
                                     onHighlightsClick()
                                 },
@@ -166,27 +184,30 @@ fun BookDetailsTopBar(
                                     .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                             )
 
-                            Spacer(modifier = Modifier.height(4.dp))
+                            if (onVisualsClick != null) {
+                                Spacer(modifier = Modifier.height(4.dp))
 
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = "Visuals",
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Image, contentDescription = "Visuals")
-                                },
-                                onClick = {
-                                    menuExpanded = false
-                                    onVisualsClick()
-                                },
-                                modifier = Modifier
-                                    .padding(horizontal = 8.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                            )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = stringResource(R.string.visuals),
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Image, contentDescription = stringResource(R.string.visuals))
+                                    },
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                        menuExpanded = false
+                                        onVisualsClick()
+                                    },
+                                    modifier = Modifier
+                                        .padding(horizontal = 8.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                )
+                            }
 
                             if (hasProgress) {
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -194,14 +215,15 @@ fun BookDetailsTopBar(
                                 DropdownMenuItem(
                                     text = {
                                         Text(
-                                            text = "Reset Progress",
+                                            text = stringResource(R.string.reset_progress),
                                             fontWeight = FontWeight.Medium
                                         )
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Default.Restore, contentDescription = "Reset Progress")
+                                        Icon(Icons.Default.Restore, contentDescription = stringResource(R.string.reset_progress))
                                     },
                                     onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                         menuExpanded = false
                                         onResetProgressClick()
                                     },
@@ -217,7 +239,7 @@ fun BookDetailsTopBar(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "Delete Book",
+                                        text = stringResource(R.string.delete_book),
                                         color = MaterialTheme.colorScheme.error,
                                         fontWeight = FontWeight.Medium
                                     )
@@ -225,11 +247,12 @@ fun BookDetailsTopBar(
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete Book",
+                                        contentDescription = stringResource(R.string.delete_book),
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 },
                                 onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     menuExpanded = false
                                     onDeleteClick()
                                 },

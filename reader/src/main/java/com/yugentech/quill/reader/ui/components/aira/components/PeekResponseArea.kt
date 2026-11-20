@@ -65,6 +65,17 @@ import java.io.File
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
+
+// From the avatar above and from the input field below to the thinking dots
+private val ThinkingGap = 20.dp
+
+// From the end of a reply (text, image or note) down to the input field
+private val ReplyBottomGap = 16.dp
+
+// AiraPeekHeader's own padding under the avatar, already part of the space above
+private val HeaderBottomPadding = 8.dp
 
 private sealed class ResponseAreaState {
     data object Loading : ResponseAreaState()
@@ -81,11 +92,10 @@ fun PeekResponseArea(
     airaUiState: QuickUiState,
     showLimitReached: Boolean,
     selectedText: String? = null,
-    activeChips: List<Pair<String, QuickPrompt>> = emptyList(),
+    activeChips: List<Pair<Int, QuickPrompt>> = emptyList(),
     startRevealed: Boolean = false,
     onResponseRevealed: (String) -> Unit = {},
-    onChipClick: (QuickPrompt) -> Unit = {},
-    onGreetingSelected: (String) -> Unit = {}
+    onChipClick: (QuickPrompt) -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -123,10 +133,12 @@ fun PeekResponseArea(
             ) { state ->
                 when (state) {
                     is ResponseAreaState.Loading -> {
+                        // Equal space either side of the dots: the header already leaves 8dp under
+                        // Aira's avatar, so 12 + 8 above matches the 20 down to the input field
                         Column {
-                            Spacer(Modifier.height(20.dp))
+                            Spacer(Modifier.height(ThinkingGap - HeaderBottomPadding))
                             ThinkingIndicator(modifier = Modifier.padding(start = 24.dp, end = 16.dp))
-                            Spacer(Modifier.height(20.dp))
+                            Spacer(Modifier.height(ThinkingGap))
                         }
                     }
 
@@ -144,7 +156,7 @@ fun PeekResponseArea(
                         Column {
                             Spacer(Modifier.height(12.dp))
                             Text(
-                                text = "I'm out of energy for today! You've reached your daily AI query limit. Upgrade to Pro to keep chatting, or I'll see you tomorrow.",
+                                text = stringResource(R.string.reader_quota_out),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -165,7 +177,7 @@ fun PeekResponseArea(
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(ReplyBottomGap))
                         }
                     }
 
@@ -182,9 +194,12 @@ fun PeekResponseArea(
                                 },
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
-                                modifier = Modifier.padding(horizontal = 16.dp)
+                                // Long-press copies the reply (no ripple, just a haptic tick)
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .longPressToCopy(state.text)
                             )
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(ReplyBottomGap))
                         }
                     }
 
@@ -197,14 +212,14 @@ fun PeekResponseArea(
                             // of cropping it to fit a square.
                             AsyncImage(
                                 model = File(state.path),
-                                contentDescription = "Generated illustration",
+                                contentDescription = stringResource(R.string.reader_generated_illustration),
                                 contentScale = ContentScale.FillWidth,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp)
                                     .clip(RoundedCornerShape(16.dp))
                             )
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(ReplyBottomGap))
                         }
                     }
 
@@ -212,8 +227,7 @@ fun PeekResponseArea(
                         QuickActionChips(
                             selectedText = selectedText,
                             activeChips = activeChips,
-                            onChipClick = onChipClick,
-                            onGreetingSelected = onGreetingSelected
+                            onChipClick = onChipClick
                         )
                     }
                 }
@@ -225,12 +239,12 @@ fun PeekResponseArea(
 // Staged, in the order the work actually happens. The card steps through them once and holds
 // on the last line instead of looping, so a slow generation never cycles back to "Reading".
 private val IMAGE_GENERATION_CAPTIONS = listOf(
-    "Reading the passage",
-    "Picking out the key details",
-    "Sketching the composition",
-    "Adding color and light",
-    "Refining the details",
-    "Finishing up"
+    R.string.reader_image_step_1,
+    R.string.reader_image_step_2,
+    R.string.reader_image_step_3,
+    R.string.reader_image_step_4,
+    R.string.reader_image_step_5,
+    R.string.reader_image_step_6
 )
 
 // A square placeholder matching the eventual image's rounded-corner treatment, so the
@@ -353,7 +367,7 @@ private fun ImageGeneratingCard(modifier: Modifier = Modifier) {
                 label = "captionSwap"
             ) { index ->
                 Text(
-                    text = IMAGE_GENERATION_CAPTIONS[index],
+                    text = stringResource(IMAGE_GENERATION_CAPTIONS[index]),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -368,18 +382,16 @@ private fun ImageGeneratingCard(modifier: Modifier = Modifier) {
 @Composable
 private fun QuickActionChips(
     selectedText: String?,
-    activeChips: List<Pair<String, QuickPrompt>>,
-    onChipClick: (QuickPrompt) -> Unit,
-    onGreetingSelected: (String) -> Unit
+    activeChips: List<Pair<Int, QuickPrompt>>,
+    onChipClick: (QuickPrompt) -> Unit
 ) {
     val greetings = listOf(
-        "How can I help you today?",
-        "What's on your mind regarding this book?",
-        "Ask me anything about the story!",
-        "Want to dive deeper into this chapter?"
+        R.string.reader_greeting_1,
+        R.string.reader_greeting_2,
+        R.string.reader_greeting_3,
+        R.string.reader_greeting_4
     )
-    val greeting = remember { greetings.random() }
-    LaunchedEffect(Unit) { onGreetingSelected(greeting) }
+    val greeting = stringResource(remember { greetings.random() })
 
     Column {
         Spacer(Modifier.height(12.dp))
@@ -404,7 +416,7 @@ private fun QuickActionChips(
                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
                 ) {
                     Text(
-                        text = label,
+                        text = stringResource(label),
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,

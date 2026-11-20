@@ -23,7 +23,4 @@ interface QuotaDao {
 
     @Query("UPDATE quotas SET queriesUsed = 0, lastResetDate = :today WHERE userId = :userId")
     suspend fun resetUsage(userId: String, today: String)
-
-    @Query("UPDATE quotas SET queriesLimit = :newLimit WHERE userId = :userId")
-    suspend fun updateLimit(userId: String, newLimit: Int)
 }

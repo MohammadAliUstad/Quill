@@ -38,21 +38,24 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.reader.viewmodel.quick.QuickUiState
+import com.yugentech.theme.effects.airaBeam
 import com.yugentech.theme.tokens.dimensions.AppAnimations
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
 private val loadingPlaceholders = listOf(
-    "Finding the right words",
-    "Your answer is taking shape",
-    "Something thoughtful is coming",
-    "Distilling an answer",
-    "Almost there",
-    "Reading between the lines",
-    "Gathering my thoughts",
-    "Let me think about that",
-    "Connecting the dots",
-    "Searching for insight",
-    "Pulling it all together",
-    "Crafting a response"
+    R.string.reader_thinking_1,
+    R.string.reader_thinking_2,
+    R.string.reader_thinking_3,
+    R.string.reader_thinking_4,
+    R.string.reader_thinking_5,
+    R.string.reader_thinking_6,
+    R.string.reader_thinking_7,
+    R.string.reader_thinking_8,
+    R.string.reader_thinking_9,
+    R.string.reader_thinking_10,
+    R.string.reader_thinking_11,
+    R.string.reader_thinking_12
 )
 
 @Composable
@@ -71,6 +74,7 @@ fun InputBar(
 ) {
     val isStreamingOrLoading = airaUiState.isStreaming || airaUiState.isLoading
     val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
+    val placeholderTexts = loadingPlaceholders.map { stringResource(it) }
     var loadingPlaceholder by remember { mutableStateOf("") }
     var lastPlaceholderIndex by remember { mutableIntStateOf(-1) }
 
@@ -80,7 +84,7 @@ fun InputBar(
             do { index = loadingPlaceholders.indices.random() }
             while (index == lastPlaceholderIndex && loadingPlaceholders.size > 1)
             lastPlaceholderIndex = index
-            loadingPlaceholder = loadingPlaceholders[index]
+            loadingPlaceholder = placeholderTexts[index]
         } else {
             loadingPlaceholder = ""
         }
@@ -98,7 +102,7 @@ fun InputBar(
             enabled = !airaUiState.isLoading,
             placeholder = {
                 Text(
-                    text = if (!airaUiState.isLoading) "Ask me anything…" else loadingPlaceholder,
+                    text = if (!airaUiState.isLoading) stringResource(R.string.reader_ask_anything) else loadingPlaceholder,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
@@ -139,7 +143,7 @@ fun InputBar(
                     ) { loading ->
                         Icon(
                             imageVector = if (loading) Icons.Default.Stop else Icons.Default.ArrowUpward,
-                            contentDescription = if (loading) "Stop" else "Send",
+                            contentDescription = if (loading) stringResource(R.string.reader_stop) else stringResource(R.string.reader_send),
                             tint = if (loading) MaterialTheme.colorScheme.onSecondaryContainer else buttonContentColor,
                             modifier = Modifier.size(20.dp)
                         )
@@ -148,6 +152,9 @@ fun InputBar(
             },
             modifier = Modifier
                 .weight(1f)
+                // A light circles the field while Aira is answering (loading and streaming).
+                // Ahead of animateContentSize, so it follows the field's size as it eases.
+                .airaBeam(active = isStreamingOrLoading)
                 .focusRequester(focusRequester)
                 .onFocusChanged { onFocusChanged(it.isFocused) }
                 .animateContentSize(),

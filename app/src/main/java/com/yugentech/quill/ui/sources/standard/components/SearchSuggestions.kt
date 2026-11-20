@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.sources.standard.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import getTitleForCategory
 
 data class CategorySuggestion(
     val name: String,
@@ -66,10 +69,14 @@ fun CategorySuggestionItem(
     category: CategorySuggestion,
     onClick: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                onClick()
+            }
             .padding(vertical = 12.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -82,7 +89,7 @@ fun CategorySuggestionItem(
         Spacer(modifier = Modifier.width(16.dp))
 
         Text(
-            text = category.name,
+            text = getTitleForCategory(category.name),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface
         )

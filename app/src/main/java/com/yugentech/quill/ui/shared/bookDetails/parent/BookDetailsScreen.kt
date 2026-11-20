@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.shared.bookDetails.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -46,6 +48,7 @@ import com.yugentech.quill.bookDetails.viewmodel.BookDetailsViewModel
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.quill.ui.shared.bookDetails.components.BookDescriptionSection
+import com.yugentech.quill.ui.shared.bookDetails.components.SourceMaintenanceSection
 import com.yugentech.quill.ui.shared.bookDetails.components.BookDetailsTopBar
 import com.yugentech.quill.ui.shared.bookDetails.components.BookHeaderContent
 import com.yugentech.quill.ui.shared.bookDetails.components.BookParallaxBackground
@@ -53,6 +56,8 @@ import com.yugentech.quill.ui.shared.bookDetails.components.CategorySelectionShe
 import com.yugentech.quill.ui.shared.bookDetails.components.FloatingActionButton
 import com.yugentech.quill.ui.shared.bookDetails.components.ReadingProgressSection
 import com.yugentech.quill.ui.shared.bookDetails.components.chaptersListSection
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(
     ExperimentalAnimationGraphicsApi::class, ExperimentalMaterial3ExpressiveApi::class,
@@ -66,8 +71,11 @@ fun BookDetailsScreen(
     onReadClick: (String, String?) -> Unit,
     onAiraClick: (String) -> Unit,
     onGoToCategoriesClick: () -> Unit,
-    bookDetailsViewModel: BookDetailsViewModel
+    bookDetailsViewModel: BookDetailsViewModel,
+    // Off for a guest: Aira (and her Visuals) need an account
+    airaEnabled: Boolean = true
 ) {
+    val haptic = LocalHapticFeedback.current
     val uiState by bookDetailsViewModel.uiState.collectAsStateWithLifecycle()
     val categories by bookDetailsViewModel.categories.collectAsStateWithLifecycle()
 
@@ -135,15 +143,18 @@ fun BookDetailsScreen(
                 onResetProgressClick = { showResetDialog = true },
                 scrollBehavior = scrollBehavior,
                 onHighlightsClick = { onHighlightsClick(book.id) },
-                onVisualsClick = { onVisualsClick(book.id) }
+                onVisualsClick = if (airaEnabled) ({ onVisualsClick(book.id) }) else null
             )
         },
         floatingActionButton = {
-            if (downloadStatus == DownloadStatus.DOWNLOADED) {
+            if (airaEnabled && downloadStatus == DownloadStatus.DOWNLOADED) {
                 FloatingActionButton(
                     currentTabHasFab = true,
                     isScrollingDown = isScrollingDown,
-                    onClick = { onAiraClick(book.id) }
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onAiraClick(book.id)
+                    }
                 )
             }
         }
@@ -163,7 +174,7 @@ fun BookDetailsScreen(
                 state = lazyListState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    bottom = innerPadding.calculateBottomPadding()
+                    bottom = innerPadding.calculateBottomPadding() + 8.dp
                 ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -171,6 +182,7 @@ fun BookDetailsScreen(
                     BookHeaderContent(
                         book = book,
                         topPadding = innerPadding.calculateTopPadding(),
+                        isSourceDown = uiState.isSourceDown,
                         onCategoryClick = { showCategorySheet = true },
                         onDownloadClick = {
                             if (downloadStatus == DownloadStatus.DOWNLOADED) {
@@ -202,23 +214,40 @@ fun BookDetailsScreen(
                         Column {
                             ReadingProgressSection(
                                 book = book,
-                                onContinueClick = { onReadClick(book.id, null) }
+                                onContinueClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                    onReadClick(book.id, null)
+                                }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
                 }
 
-                if (!uiState.isLoading) {
+                // Can't be downloaded while its source is down for maintenance: that's what the
+                // page says in place of the description, as the Sources card does
+                val isUnavailable = uiState.isSourceDown &&
+                    downloadStatus != DownloadStatus.DOWNLOADED && downloadStatus != DownloadStatus.DOWNLOADING
+                if (!uiState.isLoading && isUnavailable) {
+                    item {
+                        SourceMaintenanceSection(
+                            source = book.source,
+                            backAfter = uiState.sourceBackAfter,
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+                    }
+                } else if (!uiState.isLoading) {
                     item {
                         BookDescriptionSection(
                             description = book.description,
                             subjects = book.subjects,
                             isDescriptionLoading = uiState.isDescriptionLoading,
-                            modifier = Modifier
-                                .padding(horizontal = 24.dp),
+                            horizontalPadding = 24.dp,
                             isExpanded = isDescriptionExpanded,
-                            onExpandedChange = { bookDetailsViewModel.onToggleDescription() }
+                            onExpandedChange = {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                bookDetailsViewModel.onToggleDescription()
+                            }
                         )
                     }
                 }
@@ -226,7 +255,10 @@ fun BookDetailsScreen(
                 if (chapters.isNotEmpty()) {
                     chaptersListSection(
                         chapters = chapters,
-                        onChapterClick = { href -> onReadClick(book.id, href) },
+                        onChapterClick = { href ->
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onReadClick(book.id, href)
+                        },
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
                 }
@@ -248,7 +280,8 @@ fun BookDetailsScreen(
                     showRemoveLibraryWarningDialog = true
                 } else {
                     bookDetailsViewModel.removeFromLibrary()
-                    onBackClick()
+                    // Only an imported book leaves: a catalogue one stays, fresh
+                    if (book.source == BookSource.USER_IMPORTED) onBackClick()
                 }
             },
             onGoToCategoriesClick = {
@@ -262,11 +295,12 @@ fun BookDetailsScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            title = { Text("Delete Book File?") },
-            text = { Text("The downloaded book file will be deleted, but your reading progress and bookmarks will be kept completely safe.") },
+            title = { Text(stringResource(R.string.delete_file_title)) },
+            text = { Text(stringResource(R.string.delete_file_body)) },
             confirmButton = {
                 Button(
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                         if (book.source == BookSource.USER_IMPORTED) {
                             bookDetailsViewModel.removeFromLibrary()
                             onBackClick()
@@ -281,11 +315,14 @@ fun BookDetailsScreen(
                         contentColor = MaterialTheme.colorScheme.onError
                     )
                 ) {
-                    Text("Delete File")
+                    Text(stringResource(R.string.delete_file))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+                TextButton(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                    showDeleteDialog = false
+                }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -294,11 +331,12 @@ fun BookDetailsScreen(
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            title = { Text("Reset Reading Progress?") },
-            text = { Text("Are you sure you want to reset your reading progress? All your current reading stats for this book will be permanently cleared.") },
+            title = { Text(stringResource(R.string.reset_progress_title)) },
+            text = { Text(stringResource(R.string.reset_progress_body)) },
             confirmButton = {
                 Button(
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                         bookDetailsViewModel.resetReadingProgress()
                         showResetDialog = false
                     },
@@ -307,11 +345,14 @@ fun BookDetailsScreen(
                         contentColor = MaterialTheme.colorScheme.onError
                     )
                 ) {
-                    Text("Reset Progress")
+                    Text(stringResource(R.string.reset_progress))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showResetDialog = false }) { Text("Cancel") }
+                TextButton(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                    showResetDialog = false
+                }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -320,25 +361,29 @@ fun BookDetailsScreen(
         AlertDialog(
             onDismissRequest = { showRemoveLibraryWarningDialog = false },
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            title = { Text("Remove from Library?") },
-            text = { Text("This book is currently downloaded. Removing it from your library will also delete the downloaded file and permanently clear all its data.") },
+            title = { Text(stringResource(R.string.remove_library_title)) },
+            text = { Text(stringResource(R.string.remove_library_body)) },
             confirmButton = {
                 Button(
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                         bookDetailsViewModel.removeFromLibrary()
                         showRemoveLibraryWarningDialog = false
-                        onBackClick()
+                        if (book.source == BookSource.USER_IMPORTED) onBackClick()
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError
                     )
                 ) {
-                    Text("Remove Completely")
+                    Text(stringResource(R.string.remove_completely))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRemoveLibraryWarningDialog = false }) { Text("Cancel") }
+                TextButton(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                    showRemoveLibraryWarningDialog = false
+                }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }

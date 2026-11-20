@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.about.whatsNew.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -7,8 +9,10 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,6 +30,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.NoAccounts
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Brush
@@ -43,6 +49,9 @@ import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -68,107 +77,149 @@ import com.yugentech.quill.ui.main.components.itemShape
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.dimensions.AppAnimations
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.WavingHand
+import androidx.compose.material.icons.filled.HourglassTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WhatsNewScreen(
     onNavigateBack: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val layoutDirection = LocalLayoutDirection.current
-    val versionName = "Current Version ${com.yugentech.quill.BuildConfig.VERSION_NAME}"
+    val versionName = stringResource(R.string.current_version, com.yugentech.quill.BuildConfig.VERSION_NAME)
 
-    val v41Updates = listOf(
+    // 5.0.0: the release this build is, shown first without a header (the top bar names it)
+    val v5Updates = listOf(
         UpdateItem(
-            "A Redesigned Sources Tab",
-            "Sources has a fresh new look, with a friendlier way to import books from your device, cover previews from each catalogue, and a count of how many of their books are already in your library.",
+            stringResource(R.string.wn_5_guest_title),
+            stringResource(R.string.wn_5_guest_body),
+            Icons.Default.NoAccounts
+        ),
+        UpdateItem(
+            stringResource(R.string.wn_5_backup_title),
+            stringResource(R.string.wn_5_backup_body),
+            Icons.Default.Backup
+        ),
+        UpdateItem(
+            stringResource(R.string.wn_5_languages_title),
+            stringResource(R.string.wn_5_languages_body),
+            Icons.Default.Translate
+        ),
+        UpdateItem(
+            stringResource(R.string.wn_5_welcome_title),
+            stringResource(R.string.wn_5_welcome_body),
+            Icons.Default.WavingHand
+        ),
+        UpdateItem(
+            stringResource(R.string.wn_5_appearance_title),
+            stringResource(R.string.wn_5_appearance_body),
+            Icons.Default.Brush
+        ),
+        UpdateItem(
+            stringResource(R.string.wn_5_loading_title),
+            stringResource(R.string.wn_5_loading_body),
+            Icons.Default.HourglassTop
+        )
+    )
+
+    // 4.5.0, the previous release
+    val v45Updates = listOf(
+        UpdateItem(
+            stringResource(R.string.wn_41_sources_title),
+            stringResource(R.string.wn_41_sources_body),
             Icons.Default.Explore
         ),
         UpdateItem(
-            "A New Profile Card",
-            "Your profile card in More is more compact, with a bigger avatar. Tap the avatar to pick a new one from a sheet, or the pencil to change your name, without leaving the page.",
+            stringResource(R.string.wn_41_profile_title),
+            stringResource(R.string.wn_41_profile_body),
             Icons.Default.AccountCircle
         ),
         UpdateItem(
-            "Smoother Aira Replies",
-            "Aira's answers now flow in a few words at a time, and the conversation glides up gently as they appear, both in the chat and in the quick panel while you read.",
+            stringResource(R.string.wn_41_replies_title),
+            stringResource(R.string.wn_41_replies_body),
             Icons.Default.AutoAwesome
         ),
         UpdateItem(
-            "Faster Covers",
-            "Standard Ebooks covers now load as lighter thumbnails, so Discover, your Library, and book pages fill in much quicker.",
+            stringResource(R.string.wn_41_covers_title),
+            stringResource(R.string.wn_41_covers_body),
             Icons.Default.Image
         ),
         UpdateItem(
-            "Gentler Reminders",
-            "Your daily reading reminder now shows when it rings, like \"Every evening at 7:00 PM\". Playful reminders are quieter and never more than one a day, with a few kind words if you've been away for a while.",
+            stringResource(R.string.wn_41_reminders_title),
+            stringResource(R.string.wn_41_reminders_body),
             Icons.Default.NotificationsActive
         ),
         UpdateItem(
-            "Polish & Fixes",
-            "Smoother, consistent fades behind the top bars across the app, Aira's quick panel now resizes back to its full height, and the sign-in spinner shows only on the button you tapped.",
+            stringResource(R.string.wn_41_polish_title),
+            stringResource(R.string.wn_41_polish_body),
             Icons.Default.Palette
         )
     )
 
     val v4Updates = listOf(
         UpdateItem(
-            "Meet the New Aira",
-            "Aira has been rebuilt from the ground up. She knows whether you're asking about your book or anything else, answers straight from the pages you've read, never spoils what's ahead, and can read her answers aloud.",
+            stringResource(R.string.wn_4_aira_title),
+            stringResource(R.string.wn_4_aira_body),
             Icons.Default.AutoAwesome
         ),
         UpdateItem(
-            "Ask Aira From the Page",
-            "Select any word or passage while reading and Aira is right there. Define words, explain tricky lines, or find out why a moment matters, without leaving the book.",
+            stringResource(R.string.wn_4_page_title),
+            stringResource(R.string.wn_4_page_body),
             Icons.Default.TouchApp
         ),
         UpdateItem(
-            "Character Companion",
-            "Select a character's name to recall who they are, see what they're up to lately, or trace their whole journey so far. Always spoiler-free.",
+            stringResource(R.string.wn_4_character_title),
+            stringResource(R.string.wn_4_character_body),
             Icons.Default.Face
         ),
         UpdateItem(
-            "Visualize Scenes",
-            "Turn any passage into a painted illustration. Your images are kept in a Visuals gallery, and tapping one takes you right back to the passage it came from.",
+            stringResource(R.string.feature_visualize_title),
+            stringResource(R.string.wn_4_visualize_body),
             Icons.Default.Brush
         ),
         UpdateItem(
-            "Highlights",
-            "A smoother way to select text, plus highlights you can revisit from one place and jump straight back to in the book.",
+            stringResource(R.string.highlights),
+            stringResource(R.string.wn_4_highlights_body),
             Icons.Default.Highlight
         ),
         UpdateItem(
-            "A Reimagined Reader",
-            "A refreshed reading screen with new reading settings, a cleaner table of contents, a warm night light, and page turning with your volume keys.",
+            stringResource(R.string.wn_4_reader_title),
+            stringResource(R.string.wn_4_reader_body),
             Icons.Default.AutoStories
         ),
         UpdateItem(
-            "Ambient Sounds",
-            "Set the mood with six soundscapes, from gentle rain to a crackling fireplace. Preview them before you play, or have them start automatically when you open a book.",
+            stringResource(R.string.wn_4_sounds_title),
+            stringResource(R.string.wn_4_sounds_body),
             Icons.Default.MusicNote
         ),
         UpdateItem(
-            "Reading Reminders",
-            "Pick a time for a daily reading reminder, or let playful nudges help you keep your streak going.",
+            stringResource(R.string.wn_4_reminders_title),
+            stringResource(R.string.wn_4_reminders_body),
             Icons.Default.NotificationsActive
         ),
         UpdateItem(
-            "Discover & Organize",
-            "A redesigned Discover tab, better Project Gutenberg and Standard Ebooks browsing, a quick way to add your own books, and categories you can reorder by dragging.",
+            stringResource(R.string.wn_4_discover_title),
+            stringResource(R.string.wn_4_discover_body),
             Icons.Default.Explore
         ),
         UpdateItem(
-            "Reading Insights",
-            "See your reading time, streak, peak reading hours, favorite authors, and how you read with Aira, all on a refreshed Insights screen.",
+            stringResource(R.string.wn_4_insights_title),
+            stringResource(R.string.wn_4_insights_body),
             Icons.Default.Insights
         ),
         UpdateItem(
-            "A Fresh Look",
-            "A brand new app icon and splash screen, the new Harbor color theme, and a polished feel across the whole app.",
+            stringResource(R.string.wn_4_look_title),
+            stringResource(R.string.wn_4_look_body),
             Icons.Default.Palette
         )
     )
 
+    var v45Expanded by rememberSaveable { mutableStateOf(false) }
     var v4Expanded by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -177,7 +228,7 @@ fun WhatsNewScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("What's New")
+                        Text(stringResource(R.string.more_whats_new))
                         Text(
                             text = versionName,
                             style = MaterialTheme.typography.bodyMedium,
@@ -186,10 +237,13 @@ fun WhatsNewScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onNavigateBack()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -217,8 +271,37 @@ fun WhatsNewScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs)
         ) {
-            itemsIndexed(v41Updates) { index, item ->
-                UpdateCard(item, index, v41Updates.size)
+            itemsIndexed(v5Updates) { index, item ->
+                UpdateCard(item, index, v5Updates.size)
+            }
+
+            // 4.5.0 collapsible section
+            item {
+                VersionSectionHeader(
+                    version = "4.5.0",
+                    isLatest = false,
+                    expanded = v45Expanded,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        v45Expanded = !v45Expanded
+                    }
+                )
+            }
+
+            item(key = "v45_collapsible_content") {
+                AnimatedVisibility(
+                    visible = v45Expanded,
+                    enter = fadeIn(tween(AppAnimations.Durations.Standard)) + expandVertically(tween(AppAnimations.Durations.Standard)),
+                    exit = fadeOut(tween(AppAnimations.Durations.Standard)) + shrinkVertically(tween(AppAnimations.Durations.Standard))
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xxs)
+                    ) {
+                        v45Updates.forEachIndexed { index, item ->
+                            UpdateCard(item, index, v45Updates.size)
+                        }
+                    }
+                }
             }
 
             // 4.0.0 collapsible section
@@ -227,7 +310,10 @@ fun WhatsNewScreen(
                     version = "4.0.0",
                     isLatest = false,
                     expanded = v4Expanded,
-                    onClick = { v4Expanded = !v4Expanded }
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        v4Expanded = !v4Expanded
+                    }
                 )
             }
 
@@ -276,7 +362,7 @@ private fun VersionSectionHeader(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "Version $version",
+                text = stringResource(R.string.more_version, version),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (isLatest) MaterialTheme.colorScheme.primary
@@ -286,7 +372,7 @@ private fun VersionSectionHeader(
         if (onClick != null) {
             Icon(
                 imageVector = Icons.Default.ExpandMore,
-                contentDescription = if (expanded) "Collapse" else "Expand",
+                contentDescription = if (expanded) stringResource(R.string.collapse) else stringResource(R.string.expand),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.graphicsLayer { rotationZ = chevronRotation }
             )
@@ -294,6 +380,16 @@ private fun VersionSectionHeader(
     }
 }
 
+// A few expressive shapes, cycled through so the list doesn't look like a column of dots.
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private val updateIconShapes = listOf(
+    MaterialShapes.Cookie9Sided,
+    MaterialShapes.Clover4Leaf,
+    MaterialShapes.Sunny,
+    MaterialShapes.Pill
+)
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun UpdateCard(item: UpdateItem, index: Int, totalCount: Int) {
     val shape = itemShape(index, totalCount)
@@ -312,13 +408,24 @@ private fun UpdateCard(item: UpdateItem, index: Int, totalCount: Int) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
         ) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(32.dp)
-            )
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(updateIconShapes[index % updateIconShapes.size].toShape())
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+            ) {
+                Icon(
+                    imageVector = item.icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
                     text = item.title,
                     style = MaterialTheme.typography.titleMedium,

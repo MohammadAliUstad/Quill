@@ -4,6 +4,7 @@ import com.yugentech.quill.aira.intent.model.Intent
 import com.yugentech.quill.aira.intent.model.IntentResponse
 import com.yugentech.quill.aira.intent.model.QueryIntent
 import com.yugentech.quill.aira.intent.service.IntentDetectionService
+import com.yugentech.quill.aira.util.AiraLog
 import org.json.JSONObject
 
 class IntentDetectionRepository(
@@ -39,6 +40,8 @@ class IntentDetectionRepository(
                 Intent.General
             }
         } catch (e: Exception) {
+            // Not fatal: the question still goes to general chat, just without the book's passages
+            AiraLog.failure("DetectIntent query=\"$query\" (falling back to general chat)", e)
             Intent.General
         }
     }

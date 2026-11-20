@@ -1,6 +1,9 @@
 package com.yugentech.quill.ui.about.about.parent
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.content.Context
+import com.yugentech.theme.SheetTheme
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -98,12 +101,15 @@ import com.yugentech.quill.ui.about.about.components.AnimatedMyntIcon
 import com.yugentech.quill.ui.about.about.components.AnimatedSessionsIcon
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoreAppsScreen(
     onNavigateBack: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -111,12 +117,15 @@ fun MoreAppsScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text("More from us") },
+                title = { Text(stringResource(R.string.more_more_from_us)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onNavigateBack()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -135,7 +144,7 @@ fun MoreAppsScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 8.dp,
-                bottom = innerPadding.calculateBottomPadding()
+                bottom = innerPadding.calculateBottomPadding() + 8.dp
             ),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
@@ -146,7 +155,7 @@ fun MoreAppsScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SectionLabel("Key Features")
+                    SectionLabel(stringResource(R.string.key_features))
                     MyntCapabilitiesCarousel()
                 }
             }
@@ -158,7 +167,7 @@ fun MoreAppsScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SectionLabel("Key Features")
+                    SectionLabel(stringResource(R.string.key_features))
                     HajimeCapabilitiesCarousel()
                 }
             }
@@ -174,7 +183,7 @@ fun MoreAppsScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SectionLabel("Key Features")
+                    SectionLabel(stringResource(R.string.key_features))
                     SessionsCapabilitiesCarousel()
                 }
             }
@@ -186,7 +195,7 @@ fun MoreAppsScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SectionLabel("Key Features")
+                    SectionLabel(stringResource(R.string.key_features))
                     RyoriCapabilitiesCarousel()
                 }
             }
@@ -205,13 +214,13 @@ private fun IntroText() {
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
-            text = "Four more apps, made with the same care",
+            text = stringResource(R.string.more_apps_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "If you enjoy reading with Quill, you might like keeping track of your money with Mynt, learning Japanese with Hajime, focusing with Sessions and cooking with Ryori.",
+            text = stringResource(R.string.more_apps_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -261,7 +270,7 @@ private fun SectionLabel(text: String) {
 private fun SessionsHeroSection(onDownloadClick: () -> Unit) {
     AppHeroSection(
         name = "Sessions",
-        tagline = "Ultimate Pomodoro Timer",
+        tagline = stringResource(R.string.sessions_tagline),
         iconBackground = SessionsIconBackground,
         animationMillis = 900,
         onDownloadClick = onDownloadClick,
@@ -283,7 +292,7 @@ private fun SessionsHeroSection(onDownloadClick: () -> Unit) {
                 StoreStat(
                     value = "4.9",
                     showStar = true,
-                    label = "70+ reviews",
+                    label = "100+ reviews",
                     modifier = Modifier.weight(1f)
                 )
                 VerticalDivider(
@@ -291,7 +300,7 @@ private fun SessionsHeroSection(onDownloadClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.outlineVariant
                 )
                 StoreStat(
-                    value = "3K+",
+                    value = "5K+",
                     showStar = false,
                     label = "Downloads",
                     modifier = Modifier.weight(1f)
@@ -323,7 +332,7 @@ private fun StoreStat(
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Filled.Star,
-                    contentDescription = "stars",
+                    contentDescription = stringResource(R.string.stars_cd),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
                 )
@@ -345,38 +354,38 @@ private fun SessionsCapabilitiesCarousel() {
         items = listOf(
             CapabilityItem(
                 icon = Icons.Outlined.Timer,
-                title = "Smart Engine",
-                description = "Customizable cycles and smart intervals that work out when to trigger long breaks.",
+                title = stringResource(R.string.sessions_f1_title),
+                description = stringResource(R.string.sessions_f1_body),
                 slot = 0
             ),
             CapabilityItem(
                 icon = Icons.Outlined.Headphones,
-                title = "Immersive Audio",
-                description = "6 curated ambient sounds with adaptive ducking and haptic feedback.",
+                title = stringResource(R.string.sessions_f2_title),
+                description = stringResource(R.string.sessions_f2_body),
                 slot = 1
             ),
             CapabilityItem(
                 icon = Icons.Outlined.Analytics,
-                title = "Deep Analytics",
-                description = "Heatmaps, total focus time and your peak productivity hours at a glance.",
+                title = stringResource(R.string.sessions_f3_title),
+                description = stringResource(R.string.sessions_f3_body),
                 slot = 2
             ),
             CapabilityItem(
                 icon = Icons.Outlined.Security,
-                title = "Unkillable",
-                description = "Built to resist aggressive battery optimization, so your timer never drops.",
+                title = stringResource(R.string.sessions_f4_title),
+                description = stringResource(R.string.sessions_f4_body),
                 slot = 0
             ),
             CapabilityItem(
                 icon = Icons.Outlined.ColorLens,
-                title = "Deep Theming",
-                description = "8 color themes, dynamic Material You, OLED black mode and 6 font options.",
+                title = stringResource(R.string.sessions_f5_title),
+                description = stringResource(R.string.sessions_f5_body),
                 slot = 1
             ),
             CapabilityItem(
                 icon = Icons.Outlined.History,
-                title = "Task History",
-                description = "Name your sessions to track and review exactly what you worked on.",
+                title = stringResource(R.string.sessions_f6_title),
+                description = stringResource(R.string.sessions_f6_body),
                 slot = 2
             )
         )
@@ -389,7 +398,7 @@ private fun SessionsCapabilitiesCarousel() {
 private fun RyoriHeroSection() {
     AppHeroSection(
         name = "Ryori",
-        tagline = "Cook Something Wonderful",
+        tagline = stringResource(R.string.ryori_tagline),
         iconBackground = RyoriIconBackground,
         animationMillis = 1200,
         onDownloadClick = null,
@@ -412,38 +421,38 @@ private fun RyoriCapabilitiesCarousel() {
         items = listOf(
             CapabilityItem(
                 icon = Icons.Outlined.Home,
-                title = "A Home That Inspires",
-                description = "A featured carousel, a cuisine and a category of the day, and a Surprise me button for when you can't decide.",
+                title = stringResource(R.string.ryori_f1_title),
+                description = stringResource(R.string.ryori_f1_body),
                 slot = 0
             ),
             CapabilityItem(
                 icon = Icons.Outlined.TravelExplore,
-                title = "Explore Every Kitchen",
-                description = "Browse recipes by category, cuisine or ingredient, or search for one by name.",
+                title = stringResource(R.string.ryori_f2_title),
+                description = stringResource(R.string.ryori_f2_body),
                 slot = 1
             ),
             CapabilityItem(
                 icon = Icons.Outlined.Checklist,
-                title = "Cook Along",
-                description = "Clear step-by-step instructions, with ingredients you can tick off as you go.",
+                title = stringResource(R.string.ryori_f3_title),
+                description = stringResource(R.string.ryori_f3_body),
                 slot = 2
             ),
             CapabilityItem(
                 icon = Icons.Outlined.LocalBar,
-                title = "Mocktails",
-                description = "Non-alcoholic drinks sit right next to the meals, so there's something for every glass.",
+                title = stringResource(R.string.ryori_f4_title),
+                description = stringResource(R.string.ryori_f4_body),
                 slot = 0
             ),
             CapabilityItem(
                 icon = Icons.Outlined.Eco,
-                title = "Vegetarian Mode",
-                description = "One switch hides meat and seafood across the whole app.",
+                title = stringResource(R.string.ryori_f5_title),
+                description = stringResource(R.string.ryori_f5_body),
                 slot = 1
             ),
             CapabilityItem(
                 icon = Icons.Outlined.CloudOff,
-                title = "Works Offline",
-                description = "Recipes you've opened are saved on your device and load instantly, even without a connection.",
+                title = stringResource(R.string.ryori_f6_title),
+                description = stringResource(R.string.ryori_f6_body),
                 slot = 2
             )
         )
@@ -456,9 +465,10 @@ private fun RyoriCapabilitiesCarousel() {
 private fun MyntHeroSection() {
     AppHeroSection(
         name = "Mynt",
-        tagline = "Your Voice Money Assistant",
+        tagline = stringResource(R.string.mynt_tagline),
         iconBackground = MyntIconBackground,
         animationMillis = 1300,
+        // Not on the Play Store yet
         onDownloadClick = null,
         icon = { isAnimating ->
             // Drawn larger than the tile, as Mynt itself does, so the wallet fills it and the
@@ -478,38 +488,38 @@ private fun MyntCapabilitiesCarousel() {
         items = listOf(
             CapabilityItem(
                 icon = Icons.Outlined.KeyboardVoice,
-                title = "Just Say It",
-                description = "Tell Mynt what you spent the way you'd tell a friend. Several things in one sentence become separate entries.",
+                title = stringResource(R.string.mynt_f1_title),
+                description = stringResource(R.string.mynt_f1_body),
                 slot = 0
             ),
             CapabilityItem(
                 icon = Icons.Outlined.Handshake,
-                title = "Lend & Borrow",
-                description = "Say who you lent to or borrowed from, and when they paid you back. Mynt keeps every balance straight.",
+                title = stringResource(R.string.mynt_f2_title),
+                description = stringResource(R.string.mynt_f2_body),
                 slot = 1
             ),
             CapabilityItem(
                 icon = Icons.AutoMirrored.Outlined.CallSplit,
-                title = "Split Bills",
-                description = "Split a dinner or a trip between friends just by saying who was there and what it cost.",
+                title = stringResource(R.string.mynt_f3_title),
+                description = stringResource(R.string.mynt_f3_body),
                 slot = 2
             ),
             CapabilityItem(
                 icon = Icons.Outlined.QueryStats,
-                title = "Ask About Your Money",
-                description = "Ask how much you spent on food this month, or who still owes you, and get an answer straight away.",
+                title = stringResource(R.string.mynt_f4_title),
+                description = stringResource(R.string.mynt_f4_body),
                 slot = 0
             ),
             CapabilityItem(
                 icon = Icons.Outlined.EditNote,
-                title = "Check Before Saving",
-                description = "Everything Mynt understood is shown first, so you can fix an amount or a category before it's saved.",
+                title = stringResource(R.string.mynt_f5_title),
+                description = stringResource(R.string.mynt_f5_body),
                 slot = 1
             ),
             CapabilityItem(
                 icon = Icons.Outlined.RecordVoiceOver,
-                title = "Talks Back",
-                description = "When something's missing, Mynt asks you, and can read its questions aloud so you can answer hands-free.",
+                title = stringResource(R.string.mynt_f6_title),
+                description = stringResource(R.string.mynt_f6_body),
                 slot = 2
             )
         )
@@ -522,7 +532,7 @@ private fun MyntCapabilitiesCarousel() {
 private fun HajimeHeroSection() {
     AppHeroSection(
         name = "Hajime",
-        tagline = "Learn to Read Japanese",
+        tagline = stringResource(R.string.hajime_tagline),
         iconBackground = HajimeIconBackground,
         animationMillis = 1660,
         onDownloadClick = null,
@@ -543,38 +553,38 @@ private fun HajimeCapabilitiesCarousel() {
         items = listOf(
             CapabilityItem(
                 icon = Icons.Outlined.Translate,
-                title = "Learn to Read Japanese",
-                description = "Hiragana and katakana first, then kanji, words and sentences, one short lesson at a time.",
+                title = stringResource(R.string.hajime_tagline),
+                description = stringResource(R.string.hajime_f1_body),
                 slot = 0
             ),
             CapabilityItem(
                 icon = Icons.Outlined.School,
-                title = "Every JLPT Kanji",
-                description = "N5 to N1 kanji with readings, meanings, parts, common words and example sentences with furigana.",
+                title = stringResource(R.string.hajime_f2_title),
+                description = stringResource(R.string.hajime_f2_body),
                 slot = 1
             ),
             CapabilityItem(
                 icon = Icons.Outlined.History,
-                title = "Reviews That Remember",
-                description = "Spaced repetition brings each item back just before you'd forget it, so what you learn sticks.",
+                title = stringResource(R.string.hajime_f3_title),
+                description = stringResource(R.string.hajime_f3_body),
                 slot = 2
             ),
             CapabilityItem(
                 icon = Icons.Outlined.AutoAwesome,
-                title = "Sensei, Your AI Tutor",
-                description = "Ask anything about Japanese and get stories, sentence breakdowns and quizzes built from what you've learned.",
+                title = stringResource(R.string.hajime_f4_title),
+                description = stringResource(R.string.hajime_f4_body),
                 slot = 0
             ),
             CapabilityItem(
                 icon = Icons.Outlined.RecordVoiceOver,
-                title = "Hear Every Word",
-                description = "Every kana, kanji, word and sentence can be read aloud in a Japanese voice.",
+                title = stringResource(R.string.hajime_f5_title),
+                description = stringResource(R.string.hajime_f5_body),
                 slot = 1
             ),
             CapabilityItem(
                 icon = Icons.Outlined.Insights,
-                title = "Study Insights",
-                description = "Streaks, a study heatmap, your trickiest mix-ups and progress through every JLPT level.",
+                title = stringResource(R.string.hajime_f6_title),
+                description = stringResource(R.string.hajime_f6_body),
                 slot = 2
             )
         )
@@ -596,6 +606,7 @@ private fun AppHeroSection(
     icon: @Composable (isAnimating: Boolean) -> Unit,
     footer: (@Composable () -> Unit)? = null
 ) {
+    val haptic = LocalHapticFeedback.current
     var isAnimating by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -626,6 +637,7 @@ private fun AppHeroSection(
                             indication = null
                         ) {
                             if (!isAnimating) {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                 isAnimating = true
                                 scope.launch {
                                     delay(animationMillis)
@@ -661,7 +673,10 @@ private fun AppHeroSection(
                         ComingSoonLabel()
                     } else {
                         Button(
-                            onClick = onDownloadClick,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                onDownloadClick()
+                            },
                             modifier = Modifier.height(40.dp),
                             contentPadding = PaddingValues(horizontal = 14.dp),
                             shape = RoundedCornerShape(8.dp),
@@ -677,7 +692,7 @@ private fun AppHeroSection(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Get on Play Store",
+                                text = stringResource(R.string.get_on_play_store),
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -707,7 +722,7 @@ private fun ComingSoonLabel() {
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
     ) {
         Text(
-            text = "Coming soon",
+            text = stringResource(R.string.coming_soon),
             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
         )
@@ -807,14 +822,14 @@ private fun ClosingCard() {
                 OverviewIcon(icon = Icons.Outlined.LunchDining, contentDescription = "Ryori")
             }
             Text(
-                text = "Read. Track. Learn. Focus. Cook.",
+                text = stringResource(R.string.more_apps_motto),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center
             )
             Text(
-                text = "Quill, Mynt, Hajime, Sessions and Ryori are made by YugenTech: small, thoughtful apps built to make everyday moments a little calmer.",
+                text = stringResource(R.string.more_apps_maker),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center,
@@ -863,104 +878,108 @@ private class SheetEntry(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoreFromUsSheet(onDismiss: () -> Unit, onSeeAll: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     val apps = listOf(
-        SheetEntry("Mynt", "Your Voice Money Assistant", null, MyntIconBackground, 1300) {
+        SheetEntry("Mynt", stringResource(R.string.mynt_tagline), null, MyntIconBackground, 1300) {
             AnimatedMyntIcon(isAnimating = it, modifier = Modifier.requiredSize(84.dp))
         },
-        SheetEntry("Hajime", "Learn to Read Japanese", null, HajimeIconBackground, 1660) {
+        SheetEntry("Hajime", stringResource(R.string.hajime_tagline), null, HajimeIconBackground, 1660) {
             AnimatedHajimeIcon(isAnimating = it, modifier = Modifier.requiredSize(100.dp))
         },
-        SheetEntry("Sessions", "Ultimate Pomodoro Timer", "com.yugentech.sessions", SessionsIconBackground, 900) {
+        SheetEntry("Sessions", stringResource(R.string.sessions_tagline), "com.yugentech.sessions", SessionsIconBackground, 900) {
             AnimatedSessionsIcon(isAnimating = it, modifier = Modifier.requiredSize(100.dp))
         },
-        SheetEntry("Ryori", "Cook Something Wonderful", null, RyoriIconBackground, 1200) {
+        SheetEntry("Ryori", stringResource(R.string.ryori_tagline), null, RyoriIconBackground, 1200) {
             AnimatedRyoriIcon(isAnimating = it, modifier = Modifier.requiredSize(56.dp))
         }
     )
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        // Sessions' sheet handle: a small pill with roomy padding, so it's easy to grab.
-        dragHandle = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {}
-                    )
-                    .padding(vertical = 22.dp),
-                contentAlignment = Alignment.Center
-            ) {
+    SheetTheme {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            // Sessions' sheet handle: a small pill with roomy padding, so it's easy to grab.
+            dragHandle = {
                 Box(
                     modifier = Modifier
-                        .size(width = 32.dp, height = 6.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            shape = CircleShape
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {}
                         )
-                )
-            }
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 16.dp)
-        ) {
-            Text(
-                text = "More from us",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "Four more apps, made with the same care.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
-            Column(
-                modifier = Modifier.padding(top = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                apps.forEachIndexed { index, app ->
-                    SheetAppRow(
-                        app = app,
-                        index = index,
-                        count = apps.size,
-                        onGetApp = app.packageName?.let { pkg -> { openPlayStore(context, pkg) } }
+                        .padding(vertical = 22.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 32.dp, height = 6.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                shape = CircleShape
+                            )
                     )
                 }
             }
-
-            TextButton(
-                onClick = {
-                    // Slides the sheet away first, so it doesn't vanish under the new screen.
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        onDismiss()
-                        onSeeAll()
-                    }
-                },
+        ) {
+            Column(
                 modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(top = 12.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 16.dp)
             ) {
-                Text("See all features")
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                Text(
+                    text = stringResource(R.string.more_more_from_us),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+                Text(
+                    text = stringResource(R.string.more_apps_sheet_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+
+                Column(
+                    modifier = Modifier.padding(top = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    apps.forEachIndexed { index, app ->
+                        SheetAppRow(
+                            app = app,
+                            index = index,
+                            count = apps.size,
+                            onGetApp = app.packageName?.let { pkg -> { openPlayStore(context, pkg) } }
+                        )
+                    }
+                }
+
+                TextButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        // Slides the sheet away first, so it doesn't vanish under the new screen.
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            onDismiss()
+                            onSeeAll()
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 12.dp)
+                ) {
+                    Text(stringResource(R.string.see_all_features))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }
@@ -968,6 +987,7 @@ fun MoreFromUsSheet(onDismiss: () -> Unit, onSeeAll: () -> Unit) {
 
 @Composable
 private fun SheetAppRow(app: SheetEntry, index: Int, count: Int, onGetApp: (() -> Unit)?) {
+    val haptic = LocalHapticFeedback.current
     var isAnimating by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val play: () -> Unit = {
@@ -1004,7 +1024,10 @@ private fun SheetAppRow(app: SheetEntry, index: Int, count: Int, onGetApp: (() -
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = play
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            play()
+                        }
                     )
             ) {
                 app.icon(isAnimating)
@@ -1030,10 +1053,13 @@ private fun SheetAppRow(app: SheetEntry, index: Int, count: Int, onGetApp: (() -
                 ComingSoonLabel()
             } else {
                 FilledTonalButton(
-                    onClick = onGetApp,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        onGetApp()
+                    },
                     contentPadding = PaddingValues(horizontal = 18.dp)
                 ) {
-                    Text("Get")
+                    Text(stringResource(R.string.get))
                 }
             }
         }

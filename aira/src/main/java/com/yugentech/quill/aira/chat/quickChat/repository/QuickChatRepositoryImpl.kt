@@ -13,6 +13,8 @@ import com.yugentech.quill.aira.rag.EpubTextExtractor
 import com.yugentech.quill.aira.rag.RagRetriever
 import com.yugentech.quill.aira.response.AiraResponse
 import com.yugentech.quill.aira.service.AiraChatService
+import com.yugentech.quill.aira.util.AiraErrors
+import com.yugentech.quill.aira.util.AiraLog
 import com.yugentech.quill.database.dao.AiraMessageDao
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.dao.VisualDao
@@ -26,6 +28,8 @@ import kotlinx.coroutines.flow.flow
 import timber.log.Timber
 import java.io.File
 import java.util.UUID
+import com.yugentech.quill.aira.localization.AiraStrings
+import com.yugentech.quill.aira.R
 
 class QuickChatRepositoryImpl(
     private val context: Context,
@@ -40,9 +44,10 @@ class QuickChatRepositoryImpl(
 ) : QuickChatRepository {
 
     override suspend fun ask(bookId: String, quickPrompt: QuickPrompt): Flow<AiraResponse> = flow {
+        AiraLog.d("QuickChat[${quickPrompt.javaClass.simpleName}] book=$bookId")
         val book = bookDao.getBookEntity(bookId)
         if (book == null) {
-            emit(AiraResponse.Error("Book not found."))
+            emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_book_not_found)))
             return@flow
         }
 
@@ -53,7 +58,7 @@ class QuickChatRepositoryImpl(
                     epubTextExtractor.extractChapter(it, quickPrompt.chapterIndex)
                 }
                 if (chapter == null) {
-                    emit(AiraResponse.Error("No content found for this chapter."))
+                    emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_no_chapter_content)))
                     return@flow
                 }
                 QuickChatPayload(
@@ -91,7 +96,7 @@ class QuickChatRepositoryImpl(
                     spoilerLockEnabled = true
                 )
                 if (retrieved.isEmpty()) {
-                    emit(AiraResponse.Error("I haven't encountered \"${quickPrompt.name}\" in what you've read so far."))
+                    emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_not_encountered, quickPrompt.name)))
                     return@flow
                 }
                 logRetrievedChunks("RecallCharacter", quickPrompt.name, retrieved)
@@ -111,7 +116,7 @@ class QuickChatRepositoryImpl(
                     spoilerLockEnabled = true
                 )
                 if (retrieved.isEmpty()) {
-                    emit(AiraResponse.Error("I haven't encountered \"${quickPrompt.name}\" in what you've read so far."))
+                    emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_not_encountered, quickPrompt.name)))
                     return@flow
                 }
                 logRetrievedChunks("RecentRole", quickPrompt.name, retrieved)
@@ -131,7 +136,7 @@ class QuickChatRepositoryImpl(
                     spoilerLockEnabled = true
                 )
                 if (retrieved.isEmpty()) {
-                    emit(AiraResponse.Error("I haven't encountered \"${quickPrompt.name}\" in what you've read so far."))
+                    emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_not_encountered, quickPrompt.name)))
                     return@flow
                 }
                 logRetrievedChunks("JourneySoFar", quickPrompt.name, retrieved)
@@ -150,7 +155,7 @@ class QuickChatRepositoryImpl(
                     epubTextExtractor.extractChapter(it, quickPrompt.chapterIndex)
                 }
                 if (chapter == null) {
-                    emit(AiraResponse.Error("No content found for this chapter."))
+                    emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_no_chapter_content)))
                     return@flow
                 }
                 // The current chapter stays the anchor -- these retrieved passages from
@@ -207,7 +212,7 @@ class QuickChatRepositoryImpl(
                     epubTextExtractor.extractChapter(it, quickPrompt.chapterIndex)
                 }
                 if (chapter == null) {
-                    emit(AiraResponse.Error("No content found for this chapter."))
+                    emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_no_chapter_content)))
                     return@flow
                 }
                 val supplementary = ragRetriever.retrieve(
@@ -264,17 +269,18 @@ class QuickChatRepositoryImpl(
 
                     emit(AiraResponse.ImageSuccess(imageFile.absolutePath))
                 } catch (e: Exception) {
-                    Timber.e(e, "VisualizeThis failed")
+                    AiraLog.failure("QuickChat[VisualizeThis]", e)
                     val errorMsg = when {
+                        AiraErrors.isContentBlocked(e) -> AiraStrings.get(R.string.airachat_blocked)
                         e.message?.contains("resource-exhausted") == true ->
-                            "You've reached your free limit. Upgrade to Quill Pro."
+                            AiraStrings.get(R.string.airachat_limit)
                         // A clean model decline (nothing visual in the passage) rather than a
                         // technical failure -- the function already puts a friendly, specific
                         // message here, so just pass it through instead of the generic fallback.
                         (e as? FirebaseFunctionsException)?.code ==
                             FirebaseFunctionsException.Code.FAILED_PRECONDITION ->
-                            e.message ?: "This passage doesn't have enough visual detail to generate an image."
-                        else -> "Something went wrong generating that image. Please try again."
+                            e.message ?: AiraStrings.get(R.string.airachat_image_no_detail)
+                        else -> AiraStrings.get(R.string.airachat_image_error)
                     }
                     emit(AiraResponse.Error(errorMsg))
                 }
@@ -304,7 +310,7 @@ class QuickChatRepositoryImpl(
             Timber.d("QuickChat[${payload.actionType}] query=\"${payload.query}\" response: $responseText")
 
             if (responseText.isBlank()) {
-                emit(AiraResponse.Error("Aira didn't have a response."))
+                emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_no_response)))
             } else {
                 // Quick actions (chips) don't come from the user typing a real question, so they
                 // get recorded under a premade stand-in statement -- this is what makes them show
@@ -328,10 +334,12 @@ class QuickChatRepositoryImpl(
             }
 
         } catch (e: Exception) {
+            AiraLog.failure("QuickChat[${quickPrompt.javaClass.simpleName}]", e)
             val errorMsg = when {
+                AiraErrors.isContentBlocked(e) -> AiraStrings.get(R.string.airachat_blocked)
                 e.message?.contains("resource-exhausted") == true ->
-                    "You've reached your free limit. Upgrade to Quill Pro."
-                else -> "Something went wrong. Please try again."
+                    AiraStrings.get(R.string.airachat_limit)
+                else -> AiraStrings.get(R.string.airachat_error)
             }
             emit(AiraResponse.Error(errorMsg))
         }
@@ -352,17 +360,17 @@ class QuickChatRepositoryImpl(
     // for the chat history transcript -- CustomQuestion is the one exception, since it already
     // carries the user's own typed text.
     private fun QuickPrompt.toHistoryStatement(): String = when (this) {
-        is QuickPrompt.WhoAreTheCharacters -> "Who are the characters in this book?"
-        is QuickPrompt.WhatAreTheThemes -> "What are the themes of this book?"
-        is QuickPrompt.RecallCharacter -> "Who is $name?"
-        is QuickPrompt.RecentRole -> "What has $name been doing recently?"
-        is QuickPrompt.JourneySoFar -> "What has $name's journey been so far?"
-        is QuickPrompt.WhatIsTheSignificance -> "What's the significance of \"$text\"?"
-        is QuickPrompt.SummarizeChapter -> "Can you summarize this chapter?"
-        is QuickPrompt.DefineWord -> "What does $word mean?"
-        is QuickPrompt.WhatIsThis -> "What is $word?"
-        is QuickPrompt.ExplainThis -> "Can you explain \"$text\"?"
-        is QuickPrompt.VisualizeThis -> "Can you visualize \"$text\"?"
+        is QuickPrompt.WhoAreTheCharacters -> AiraStrings.get(R.string.airachat_q_characters)
+        is QuickPrompt.WhatAreTheThemes -> AiraStrings.get(R.string.airachat_q_themes)
+        is QuickPrompt.RecallCharacter -> AiraStrings.get(R.string.airachat_q_who_is, name)
+        is QuickPrompt.RecentRole -> AiraStrings.get(R.string.airachat_q_recent_role, name)
+        is QuickPrompt.JourneySoFar -> AiraStrings.get(R.string.airachat_q_journey, name)
+        is QuickPrompt.WhatIsTheSignificance -> AiraStrings.get(R.string.airachat_q_significance, text)
+        is QuickPrompt.SummarizeChapter -> AiraStrings.get(R.string.airachat_q_summarize)
+        is QuickPrompt.DefineWord -> AiraStrings.get(R.string.airachat_q_define, word)
+        is QuickPrompt.WhatIsThis -> AiraStrings.get(R.string.airachat_q_what_is, word)
+        is QuickPrompt.ExplainThis -> AiraStrings.get(R.string.airachat_q_explain, text)
+        is QuickPrompt.VisualizeThis -> AiraStrings.get(R.string.airachat_q_visualize, text)
         is QuickPrompt.CustomQuestion -> query
     }
 }

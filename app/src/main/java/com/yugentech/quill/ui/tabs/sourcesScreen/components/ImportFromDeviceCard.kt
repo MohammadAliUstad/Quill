@@ -1,5 +1,20 @@
 package com.yugentech.quill.ui.tabs.sourcesScreen.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
@@ -26,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -37,6 +53,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.R
+import com.yugentech.theme.tokens.dimensions.AppAnimations
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -60,7 +78,7 @@ fun ImportFromDeviceCard(
 
     Box(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "Your files",
+            text = stringResource(R.string.your_files),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -140,17 +158,45 @@ private fun ImportCardSurface(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (isImporting) "Importing..." else "Import from Device",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                // Swaps with a short rise and fade; while importing, the word breathes gently
+                AnimatedContent(
+                    targetState = isImporting,
+                    transitionSpec = {
+                        (fadeIn(tween(AppAnimations.Durations.Standard, delayMillis = 60)) +
+                            slideInVertically(tween(AppAnimations.Durations.Standard)) { it / 3 }) togetherWith
+                            (fadeOut(tween(150)) + slideOutVertically(tween(AppAnimations.Durations.Standard)) { -it / 3 }) using
+                            SizeTransform(clip = false)
+                    },
+                    contentAlignment = Alignment.CenterStart,
+                    label = "importTitle",
+                ) { importing ->
+                    val breathing = if (importing) {
+                        val pulse = rememberInfiniteTransition(label = "importingPulse")
+                        pulse.animateFloat(
+                            initialValue = 1f,
+                            targetValue = 0.45f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(900, easing = FastOutSlowInEasing),
+                                repeatMode = RepeatMode.Reverse,
+                            ),
+                            label = "importingAlpha",
+                        ).value
+                    } else {
+                        1f
+                    }
+                    Text(
+                        text = if (importing) stringResource(R.string.importing) else stringResource(R.string.import_from_device),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.graphicsLayer { alpha = breathing },
+                    )
+                }
                 Text(
                     text = if (importedCount > 0) {
-                        "EPUB files · $importedCount imported"
+                        stringResource(R.string.epub_files_imported, importedCount)
                     } else {
-                        "Bring your own EPUB files"
+                        stringResource(R.string.bring_your_own_epubs)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -163,24 +209,38 @@ private fun ImportCardSurface(
                 modifier = Modifier.size(48.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                if (isImporting) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.tertiary,
-                        strokeWidth = 3.dp,
-                        modifier = Modifier.size(28.dp),
-                    )
-                } else {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.size(48.dp),
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Browse Device",
-                                tint = MaterialTheme.colorScheme.onTertiary,
+                // The + button shrinks away as the wavy indicator grows in, and back again
+                AnimatedContent(
+                    targetState = isImporting,
+                    transitionSpec = {
+                        (fadeIn(tween(AppAnimations.Durations.Standard)) +
+                            scaleIn(tween(AppAnimations.Durations.Standard), initialScale = 0.6f)) togetherWith
+                            (fadeOut(tween(200)) + scaleOut(tween(200), targetScale = 0.6f)) using
+                            SizeTransform(clip = false)
+                    },
+                    contentAlignment = Alignment.Center,
+                    label = "importButton",
+                ) { importing ->
+                    if (importing) {
+                        Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                            CircularWavyProgressIndicator(
+                                color = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(36.dp),
                             )
+                        }
+                    } else {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.size(48.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = stringResource(R.string.browse_device),
+                                    tint = MaterialTheme.colorScheme.onTertiary,
+                                )
+                            }
                         }
                     }
                 }

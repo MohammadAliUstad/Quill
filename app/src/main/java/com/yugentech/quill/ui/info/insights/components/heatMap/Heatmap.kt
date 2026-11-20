@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.sp
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
 import java.time.LocalDate
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -68,7 +70,7 @@ fun Heatmap(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "History",
+                        text = stringResource(R.string.heatmap_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -77,7 +79,7 @@ fun Heatmap(
                     )
 
                     Text(
-                        text = "Your year in pixels",
+                        text = stringResource(R.string.heatmap_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
@@ -91,7 +93,7 @@ fun Heatmap(
                     horizontalArrangement = Arrangement.spacedBy(cellSpacing)
                 ) {
                     Text(
-                        text = "Less",
+                        text = stringResource(R.string.heatmap_less),
                         style = MaterialTheme.typography.labelSmall
                     )
 
@@ -100,7 +102,7 @@ fun Heatmap(
                     HeatmapCell(intensity = 5, size = cellSize)
 
                     Text(
-                        text = "More",
+                        text = stringResource(R.string.heatmap_more),
                         style = MaterialTheme.typography.labelSmall
                     )
                 }

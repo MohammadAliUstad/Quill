@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.theme.tokens.spacing
+import com.yugentech.quill.R
+import androidx.compose.ui.res.pluralStringResource
 
 @Composable
 fun TopAuthorsCard(
@@ -81,7 +83,7 @@ private fun AuthorRow(
         )
 
         Text(
-            text = "$count ${if (count == 1) "book" else "books"}",
+            text = pluralStringResource(R.plurals.book_count, count, count),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

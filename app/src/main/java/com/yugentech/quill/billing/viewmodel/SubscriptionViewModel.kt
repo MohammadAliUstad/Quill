@@ -1,115 +1,117 @@
 package com.yugentech.quill.billing.viewmodel
 
+import android.os.SystemClock
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
+import com.yugentech.quill.R
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.domain.BillingRepository
-import com.yugentech.quill.user.repository.UserRepository
+import com.yugentech.quill.localization.AppStrings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/** How a tap on Restore ended, when there's something to say: shown in a dialog. */
+enum class RestoreResult {
+    /** Play answered, and this account has no active subscription. */
+    NotFound,
+    /** Couldn't reach Google Play. */
+    ConnectionFailed,
+    /** A guest: Pro belongs to an account. */
+    NeedsAccount,
+    /** Nobody signed in. */
+    NotSignedIn
+}
+
+// How long Restore shows its thinking dots at the least, from the tap
+private const val MIN_RESTORING_MILLIS = 1_800L
+
+/**
+ * The subscription screen. It only starts purchases and shows how they ended: saving Pro to the
+ * account's profile is GlobalSyncManager's job, so it happens whichever screen is open.
+ */
 class SubscriptionViewModel(
     private val billingRepository: BillingRepository,
-    private val authRepository: AuthRepository,
-    private val userRepository: UserRepository,
-    private val bookRepository: BookDetailsRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    private val _isPro = MutableStateFlow(false)
-    val isPro: StateFlow<Boolean> = _isPro.asStateFlow()
+    val isPro: StateFlow<Boolean> = billingRepository.isPro
 
     val subProducts = billingRepository.subProducts
 
     private val _isRestoring = MutableStateFlow(false)
     val isRestoring: StateFlow<Boolean> = _isRestoring.asStateFlow()
 
+    // A restore that found Pro needs no dialog: the screen turns into the subscribed one
+    private val _restoreResult = MutableStateFlow<RestoreResult?>(null)
+    val restoreResult: StateFlow<RestoreResult?> = _restoreResult.asStateFlow()
+
+    fun dismissRestoreResult() {
+        _restoreResult.value = null
+    }
+
     private val _events = MutableSharedFlow<BillingEvent>()
     val events = _events.asSharedFlow()
 
     init {
         viewModelScope.launch {
-            authRepository.authState.collectLatest { user ->
-                if (user != null) {
-                    userRepository.getUserFlow(user.uid).collect { userData ->
-                        _isPro.value = userData?.isPro == true
-                    }
-                } else {
-                    _isPro.value = false
-                }
-            }
-        }
-
-        viewModelScope.launch {
-            billingRepository.billingEvents.collect { event ->
-                if (event is BillingEvent.SubscriptionActivated) {
-                    authRepository.currentUser?.let { uid ->
-                        userRepository.updateProStatus(uid, true)
-                        enqueueIndexingForExistingBooks()
-                    }
-                }
-                _events.emit(event)
-            }
+            billingRepository.billingEvents.collect { _events.emit(it) }
         }
     }
 
     fun subscribe(activity: Activity, basePlanId: String) {
+        // Pro belongs to an account, so a guest makes one first
+        if (authRepository.isGuest) {
+            viewModelScope.launch { _events.emit(BillingEvent.Error(AppStrings.get(R.string.guest_subscribe_needs_account))) }
+            return
+        }
         val userId = authRepository.currentUser
 
         if (userId != null) {
             billingRepository.launchSubscriptionFlow(activity, basePlanId, userId)
         } else {
             viewModelScope.launch {
-                _events.emit(BillingEvent.Error("You must be logged in to subscribe."))
+                _events.emit(BillingEvent.Error(AppStrings.get(R.string.billing_login_subscribe)))
             }
         }
     }
 
     fun restorePurchases() {
+        if (authRepository.isGuest) {
+            _restoreResult.value = RestoreResult.NeedsAccount
+            return
+        }
         val userId = authRepository.currentUser
 
         if (userId == null) {
-            viewModelScope.launch {
-                _events.emit(BillingEvent.Error("You must be logged in to restore purchases."))
-            }
+            _restoreResult.value = RestoreResult.NotSignedIn
             return
         }
+        if (_isRestoring.value) return
 
         viewModelScope.launch {
             _isRestoring.value = true
+            val startedAt = SystemClock.elapsedRealtime()
 
             val wasRestored = billingRepository.restorePurchases(userId)
 
-            delay(800)
+            // The thinking dots stay a moment even when Play answers at once, so the button
+            // doesn't flick straight back to Restore
+            val shownFor = SystemClock.elapsedRealtime() - startedAt
+            delay((MIN_RESTORING_MILLIS - shownFor).coerceAtLeast(0))
             _isRestoring.value = false
 
             when (wasRestored) {
-                true -> {
-                    userRepository.updateProStatus(userId, true)
-                    enqueueIndexingForExistingBooks()
-                    _events.emit(BillingEvent.SubscriptionActivated)
-                }
-                false -> {
-                    userRepository.updateProStatus(userId, false)
-                    _events.emit(BillingEvent.NoSubscriptionFound)
-                }
-                null -> {
-                    _events.emit(BillingEvent.Error("Could not connect to Google Play. Please check your internet connection and try again."))
-                }
+                true -> _events.emit(BillingEvent.SubscriptionActivated)
+                false -> _restoreResult.value = RestoreResult.NotFound
+                null -> _restoreResult.value = RestoreResult.ConnectionFailed
             }
         }
-    }
-
-    private suspend fun enqueueIndexingForExistingBooks() {
-        bookRepository.getUnindexedDownloadedBooks()
-            .forEach { book -> bookRepository.enqueueIndexing(book.id) }
     }
 }

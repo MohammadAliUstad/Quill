@@ -4,7 +4,13 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.request
+import io.ktor.http.isSuccess
+import io.ktor.client.plugins.ResponseException
+import com.yugentech.quill.sources.shared.ServerMaintenanceException
+import com.yugentech.quill.sources.shared.throwIfMaintenance
 import timber.log.Timber
 
 class GutenbergApiService(
@@ -26,7 +32,30 @@ class GutenbergApiService(
             parameter("page", page)
         }
         Timber.d("getPopularBooks() response status=${response.status}")
-        return response.bodyAsText()
+        return response.bodyOrThrow()
+    }
+
+    /**
+     * Whether gutenberg.org itself is up, for the Sources card and downloads. The popular grid
+     * comes from Gutendex, which stays up while gutenberg.org is down for maintenance, but its
+     * covers and downloads are all on gutenberg.org. Throws [ServerMaintenanceException] if it's down.
+     */
+    suspend fun checkSite() {
+        httpClient.get("$SITE/robots.txt") {
+            timeout {
+                requestTimeoutMillis = 15_000
+            }
+        }.throwIfMaintenance()
+    }
+
+    /**
+     * The body of a successful response. Anything else (gutenberg.org answers 503 with an HTML
+     * page while it's down for maintenance) is thrown, so it shows as a failed load rather than
+     * being parsed into an empty "no results" list.
+     */
+    private suspend fun HttpResponse.bodyOrThrow(): String {
+        if (!status.isSuccess()) throw ResponseException(this, "${request.url.host} answered $status")
+        return bodyAsText()
     }
 
     /**
@@ -40,7 +69,7 @@ class GutenbergApiService(
                 requestTimeoutMillis = 30_000
             }
             parameter("query", "$query l.en")
-        }.bodyAsText()
+        }.bodyOrThrow()
     }
 
     /** One book's own feed on gutenberg.org: its summary and subjects, for the details page. */
@@ -49,7 +78,7 @@ class GutenbergApiService(
             timeout {
                 requestTimeoutMillis = 30_000
             }
-        }.bodyAsText()
+        }.bodyOrThrow()
     }
 
     suspend fun getNextPage(nextUrl: String): String {
@@ -57,6 +86,6 @@ class GutenbergApiService(
             timeout {
                 requestTimeoutMillis = 60_000
             }
-        }.bodyAsText()
+        }.bodyOrThrow()
     }
 }

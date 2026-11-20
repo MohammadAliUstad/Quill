@@ -22,15 +22,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
-private fun selectionLabel(text: String): String {
+private fun selectionLabel(text: String): Int {
     val wordCount = text.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }.size
     val sentenceCount = text.trim().split(Regex("[.!?]+\\s+")).filter { it.isNotBlank() }.size
     return when {
-        wordCount == 1 -> "Selected word"
-        wordCount <= 5 -> "Selected words"
-        sentenceCount > 1 -> "Selected passage"
-        else -> "Selected sentence"
+        wordCount == 1 -> R.string.reader_selected_word
+        wordCount <= 5 -> R.string.reader_selected_words
+        sentenceCount > 1 -> R.string.reader_selected_passage
+        else -> R.string.reader_selected_sentence
     }
 }
 
@@ -71,7 +73,7 @@ fun SelectionSnippet(
                 .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
             Text(
-                text = selectionLabel(displayText),
+                text = stringResource(selectionLabel(displayText)),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 0.3.sp

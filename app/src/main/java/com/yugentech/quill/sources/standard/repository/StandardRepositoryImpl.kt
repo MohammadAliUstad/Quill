@@ -1,20 +1,30 @@
 package com.yugentech.quill.sources.standard.repository
 
+import com.yugentech.quill.sources.shared.ServerMaintenanceException
 import com.yugentech.quill.database.dao.CatalogDao
 import com.yugentech.quill.database.dao.CategoryCacheDao
+import com.yugentech.quill.database.entity.CatalogCacheEntity
 import com.yugentech.quill.database.entity.CategoryCacheEntity
-import com.yugentech.quill.database.mapper.toCatalogEntity
+import com.yugentech.quill.database.mapper.toCatalogEntities
 import com.yugentech.quill.database.mapper.toDomainModel
 import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.sources.shared.CatalogMemory
 import com.yugentech.quill.sources.standard.mapper.StandardMapper
 import com.yugentech.quill.sources.standard.model.OpdsCollection
 import com.yugentech.quill.sources.standard.model.OpdsFeedResult
 import com.yugentech.quill.sources.standard.service.StandardApiService
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
 
 private const val SOURCE_KEY = "standard"
+private const val NEW_RELEASES_KEY = "new-releases"
+
+private fun topicKey(topic: String) = "standard-topic-$topic"
 
 class StandardRepositoryImpl(
     private val standardApi: StandardApiService,
@@ -22,11 +32,21 @@ class StandardRepositoryImpl(
     private val categoryCacheDao: CategoryCacheDao,
 ) : StandardRepository {
 
-    override fun getNewReleasesFlow(): Flow<List<Book>> {
-        return catalogDao.getBooksByCategory("new-releases").map { entities ->
-            entities.map { it.toDomainModel() }
-        }
+    private val memory = CatalogMemory()
+
+    override suspend fun checkMaintenance(): Result<ServerMaintenanceException?> = try {
+        standardApi.checkSite()
+        Result.success(null)
+    } catch (e: ServerMaintenanceException) {
+        Timber.w("standardebooks.org is down for maintenance, back after ${e.backAfter}")
+        Result.success(e)
+    } catch (e: Exception) {
+        if (e is kotlinx.coroutines.CancellationException) throw e
+        Timber.w(e, "Couldn't ask standardebooks.org whether it's down")
+        Result.failure(e)
     }
+
+    override fun getNewReleasesFlow(): Flow<List<Book>> = cachedList(NEW_RELEASES_KEY)
 
     override suspend fun syncNewReleases(): Result<Unit> {
         return try {
@@ -34,12 +54,7 @@ class StandardRepositoryImpl(
             val result = StandardMapper.parseOpdsToBooks(xml)
             val books = result.books
 
-            if (books.isNotEmpty()) {
-                val newEntities = books.map { it.toCatalogEntity("new-releases") }
-                val newIds = newEntities.map { it.id }.toSet()
-                catalogDao.insertBooks(newEntities)
-                catalogDao.deleteStaleBooks("new-releases", newIds.toList())
-            }
+            if (books.isNotEmpty()) store(NEW_RELEASES_KEY, books)
             Result.success(Unit)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
@@ -48,9 +63,14 @@ class StandardRepositoryImpl(
         }
     }
 
-    override fun getCategoriesFlow(): Flow<List<String>> {
-        return categoryCacheDao.getCategoriesBySource(SOURCE_KEY)
-    }
+    /** The subjects last read, so the chip row is there in the first frame along with the books. */
+    @Volatile
+    private var rememberedCategories: List<String>? = null
+
+    override fun getCategoriesFlow(): Flow<List<String>> = flow {
+        rememberedCategories?.let { emit(it) }
+        emitAll(categoryCacheDao.getCategoriesBySource(SOURCE_KEY).onEach { if (it.isNotEmpty()) rememberedCategories = it })
+    }.distinctUntilChanged()
 
     override suspend fun syncCategories(): Result<Unit> {
         return try {
@@ -58,9 +78,13 @@ class StandardRepositoryImpl(
             val categories = StandardMapper.parseOpdsToCategories(xml)
 
             if (categories.isNotEmpty()) {
-                categoryCacheDao.clearCategories(SOURCE_KEY)
-                categoryCacheDao.insertCategories(
-                    categories.map { CategoryCacheEntity(name = it, source = SOURCE_KEY) }
+                // Stamped in the feed's order (the chips list by it), replaced in one go
+                val start = System.currentTimeMillis()
+                categoryCacheDao.replaceCategories(
+                    SOURCE_KEY,
+                    categories.mapIndexed { index, name ->
+                        CategoryCacheEntity(name = name, source = SOURCE_KEY, cachedAt = start + index)
+                    }
                 )
             }
             Result.success(Unit)
@@ -70,26 +94,14 @@ class StandardRepositoryImpl(
         }
     }
 
-    override fun getTopicBooksFlow(topic: String): Flow<List<Book>> {
-        val feedKey = "standard-topic-$topic"
-        return catalogDao.getBooksByCategory(feedKey).map { entities ->
-            entities.map { it.toDomainModel() }
-        }
-    }
+    override fun getTopicBooksFlow(topic: String): Flow<List<Book>> = cachedList(topicKey(topic))
 
     override suspend fun syncTopicBooks(topic: String): Result<Unit> {
         return try {
             val xml = standardApi.getTopicFeed(topic)
             val result = StandardMapper.parseOpdsToBooks(xml)
 
-            if (result.books.isNotEmpty()) {
-                val feedKey = "standard-topic-$topic"
-                val newEntities = result.books.map { it.toCatalogEntity(feedKey) }
-                val newIds = newEntities.map { it.id }.toSet()
-
-                catalogDao.insertBooks(newEntities)
-                catalogDao.deleteStaleBooks(feedKey, newIds.toList())
-            }
+            if (result.books.isNotEmpty()) store(topicKey(topic), result.books)
             Result.success(Unit)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
@@ -128,4 +140,33 @@ class StandardRepositoryImpl(
             Result.failure(e)
         }
     }
+
+    /** [key]'s cached books, from memory at once and then from the database. */
+    private fun cachedList(key: String): Flow<List<Book>> = memory.follow(
+        key,
+        catalogDao.getBooksByCategory(key).map { entities ->
+            entities.map { it.toDomainModel().copy(id = it.id.removePrefix(rowPrefix(key))) }
+        }
+    )
+
+    /** Replaces [key]'s cached books with a freshly downloaded [books]. */
+    private suspend fun store(key: String, books: List<Book>) {
+        catalogDao.replaceCategory(key, books.toCatalogEntities(key).map { it.scopedTo(key) })
+        memory.remember(key, books)
+    }
+
+    /**
+     * The cache keeps one row per ID, and the same book is often in New Arrivals and in one or
+     * more subjects. Stored under its plain ID, refreshing one of those lists moved the book's
+     * row over to it, taking it out of the others: it was missing from them on the next visit,
+     * and popped back in a second later when they refreshed in turn (and took it back). Each
+     * list's rows carry the list in their ID instead, so every list keeps its own copy. The
+     * prefix comes off again when the rows are read, so the books keep their real IDs.
+     *
+     * Rows stored before this, under plain IDs, aren't in the next refresh's list of fresh IDs,
+     * so that refresh clears them out.
+     */
+    private fun CatalogCacheEntity.scopedTo(key: String) = copy(id = rowPrefix(key) + id)
+
+    private fun rowPrefix(key: String) = "$key::"
 }

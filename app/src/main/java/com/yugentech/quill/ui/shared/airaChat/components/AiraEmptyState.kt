@@ -1,5 +1,7 @@
 package com.yugentech.quill.ui.shared.airaChat.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -47,18 +49,24 @@ import androidx.compose.ui.unit.sp
 import com.yugentech.quill.R
 import com.yugentech.theme.WindSongFont
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AiraEmptyState(
     lastChapterTitle: String?,
     isIndexing: Boolean,
+    // Waiting its turn behind other books in the indexing queue
+    isQueued: Boolean,
+    // Aira has finished reading the book
+    isReady: Boolean,
     indexingProgress: Int,
     spoilerLockEnabled: Boolean,
     hasStartedReading: Boolean,
     modifier: Modifier = Modifier,
     onToggleSpoilerLock: () -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -171,7 +179,7 @@ fun AiraEmptyState(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Your reading companion.",
+            text = stringResource(R.string.aira_tagline),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -181,12 +189,12 @@ fun AiraEmptyState(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = if (isIndexing)
-                "Aira is going through your book. She'll be ready to chat in just a moment."
-            else if (!hasStartedReading)
-                "Aira needs you to read a few pages first before she can discuss the story with you."
-            else
-                "Ask me to summarize chapters, explain complex themes, or recall characters.",
+            text = when {
+                isQueued -> stringResource(R.string.aira_empty_queued)
+                isIndexing || !isReady -> stringResource(R.string.aira_empty_indexing)
+                !hasStartedReading -> stringResource(R.string.aira_empty_not_started)
+                else -> stringResource(R.string.aira_empty_ready)
+            },
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -195,8 +203,9 @@ fun AiraEmptyState(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // The chapter and spoiler lock come with the chat itself, once Aira has read the book
         AnimatedVisibility(
-            visible = hasStartedReading,
+            visible = isReady && hasStartedReading,
             enter = fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 4 },
             exit = fadeOut(tween(300)) + slideOutVertically(tween(300)) { it / 4 }
         ) {
@@ -210,7 +219,7 @@ fun AiraEmptyState(
                     horizontalAlignment = Alignment.Start
                 ) {
                     Text(
-                        text = "Current Chapter",
+                        text = stringResource(R.string.current_chapter),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
@@ -219,7 +228,7 @@ fun AiraEmptyState(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = lastChapterTitle ?: "Just started reading",
+                        text = lastChapterTitle ?: stringResource(R.string.just_started_reading),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -246,7 +255,12 @@ fun AiraEmptyState(
                     )
 
                     Surface(
-                        onClick = onToggleSpoilerLock,
+                        onClick = {
+                            haptic.performHapticFeedback(
+                                if (spoilerLockEnabled) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn
+                            )
+                            onToggleSpoilerLock()
+                        },
                         shape = CircleShape,
                         color = backgroundColor
                     ) {
@@ -259,7 +273,7 @@ fun AiraEmptyState(
                             label = "spoilerTextAnimation"
                         ) { isLocked ->
                             Text(
-                                text = if (isLocked) "Spoiler lock active" else "Spoiler lock disabled",
+                                text = if (isLocked) stringResource(R.string.spoiler_lock_active) else stringResource(R.string.spoiler_lock_disabled),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = textColor,

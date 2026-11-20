@@ -1,5 +1,8 @@
 package com.yugentech.quill.ui.tabs.libraryScreen.components
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import com.yugentech.quill.ui.shared.maintenance.MaintenanceAwareCover
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,6 +38,9 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,6 +91,7 @@ fun HistoryCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     val currentPage = remember(book.progressPercent, book.totalPages) {
         if (book.totalPages > 0) {
             ((book.progressPercent * (book.totalPages - 1)).roundToInt()).coerceIn(
@@ -94,16 +101,14 @@ fun HistoryCard(
         } else 0
     }
 
-    val progressText = remember(currentPage, book.totalPages) {
-        if (book.totalPages > 0) {
-            "Page $currentPage of ${book.totalPages}"
-        } else {
-            "${(book.progressPercent * 100).toInt()}% Complete"
-        }
+    val progressText = if (book.totalPages > 0) {
+        stringResource(R.string.page_of, currentPage, book.totalPages)
+    } else {
+        stringResource(R.string.percent_complete, (book.progressPercent * 100).toInt())
     }
 
-    val formattedDayInfo = remember(book.lastReadTime) {
-        if (book.lastReadTime == 0L) return@remember "Not read yet"
+    val formattedDayInfo = run {
+        if (book.lastReadTime == 0L) return@run stringResource(R.string.not_read_yet)
         val zoneId = ZoneId.systemDefault()
         val lastReadDateTime =
             Instant.ofEpochMilli(book.lastReadTime).atZone(zoneId).toLocalDateTime()
@@ -111,15 +116,17 @@ fun HistoryCard(
         val daysBetween = ChronoUnit.DAYS.between(lastReadDateTime.toLocalDate(), now.toLocalDate())
 
         when {
-            daysBetween <= 0L -> "Today"
-            daysBetween == 1L -> "Yesterday"
-            daysBetween in 2..6 -> "$daysBetween days ago"
-            else -> "$daysBetween days ago"
+            daysBetween <= 0L -> stringResource(R.string.today)
+            daysBetween == 1L -> stringResource(R.string.yesterday)
+            else -> pluralStringResource(R.plurals.days_ago, daysBetween.toInt(), daysBetween.toInt())
         }
     }
 
     Card(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+            onClick()
+        },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
@@ -131,10 +138,11 @@ fun HistoryCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Image
-            AsyncImage(
-                model = book.coverUrl?.toCoverThumbnailUrl(),
+            MaintenanceAwareCover(
+                url = book.coverUrl?.toCoverThumbnailUrl(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
+                iconSize = 28.dp,
                 modifier = Modifier
                     .width(90.dp)
                     .fillMaxHeight()
@@ -160,7 +168,7 @@ fun HistoryCard(
                     )
 
                     Text(
-                        text = book.lastChapterTitle ?: "Continuing...",
+                        text = book.lastChapterTitle ?: stringResource(R.string.continuing),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.secondary,
                         maxLines = 1,

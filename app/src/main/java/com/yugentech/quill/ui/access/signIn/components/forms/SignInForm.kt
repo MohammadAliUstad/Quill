@@ -1,8 +1,11 @@
 package com.yugentech.quill.ui.access.signIn.components.forms
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
@@ -26,14 +29,18 @@ import com.yugentech.quill.ui.access.signIn.components.AppTextField
 import com.yugentech.quill.ui.access.signIn.components.AuthDivider
 import com.yugentech.quill.ui.access.signIn.components.buttons.ActionButton
 import com.yugentech.quill.ui.access.signIn.components.buttons.GoogleSignInButton
+import com.yugentech.quill.ui.access.signIn.components.buttons.GuestSignInButton
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.ui.access.signIn.state.SignInFormState
 import com.yugentech.quill.ui.access.signIn.util.FormValidator
 import com.yugentech.theme.tokens.components
 import com.yugentech.theme.tokens.spacing
 import kotlinx.coroutines.launch
+import com.yugentech.quill.R
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.localization.AppStrings
 
-/** Email and password, then Google underneath, as on Hajime's sign-in. */
+/** Email and password, then Google and Guest side by side underneath. */
 @Composable
 fun SignInForm(
     isLoading: Boolean,
@@ -41,17 +48,23 @@ fun SignInForm(
     onGoogleSignIn: () -> Unit,
     onForgotPassword: (email: String) -> Unit,
     onClearError: () -> Unit,
+    onContinueAsGuest: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     var formState by remember { mutableStateOf(SignInFormState()) }
     val scope = rememberCoroutineScope()
-    // isLoading is shared by both sign-in paths; remember which button started it so only
-    // that one shows the spinner while the other is just disabled.
-    var isGoogleSignIn by rememberSaveable { mutableStateOf(false) }
+    // isLoading is shared by every sign-in path; remember which button started it so only
+    // that one shows the spinner while the others are just disabled.
+    var loadingFrom by rememberSaveable { mutableStateOf(LOADING_EMAIL) }
 
     LaunchedEffect(formState.email, formState.password) {
         onClearError()
     }
+
+    // Starting guest mode is instant, so while it does the other buttons keep their look rather
+    // than greying out for a split second before the app opens; taps are ignored instead
+    val dimForLoading = isLoading && loadingFrom != LOADING_GUEST
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -65,7 +78,7 @@ fun SignInForm(
                     emailError = FormValidator.validateEmail(newEmail)
                 )
             },
-            label = "Email",
+            label = stringResource(R.string.label_email),
             leadingIcon = Icons.Default.Email,
             error = formState.emailError
         )
@@ -79,7 +92,7 @@ fun SignInForm(
                         passwordError = FormValidator.validatePassword(newPassword)
                     )
                 },
-                label = "Password",
+                label = stringResource(R.string.label_password),
                 leadingIcon = Icons.Default.Lock,
                 error = formState.passwordError,
                 isPassword = true
@@ -93,9 +106,10 @@ fun SignInForm(
             ) {
                 TextButton(
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                         if (formState.email.isBlank()) {
                             formState = formState.copy(
-                                emailError = "Enter your email first, and we'll send a reset link"
+                                emailError = AppStrings.get(R.string.sign_in_reset_needs_email)
                             )
                         } else {
                             onForgotPassword(formState.email)
@@ -104,7 +118,7 @@ fun SignInForm(
                     modifier = Modifier.height(MaterialTheme.components.buttonSmall)
                 ) {
                     Text(
-                        text = "Forgot password?",
+                        text = stringResource(R.string.sign_in_forgot_password),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -113,11 +127,12 @@ fun SignInForm(
         }
 
         ActionButton(
-            text = "Sign in",
-            isLoading = isLoading && !isGoogleSignIn,
-            enabled = !isLoading,
+            text = stringResource(R.string.auth_sign_in),
+            isLoading = isLoading && loadingFrom == LOADING_EMAIL,
+            enabled = !dimForLoading,
             onClick = {
-                isGoogleSignIn = false
+                if (isLoading) return@ActionButton
+                loadingFrom = LOADING_EMAIL
                 val isValid = FormValidator.validateSignInForm(
                     email = formState.email,
                     password = formState.password,
@@ -128,6 +143,10 @@ fun SignInForm(
                         formState = formState.copy(passwordError = error)
                     }
                 )
+                // A tap for a form that goes through, a buzz for one with something to fix
+                haptic.performHapticFeedback(
+                    if (isValid) HapticFeedbackType.Confirm else HapticFeedbackType.Reject
+                )
 
                 if (isValid) {
                     scope.launch {
@@ -137,15 +156,41 @@ fun SignInForm(
             }
         )
 
-        AuthDivider(text = "or")
+        AuthDivider(text = stringResource(R.string.auth_divider_or))
 
-        GoogleSignInButton(
-            isLoading = isLoading && isGoogleSignIn,
-            enabled = !isLoading,
-            onClick = {
-                isGoogleSignIn = true
-                scope.launch { onGoogleSignIn() }
-            }
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+        ) {
+            GoogleSignInButton(
+                isLoading = isLoading && loadingFrom == LOADING_GOOGLE,
+                enabled = !dimForLoading,
+                label = stringResource(R.string.google_short),
+                onClick = {
+                    if (isLoading) return@GoogleSignInButton
+                    loadingFrom = LOADING_GOOGLE
+                    scope.launch { onGoogleSignIn() }
+                },
+                modifier = Modifier.weight(1f)
+            )
+
+            // Read without an account; the library stays on this phone (More can export it)
+            GuestSignInButton(
+                // Guest mode starts instantly on the phone, so no spinner: the ghost's flight
+                // is the wait, and the button stays as it is until the app opens
+                isLoading = false,
+                enabled = !dimForLoading,
+                onClick = {
+                    if (isLoading) return@GuestSignInButton
+                    loadingFrom = LOADING_GUEST
+                    onContinueAsGuest()
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
+
+private const val LOADING_EMAIL = "email"
+private const val LOADING_GOOGLE = "google"
+private const val LOADING_GUEST = "guest"

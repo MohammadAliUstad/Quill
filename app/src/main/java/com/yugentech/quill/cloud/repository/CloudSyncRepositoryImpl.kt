@@ -16,6 +16,7 @@ import com.yugentech.quill.database.entity.CategoryEntity
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.Chapter
 import com.yugentech.quill.database.model.DownloadStatus
+import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.theme.tokens.AppConstants.EMPTY
 import com.yugentech.theme.tokens.AppConstants.SHELF
 import kotlinx.coroutines.Dispatchers
@@ -28,8 +29,13 @@ class CloudSyncRepositoryImpl(
     private val bookDao: BookDao,
     private val categoryDao: CategoryDao,
     private val cloudSyncService: CloudSyncService,
-    private val context: Context
+    private val context: Context,
+    private val authRepository: AuthRepository
 ) : CloudSyncRepository {
+
+    // A guest's library stays on this phone: Firestore is never touched in guest mode
+    private val isGuest: Boolean
+        get() = authRepository.isGuest
 
     override suspend fun syncLibraryOnLogin(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
@@ -143,6 +149,7 @@ class CloudSyncRepositoryImpl(
     }
 
     override suspend fun syncBooksToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
+        if (isGuest) return@withContext Result.success(Unit)
         try {
             val unsyncedBooks = bookDao.getUnsyncedBooks()
 
@@ -169,6 +176,7 @@ class CloudSyncRepositoryImpl(
     }
 
     override suspend fun syncCategoriesToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
+        if (isGuest) return@withContext Result.success(Unit)
         try {
             val unsyncedCategories = categoryDao.getUnsyncedCategories()
 
@@ -191,6 +199,7 @@ class CloudSyncRepositoryImpl(
     }
 
     override suspend fun deleteCategoryFromCloud(categoryId: String) = withContext(Dispatchers.IO) {
+        if (isGuest) return@withContext
         try {
             cloudSyncService.deleteCategoryFromCloud(categoryId)
             Timber.i("Successfully deleted category document $categoryId from cloud")
@@ -200,6 +209,7 @@ class CloudSyncRepositoryImpl(
     }
 
     override suspend fun deleteBookFromCloud(bookId: String) = withContext(Dispatchers.IO) {
+        if (isGuest) return@withContext
         try {
             cloudSyncService.deleteBookFromCloud(bookId)
             Timber.i("Successfully deleted book document $bookId from cloud")
@@ -209,6 +219,7 @@ class CloudSyncRepositoryImpl(
     }
 
     override fun scheduleBackgroundSync() {
+        if (isGuest) return
         Timber.d("Scheduling background sync in 15 seconds")
 
         val constraints = Constraints.Builder()

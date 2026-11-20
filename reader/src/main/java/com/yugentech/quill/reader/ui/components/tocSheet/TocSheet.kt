@@ -1,6 +1,9 @@
 package com.yugentech.quill.reader.ui.components.tocSheet
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.core.animateDpAsState
+import com.yugentech.theme.SheetTheme
 import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,9 +44,11 @@ import androidx.compose.ui.unit.sp
 import org.readium.r2.shared.publication.Link
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
+import com.yugentech.quill.reader.R
+import androidx.compose.ui.res.stringResource
 
 private data class TocDisplayItem(
-    val link: Link, val depth: Int, val pageNumber: String? = null
+    val link: Link, val depth: Int, val pageNumber: Int? = null
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,58 +81,60 @@ fun TocSheet(
     CompositionLocalProvider(
         LocalOverscrollFactory provides null
     ) {
-        ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            sheetState = sheetState,
-            shape = RoundedCornerShape(
-                topStart = cornerRadius, topEnd = cornerRadius
-            ),
-            modifier = Modifier.fillMaxHeight(),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            dragHandle = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = {})
-                        .padding(vertical = 22.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+        SheetTheme {
+            ModalBottomSheet(
+                onDismissRequest = onDismiss,
+                sheetState = sheetState,
+                shape = RoundedCornerShape(
+                    topStart = cornerRadius, topEnd = cornerRadius
+                ),
+                modifier = Modifier.fillMaxHeight(),
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                dragHandle = {
                     Box(
                         modifier = Modifier
-                            .size(width = 32.dp, height = 6.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                                shape = CircleShape
-                            )
-                    )
-                }
-            }) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                item {
-                    Text(
-                        text = "Table of Contents",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 12.dp)
-                    )
-                }
+                            .fillMaxWidth()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {})
+                            .padding(vertical = 22.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(width = 32.dp, height = 6.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                    shape = CircleShape
+                                )
+                        )
+                    }
+                }) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.reader_toc_title),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 12.dp)
+                        )
+                    }
 
-                itemsIndexed(flattenedToc) { index, item ->
-                    val isActive = index == activeIndex
-                    SimpleTocItem(
-                        item = item, isActive = isActive, onClick = onTocItemClick
-                    )
-                }
+                    itemsIndexed(flattenedToc) { index, item ->
+                        val isActive = index == activeIndex
+                        SimpleTocItem(
+                            item = item, isActive = isActive, onClick = onTocItemClick
+                        )
+                    }
 
-                item { Spacer(modifier = Modifier.height(24.dp)) }
+                    item { Spacer(modifier = Modifier.height(24.dp)) }
+                }
             }
         }
     }
@@ -145,7 +152,8 @@ private fun flattenToc(
                 ?: loc.locations.position
         }
 
-        result.add(TocDisplayItem(link, depth, pageNumber?.toString()))
+        // Kept as a number: reader_page_number formats it with %d
+        result.add(TocDisplayItem(link, depth, pageNumber))
         if (link.children.isNotEmpty()) {
             result.addAll(flattenToc(publication, allPositions, link.children, depth + 1))
         }
@@ -157,6 +165,7 @@ private fun flattenToc(
 private fun SimpleTocItem(
     item: TocDisplayItem, isActive: Boolean, onClick: (String) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val containerColor =
         if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
     val contentColor =
@@ -169,7 +178,10 @@ private fun SimpleTocItem(
             .padding(horizontal = 16.dp)
             .clip(CircleShape)
             .background(containerColor)
-            .clickable { onClick(item.link.href.toString()) }
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                onClick(item.link.href.toString())
+            }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically) {
         if (item.depth > 0) {
@@ -177,7 +189,7 @@ private fun SimpleTocItem(
         }
 
         Text(
-            text = item.link.title ?: "Untitled",
+            text = item.link.title ?: stringResource(R.string.reader_untitled),
             style = MaterialTheme.typography.bodyLarge,
             color = contentColor,
             fontWeight = textWeight,
@@ -188,7 +200,7 @@ private fun SimpleTocItem(
 
         if (item.pageNumber != null) {
             Text(
-                text = "Page ${item.pageNumber}",
+                text = stringResource(R.string.reader_page_number, item.pageNumber),
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                 color = contentColor.copy(alpha = 0.6f),
                 fontWeight = FontWeight.Normal,

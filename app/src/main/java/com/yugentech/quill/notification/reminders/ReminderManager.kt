@@ -24,6 +24,22 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.random.Random
+import com.yugentech.quill.R
+import com.yugentech.quill.localization.AppStrings
+
+/** The daily reminder: calm and plain. */
+private val dailyMessages = listOf(
+    R.string.reminder_daily_1,
+    R.string.reminder_daily_2,
+    R.string.reminder_daily_3,
+    R.string.reminder_daily_4
+)
+
+/**
+ * One of the daily reminder's lines, in the app's current language. Picked when the reminder
+ * rings, not when it's booked, so a language switch since then shows in it.
+ */
+internal fun dailyReminderMessage(): String = AppStrings.get(dailyMessages.random())
 
 /**
  * The reminders, set up the same way in Quill and Sessions; only the wording differs.
@@ -87,7 +103,7 @@ class ReminderManager(
             hour = hour,
             minute = minute,
             title = APP_NAME,
-            message = dailyMessages.random()
+            message = dailyReminderMessage()
         )
     }
 
@@ -193,7 +209,7 @@ class ReminderManager(
             .filter { it.lastReadTime > 0 }
             .maxByOrNull { it.lastReadTime }
             ?.title
-        val name = book?.let { "'$it'" } ?: "your next book"
+        val name = book?.let { AppStrings.get(R.string.reminder_book_quoted, it) } ?: AppStrings.get(R.string.reminder_your_next_book)
         val playful = if (book != null) playfulMessages + startedBookPlayfulMessages else playfulMessages
         val away = if (book != null) awayMessages + startedBookAwayMessages else awayMessages
         return NudgeMessages(
@@ -202,9 +218,9 @@ class ReminderManager(
         )
     }
 
-    /** Puts [name] in for {book}, capitalised where it starts a sentence. */
-    private fun String.withBook(name: String) =
-        replace("! {book}", "! " + name.replaceFirstChar { it.uppercase() }).replace("{book}", name)
+    /** The line [this] with [name] in it, capitalised where it starts a sentence ("Reading time! Your next book…"). */
+    private fun Int.withBook(name: String) =
+        AppStrings.get(this, name).replace("! $name", "! " + name.replaceFirstChar { it.uppercase() })
 
     private companion object {
         const val APP_NAME = "Quill"
@@ -225,40 +241,32 @@ class ReminderManager(
         const val NUDGE_LATEST_HOUR = 19
         const val NUDGE_GAP_HOURS = 3
 
-        /** The daily reminder: calm and plain. */
-        val dailyMessages = listOf(
-            "It's your reading time. A few pages are ready whenever you are.",
-            "Your books are ready whenever you are.",
-            "A few quiet minutes with a good book. Time for today's reading.",
-            "Little and often: a few pages today keeps the story going."
-        )
-
-        /** Now and then in the first days: light and playful. */
+        /** Now and then in the first days: light and playful. %1$s is the book. */
         val playfulMessages = listOf(
-            "Ready to curl up with {book}?",
-            "Psst... {book} would make a lovely break today.",
-            "How about a quick chapter of {book} before the day ends?",
-            "Just 10 minutes with {book}? A nice way to unwind.",
-            "Reading time! {book} is ready for you.",
-            "A quiet moment and {book}. Perfection. Ready?",
-            "A cup of tea and a chapter of {book}? Sounds like a nice break."
+            R.string.reminder_playful_1,
+            R.string.reminder_playful_2,
+            R.string.reminder_playful_3,
+            R.string.reminder_playful_4,
+            R.string.reminder_playful_5,
+            R.string.reminder_playful_6,
+            R.string.reminder_playful_7
         )
 
         /** Playful lines for a book the user has already started. */
         val startedBookPlayfulMessages = listOf(
-            "Remember how good {book} was getting? Let's find out what happens next."
+            R.string.reminder_playful_started_1
         )
 
         /** After almost a week away, every other day: warm, no pressure. */
         val awayMessages = listOf(
-            "It's been a while! Aira is missing our reading sessions.",
-            "No rush: {book} will be here whenever you're ready.",
-            "Reading is a journey, and we miss traveling with you. Ready to continue?"
+            R.string.reminder_away_1,
+            R.string.reminder_away_2,
+            R.string.reminder_away_3
         )
 
         /** Away lines for a book the user has already started. */
         val startedBookAwayMessages = listOf(
-            "Your bookmark is right where you left it. A few pages today?"
+            R.string.reminder_away_started_1
         )
     }
 }

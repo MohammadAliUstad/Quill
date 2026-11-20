@@ -24,6 +24,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.sound.model.BackgroundSound
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.reader.R
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -34,7 +36,7 @@ fun SoundToggleButton(
 ) {
     val haptic = LocalHapticFeedback.current
     val isPlaying = currentSound != BackgroundSound.NONE
-    val soundLabel = if (isPlaying) currentSound.displayName else lastSelectedSound.displayName
+    val soundLabel = stringResource(if (isPlaying) currentSound.displayName else lastSelectedSound.displayName)
 
     ToggleButton(
         checked = isPlaying,
@@ -59,7 +61,7 @@ fun SoundToggleButton(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = if (isPlaying) Icons.AutoMirrored.Rounded.VolumeUp else Icons.Rounded.MusicNote,
-                contentDescription = "Toggle Sound",
+                contentDescription = stringResource(R.string.reader_toggle_sound),
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .size(22.dp)

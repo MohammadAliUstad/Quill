@@ -22,6 +22,8 @@ import org.readium.r2.streamer.parser.DefaultPublicationParser
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
+import com.yugentech.quill.R
+import com.yugentech.quill.localization.AppStrings
 
 object LocalBookImporter {
 
@@ -41,24 +43,31 @@ object LocalBookImporter {
         val fileName = resolveFileName(context, uri) ?: "unknown.epub"
         val bookId = "local_${uri.hashCode()}"
 
-        return try {
-            val importsDir = File(context.filesDir, "imports").also { it.mkdirs() }
-            val destFile = File(importsDir, "$bookId.epub")
+        // The same file picked again: stop before copying anything, so the book's file and
+        // reading progress stay exactly as they are
+        bookDao.getBookEntity(bookId)?.takeIf { it.hasFile() }?.let {
+            return ImportResult.AlreadyExists(it.title)
+        }
 
+        val importsDir = File(context.filesDir, "imports").also { it.mkdirs() }
+        // Copied under a temporary name until it's known not to be a book already in the library
+        val tempFile = File(importsDir, "$bookId.importing")
+
+        return try {
             context.contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(destFile).use { output -> input.copyTo(output) }
-            } ?: return ImportResult.Failure(fileName, "Could not open file")
+                FileOutputStream(tempFile).use { output -> input.copyTo(output) }
+            } ?: return ImportResult.Failure(fileName, AppStrings.get(R.string.import_error_open_file))
 
             val httpClient = DefaultHttpClient()
             val assetRetriever = AssetRetriever(context.contentResolver, httpClient)
             val parser = DefaultPublicationParser(context, httpClient, assetRetriever, null)
             val opener = PublicationOpener(parser, emptyList(), onCreatePublication = {})
 
-            val asset = assetRetriever.retrieve(destFile)
-                .getOrElse { return ImportResult.Failure(fileName, "Not a valid EPUB") }
+            val asset = assetRetriever.retrieve(tempFile)
+                .getOrElse { return ImportResult.Failure(fileName, AppStrings.get(R.string.import_error_not_epub)) }
 
             val publication = opener.open(asset, allowUserInteraction = false)
-                .getOrElse { return ImportResult.Failure(fileName, "Could not open EPUB") }
+                .getOrElse { return ImportResult.Failure(fileName, AppStrings.get(R.string.import_error_open_epub)) }
 
             val metadata = publication.metadata
 
@@ -68,18 +77,38 @@ object LocalBookImporter {
 
             val author = metadata.authors
                 .joinToString(" & ") { it.name.trim() }
-                .ifBlank { "Unknown Author" }
+                .ifBlank { AppStrings.get(R.string.unknown_author) }
 
+            // Already in the library: this file's own record, or the same book imported from
+            // another file. Blocked, unless that book has no file on this device (it came from
+            // another device through sync); then this file is attached and its progress kept.
+            val existing = bookDao.getBookEntity(bookId) ?: bookDao.findImportedBook(title, author)
+            if (existing?.hasFile() == true) {
+                publication.close()
+                return ImportResult.AlreadyExists(existing.title)
+            }
+
+            val id = existing?.id ?: bookId
             val description = metadata.description?.trim()?.ifBlank { null }
             val language = metadata.languages.firstOrNull() ?: "en"
             val subjects = metadata.subjects.map { it.name.trim() }.filter { it.isNotBlank() }
-
-            val coverUrl = saveCover(context, publication.cover(), bookId)
+            val cover = publication.cover()
 
             publication.close()
 
-            val entity = BookEntity(
-                id = bookId,
+            val destFile = File(importsDir, "$id.epub")
+            if (!tempFile.renameTo(destFile)) {
+                tempFile.copyTo(destFile, overwrite = true)
+            }
+            val coverUrl = saveCover(context, cover, id)
+
+            val entity = existing?.copy(
+                coverUrl = coverUrl ?: existing.coverUrl,
+                localFilePath = destFile.absolutePath,
+                downloadStatus = DownloadStatus.DOWNLOADED,
+                downloadError = null
+            ) ?: BookEntity(
+                id = id,
                 title = title,
                 author = author,
                 description = description,
@@ -93,25 +122,38 @@ object LocalBookImporter {
                 addedAt = System.currentTimeMillis()
             )
 
-            bookDao.insertBook(entity)
+            // The chapter list and page count; a book Readium opened is still added without them
+            val parsed = runCatching { EpubParser(context).parse(destFile.absolutePath, title) }
+                .onFailure { Timber.w(it, "Couldn't parse chapters of $fileName") }
+                .getOrNull()
 
-            val epubParser = EpubParser(context)
-            val parsed = epubParser.parse(destFile.absolutePath, title)
-
-            val updatedEntity = entity.copy(
-                chapters = parsed.chapters,
-                totalPages = parsed.totalPages,
-                fileSizeBytes = destFile.length()
+            bookDao.insertBook(
+                if (parsed == null) {
+                    entity.copy(fileSizeBytes = destFile.length())
+                } else {
+                    entity.copy(
+                        chapters = parsed.chapters,
+                        totalPages = parsed.totalPages,
+                        fileSizeBytes = destFile.length()
+                    )
+                }
             )
-            bookDao.insertBook(updatedEntity)
 
-            ImportResult.Success(bookId, title)
+            ImportResult.Success(id, entity.title)
 
         } catch (e: Exception) {
-            Timber.Forest.e(e, "Import failed for $fileName")
-            ImportResult.Failure(fileName, e.localizedMessage ?: "Unknown error")
+            Timber.e(e, "Import failed for $fileName")
+            ImportResult.Failure(fileName, e.localizedMessage ?: AppStrings.get(R.string.unknown_error))
+        } finally {
+            // Left behind only when the import stopped before the file was moved into place
+            tempFile.delete()
         }
     }
+
+    /** Whether this book's file is on this device. */
+    private fun BookEntity.hasFile(): Boolean =
+        downloadStatus == DownloadStatus.DOWNLOADED &&
+            localFilePath?.let { File(it).exists() } == true
 
     private fun saveCover(context: Context, bitmap: Bitmap?, bookId: String): String? {
         bitmap ?: return null
@@ -123,7 +165,7 @@ object LocalBookImporter {
             }
             coverFile.absolutePath
         } catch (e: Exception) {
-            Timber.Forest.w(e, "Failed to save cover for $bookId")
+            Timber.w(e, "Failed to save cover for $bookId")
             null
         }
     }
