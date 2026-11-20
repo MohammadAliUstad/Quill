@@ -64,6 +64,8 @@
     <string name="reader_ask_aira">Aira से पूछें</string>
     <string name="reader_processing_selection">चुना हुआ हिस्सा प्रोसेस हो रहा है...</string>
     <string name="reader_highlight">हाइलाइट करें</string>
+    <string name="reader_copy">कॉपी करें</string>
+    <string name="reader_share">शेयर करें</string>
     <string name="reader_choose_color">एक रंग चुनें</string>
     <string name="reader_save_highlight">हाइलाइट सेव करें</string>
     <string name="reader_selected">चुना गया</string>

@@ -64,6 +64,8 @@
     <string name="reader_ask_aira">Demander à Aira</string>
     <string name="reader_processing_selection">Traitement de la sélection...</string>
     <string name="reader_highlight">Surligner</string>
+    <string name="reader_copy">Copier</string>
+    <string name="reader_share">Partager</string>
     <string name="reader_choose_color">Choisissez une couleur</string>
     <string name="reader_save_highlight">Enregistrer le surlignage</string>
     <string name="reader_selected">Sélectionné</string>

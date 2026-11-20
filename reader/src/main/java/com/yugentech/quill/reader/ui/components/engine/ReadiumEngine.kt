@@ -1,6 +1,9 @@
 package com.yugentech.quill.reader.ui.components.engine
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -41,6 +44,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import org.json.JSONTokener
 import org.readium.r2.navigator.DecorableNavigator
 import org.readium.r2.navigator.Decoration
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
@@ -58,7 +62,19 @@ private fun Color.toCssRgba(): String {
     return "rgba($r, $g, $b, $alpha)"
 }
 
-private const val TOOLBAR_HEIGHT_DP = 66f
+/**
+ * How many selection changes in one burst mean a handle is being dragged (the toolbar hides).
+ * Fewer is the system adjusting a fresh selection, and the toolbar stays put through it.
+ */
+private const val DRAG_CHANGE_COUNT = 3
+
+/** Least room kept between the toolbar and the screen's top or bottom edge, in dp. */
+private const val SCREEN_EDGE_MARGIN = 8f
+
+// SelectionToolbar's real height: 9dp padding above and below, each action 4dp + a 32dp icon
+// slot + 4dp + a 16sp label line + 4dp. At 66 a toolbar placed above the selection overlapped
+// its first line.
+private const val TOOLBAR_HEIGHT_DP = 78f
 
 @OptIn(ExperimentalReadiumApi::class)
 @Composable
@@ -262,27 +278,57 @@ fun ReadiumEngine(
             exitToolbarY = toolbarY
         }
 
+        // A toolbar that's already up glides to its new place when the selection settles
+        // somewhere else (the system widening it, say); one that's just appearing starts
+        // right where it belongs instead of sliding over from the last selection's spot.
+        val glideY = remember { Animatable(0f) }
+        var gliding by remember { mutableStateOf(false) }
+        LaunchedEffect(currentSelection != null, exitToolbarY) {
+            if (currentSelection == null) {
+                gliding = false
+            } else if (!gliding) {
+                glideY.snapTo(exitToolbarY.value)
+                gliding = true
+            } else {
+                glideY.animateTo(exitToolbarY.value, spring(stiffness = Spring.StiffnessMediumLow))
+            }
+        }
+
         AnimatedVisibility(
             visible = currentSelection != null,
             enter = fadeIn(tween(180)) + scaleIn(tween(180), initialScale = 0.88f),
             exit = fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.88f),
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset { IntOffset(0, exitToolbarY.roundToPx()) }
+                .offset {
+                    val y = if (gliding) glideY.value.dp else exitToolbarY
+                    IntOffset(0, y.roundToPx())
+                }
         ) {
             exitSelection?.let { sel ->
+                // The selection is still live when an action is tapped, so ask Readium for its
+                // locator then: the one captured when the toolbar appeared can be missing (a
+                // selection starting in a paragraph carried over from the previous page), which
+                // made Highlight do nothing at all.
+                suspend fun freshLocator(): Locator? =
+                    runCatching { navigator?.currentSelection()?.locator }.getOrNull() ?: sel.locator
+
                 SelectionToolbar(
                     selectionInfo = sel,
                     isAiraReady = isAiraReady,
                     hazeState = hazeState,
                     readerBgIsLight = readerBgIsLight,
                     onHighlight = {
-                        sel.locator?.let { onSelectionAction(it) }
-                        scope.launch { clearSelection() }
+                        scope.launch {
+                            freshLocator()?.let { onSelectionAction(it) }
+                            clearSelection()
+                        }
                     },
                     onAskAira = { text ->
-                        onAskAira(text, sel.locator)
-                        scope.launch { clearSelection() }
+                        scope.launch {
+                            onAskAira(text, freshLocator())
+                            clearSelection()
+                        }
                     },
                     onCopy = { text ->
                         clipboardManager.setText(AnnotatedString(text))
@@ -392,14 +438,21 @@ fun ReadiumEngine(
     // Polling Loop for Selection Info (Transparent native selection tracking)
     LaunchedEffect(navigator) {
         val nav = navigator ?: return@LaunchedEffect
+        // The payload the toolbar was last built from, so it's only rebuilt when that changes
+        var lastSyncedJson: String? = null
 
         while (true) {
             delay(100)
             val json = try {
                 nav.evaluateJavascript("""
                     (function() {
-                        // Handles are being dragged — don't update the toolbar position yet.
-                        if (window.__quillSelChanging) return null;
+                        // The selection is still changing. A run of changes is a handle being
+                        // dragged: the toolbar steps aside. One or two is the system adjusting a
+                        // fresh selection (Smart Text Selection widening it to a phrase): the
+                        // toolbar holds still instead of vanishing and coming straight back.
+                        if (window.__quillSelChanging) {
+                            return (window.__quillSelChangeCount || 0) >= $DRAG_CHANGE_COUNT ? 'dragging' : 'settling';
+                        }
 
                         var sel = window.getSelection();
                         var liveActive = sel && !sel.isCollapsed && sel.rangeCount > 0 && sel.toString();
@@ -442,22 +495,37 @@ fun ReadiumEngine(
                 """.trimIndent())
             } catch (_: Exception) { null }
 
-            val processedJson = json?.removeSurrounding("\"")?.replace("\\\"", "\"")
+            // evaluateJavascript hands back the script's result JSON-encoded, so the payload
+            // (itself JSON) arrives as a JSON string literal. Decode it properly: stripping the
+            // outer quotes and un-escaping \" by hand broke on any selection holding a straight
+            // quote (the toolbar never appeared) and left \n and \\ escaped in copied text.
+            val processedJson = json?.let { raw ->
+                runCatching { JSONTokener(raw).nextValue() as? String }.getOrNull()
+            }
 
             if (isClearingSelection) {
                 // Ignore poll results while a manual clear is in progress
                 continue
             }
 
-            if (processedJson == null || processedJson == "null" || processedJson == "undefined" || processedJson == "{}") {
-                selectionInfo = null
-            } else if (selectionInfo == null) {
-                // JS debounce already held back data while handles were moving;
-                // show the toolbar immediately on the first stable result.
-                syncSelection(processedJson)
-            } else {
-                // Selection exists, update position if it moved slightly (e.g. page resize)
-                // but usually syncSelection will be called by stable logic.
+            when {
+                // A handle is being dragged: hide until it's let go
+                processedJson == "dragging" -> {
+                    selectionInfo = null
+                    lastSyncedJson = null
+                }
+                // A brief adjustment: keep whatever is showing (or not yet showing) as it is
+                processedJson == "settling" -> Unit
+                processedJson == null || processedJson == "null" || processedJson == "undefined" || processedJson == "{}" -> {
+                    selectionInfo = null
+                    lastSyncedJson = null
+                }
+                // A new or changed stable selection: show the toolbar, or bring the one showing
+                // up to date (its text and place) when the selection settled differently.
+                processedJson != lastSyncedJson -> {
+                    syncSelection(processedJson)
+                    lastSyncedJson = if (selectionInfo != null) processedJson else null
+                }
             }
         }
     }
@@ -564,6 +632,7 @@ fun ReadiumEngine(
                         if (!sel || sel.isCollapsed || sel.rangeCount === 0 || !sel.toString().trim()) {
                             window.__quillSelData = null;
                             window.__quillSelChanging = false;
+                            window.__quillSelChangeCount = 0;
                             lastBridgeText = "";
                             if (selChangeTimer) { clearTimeout(selChangeTimer); selChangeTimer = null; }
                             if (window.__quillSelectionActive) {
@@ -624,10 +693,15 @@ fun ReadiumEngine(
 
                         // ── Debounce: mark selection as actively changing ──────────────────────
                         // The toolbar is only shown once this flag clears (300 ms of no changes).
+                        // The changes in this burst are counted so the poll can tell a handle
+                        // drag (many) from the system adjusting a fresh selection (one or two).
+                        if (!window.__quillSelChanging) window.__quillSelChangeCount = 0;
+                        window.__quillSelChangeCount = (window.__quillSelChangeCount || 0) + 1;
                         window.__quillSelChanging = true;
                         if (selChangeTimer) clearTimeout(selChangeTimer);
                         selChangeTimer = setTimeout(function() {
                             window.__quillSelChanging = false;
+                            window.__quillSelChangeCount = 0;
                         }, 300);
                     });
                 })();
@@ -652,8 +726,10 @@ private fun computeToolbarY(rectTop: Float, rectBottom: Float, screenHeight: Flo
     // Require 50dp of breathing room beyond the toolbar height before placing above/below.
     // If the available space is even slightly marginal, overlay over the selection instead.
     val comfortThreshold = TOOLBAR_HEIGHT_DP + 50f
-    val gapAbove = 8f
-    val gapBelow = 4f
+    // Small: a selection's rect is the full line box, and the book's line spacing already
+    // leaves room between it and the glyphs, so the toolbar sits close to the words
+    val gapAbove = 2f
+    val gapBelow = 0f
     val hasRoomAbove = rectTop >= comfortThreshold
     val hasRoomBelow = (screenHeight - rectBottom) >= comfortThreshold
     return when {
@@ -661,6 +737,6 @@ private fun computeToolbarY(rectTop: Float, rectBottom: Float, screenHeight: Flo
         hasRoomBelow -> (rectBottom + gapBelow).dp
         // Not enough comfortable space above or below: overlay over the selection centre
         else -> ((rectTop + rectBottom - TOOLBAR_HEIGHT_DP) / 2f)
-            .coerceIn(gapAbove, screenHeight - TOOLBAR_HEIGHT_DP - gapAbove).dp
+            .coerceIn(SCREEN_EDGE_MARGIN, screenHeight - TOOLBAR_HEIGHT_DP - SCREEN_EDGE_MARGIN).dp
     }
 }

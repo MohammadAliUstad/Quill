@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -111,7 +112,7 @@ fun SelectionToolbar(
             ToolbarAction(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Rounded.Brush,
-                label = "Highlight",
+                label = stringResource(R.string.reader_highlight),
                 tint = MaterialTheme.colorScheme.tertiary,
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
@@ -122,7 +123,7 @@ fun SelectionToolbar(
             ToolbarAction(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Rounded.ContentCopy,
-                label = "Copy",
+                label = stringResource(R.string.reader_copy),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     onCopy(selectionInfo.text)
@@ -132,7 +133,7 @@ fun SelectionToolbar(
             ToolbarAction(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Rounded.Share,
-                label = "Share",
+                label = stringResource(R.string.reader_share),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     onShare(selectionInfo.text)
@@ -173,7 +174,9 @@ private fun AiraBadge() {
         )
         Icon(
             imageVector = Icons.Rounded.AutoAwesome,
-            contentDescription = stringResource(R.string.reader_ask_aira),
+            // The action's label below already names it; describing the icon too made
+            // TalkBack read "Ask Aira" twice
+            contentDescription = null,
             tint = MaterialTheme.colorScheme.onPrimaryContainer,
             modifier = Modifier.size(18.dp)
         )
@@ -195,7 +198,7 @@ private fun ToolbarAction(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick, role = Role.Button)
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -209,7 +212,8 @@ private fun ToolbarAction(
             } else if (icon != null) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = label,
+                    // Named by the label below (read once, as the button's text)
+                    contentDescription = null,
                     modifier = Modifier.size(22.dp),
                     tint = tint
                 )

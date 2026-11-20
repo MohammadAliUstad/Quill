@@ -64,6 +64,8 @@
     <string name="reader_ask_aira">问 Aira</string>
     <string name="reader_processing_selection">正在处理所选内容...</string>
     <string name="reader_highlight">高亮</string>
+    <string name="reader_copy">复制</string>
+    <string name="reader_share">分享</string>
     <string name="reader_choose_color">选择颜色</string>
     <string name="reader_save_highlight">保存高亮</string>
     <string name="reader_selected">已选择</string>

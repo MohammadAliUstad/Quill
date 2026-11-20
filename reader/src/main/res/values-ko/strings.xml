@@ -64,6 +64,8 @@
     <string name="reader_ask_aira">Aira에게 묻기</string>
     <string name="reader_processing_selection">선택한 내용을 처리하는 중...</string>
     <string name="reader_highlight">하이라이트</string>
+    <string name="reader_copy">복사</string>
+    <string name="reader_share">공유</string>
     <string name="reader_choose_color">색상 선택</string>
     <string name="reader_save_highlight">하이라이트 저장</string>
     <string name="reader_selected">선택됨</string>

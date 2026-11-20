@@ -61,6 +61,7 @@ fun ReadiumFragmentHost(
                     this.isPro = currentIsPro
                     this.isAiraReady = currentIsAiraReady
                     this.onSelectionChanged = currentOnSelectionChanged
+                    this.scrollMode = preferences.scroll == true
 
                     ViewCompat.setOnApplyWindowInsetsListener(this) { _, _ -> WindowInsetsCompat.CONSUMED }
 
@@ -88,6 +89,7 @@ fun ReadiumFragmentHost(
             update = { view ->
                 view.isPro = currentIsPro
                 view.isAiraReady = currentIsAiraReady
+                view.scrollMode = preferences.scroll == true
                 view.onAskAira = currentOnAskAira
                 view.onHighlightRequest = currentOnHighlightRequest
                 view.onSelectionStarted = currentOnSelectionStarted

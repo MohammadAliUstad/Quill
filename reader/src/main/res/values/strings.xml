@@ -64,6 +64,8 @@
     <string name="reader_ask_aira">Ask Aira</string>
     <string name="reader_processing_selection">Processing selection...</string>
     <string name="reader_highlight">Highlight</string>
+    <string name="reader_copy">Copy</string>
+    <string name="reader_share">Share</string>
     <string name="reader_choose_color">Choose a color</string>
     <string name="reader_save_highlight">Save Highlight</string>
     <string name="reader_selected">Selected</string>

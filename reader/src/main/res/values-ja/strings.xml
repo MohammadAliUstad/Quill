@@ -64,6 +64,8 @@
     <string name="reader_ask_aira">Aira に聞く</string>
     <string name="reader_processing_selection">選択範囲を処理中...</string>
     <string name="reader_highlight">ハイライト</string>
+    <string name="reader_copy">コピー</string>
+    <string name="reader_share">共有</string>
     <string name="reader_choose_color">色を選択</string>
     <string name="reader_save_highlight">ハイライトを保存</string>
     <string name="reader_selected">選択中</string>

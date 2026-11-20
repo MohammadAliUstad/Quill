@@ -63,6 +63,8 @@
     <string name="reader_ask_aira">Спросить Aira</string>
     <string name="reader_processing_selection">Обрабатываю выделение...</string>
     <string name="reader_highlight">Выделить</string>
+    <string name="reader_copy">Копировать</string>
+    <string name="reader_share">Поделиться</string>
     <string name="reader_choose_color">Выберите цвет</string>
     <string name="reader_save_highlight">Сохранить выделение</string>
     <string name="reader_selected">Выбрано</string>
