@@ -8,11 +8,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Book
 
@@ -21,29 +18,23 @@ fun BookShelfRow(
     title: String,
     subtitle: String? = null,
     books: List<Book>,
-    onBookClick: (Book) -> Unit
+    onBookClick: (Book) -> Unit,
+    // Opens the whole shelf; null when there's nothing more to it than the row
+    onSeeAllClick: (() -> Unit)? = null
 ) {
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        ShelfHeader(
+            title = title,
+            subtitle = subtitle,
+            onSeeAllClick = onSeeAllClick,
+            // Less on the right: the See all button carries its own padding
+            modifier = Modifier.padding(start = 16.dp, end = if (onSeeAllClick != null) 4.dp else 16.dp)
+        )
         Spacer(modifier = Modifier.height(16.dp))
         LazyRow(
             contentPadding = PaddingValues(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // FIX: Added the 'key' so Compose knows exactly how to track insertions/deletions
             items(
                 items = books,
                 key = { book -> book.id }

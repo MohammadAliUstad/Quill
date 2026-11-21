@@ -15,7 +15,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -61,12 +60,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.sources.discover.viewmodel.DiscoverViewModel
-import com.yugentech.quill.ui.sources.gutenberg.components.BooksGrid
+import com.yugentech.quill.sources.discover.viewmodel.NEW_ARRIVALS
+import com.yugentech.quill.ui.sources.standard.components.BooksGrid
 import com.yugentech.quill.ui.shared.search.NoSearchResults
 import com.yugentech.quill.ui.shared.search.SearchStateLayout
 import com.yugentech.quill.ui.sources.standard.components.AnimatedSearchIcon
@@ -74,6 +73,8 @@ import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
 import com.yugentech.quill.ui.sources.standard.components.SearchSuggestions
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfRow
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfSkeleton
+import com.yugentech.quill.ui.tabs.discoverScreen.components.DiscoverMaintenanceCard
+import com.yugentech.quill.ui.tabs.discoverScreen.components.ShelfHeader
 import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarousel
 import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarouselSkeleton
 import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
@@ -98,6 +99,10 @@ import androidx.compose.ui.res.stringResource
 fun DiscoverScreen(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     onBookClick: (Book) -> Unit,
+    // A whole shelf: New Arrivals, or a subject by its English name
+    onShelfClick: (String) -> Unit,
+    // Whether the search is open, so the tab's Subjects button can step aside for it
+    onSearchExpandedChange: (Boolean) -> Unit = {},
     viewModel: DiscoverViewModel = koinViewModel()
 ) {
     val haptic = LocalHapticFeedback.current
@@ -106,6 +111,7 @@ fun DiscoverScreen(
     var searchText by rememberSaveable { mutableStateOf("") }
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    LaunchedEffect(searchExpanded) { onSearchExpandedChange(searchExpanded) }
 
     val density = LocalDensity.current
     val windowInfo = LocalWindowInfo.current
@@ -184,34 +190,34 @@ fun DiscoverScreen(
                 .hazeSource(hazeState),
             contentPadding = PaddingValues(
                 top = statusBarHeight + 80.dp,
-                // 8 here plus the last shelf row's own 8dp bottom padding: 16 like the other tabs
+                // 16dp above the dock, as Sessions' tabs: 8 here plus the 8dp every section (the
+                // hero, each shelf) already ends with
                 bottom = contentPadding.calculateBottomPadding() + 8.dp
             )
         ) {
             item(key = "hero_section") {
-                if (uiState.isFeedLoading) {
+                // Part of the first item rather than one of its own, so the parallax (which
+                // follows the first item's scroll) moves smoothly past it
+                if (uiState.isSourceDown) {
+                    DiscoverMaintenanceCard(
+                        backAfter = uiState.sourceBackAfter,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                    )
+                }
+
+                // While the source is down nothing's on its way, so no skeleton waits for it
+                if (uiState.isFeedLoading && !uiState.isSourceDown) {
                     HeroCarouselSkeleton(
                         title = stringResource(R.string.new_releases),
                         subtitle = stringResource(R.string.new_releases_subtitle)
                     )
                 } else if (uiState.heroBooks.isNotEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.new_releases),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = stringResource(R.string.new_releases_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    ShelfHeader(
+                        title = stringResource(R.string.new_releases),
+                        subtitle = stringResource(R.string.new_releases_subtitle),
+                        onSeeAllClick = { onShelfClick(NEW_ARRIVALS) },
+                        modifier = Modifier.padding(start = 16.dp, end = 4.dp, bottom = 12.dp)
+                    )
 
                     HeroCarousel(
                         books = uiState.heroBooks,
@@ -229,9 +235,10 @@ fun DiscoverScreen(
                             title = getTitleForCategory(categoryName),
                             subtitle = getSubtitleForCategory(categoryName),
                             books = books,
-                            onBookClick = onBookClick
+                            onBookClick = onBookClick,
+                            onSeeAllClick = { onShelfClick(categoryName) }
                         )
-                    } else {
+                    } else if (!uiState.isSourceDown) {
                         BookShelfSkeleton(
                             title = getTitleForCategory(categoryName),
                             subtitle = getSubtitleForCategory(categoryName)
@@ -371,7 +378,7 @@ fun DiscoverScreen(
                 }
                 AnimatedContent(
                     targetState = searchView,
-                    // Results from the second catalogue join the grid in place, not by a fade
+                    // New results replace the grid in place, not by a fade
                     contentKey = { it::class },
                     transitionSpec = {
                         fadeIn(
@@ -415,8 +422,8 @@ fun DiscoverScreen(
                                 onBookClick(book)
                             },
                             topPadding = 16.dp,
-                            // 8dp over the navigation bar, as on the other tabs' lists
-                            bottomPadding = contentPadding.calculateBottomPadding() + 8.dp
+                            // 16dp above the dock, as on the other tabs' lists
+                            bottomPadding = contentPadding.calculateBottomPadding() + 16.dp
                         )
                     }
                 }

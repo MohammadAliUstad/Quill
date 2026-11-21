@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.tabs.sourcesScreen.components
+package com.yugentech.quill.ui.main.importBooks
 
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -37,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.yugentech.quill.ui.tabs.sourcesScreen.result.ImportResult
 import kotlinx.coroutines.launch
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource

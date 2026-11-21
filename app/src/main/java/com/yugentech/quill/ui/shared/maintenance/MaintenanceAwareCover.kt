@@ -37,7 +37,6 @@ val LocalSourcesDown = compositionLocalOf<Set<BookSource>> { emptySet() }
 /** The source whose server a cover is fetched from, judged by its address. */
 private fun sourceOfCover(url: String?): BookSource? = when {
     url == null -> null
-    "gutenberg.org" in url -> BookSource.GUTENBERG
     "standardebooks.org" in url -> BookSource.STANDARD_EBOOKS
     else -> null
 }

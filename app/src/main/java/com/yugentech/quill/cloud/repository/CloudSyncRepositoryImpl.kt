@@ -73,6 +73,10 @@ class CloudSyncRepositoryImpl(
 
                 for (cloudData in cloudBooks) {
                     val bookId = cloudData["id"] as? String ?: continue
+                    // Project Gutenberg is no longer a source: its books can't be fetched, and
+                    // any kept on this device are now imports (MIGRATION_4_5), which this mustn't
+                    // overwrite
+                    if (cloudData["source"] == LEGACY_GUTENBERG_SOURCE) continue
 
                     val expectedFile = File(context.filesDir, "books/$bookId.epub")
                     val fileExists = expectedFile.exists()
@@ -278,3 +282,6 @@ class CloudSyncRepositoryImpl(
         }
     }
 }
+
+/** What Project Gutenberg books were saved as in the cloud, before it stopped being a source. */
+private const val LEGACY_GUTENBERG_SOURCE = "GUTENBERG"

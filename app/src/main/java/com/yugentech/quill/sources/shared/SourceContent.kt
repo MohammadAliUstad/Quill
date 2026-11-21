@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 
 /**
- * What a source screen (Standard Ebooks, Project Gutenberg) shows below its header. The view
+ * What a source screen (Standard Ebooks) shows below its header. The view
  * model decides it and the screen draws it as it is, so the two can never disagree, and there's
  * no moment where a half-updated set of flags reads as the wrong state.
  */

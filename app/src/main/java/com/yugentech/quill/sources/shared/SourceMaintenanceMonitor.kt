@@ -8,7 +8,6 @@ import kotlinx.coroutines.sync.withLock
 import com.yugentech.quill.sources.standard.repository.StandardRepository
 import android.os.SystemClock
 import com.yugentech.quill.database.model.BookSource
-import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,14 +20,11 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * Each online source is asked directly, by a request to its own site ([check], [checkIfDue]):
  * marked down when it answers for maintenance, and up again by the next check that finds it back.
- * Asking the site, not waiting for a load to fail, matters for Gutenberg, whose catalogue comes
- * from Gutendex, which stays up while gutenberg.org is down.
  *
  * A check that gets no answer at all (no network yet as the app starts, a timeout) says nothing
  * either way: it changes nothing, doesn't count as a check, and [checkIfDue] tries again shortly.
  */
 class SourceMaintenanceMonitor(
-    private val gutenbergRepository: GutenbergRepository,
     private val standardRepository: StandardRepository
 ) {
     private val _down = MutableStateFlow<Map<BookSource, ServerMaintenanceException>>(emptyMap())
@@ -72,7 +68,6 @@ class SourceMaintenanceMonitor(
     /** One request to [source]'s site; only an answer (down or up) is recorded. */
     private suspend fun ask(source: BookSource): Result<ServerMaintenanceException?> {
         val result = when (source) {
-            BookSource.GUTENBERG -> gutenbergRepository.checkMaintenance()
             BookSource.STANDARD_EBOOKS -> standardRepository.checkMaintenance()
             BookSource.USER_IMPORTED -> return Result.success(null)
         }
@@ -85,7 +80,7 @@ class SourceMaintenanceMonitor(
 
     companion object {
         /** The sources with a site to be down: every one but the user's own imports. */
-        val ONLINE_SOURCES = listOf(BookSource.STANDARD_EBOOKS, BookSource.GUTENBERG)
+        val ONLINE_SOURCES = listOf(BookSource.STANDARD_EBOOKS)
 
         private const val RECHECK_AFTER_MILLIS = 60_000L
 

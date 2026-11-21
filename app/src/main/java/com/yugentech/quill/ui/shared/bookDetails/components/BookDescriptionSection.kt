@@ -1,16 +1,9 @@
 package com.yugentech.quill.ui.shared.bookDetails.components
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -56,7 +49,6 @@ fun BookDescriptionSection(
     description: String?,
     subjects: List<String> = emptyList(),
     isExpanded: Boolean,
-    isDescriptionLoading: Boolean = false,
     // The page's side margin: the title and text sit inside it, while the subjects row runs out
     // to the screen's edges and only starts at it
     horizontalPadding: Dp = 0.dp,
@@ -121,73 +113,61 @@ fun BookDescriptionSection(
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // While the summary is still on its way: soft placeholder lines, not "No description
-            // available.", then the text fades in over them.
-            Crossfade(
-                targetState = isDescriptionLoading,
-                animationSpec = tween(durationMillis = 300),
-                label = "descriptionLoading"
-            ) { loading ->
-                if (loading) {
-                    DescriptionPlaceholder()
-                } else {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        HtmlText(
-                            html = cleanDescription(processedDescription),
-                            maxLines = if (isExpanded) Int.MAX_VALUE else 3,
-                            textColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
-                                    if (showExpandToggle) {
-                                        isUserInitiated = true
-                                        onExpandedChange(!isExpanded)
-                                    }
-                                },
-                            onLineCountChanged = { lineCount ->
-                                if (lineCount > fullLineCount) {
-                                    fullLineCount = lineCount
-                                }
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                HtmlText(
+                    html = cleanDescription(processedDescription),
+                    maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                    textColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            if (showExpandToggle) {
+                                isUserInitiated = true
+                                onExpandedChange(!isExpanded)
                             }
-                        )
-
-                        // The arrow sits exactly midway between the text and the subjects, expanded or
-                        // not, for every book: the same gap above it as below, and nothing nudged
-                        if (showExpandToggle) {
-                            Spacer(modifier = Modifier.height(ArrowGap))
-                            Box(
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .clickable {
-                                        isUserInitiated = true
-                                        onExpandedChange(!isExpanded)
-                                    }
-                                    .size(40.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                    contentDescription = if (isExpanded) stringResource(R.string.collapse) else stringResource(R.string.expand),
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-                            if (cleanedSubjects.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(ArrowGap))
-                            }
+                        },
+                    onLineCountChanged = { lineCount ->
+                        if (lineCount > fullLineCount) {
+                            fullLineCount = lineCount
                         }
+                    }
+                )
+
+                // The arrow sits exactly midway between the text and the subjects, expanded or
+                // not, for every book: the same gap above it as below, and nothing nudged
+                if (showExpandToggle) {
+                    Spacer(modifier = Modifier.height(ArrowGap))
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .clickable {
+                                isUserInitiated = true
+                                onExpandedChange(!isExpanded)
+                            }
+                            .size(40.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (isExpanded) stringResource(R.string.collapse) else stringResource(R.string.expand),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    if (cleanedSubjects.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(ArrowGap))
                     }
                 }
             }
         }
 
-        if (cleanedSubjects.isNotEmpty() && !isDescriptionLoading) {
+        if (cleanedSubjects.isNotEmpty()) {
             // With the arrow, its own gap below it is the space; without, the text's
             if (!showExpandToggle) {
                 Spacer(modifier = Modifier.height(TextToSubjectsGap))
@@ -223,33 +203,3 @@ private val ArrowGap = 4.dp
 
 // Between the text and the subjects when there's no arrow between them
 private val TextToSubjectsGap = 12.dp
-
-/** Three soft lines where the description will go, gently pulsing while it loads. */
-@Composable
-private fun DescriptionPlaceholder() {
-    val pulse = rememberInfiniteTransition(label = "descriptionPlaceholder")
-    val alpha by pulse.animateFloat(
-        initialValue = 0.06f,
-        targetValue = 0.14f,
-        animationSpec = infiniteRepeatable(tween(durationMillis = 800), RepeatMode.Reverse),
-        label = "descriptionPlaceholderAlpha"
-    )
-    val lineColor = MaterialTheme.colorScheme.onBackground.copy(alpha = alpha)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        listOf(1f, 1f, 0.6f).forEach { fraction ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(fraction)
-                    .height(14.dp)
-                    .clip(RoundedCornerShape(7.dp))
-                    .background(lineColor)
-            )
-        }
-    }
-}

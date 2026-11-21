@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.tabs.sourcesScreen.result
+package com.yugentech.quill.ui.main.importBooks
 
 sealed class ImportResult {
     data class Success(val bookId: String, val title: String) : ImportResult()

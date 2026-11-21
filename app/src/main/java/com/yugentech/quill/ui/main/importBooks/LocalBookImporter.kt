@@ -1,4 +1,4 @@
-package com.yugentech.quill.ui.tabs.sourcesScreen.util
+package com.yugentech.quill.ui.main.importBooks
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -8,7 +8,6 @@ import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.DownloadStatus
-import com.yugentech.quill.ui.tabs.sourcesScreen.result.ImportResult
 import com.yugentech.quill.utils.EpubParser
 import com.yugentech.theme.tokens.AppConstants
 import kotlinx.coroutines.Dispatchers

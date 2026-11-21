@@ -109,7 +109,7 @@ fun AvatarPickerSheet(
                     onAvatarSelected = { avatarId ->
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                         shownAvatarId = avatarId
-                    onAvatarSelected(avatarId)
+                        onAvatarSelected(avatarId)
                     }
                 )
             }

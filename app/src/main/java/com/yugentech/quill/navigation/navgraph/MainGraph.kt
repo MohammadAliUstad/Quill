@@ -9,7 +9,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.yugentech.quill.ui.tabs.libraryScreen.viewmodel.SeeAllViewModel
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
-import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
 import com.yugentech.quill.navigation.screen.AppScreen
@@ -54,18 +53,8 @@ fun NavGraphBuilder.mainGraph(
             onResumeClick = { book ->
                 context.startActivity(ReaderActivity.createIntent(context, book.id, null))
             },
-            onSourceClick = { sourceId ->
-                when (sourceId) {
-                    BookSource.STANDARD_EBOOKS -> navController.navigate(AppScreen.StandardEbooks.route) {
-                        launchSingleTop = true
-                    }
-
-                    BookSource.GUTENBERG -> navController.navigate(AppScreen.Gutenberg.route) {
-                        launchSingleTop = true
-                    }
-
-                    BookSource.USER_IMPORTED -> {}
-                }
+            onShelfClick = { shelf ->
+                navController.navigate(AppScreen.Shelf.createRoute(shelf)) { launchSingleTop = true }
             },
             onAboutClick = {
                 navController.navigate(AppScreen.About.route) { launchSingleTop = true }

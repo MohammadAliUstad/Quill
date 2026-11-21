@@ -2,12 +2,13 @@ package com.yugentech.quill.sources.discover.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yugentech.quill.database.model.Book
+import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.sources.discover.state.DiscoverUiState
-import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
+import com.yugentech.quill.sources.shared.SourceMaintenanceMonitor
 import com.yugentech.quill.sources.standard.repository.StandardRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +17,7 @@ import kotlinx.coroutines.launch
 
 class DiscoverViewModel(
     private val standardRepository: StandardRepository,
-    private val gutenbergRepository: GutenbergRepository
+    private val maintenanceMonitor: SourceMaintenanceMonitor
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DiscoverUiState())
@@ -28,6 +29,37 @@ class DiscoverViewModel(
 
     init {
         loadStandardStorefront()
+        watchSubjects()
+        watchMaintenance()
+    }
+
+    /** Every subject Standard Ebooks has, for Browse by subject, in the catalogue's own order. */
+    private fun watchSubjects() {
+        viewModelScope.launch {
+            standardRepository.getCategoriesFlow().collect { subjects ->
+                _uiState.update { it.copy(subjects = subjects.distinct()) }
+            }
+        }
+    }
+
+    /**
+     * Whether Standard Ebooks is down for maintenance, asked of its site directly. While it is,
+     * it's asked again every minute, so Discover comes back by itself once the site does.
+     */
+    private fun watchMaintenance() {
+        viewModelScope.launch { maintenanceMonitor.checkIfDue(BookSource.STANDARD_EBOOKS) }
+        viewModelScope.launch {
+            maintenanceMonitor.down.collectLatest { down ->
+                val maintenance = down[BookSource.STANDARD_EBOOKS]
+                _uiState.update {
+                    it.copy(isSourceDown = maintenance != null, sourceBackAfter = maintenance?.backAfter)
+                }
+                while (maintenance != null) {
+                    delay(RECHECK_WHILE_DOWN_MILLIS)
+                    maintenanceMonitor.check(BookSource.STANDARD_EBOOKS)
+                }
+            }
+        }
     }
 
     private fun loadStandardStorefront() {
@@ -113,39 +145,22 @@ class DiscoverViewModel(
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             // Wait for a pause in typing, so each keystroke doesn't start (and then abandon) a
-            // search on both sites.
+            // search.
             delay(SEARCH_DEBOUNCE_MILLIS)
 
-            // Each source's books go into the grid as soon as that source answers, after any
-            // already there, so a slower source never holds the other's results back and the
-            // grid only grows at the end. The spinner stays only until something arrives.
-            val results = mutableListOf<Book>()
-            var pending = 2
-            val publish: (List<Book>) -> Unit = { books ->
-                results += books.filter { book -> results.none { it.id == book.id } }
-                pending--
-                _uiState.update {
-                    it.copy(
-                        searchResults = results.toList(),
-                        isSearchLoading = pending > 0 && results.isEmpty()
-                    )
-                }
-            }
-
-            launch { publish(standardRepository.searchBooks(query).getOrNull()?.books ?: emptyList()) }
-            launch {
-                val books = gutenbergRepository.searchBooks(query).getOrNull()?.books ?: emptyList()
-                publish(books)
-                // Gutenberg results lack their summaries; fetch the top ones now, so tapping one
-                // opens a complete page.
-                gutenbergRepository.prefetchBookExtras(books.take(PREFETCH_COUNT))
+            val books = standardRepository.searchBooks(query).getOrNull()?.books ?: emptyList()
+            _uiState.update {
+                it.copy(
+                    searchResults = books.distinctBy { book -> book.id },
+                    isSearchLoading = false
+                )
             }
         }
     }
 
     private companion object {
         const val SEARCH_DEBOUNCE_MILLIS = 400L
-        const val PREFETCH_COUNT = 8
+        const val RECHECK_WHILE_DOWN_MILLIS = 60_000L
     }
 
     fun clearSearch() {

@@ -1,7 +1,5 @@
 package com.yugentech.quill.ui.tabs.libraryScreen.parent
 
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -23,10 +21,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -92,10 +86,8 @@ fun LibraryScreen(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     scrollToBottom: Boolean = false,
     onScrollToBottomHandled: () -> Unit = {},
-    onEmptyStateChange: (Boolean) -> Unit = {},
-    onAddBooksClick: () -> Unit = {}
+    onEmptyStateChange: (Boolean) -> Unit = {}
 ) {
-    val haptic = LocalHapticFeedback.current
     val lastReadBook by viewModel.lastReadBook.collectAsState()
     val historyBooks by viewModel.historyBooks.collectAsState()
     val allHistoryBooks by viewModel.allHistoryBooks.collectAsState()
@@ -190,21 +182,6 @@ fun LibraryScreen(
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold
                         )
-                    },
-                    actions = {
-                        // Only once the library has books -- the empty state has its own
-                        // Add Books FAB instead.
-                        if (libraryState == LibraryState.Content) {
-                            IconButton(onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                onAddBooksClick()
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = stringResource(R.string.add_books)
-                                )
-                            }
-                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,

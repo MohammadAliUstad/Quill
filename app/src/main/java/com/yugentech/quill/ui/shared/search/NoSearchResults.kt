@@ -30,9 +30,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * A search that found nothing, the same in every search (Discover, Project Gutenberg, Standard
- * Ebooks) and laid out like Ryori's: a soft search-off icon, a title, and a two-line hint at
- * what to try, a little above centre where the search prompt's icon sits.
+ * A search that found nothing, the same in every search (Discover, Standard Ebooks) and laid out
+ * like Ryori's: a soft search-off icon, a title, and a two-line hint at what to try, a little
+ * above centre where the search prompt's icon sits.
  */
 @Composable
 fun NoSearchResults(modifier: Modifier = Modifier) {

@@ -34,7 +34,8 @@ suspend fun HttpResponse.bodyUnlessMaintenance(): String {
     return bodyAsText()
 }
 
-// Project Gutenberg's page: "Please check back after 21:00 UTC on Wednesday, 18 November 2026."
+// A maintenance page that says when it will be back, like "Please check back after 21:00 UTC on
+// Wednesday, 18 November 2026."
 private val BackAfterPattern = Regex(
     """after\s+(\d{1,2}:\d{2})\s+UTC\s+on\s+(?:[A-Za-z]+,\s+)?(\d{1,2}\s+[A-Za-z]+\s+\d{4})""",
     RegexOption.IGNORE_CASE

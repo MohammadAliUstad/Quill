@@ -15,8 +15,13 @@ sealed class AppScreen(val route: String) {
     data object SignUp : AppScreen("sign_up")
     data object Main : AppScreen("main")
     data object AllBooks : AppScreen("all_books")
-    data object StandardEbooks : AppScreen("sources/standard_ebooks")
-    data object Gutenberg : AppScreen("sources/gutenberg")
+    /** A whole Discover shelf: New Arrivals or one subject, by its English name. */
+    data object Shelf : AppScreen("shelf") {
+        const val ARG = "shelf"
+        const val ROUTE = "shelf/{$ARG}"
+        fun createRoute(shelf: String): String =
+            "shelf/" + URLEncoder.encode(shelf, StandardCharsets.UTF_8.toString())
+    }
     data object Aira : AppScreen("aira")
     data object Queue : AppScreen("queue")
     data object Appearance : AppScreen("appearance")

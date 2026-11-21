@@ -14,8 +14,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 
 /**
- * A book's description, from its HTML (Standard Ebooks writes paragraphs; Gutenberg summaries are
- * plain text). Drawn by Compose, with nothing around the text but the text itself: the blank lines
+ * A book's description, from its HTML (Standard Ebooks writes paragraphs; an imported book's may
+ * be plain text). Drawn by Compose, with nothing around the text but the text itself: the blank lines
  * HTML paragraphs leave at the end are trimmed, and the line height adds no space above the first
  * line or below the last. So what's around it (the expand arrow, the subjects) sits exactly where
  * the layout puts it, for every book alike.

@@ -1,7 +1,5 @@
 package com.yugentech.quill.ui.config.editProfile.components
 
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -24,10 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.Font
@@ -38,17 +32,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.ResourceFont
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
 import com.yugentech.quill.ui.tabs.moreScreen.components.Avatar
 import com.yugentech.quill.ui.tabs.moreScreen.components.AvatarImage
+import com.yugentech.quill.ui.shared.shapes.BloomShapes
+import com.yugentech.quill.ui.shared.shapes.MorphShape
 import com.yugentech.theme.tokens.dimensions.AppAnimations
 import com.yugentech.theme.tokens.spacing
-import kotlin.math.cos
 import kotlin.math.roundToInt
-import kotlin.math.sin
 import kotlin.random.Random
 
 // Size of each avatar in the avatar sheet's grid, three to a row.
@@ -61,16 +53,9 @@ private const val SelectedSpin = 40f
 private const val LabelWeightRest = 400
 private const val LabelWeightSelected = 600
 
-// Round Material shapes that fill the circle about as fully as the cookie does, so the figure
-// cropped to any of them keeps its face. All symmetric, so the turn never leaves one lopsided.
-private val SelectedShapes = listOf(
-    MaterialShapes.Cookie9Sided,
-    MaterialShapes.Cookie7Sided,
-    MaterialShapes.Cookie12Sided,
-    MaterialShapes.Clover8Leaf,
-    MaterialShapes.SoftBurst,
-    MaterialShapes.Sunny
-)
+// Round shapes that fill the circle about as fully as the cookie does, so the figure cropped to
+// any of them keeps its face
+private val SelectedShapes = BloomShapes
 
 // Unselected avatars sit on a plain circle. Selecting one blooms its circle into one of
 // [SelectedShapes], picked at random each time (never the same one twice in a row), in
@@ -82,7 +67,6 @@ fun AvatarOption(
     isSelected: Boolean,
     onSelect: () -> Unit
 ) {
-    val haptic = LocalHapticFeedback.current
     // The last shape picked, kept so a deselected avatar eases back from the shape it showed
     val lastShape = remember { intArrayOf(Random.nextInt(SelectedShapes.size)) }
     val shapeIndex = remember(isSelected) {
@@ -134,10 +118,8 @@ fun AvatarOption(
                 .size(AvatarOptionSize)
                 .clip(shape)
                 .background(backdrop)
-                .clickable {
-                    haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                    onSelect()
-                },
+                // No haptic here: the sheet confirms the pick with its own, and two read as a buzz
+                .clickable(onClick = onSelect),
             contentAlignment = Alignment.Center
         ) {
             AvatarImage(
@@ -188,32 +170,4 @@ private fun fontFamilyAtWeight(family: FontFamily?, weight: Int): FontFamily? {
             variationSettings = FontVariation.Settings(FontVariation.weight(weight))
         )
     )
-}
-
-// The [morph] at [progress], turned [rotation] degrees about its centre and stretched over the
-// bounds. MaterialShapes are drawn in a 0..1 square, so each point is scaled up to the size.
-private class MorphShape(
-    private val morph: Morph,
-    private val progress: Float,
-    private val rotation: Float
-) : Shape {
-    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
-        val radians = Math.toRadians(rotation.toDouble())
-        val c = cos(radians).toFloat()
-        val s = sin(radians).toFloat()
-        fun x(px: Float, py: Float) = ((px - 0.5f) * c - (py - 0.5f) * s + 0.5f) * size.width
-        fun y(px: Float, py: Float) = ((px - 0.5f) * s + (py - 0.5f) * c + 0.5f) * size.height
-
-        val path = Path()
-        morph.asCubics(progress).forEachIndexed { i, cubic ->
-            if (i == 0) path.moveTo(x(cubic.anchor0X, cubic.anchor0Y), y(cubic.anchor0X, cubic.anchor0Y))
-            path.cubicTo(
-                x(cubic.control0X, cubic.control0Y), y(cubic.control0X, cubic.control0Y),
-                x(cubic.control1X, cubic.control1Y), y(cubic.control1X, cubic.control1Y),
-                x(cubic.anchor1X, cubic.anchor1Y), y(cubic.anchor1X, cubic.anchor1Y)
-            )
-        }
-        path.close()
-        return Outline.Generic(path)
-    }
 }

@@ -10,8 +10,6 @@ import com.yugentech.quill.database.mapper.toDomainModel
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.DownloadStatus
-import com.yugentech.quill.sources.gutenberg.mapper.GutenbergOpdsMapper
-import com.yugentech.quill.sources.gutenberg.repository.GutenbergRepository
 import com.yugentech.quill.sources.shared.SourceMaintenanceMonitor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,7 +24,6 @@ import java.nio.charset.StandardCharsets
 class BookDetailsViewModel(
     savedStateHandle: SavedStateHandle,
     private val repository: BookDetailsRepository,
-    private val gutenbergRepository: GutenbergRepository,
     private val maintenanceMonitor: SourceMaintenanceMonitor
 ) : ViewModel() {
 
@@ -46,20 +43,8 @@ class BookDetailsViewModel(
 
     private val userExpandedOverride = MutableStateFlow<Boolean?>(null)
 
-    /**
-     * A Gutenberg book opened from search arrives without its summary or subjects (the search
-     * feed doesn't carry them). They're fetched from the book's own gutenberg.org page and fill
-     * in a moment after the page opens.
-     */
+    /** The catalogue copy shown in place of a book just taken out of the library. */
     private val fetchedBook = MutableStateFlow<Book?>(null)
-
-    /** True while that summary is still on its way, so the page shows a placeholder for it. */
-    private val isFetchingDescription = MutableStateFlow(false)
-
-    private fun Book.withExtras(extras: GutenbergOpdsMapper.BookExtras) = copy(
-        description = extras.summary,
-        subjects = subjects.ifEmpty { extras.subjects }
-    )
 
     init {
         // A book not downloaded yet can only be fetched while its source is up: find out now, so
@@ -69,31 +54,13 @@ class BookDetailsViewModel(
             val source = passedBook?.source ?: repository.getBook(targetBookId).first()?.toDomainModel()?.source
             if (source != null) maintenanceMonitor.checkIfDue(source)
         }
-
-        val book = passedBook
-        if (book != null && book.source == BookSource.GUTENBERG && book.description == null) {
-            // Usually already fetched while the search results were showing: use it at once.
-            val cached = gutenbergRepository.cachedBookExtras(book.id)
-            if (cached != null) {
-                fetchedBook.value = book.withExtras(cached)
-            } else {
-                isFetchingDescription.value = true
-                viewModelScope.launch {
-                    gutenbergRepository.getBookExtras(book.id).onSuccess { extras ->
-                        fetchedBook.value = book.withExtras(extras)
-                    }
-                    isFetchingDescription.value = false
-                }
-            }
-        }
     }
 
     private val bookState = combine(
         repository.getBook(targetBookId),
         userExpandedOverride,
-        fetchedBook,
-        isFetchingDescription
-    ) { dbEntity, userExpanded, fetched, fetchingDescription ->
+        fetchedBook
+    ) { dbEntity, userExpanded, fetched ->
 
         val richBook = dbEntity?.toDomainModel() ?: fetched ?: passedBook
         if (richBook == null) return@combine BookDetailsUiState(isLoading = true)
@@ -105,9 +72,7 @@ class BookDetailsViewModel(
             book = richBook,
             chapters = richBook.chapters,
             isLoading = false,
-            isDescriptionExpanded = shouldExpand,
-            // A saved copy has whatever description it has; only a passed-in one is awaited.
-            isDescriptionLoading = dbEntity == null && fetchingDescription
+            isDescriptionExpanded = shouldExpand
         )
     }
 
@@ -121,8 +86,7 @@ class BookDetailsViewModel(
             book = fetchedBook.value ?: passedBook,
             chapters = passedBook?.chapters ?: emptyList(),
             isLoading = true,
-            isDescriptionExpanded = passedBook?.downloadStatus != DownloadStatus.DOWNLOADED,
-            isDescriptionLoading = isFetchingDescription.value
+            isDescriptionExpanded = passedBook?.downloadStatus != DownloadStatus.DOWNLOADED
         )
     )
 

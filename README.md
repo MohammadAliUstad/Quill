@@ -49,7 +49,7 @@
 
 Quill reimagines what a reading app can be. It pairs a carefully crafted EPUB reader with **Aira**, an AI reading companion that reads along with you. Aira answers questions about your book straight from its pages, explains difficult passages, helps you keep track of characters, and can even paint a scene you're reading, all without ever spoiling what comes next.
 
-Bring your own EPUBs or pick from thousands of free classics on **Project Gutenberg** and **Standard Ebooks**, set the mood with ambient soundscapes, and build a steady reading habit with reminders and insights.
+Bring your own EPUBs or pick from free classics on **Standard Ebooks**, set the mood with ambient soundscapes, and build a steady reading habit with reminders and insights.
 
 ---
 
@@ -116,12 +116,10 @@ Select text while reading and the Aira peek bar offers quick actions based on wh
 - Preview sounds before playing, start and stop from the reader overlay, and optionally **auto-play on open**. Volume follows your device's own volume controls.
 - Seamless looping with crossfades.
 
-### Library & Sources
+### Library & Discover
 
-- **Import your own EPUBs** from anywhere on your device.
-- **Project Gutenberg:** browse, search, and download 60,000+ free books.
-- **Standard Ebooks:** carefully formatted, high-quality public domain editions.
-- **Discover** tab with a hero carousel and curated shelves.
+- **Import your own EPUBs** from anywhere, with the + button beside the floating nav dock.
+- **Discover:** free, carefully formatted public domain classics from Standard Ebooks, with a hero carousel of new arrivals, curated shelves you can open in full, and every subject in the catalogue to browse.
 - **Categories:** organize books your way, with drag-and-drop reordering.
 - **Storage management:** see how much space each book uses and clean up.
 
@@ -140,7 +138,7 @@ Select text while reading and the Aira peek bar offers quick actions based on wh
 
 | | Basic Reader | Quill Pro |
 |---|---|---|
-| Full reader, sources, sounds, highlights, insights | ✅ | ✅ |
+| Full reader, Discover, sounds, highlights, insights | ✅ | ✅ |
 | Daily Aira queries | 5 | 50 |
 | Visualize (3 queries per image) | ✅ | ✅ |
 
@@ -238,7 +236,7 @@ Quill uses a multi-module MVVM + Clean Architecture setup.
 
 ```text
 Quill/
-├── app/        Main app: navigation, library, sources, Aira chat, insights, settings,
+├── app/        Main app: navigation, library, Discover, Aira chat, insights, settings,
 │               notifications, billing & quota, cloud sync, onboarding
 ├── reader/     Readium-based EPUB reader: engine, overlay, settings, highlights,
 │               ambient sounds, Aira peek bar
@@ -265,7 +263,7 @@ Audio:                Media3 ExoPlayer
 Embeddings:           BAAI/bge-small-en-v1.5 via ONNX Runtime (on-device)
 AI Models:            Gemini 2.5 Flash-Lite, Gemini 2.5 Flash Image
 Speech:               Google Cloud Text-to-Speech
-Networking:           Ktor (Gutendex API, Standard Ebooks OPDS)
+Networking:           Ktor (Standard Ebooks OPDS)
 Backend:              Firebase Auth, Firestore, Cloud Functions, Crashlytics, Analytics
 Payments:             Google Play Billing
 Concurrency:          Kotlin Coroutines & Flow

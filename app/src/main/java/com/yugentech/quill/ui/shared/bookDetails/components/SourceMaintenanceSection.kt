@@ -36,7 +36,6 @@ fun SourceMaintenanceSection(
     modifier: Modifier = Modifier
 ) {
     val sourceName = when (source) {
-        BookSource.GUTENBERG -> stringResource(R.string.source_gutenberg_name)
         BookSource.STANDARD_EBOOKS -> stringResource(R.string.source_standard_name)
         BookSource.USER_IMPORTED -> stringResource(R.string.download_maintenance_this_source)
     }

@@ -28,3 +28,20 @@ fun smoothScrimBrush(color: Color, topAlpha: Float = 0.9f, solidUntil: Float = 0
 @Composable
 fun rememberSmoothScrimBrush(color: Color, topAlpha: Float = 0.9f, solidUntil: Float = 0f): Brush =
     remember(color, topAlpha, solidUntil) { smoothScrimBrush(color, topAlpha, solidUntil) }
+
+/**
+ * [smoothScrimBrush] upside down: clear at the top, easing to [bottomAlpha] of [color] at the
+ * bottom. Laid along the bottom of the main tabs, so a page dissolves away behind the nav dock
+ * instead of being cut off at a hard edge.
+ */
+@Composable
+fun rememberSmoothBottomScrimBrush(color: Color, bottomAlpha: Float = 0.95f): Brush =
+    remember(color, bottomAlpha) {
+        Brush.verticalGradient(
+            colorStops = Array(SCRIM_STEPS + 1) { i ->
+                val t = i / SCRIM_STEPS.toFloat()
+                val eased = t * t * (3f - 2f * t)
+                t to color.copy(alpha = bottomAlpha * eased)
+            }
+        )
+    }

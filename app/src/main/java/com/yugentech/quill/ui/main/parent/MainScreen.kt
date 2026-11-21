@@ -9,6 +9,11 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.unit.dp
 import com.yugentech.quill.navigation.host.rememberNavTransitions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.rounded.Category
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -36,7 +42,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.database.model.BookSource
 import com.yugentech.quill.database.model.UserData
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
 import com.yugentech.quill.ui.main.components.BottomBar
@@ -45,15 +50,17 @@ import com.yugentech.quill.ui.main.components.LogoutConfirmationDialog
 import com.yugentech.quill.ui.main.components.QuillTab
 import com.yugentech.quill.ui.main.components.ResumeFab
 import com.yugentech.quill.ui.main.components.ToastMessage
+import com.yugentech.quill.sources.discover.viewmodel.DiscoverViewModel
+import com.yugentech.quill.ui.tabs.discoverScreen.components.SubjectsSheet
 import com.yugentech.quill.ui.tabs.discoverScreen.parent.DiscoverScreen
 import com.yugentech.quill.ui.tabs.libraryScreen.parent.LibraryScreen
 import com.yugentech.quill.ui.info.indexing.viewmodel.IndexingViewModel
 import com.yugentech.quill.ui.tabs.moreScreen.parent.MoreScreen
-import com.yugentech.quill.ui.tabs.sourcesScreen.parent.SourcesScreen
-import com.yugentech.quill.ui.tabs.sourcesScreen.components.FilePickerBottomSheet
-import com.yugentech.quill.ui.tabs.sourcesScreen.components.ImportStatusSheet
-import com.yugentech.quill.ui.tabs.sourcesScreen.result.ImportResult
-import com.yugentech.quill.ui.tabs.sourcesScreen.viewmodel.SourcesViewModel
+import com.yugentech.quill.ui.main.importBooks.FilePickerBottomSheet
+import com.yugentech.quill.ui.main.importBooks.ImportResult
+import com.yugentech.quill.ui.main.importBooks.ImportStatusSheet
+import com.yugentech.quill.ui.main.importBooks.ImportViewModel
+import com.yugentech.quill.ui.shared.scrim.rememberSmoothBottomScrimBrush
 import com.yugentech.quill.user.viewmodel.UserViewModel
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
@@ -65,7 +72,6 @@ import com.yugentech.quill.announcements.ui.AnnouncementHost
 private val quillTabs = listOf(
     QuillTab.Library,
     QuillTab.Discover,
-    QuillTab.Sources,
     QuillTab.Settings,
 )
 
@@ -75,7 +81,8 @@ fun MainScreen(
     onLibraryBookClick: (Book) -> Unit,
     onDiscoverBookClick: (Book) -> Unit,
     onResumeClick: (Book) -> Unit,
-    onSourceClick: (BookSource) -> Unit,
+    // A whole Discover shelf: New Arrivals, or a subject by its English name
+    onShelfClick: (String) -> Unit,
     onSeeAllClick: (title: String) -> Unit,
     onAboutClick: () -> Unit = {},
     onAppearanceClick: () -> Unit = {},
@@ -87,7 +94,9 @@ fun MainScreen(
     onSignOut: () -> Unit = {},
     libraryViewModel: LibraryViewModel,
     userViewModel: UserViewModel = koinViewModel(),
-    sourcesViewModel: SourcesViewModel = koinViewModel(),
+    importViewModel: ImportViewModel = koinViewModel(),
+    // Shared with the Discover tab (the same screen scope), so its Subjects button knows them
+    discoverViewModel: DiscoverViewModel = koinViewModel(),
     onSubscriptions: () -> Unit,
     onViewIndexingQueue: () -> Unit,
     onWhatsNew: () -> Unit,
@@ -151,10 +160,12 @@ fun MainScreen(
 
     var isLibraryEmpty by remember { mutableStateOf(false) }
     var showFilePickerSheet by remember { mutableStateOf(false) }
-    // Only show the import result sheet here for imports started from the Library FAB --
-    // the Sources tab shows its own sheet for imports started there.
-    var importStartedFromLibrary by remember { mutableStateOf(false) }
-    val importResults by sourcesViewModel.importResults.collectAsStateWithLifecycle()
+    val importResults by importViewModel.importResults.collectAsStateWithLifecycle()
+    val isImporting by importViewModel.isImporting.collectAsStateWithLifecycle()
+
+    val discoverState by discoverViewModel.uiState.collectAsStateWithLifecycle()
+    var isDiscoverSearchOpen by remember { mutableStateOf(false) }
+    var showSubjectsSheet by remember { mutableStateOf(false) }
 
     val saveableStateHolder = rememberSaveableStateHolder()
 
@@ -182,27 +193,48 @@ fun MainScreen(
         modifier = Modifier.nestedScroll(nestedScrollConnection),
         bottomBar = {
             BottomBar(
+                tabs = quillTabs,
                 currentTab = currentTab,
                 onTabSelected = { tab -> currentTab = tab },
+                isImporting = isImporting,
+                onImportClick = { showFilePickerSheet = true },
             )
         },
         floatingActionButton = {
-            // Empty library: the FAB becomes stringResource(R.string.add_books) and runs the same device import flow
-            // as the Sources tab. Otherwise it's the usual Continue-reading FAB.
-            ResumeFab(
-                visible = currentTab == QuillTab.Library && (isLibraryEmpty || lastReadBook != null),
-                isScrollingDown = isScrollingDown,
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                    if (isLibraryEmpty) {
-                        showFilePickerSheet = true
-                    } else {
-                        lastReadBook?.let { onResumeClick(it.toBook()) }
-                    }
-                },
-                icon = if (isLibraryEmpty) Icons.Default.Add else Icons.AutoMirrored.Filled.MenuBook,
-                label = if (isLibraryEmpty) stringResource(R.string.add_books) else stringResource(R.string.onboarding_continue),
-            )
+            // One button per tab, in the same spot: switching tabs scales one out as the other
+            // scales in. Both shrink to their icon while the page scrolls down.
+            Box(contentAlignment = Alignment.BottomEnd) {
+                // Empty library: Add Books, the same import as the dock's + button, so a new
+                // reader's first step is spelled out. Otherwise it's Continue reading.
+                ResumeFab(
+                    visible = currentTab == QuillTab.Library && (isLibraryEmpty || lastReadBook != null),
+                    isScrollingDown = isScrollingDown,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        if (isLibraryEmpty) {
+                            showFilePickerSheet = true
+                        } else {
+                            lastReadBook?.let { onResumeClick(it.toBook()) }
+                        }
+                    },
+                    icon = if (isLibraryEmpty) Icons.Default.Add else Icons.AutoMirrored.Filled.MenuBook,
+                    label = if (isLibraryEmpty) stringResource(R.string.add_books) else stringResource(R.string.onboarding_continue),
+                )
+
+                // Every subject in the catalogue, once they've loaded; out of the way of the search
+                ResumeFab(
+                    visible = currentTab == QuillTab.Discover &&
+                        discoverState.subjects.isNotEmpty() &&
+                        !isDiscoverSearchOpen,
+                    isScrollingDown = isScrollingDown,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                        showSubjectsSheet = true
+                    },
+                    icon = Icons.Rounded.Category,
+                    label = stringResource(R.string.discover_subjects),
+                )
+            }
         },
     ) { innerPadding ->
         val transitions = rememberNavTransitions()
@@ -228,22 +260,14 @@ fun MainScreen(
                             scrollToBottom = scrollLibraryToBottom,
                             onScrollToBottomHandled = { scrollLibraryToBottom = false },
                             onEmptyStateChange = { isLibraryEmpty = it },
-                            onAddBooksClick = { showFilePickerSheet = true },
                         )
 
                         QuillTab.Discover -> DiscoverScreen(
                             contentPadding = innerPadding,
                             onBookClick = { book -> onDiscoverBookClick(book) },
-                        )
-
-                        QuillTab.Sources -> SourcesScreen(
-                            contentPadding = innerPadding,
-                            onSourceClick = onSourceClick,
-                            viewModel = sourcesViewModel,
-                            onLocalFilesClick = {
-                                currentTab = QuillTab.Library
-                                scrollLibraryToBottom = true
-                            },
+                            onShelfClick = onShelfClick,
+                            onSearchExpandedChange = { isDiscoverSearchOpen = it },
+                            viewModel = discoverViewModel,
                         )
 
                         QuillTab.Settings -> MoreScreen(
@@ -275,6 +299,16 @@ fun MainScreen(
                 }
             }
 
+            // A soft fade into the background along the bottom, under the dock, so the page
+            // dissolves away behind it instead of being cut off at a hard edge
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(innerPadding.calculateBottomPadding() + BottomFadeExtra)
+                    .background(rememberSmoothBottomScrimBrush(MaterialTheme.colorScheme.background))
+            )
+
             ToastMessage(
                 message = toastMessage,
                 onDismiss = { toastMessage = null },
@@ -294,19 +328,25 @@ fun MainScreen(
             onDismiss = { showFilePickerSheet = false },
             onFilesSelected = { uris ->
                 showFilePickerSheet = false
-                importStartedFromLibrary = true
-                sourcesViewModel.importFiles(context, uris)
+                importViewModel.importFiles(context, uris)
             },
         )
     }
 
-    if (importStartedFromLibrary && importResults.isNotEmpty()) {
+    if (showSubjectsSheet) {
+        SubjectsSheet(
+            subjects = discoverState.subjects,
+            onSubjectClick = onShelfClick,
+            onDismiss = { showSubjectsSheet = false },
+        )
+    }
+
+    if (importResults.isNotEmpty()) {
         ImportStatusSheet(
             results = importResults,
             onDismiss = {
                 val hasSuccess = importResults.any { it is ImportResult.Success }
-                sourcesViewModel.clearResults()
-                importStartedFromLibrary = false
+                importViewModel.clearResults()
                 if (hasSuccess) {
                     currentTab = QuillTab.Library
                     scrollLibraryToBottom = true
@@ -335,3 +375,6 @@ fun MainScreen(
         )
     }
 }
+
+/** How far the bottom fade reaches above the dock. */
+private val BottomFadeExtra = 24.dp
