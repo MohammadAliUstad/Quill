@@ -1,7 +1,5 @@
 package com.yugentech.quill.ui.access.signIn.components
 
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -246,13 +244,9 @@ private fun Modifier.riseIn(
 /** "[prompt] [action]" under the form, the action in bold accent, switching sign in and sign up. */
 @Composable
 fun AuthSwitchLink(prompt: String, action: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val haptic = LocalHapticFeedback.current
     val accent = MaterialTheme.colorScheme.primary
     TextButton(
-        onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-            onClick()
-        },
+        onClick = onClick,
         modifier = modifier
     ) {
         Text(

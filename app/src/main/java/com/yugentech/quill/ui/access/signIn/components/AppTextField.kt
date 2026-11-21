@@ -1,7 +1,5 @@
 package com.yugentech.quill.ui.access.signIn.components
 
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -49,7 +47,6 @@ fun AppTextField(
     error: String = AppConstants.EMPTY,
     isPassword: Boolean = false
 ) {
-    val haptic = LocalHapticFeedback.current
     var passwordVisible by remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
@@ -88,12 +85,7 @@ fun AppTextField(
                 trailingIcon = if (isPassword) {
                     {
                         IconButton(
-                            onClick = {
-                                haptic.performHapticFeedback(
-                                    if (passwordVisible) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn
-                                )
-                                passwordVisible = !passwordVisible
-                            },
+                            onClick = { passwordVisible = !passwordVisible },
                             modifier = Modifier.size(MaterialTheme.components.buttonSmall)
                         ) {
                             AnimatedEyeIcon(

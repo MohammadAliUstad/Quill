@@ -422,8 +422,6 @@
     <string name="no_questions_yet">아직 질문이 없어요</string>
     <string name="total_conversations">Aira와 나눈 대화 수</string>
     <string name="most_explored">Aira와 가장 많이 탐구한 책</string>
-    <string name="peak_none_title">아직 데이터가 없어요</string>
-    <string name="peak_none_body">읽기 시작하면 나만의 리듬을 알 수 있어요</string>
     <string name="peak_morning">아침형 독자예요</string>
     <string name="peak_afternoon">오후가 독서 시간이에요</string>
     <string name="peak_evening">저녁에 책과 함께 쉬어요</string>
@@ -432,7 +430,103 @@
     <string name="heatmap_subtitle">픽셀로 보는 나의 1년</string>
     <string name="heatmap_less">적음</string>
     <string name="heatmap_more">많음</string>
-    <string name="none">없음</string>
+    <string name="insights_for_you_title">나를 위한 인사이트</string>
+    <string name="insights_for_you_subtitle">나의 독서 패턴과 다음에 해 볼 것</string>
+    <string name="insights_this_week">이번 주</string>
+    <string name="insights_days_of_week">%1$d/7</string>
+    <string name="insights_days_label">일</string>
+    <string name="insights_trend_none">이번 주에는 아직 읽지 않았어요</string>
+    <string name="insights_trend_fresh">이번 주 새로운 시작</string>
+    <string name="insights_trend_more">지난주보다 %1$s 더</string>
+    <string name="insights_trend_less">지난주보다 %1$s 적게</string>
+    <string name="insights_trend_same">지난주와 비슷해요</string>
+    <string name="insights_glance_time">읽은 시간</string>
+    <string name="insights_glance_streak">연속 일수</string>
+    <string name="insights_glance_finished">완독</string>
+    <string name="insights_rhythm_title">나의 리듬</string>
+    <string name="insights_rhythm_subtitle">하루 중 읽는 시간대</string>
+    <string name="insights_rhythm_empty">잠시 읽으면 나의 리듬을 알 수 있어요</string>
+    <string name="insights_part_morning">아침</string>
+    <string name="insights_part_afternoon">오후</string>
+    <string name="insights_part_evening">저녁</string>
+    <string name="insights_part_night">밤</string>
+    <string name="insights_bests_title">개인 최고 기록</string>
+    <string name="insights_bests_subtitle">지금까지의 독서 기록</string>
+    <string name="insights_best_session">가장 긴 세션</string>
+    <string name="insights_avg_session">평균 세션</string>
+    <string name="insights_best_day">최고의 날</string>
+    <string name="insights_best_streak">최장 연속 기록</string>
+    <string name="insights_top_books_title">가장 많이 읽은 책</string>
+    <string name="insights_top_books_subtitle">가장 오래 함께한 책</string>
+    <string name="insights_top_books_empty">책을 잠시 읽으면 여기에 표시돼요</string>
+    <string name="insights_percent_read">%1$d%% 읽음</string>
+    <string name="insights_status_finished">완독</string>
+    <string name="insights_status_reading">읽는 중</string>
+    <string name="insights_status_not_started">시작 전</string>
+    <string name="insights_highlights_section_title">하이라이트와 메모</string>
+    <string name="insights_highlights_section_subtitle">마음에 남은 부분</string>
+    <string name="insights_highlights_empty">읽으면서 구절을 하이라이트하면 여기에 표시돼요</string>
+    <string name="insights_highlights_label">하이라이트</string>
+    <string name="insights_notes_label">메모</string>
+    <string name="insights_this_month_label">이번 달</string>
+    <string name="insights_most_highlighted">가장 많이 하이라이트한 책</string>
+    <plurals name="insights_visuals_created">
+        <item quantity="other">비주얼 %1$d개 생성</item>
+    </plurals>
+    <string name="insights_no_reading">읽지 않음</string>
+    <string name="insights_under_minute">1분 미만</string>
+    <string name="insights_seed_title">읽을수록 인사이트가 쌓여요</string>
+    <string name="insights_seed_body">책을 열고 잠시 읽어 보세요. 나의 독서 패턴이 여기에 나타나기 시작해요.</string>
+    <string name="insights_quiet_title">조용한 한 주</string>
+    <string name="insights_quiet_body">마지막으로 읽은 건 %1$s예요. 오늘 10분만 읽어도 이야기의 흐름을 다시 잡을 수 있어요.</string>
+    <string name="insights_steady_title">지난 7일 중 %1$d일 읽었어요</string>
+    <string name="insights_steady_body">매일 조금씩 읽는 것이 책을 끝내는 방법이에요. 이 리듬을 이어가세요.</string>
+    <string name="insights_up_title">지난주보다 더 많이 읽었어요</string>
+    <string name="insights_up_body">이번 주 %1$s, 지난주는 %2$s였어요.</string>
+    <string name="insights_down_title">지난주보다 덜 읽었어요</string>
+    <string name="insights_down_body">지금까지 %1$s, 지난주는 %2$s였어요. 자기 전 한 챕터도 금방 쌓여요.</string>
+    <string name="insights_streak_risk_title">연속 기록을 이어가세요</string>
+    <plurals name="insights_streak_risk_body">
+        <item quantity="other">오늘은 아직 읽지 않았어요. 몇 페이지만 읽어도 %1$d일 연속 기록이 이어져요.</item>
+    </plurals>
+    <string name="insights_record_title">지금까지 가장 긴 연속 기록</string>
+    <plurals name="insights_record_body">
+        <item quantity="other">%1$d일 연속, 지금까지 최고 기록이에요. 내일도 읽으면 %2$d일이 돼요.</item>
+    </plurals>
+    <plurals name="insights_near_record_title">
+        <item quantity="other">기록까지 %1$d일 남았어요</item>
+    </plurals>
+    <plurals name="insights_near_record_body">
+        <item quantity="other">가장 긴 연속 기록은 %1$d일이에요. 매일 읽어서 기록을 깨 보세요.</item>
+    </plurals>
+    <string name="insights_time_morning">독서 시간의 %1$d%%가 아침이에요.</string>
+    <string name="insights_time_afternoon">독서 시간의 %1$d%%가 오후예요.</string>
+    <string name="insights_time_evening">독서 시간의 %1$d%%가 저녁이에요.</string>
+    <string name="insights_time_night">독서 시간의 %1$d%%가 밤이에요.</string>
+    <string name="insights_short_title">짧게 자주 읽어요</string>
+    <string name="insights_short_body">세션은 평균 %1$s예요. 짧은 시간도 모두 다음 챕터로 이어져요.</string>
+    <string name="insights_long_title">길게 몰입해서 읽어요</string>
+    <string name="insights_long_body">세션은 평균 %1$s예요. 깊이 읽기에 충분한 시간이에요.</string>
+    <string name="insights_finish_title">%2$s, 약 %1$s 남음</string>
+    <string name="insights_finish_body">지금까지 읽은 속도라면 끝까지 이만큼 걸려요.</string>
+    <string name="insights_waiting_title">%1$s이(가) 기다리고 있어요</string>
+    <string name="insights_waiting_body">%1$d%%까지 읽었고, 마지막으로 연 건 %2$s예요.</string>
+    <plurals name="insights_unread_title">
+        <item quantity="other">아직 시작하지 않은 책 %1$d권</item>
+    </plurals>
+    <string name="insights_unread_body">다음에 읽을 책을 골라 두면 지금 책을 다 읽었을 때 바로 시작할 수 있어요.</string>
+    <plurals name="insights_hours_title">
+        <item quantity="other">독서 %1$d시간</item>
+    </plurals>
+    <string name="insights_hours_body">Quill에서 책과 함께한 시간이에요.</string>
+    <plurals name="insights_highlights_title">
+        <item quantity="other">이번 달 하이라이트 %1$d개</item>
+    </plurals>
+    <string name="insights_highlights_body">가장 많이 하이라이트한 책은 %1$s예요.</string>
+    <string name="insights_notes_title">메모를 남겨 보세요</string>
+    <plurals name="insights_notes_body">
+        <item quantity="other">하이라이트가 %1$d개 있어요. 그 구절이 왜 마음에 남았는지 한 줄 적어 두면 다시 찾기 쉬워요.</item>
+    </plurals>
     <string name="unknown_book">알 수 없는 책</string>
     <string name="no_downloads_list">다운로드된 책이 없습니다.</string>
     <string name="delete_download_title">다운로드를 삭제할까요?</string>
@@ -614,10 +708,7 @@
     <string name="aira_cap_themes_body">상징, 동기, 작가의 의도에 담긴 깊은 의미를 탐구하세요.</string>
     <string name="aira_cap_spoilers_title">스포일러 방지</string>
     <string name="aira_cap_spoilers_body">Aira는 이야기를 지키기 위해 지식을 내 독서 진행 상황까지로 정확히 제한해요.</string>
-    <string name="aira_closing_title">멈추지 않는\n독자들을 위해\n만들었어요.</string>
-    <string name="aira_vision_1">책은 스포일러가 아닌 맥락으로 살아납니다.</string>
-    <string name="aira_vision_2">모든 질문에 페이지 그 자체로 답합니다.</string>
-    <string name="aira_vision_3">당신과 함께 성장하는 독서 동반자.</string>
+    <string name="aira_note_body">저는 작은 순간들을 위해 있어요. 잊어버린 이름, 모르는 단어, 그려 보고 싶은 장면. 물어보시면 다시 이야기 속으로 돌아가게 도와드릴게요.</string>
     <string name="aira_hero_tagline">AI 독서 도우미</string>
     <string name="aira_p1_title">본문에 기반한 답변</string>
     <string name="aira_p1_body">Aira는 추측하지 않아요. 답변은 지금 읽고 있는 책의 실제 구절에서만 가져옵니다.</string>
@@ -626,7 +717,6 @@
     <string name="aira_p3_title">줄거리를 지켜요</string>
     <string name="aira_p3_body">Aira의 지식은 내 독서 진행 상황까지로 엄격히 제한됩니다. 아직 읽지 않은 장의 사건이나 반전은 절대 알려 주지 않아요.</string>
     <string name="capabilities">할 수 있는 일</string>
-    <string name="vision">비전</string>
     <string name="attributions_subtitle">커뮤니티의 힘으로</string>
     <string name="credit_design_title">디자인 및 일러스트</string>
     <string name="credit_design_subtitle">일러스트</string>
@@ -657,7 +747,7 @@
     <string name="wn_4_page_title">페이지에서 바로 Aira에게 질문</string>
     <string name="wn_4_page_body">읽는 중에 단어나 구절을 선택하면 Aira가 바로 나타나요. 단어 뜻, 어려운 문장 설명, 그 장면이 중요한 이유까지 책을 떠나지 않고 알아보세요.</string>
     <string name="wn_4_character_title">등장인물 도우미</string>
-    <string name="wn_4_character_body">등장인물 이름을 선택해 그 인물이 누구인지, 최근에 무엇을 했는지, 지금까지의 여정을 돌아보세요. 언제나 스포일러 없이.</string>
+    <string name="wn_4_character_body">등장인물 이름을 선택해 그 인물이 누구인지, 최근에 무엇을 했는지 확인하세요. 언제나 스포일러 없이.</string>
     <string name="wn_4_visualize_body">어떤 구절이든 그림 같은 일러스트로 바꿔 보세요. 그림은 갤러리에 보관되고, 탭하면 그 그림이 나온 구절로 바로 돌아가요.</string>
     <string name="wn_4_highlights_body">더 부드러워진 텍스트 선택, 그리고 한곳에서 다시 보고 책으로 바로 돌아갈 수 있는 하이라이트.</string>
     <string name="wn_4_reader_title">새롭게 상상한 리더</string>
@@ -819,4 +909,6 @@
     <string name="guest_aira_step_export">많음 › 백업에서 서재를 내보내 아무것도 잃지 않도록 하세요</string>
     <string name="guest_aira_step_exit">많음에서 게스트 모드를 종료하세요</string>
     <string name="guest_aira_step_signup">가입하고 백업을 가져온 뒤, Aira에게 하루 최대 %1$d번 무료로 질문하세요</string>
+
+    <!-- How to use Aira (tutorial) -->
 </resources>

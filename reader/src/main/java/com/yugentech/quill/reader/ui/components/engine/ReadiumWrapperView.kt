@@ -6,11 +6,19 @@ import android.view.ActionMode
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.webkit.WebView
 import android.widget.FrameLayout
 import androidx.fragment.app.FragmentContainerView
 import org.readium.r2.shared.publication.Locator
+import timber.log.Timber
 import kotlin.math.abs
+
+/**
+ * Most frames in a row the selection page lock will skip while putting the page back. A stray
+ * reveal needs one; this only stops a stubborn scroll from holding up drawing.
+ */
+private const val MAX_SKIPPED_FRAMES = 3
 
 /** How far sideways (dp) a swipe must travel to change the chapter in scroll mode. */
 private const val MIN_CHAPTER_SWIPE_DP = 72f
@@ -107,11 +115,17 @@ class ReadiumWrapperView @JvmOverloads constructor(
         val webView = (originalView as? WebView) ?: findWebView(this)
         webView?.setLayerType(LAYER_TYPE_SOFTWARE, null)
 
+        val generation = ++selectionGeneration
+        if (!scrollMode && webView != null) lockPageScroll(webView)
+
         onSelectionStarted()
 
         val onDestroy: () -> Unit = {
             // Restore hardware rendering once the selection is settled/dismissed.
             webView?.setLayerType(LAYER_TYPE_HARDWARE, null)
+            // Only the newest selection's end releases the page (a restarted action mode may
+            // already be holding it)
+            if (generation == selectionGeneration) unlockPageScroll()
             onSelectionEnded()
         }
 
@@ -129,6 +143,65 @@ class ReadiumWrapperView @JvmOverloads constructor(
         val mode = super.startActionModeForChild(originalView, wrapped, type)
         activeActionMode = mode
         return mode
+    }
+
+    // ── Page lock while text is selected (paginated mode) ─────────────────────────────────────
+    //
+    // Dragging the upper handle into a paragraph that began on the previous page makes Chromium
+    // scroll the page back to reveal where the selection now starts. Two guards already undo
+    // this: the page script's animation-frame guard, and Readium's onScrollChanged, which posts
+    // a scroll back. A posted message is an ordinary one, though, and while a handle is being
+    // dragged the window redraws every frame, so a redraw is nearly always pending. Android
+    // holds ordinary messages back until that redraw is done (Chromium's own messages are
+    // exempt, so the scroll itself gets through). The frame is drawn on the previous page first,
+    // and only then is the scroll undone: a one-frame flash of the previous page.
+    //
+    // This guard runs inside that redraw, just before anything is drawn. If the page has moved
+    // off the one the selection began on, it puts it straight back and skips that one frame
+    // (the screen keeps showing the right page), so the previous page is never drawn.
+
+    private var selectionGeneration = 0
+    private var lockedWebView: WebView? = null
+    private var lockedScrollX = 0
+    private var correctionsInARow = 0
+
+    private val pageLock = ViewTreeObserver.OnPreDrawListener {
+        val webView = lockedWebView ?: return@OnPreDrawListener true
+        if (webView.scrollX == lockedScrollX) {
+            correctionsInARow = 0
+            return@OnPreDrawListener true
+        }
+        if (correctionsInARow >= MAX_SKIPPED_FRAMES) {
+            // Something keeps moving it back (not a stray reveal): don't hold up drawing any
+            // longer; the older guards still have their say
+            correctionsInARow = 0
+            return@OnPreDrawListener true
+        }
+        correctionsInARow++
+        Timber.d("Selection page lock: page drifted %d -> %d, restored", lockedScrollX, webView.scrollX)
+        webView.scrollTo(lockedScrollX, webView.scrollY)
+        false
+    }
+
+    private fun lockPageScroll(webView: WebView) {
+        if (lockedWebView === webView) return // Already holding this page (action mode restarted)
+        unlockPageScroll()
+        lockedWebView = webView
+        lockedScrollX = webView.scrollX
+        correctionsInARow = 0
+        viewTreeObserver.addOnPreDrawListener(pageLock)
+    }
+
+    private fun unlockPageScroll() {
+        if (lockedWebView == null) return
+        lockedWebView = null
+        correctionsInARow = 0
+        if (viewTreeObserver.isAlive) viewTreeObserver.removeOnPreDrawListener(pageLock)
+    }
+
+    override fun onDetachedFromWindow() {
+        unlockPageScroll()
+        super.onDetachedFromWindow()
     }
 
     private fun findWebView(view: View): WebView? {

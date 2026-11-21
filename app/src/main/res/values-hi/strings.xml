@@ -422,8 +422,6 @@
     <string name="no_questions_yet">अभी तक कोई सवाल नहीं</string>
     <string name="total_conversations">Aira के साथ कुल बातचीत</string>
     <string name="most_explored">Aira के साथ सबसे ज़्यादा खोजी गई</string>
-    <string name="peak_none_title">अभी कोई डेटा नहीं</string>
-    <string name="peak_none_body">अपनी लय जानने के लिए पढ़ना शुरू करें</string>
     <string name="peak_morning">आप सुबह पढ़ने वाले हैं</string>
     <string name="peak_afternoon">दोपहर आपका पढ़ने का समय है</string>
     <string name="peak_evening">शाम को आप आराम से पढ़ने बैठते हैं</string>
@@ -432,7 +430,112 @@
     <string name="heatmap_subtitle">पिक्सल में आपका साल</string>
     <string name="heatmap_less">कम</string>
     <string name="heatmap_more">ज़्यादा</string>
-    <string name="none">कोई नहीं</string>
+    <string name="insights_for_you_title">आपके लिए</string>
+    <string name="insights_for_you_subtitle">आपके पढ़ने के पैटर्न, और आगे क्या आज़माएँ</string>
+    <string name="insights_this_week">इस हफ़्ते</string>
+    <string name="insights_days_of_week">%1$d/7</string>
+    <string name="insights_days_label">दिन</string>
+    <string name="insights_trend_none">इस हफ़्ते अभी तक कुछ नहीं पढ़ा</string>
+    <string name="insights_trend_fresh">इस हफ़्ते एक नई शुरुआत</string>
+    <string name="insights_trend_more">पिछले हफ़्ते से %1$s ज़्यादा</string>
+    <string name="insights_trend_less">पिछले हफ़्ते से %1$s कम</string>
+    <string name="insights_trend_same">लगभग पिछले हफ़्ते जितना</string>
+    <string name="insights_glance_time">पढ़ने का समय</string>
+    <string name="insights_glance_streak">दिन लगातार</string>
+    <string name="insights_glance_finished">पूरी हुईं</string>
+    <string name="insights_rhythm_title">आपकी लय</string>
+    <string name="insights_rhythm_subtitle">दिन में आप कब पढ़ते हैं</string>
+    <string name="insights_rhythm_empty">अपनी लय जानने के लिए कुछ देर पढ़ें</string>
+    <string name="insights_part_morning">सुबह</string>
+    <string name="insights_part_afternoon">दोपहर</string>
+    <string name="insights_part_evening">शाम</string>
+    <string name="insights_part_night">रात</string>
+    <string name="insights_bests_title">निजी रिकॉर्ड</string>
+    <string name="insights_bests_subtitle">अब तक के आपके पढ़ने के रिकॉर्ड</string>
+    <string name="insights_best_session">सबसे लंबा सेशन</string>
+    <string name="insights_avg_session">औसत सेशन</string>
+    <string name="insights_best_day">सबसे अच्छा दिन</string>
+    <string name="insights_best_streak">सबसे लंबी स्ट्रीक</string>
+    <string name="insights_top_books_title">सबसे ज़्यादा पढ़ी गईं</string>
+    <string name="insights_top_books_subtitle">वे किताबें जिनके साथ आपने सबसे ज़्यादा समय बिताया</string>
+    <string name="insights_top_books_empty">कोई किताब कुछ देर पढ़ें, वह यहाँ दिखेगी</string>
+    <string name="insights_percent_read">%1$d%% पढ़ी गई</string>
+    <string name="insights_status_finished">पूरी हुईं</string>
+    <string name="insights_status_reading">पढ़ रहे हैं</string>
+    <string name="insights_status_not_started">शुरू नहीं हुईं</string>
+    <string name="insights_highlights_section_title">हाइलाइट और नोट्स</string>
+    <string name="insights_highlights_section_subtitle">जो आपके मन को छू गया</string>
+    <string name="insights_highlights_empty">पढ़ते समय कोई अंश हाइलाइट करें, वह यहाँ दिखेगा</string>
+    <string name="insights_highlights_label">हाइलाइट</string>
+    <string name="insights_notes_label">नोट्स</string>
+    <string name="insights_this_month_label">इस महीने</string>
+    <string name="insights_most_highlighted">सबसे ज़्यादा हाइलाइट की गई</string>
+    <plurals name="insights_visuals_created">
+        <item quantity="one">%1$d विज़ुअल बनाया</item>
+        <item quantity="other">%1$d विज़ुअल बनाए</item>
+    </plurals>
+    <string name="insights_no_reading">नहीं पढ़ा</string>
+    <string name="insights_under_minute">एक मिनट से कम</string>
+    <string name="insights_seed_title">जैसे-जैसे आप पढ़ेंगे, आपकी जानकारियाँ बढ़ेंगी</string>
+    <string name="insights_seed_body">कोई किताब खोलें और कुछ देर पढ़ें। आपके पढ़ने के पैटर्न यहाँ दिखने लगेंगे।</string>
+    <string name="insights_quiet_title">एक शांत हफ़्ता</string>
+    <string name="insights_quiet_body">आपने आख़िरी बार %1$s पढ़ा था। आज दस मिनट पढ़कर कहानी का सिरा फिर पकड़ें।</string>
+    <string name="insights_steady_title">पिछले 7 में से %1$d दिन आपने पढ़ा</string>
+    <string name="insights_steady_body">रोज़ थोड़ा-थोड़ा पढ़ने से ही किताबें पूरी होती हैं। यह लय बनाए रखें।</string>
+    <string name="insights_up_title">पिछले हफ़्ते से ज़्यादा पढ़ा</string>
+    <string name="insights_up_body">इस हफ़्ते %1$s, पिछले हफ़्ते %2$s था।</string>
+    <string name="insights_down_title">पिछले हफ़्ते से कम पढ़ा</string>
+    <string name="insights_down_body">अब तक %1$s, पिछले हफ़्ते %2$s था। सोने से पहले एक अध्याय भी जल्दी जुड़ जाता है।</string>
+    <string name="insights_streak_risk_title">अपनी स्ट्रीक बनाए रखें</string>
+    <plurals name="insights_streak_risk_body">
+        <item quantity="one">आज आपने अभी तक नहीं पढ़ा। कुछ पन्ने आपकी %1$d दिन की स्ट्रीक बचा लेंगे।</item>
+        <item quantity="other">आज आपने अभी तक नहीं पढ़ा। कुछ पन्ने आपकी %1$d दिन की स्ट्रीक बचा लेंगे।</item>
+    </plurals>
+    <string name="insights_record_title">अब तक की आपकी सबसे लंबी स्ट्रीक</string>
+    <plurals name="insights_record_body">
+        <item quantity="one">लगातार %1$d दिन, अब तक का आपका सबसे अच्छा सिलसिला। इसे %2$d करने के लिए कल भी पढ़ें।</item>
+        <item quantity="other">लगातार %1$d दिन, अब तक का आपका सबसे अच्छा सिलसिला। इसे %2$d करने के लिए कल भी पढ़ें।</item>
+    </plurals>
+    <plurals name="insights_near_record_title">
+        <item quantity="one">आपके रिकॉर्ड से %1$d दिन दूर</item>
+        <item quantity="other">आपके रिकॉर्ड से %1$d दिन दूर</item>
+    </plurals>
+    <plurals name="insights_near_record_body">
+        <item quantity="one">आपकी सबसे लंबी स्ट्रीक %1$d दिन की है। इसे तोड़ने के लिए रोज़ पढ़ते रहें।</item>
+        <item quantity="other">आपकी सबसे लंबी स्ट्रीक %1$d दिन की है। इसे तोड़ने के लिए रोज़ पढ़ते रहें।</item>
+    </plurals>
+    <string name="insights_time_morning">आपके पढ़ने का %1$d%% समय सुबह होता है।</string>
+    <string name="insights_time_afternoon">आपके पढ़ने का %1$d%% समय दोपहर में होता है।</string>
+    <string name="insights_time_evening">आपके पढ़ने का %1$d%% समय शाम को होता है।</string>
+    <string name="insights_time_night">आपके पढ़ने का %1$d%% समय रात में होता है।</string>
+    <string name="insights_short_title">आप थोड़ी-थोड़ी देर पढ़ते हैं</string>
+    <string name="insights_short_body">आपके सेशन औसतन %1$s के होते हैं। छोटे सेशन भी गिने जाते हैं: सब मिलकर अगले अध्याय तक ले जाते हैं।</string>
+    <string name="insights_long_title">आप लंबी पढ़ाई में डूब जाते हैं</string>
+    <string name="insights_long_body">आपके सेशन औसतन %1$s के होते हैं। गहराई से पढ़ने के लिए यह अच्छा समय है।</string>
+    <string name="insights_finish_title">%2$s में लगभग %1$s बाकी</string>
+    <string name="insights_finish_body">अब तक जिस रफ़्तार से आपने इसे पढ़ा है, उससे अंत तक पहुँचने में इतना समय लगेगा।</string>
+    <string name="insights_waiting_title">%1$s आपका इंतज़ार कर रही है</string>
+    <string name="insights_waiting_body">आप %1$d%% पढ़ चुके हैं, और आख़िरी बार इसे %2$s खोला था।</string>
+    <plurals name="insights_unread_title">
+        <item quantity="one">%1$d किताब अभी शुरू नहीं हुई</item>
+        <item quantity="other">%1$d किताबें अभी शुरू नहीं हुईं</item>
+    </plurals>
+    <string name="insights_unread_body">अगली किताब अभी चुन लें, ताकि मौजूदा किताब पूरी होते ही वह तैयार रहे।</string>
+    <plurals name="insights_hours_title">
+        <item quantity="one">%1$d घंटा पढ़ाई</item>
+        <item quantity="other">%1$d घंटे पढ़ाई</item>
+    </plurals>
+    <string name="insights_hours_body">इतना समय आपने Quill में अपनी किताबों के साथ बिताया है।</string>
+    <plurals name="insights_highlights_title">
+        <item quantity="one">इस महीने %1$d हाइलाइट</item>
+        <item quantity="other">इस महीने %1$d हाइलाइट</item>
+    </plurals>
+    <string name="insights_highlights_body">सबसे ज़्यादा हाइलाइट आपने %1$s में किए हैं।</string>
+    <string name="insights_notes_title">एक नोट जोड़कर देखें</string>
+    <plurals name="insights_notes_body">
+        <item quantity="one">आपने %1$d हाइलाइट किया है। कोई अंश आपको क्यों छू गया, इस पर एक पंक्ति लिखने से उस पर लौटना आसान होता है।</item>
+        <item quantity="other">आपने %1$d हाइलाइट किए हैं। कोई अंश आपको क्यों छू गया, इस पर एक पंक्ति लिखने से उस पर लौटना आसान होता है।</item>
+    </plurals>
     <string name="unknown_book">अज्ञात किताब</string>
     <string name="no_downloads_list">अभी कोई किताब डाउनलोड नहीं है।</string>
     <string name="delete_download_title">डाउनलोड हटाएँ?</string>
@@ -614,10 +717,7 @@
     <string name="aira_cap_themes_body">प्रतीकों, इरादों और लेखक की मंशा के पीछे का गहरा अर्थ खोजें।</string>
     <string name="aira_cap_spoilers_title">स्पॉइलर से सुरक्षा</string>
     <string name="aira_cap_spoilers_body">कहानी बचाने के लिए Aira अपनी जानकारी को आपकी ठीक-ठीक प्रगति तक सीमित रखती है।</string>
-    <string name="aira_closing_title">उन पाठकों के\nलिए बनी जो कभी\nरुकते नहीं।</string>
-    <string name="aira_vision_1">किताबें संदर्भ से जीवंत होती हैं, स्पॉइलर से नहीं।</string>
-    <string name="aira_vision_2">हर सवाल का जवाब पन्ने से ही।</string>
-    <string name="aira_vision_3">पढ़ने की एक साथी जो आपके साथ बढ़ती है।</string>
+    <string name="aira_note_body">मैं छोटे-छोटे पलों के लिए हूँ: कोई नाम जो आप भूल गए, कोई शब्द जो आप नहीं जानते, कोई दृश्य जिसे आप आँखों के सामने देखना चाहते हैं। पूछिए, और मैं आपको कहानी में वापस ले चलूँगी।</string>
     <string name="aira_hero_tagline">आपकी AI पढ़ने की सहायक</string>
     <string name="aira_p1_title">किताब पर आधारित</string>
     <string name="aira_p1_body">Aira अंदाज़ा नहीं लगाती। उसके जवाब हमेशा उसी किताब के असली अंशों से आते हैं जिसे आप पढ़ रहे हैं।</string>
@@ -626,7 +726,6 @@
     <string name="aira_p3_title">कहानी की रक्षा</string>
     <string name="aira_p3_body">Aira की जानकारी सख़्ती से आपकी पढ़ने की प्रगति तक सीमित है। जो अध्याय आपने नहीं पढ़े, उनकी घटनाएँ या मोड़ वह कभी नहीं बताएगी।</string>
     <string name="capabilities">क्षमताएँ</string>
-    <string name="vision">नज़रिया</string>
     <string name="attributions_subtitle">समुदाय की ताकत से</string>
     <string name="credit_design_title">डिज़ाइन और चित्र</string>
     <string name="credit_design_subtitle">चित्र</string>
@@ -657,7 +756,7 @@
     <string name="wn_4_page_title">पेज से ही Aira से पूछें</string>
     <string name="wn_4_page_body">पढ़ते समय कोई भी शब्द या अंश चुनें और Aira वहीं हाज़िर है। शब्दों के अर्थ जानें, मुश्किल पंक्तियाँ समझें, या जानें कि कोई पल क्यों अहम है, किताब छोड़े बिना।</string>
     <string name="wn_4_character_title">किरदार साथी</string>
-    <string name="wn_4_character_body">किसी किरदार का नाम चुनकर याद करें कि वह कौन है, हाल में क्या कर रहा है, या अब तक का पूरा सफ़र देखें। हमेशा बिना स्पॉइलर के।</string>
+    <string name="wn_4_character_body">किसी किरदार का नाम चुनकर याद करें कि वह कौन है, या देखें कि वह हाल में क्या कर रहा है। हमेशा बिना स्पॉइलर के।</string>
     <string name="wn_4_visualize_body">किसी भी अंश को पेंट किए गए चित्र में बदलें। आपके चित्र एक गैलरी में रहते हैं, और किसी पर टैप करते ही आप उसी अंश पर पहुँच जाते हैं जहाँ से वह बना था।</string>
     <string name="wn_4_highlights_body">टेक्स्ट चुनने का ज़्यादा सहज तरीक़ा, और हाइलाइट जिन्हें आप एक ही जगह देख सकते हैं और वहीं से सीधे किताब में लौट सकते हैं।</string>
     <string name="wn_4_reader_title">नए सिरे से बना रीडर</string>
@@ -827,4 +926,6 @@
     <string name="guest_aira_step_export">ज़्यादा › बैकअप से अपनी लाइब्रेरी एक्सपोर्ट करें, ताकि कुछ न खोए</string>
     <string name="guest_aira_step_exit">गेस्ट मोड छोड़ें, यह भी ज़्यादा में है</string>
     <string name="guest_aira_step_signup">साइन अप करें, अपना बैकअप इंपोर्ट करें, और Aira से रोज़ %1$d बार तक मुफ़्त में पूछें</string>
+
+    <!-- How to use Aira (tutorial) -->
 </resources>

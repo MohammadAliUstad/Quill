@@ -1,12 +1,9 @@
 package com.yugentech.quill.ui.info.insights
 
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -17,14 +14,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.AutoStories
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -38,27 +32,39 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
-import com.yugentech.quill.insghts.state.InsightsUiState
-import com.yugentech.quill.ui.info.insights.components.AiraEngagementCard
-import com.yugentech.quill.ui.info.insights.components.EmptyDistributionPlaceholder
-import com.yugentech.quill.ui.info.insights.components.GlanceStatCard
-import com.yugentech.quill.ui.info.insights.components.InsightSectionHeader
-import com.yugentech.quill.ui.info.insights.components.PeakHourCard
-import com.yugentech.quill.ui.info.insights.components.ProgressBracketsCard
-import com.yugentech.quill.ui.info.insights.components.TopAuthorsCard
-import com.yugentech.theme.tokens.corners
-import com.yugentech.theme.tokens.icons
-import com.yugentech.theme.tokens.spacing
-import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.yugentech.quill.R
+import com.yugentech.quill.insghts.state.InsightsUiState
+import com.yugentech.quill.ui.info.insights.components.AiraCard
+import com.yugentech.quill.ui.info.insights.components.AuthorsCard
+import com.yugentech.quill.ui.info.insights.components.EmptyInsightPlaceholder
+import com.yugentech.quill.ui.info.insights.components.GlanceRow
+import com.yugentech.quill.ui.info.insights.components.HighlightsCard
+import com.yugentech.quill.ui.info.insights.components.InsightItem
+import com.yugentech.quill.ui.info.insights.components.InsightSectionHeader
+import com.yugentech.quill.ui.info.insights.components.LibraryCard
+import com.yugentech.quill.ui.info.insights.components.RecordsCard
+import com.yugentech.quill.ui.info.insights.components.RhythmCard
+import com.yugentech.quill.ui.info.insights.components.TopBooksCard
+import com.yugentech.quill.ui.info.insights.components.WeekHeroCard
+import com.yugentech.quill.ui.info.insights.heatmap.Heatmap
+import com.yugentech.quill.ui.main.components.itemShape
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.spacing
 
+/**
+ * Insights, laid out as Hajime's (shown plainly in a LazyColumn, as Sessions does): the week at a glance, then insights generated from the
+ * reader's own records (see InsightsEngine), then the detail behind them: the year in pixels,
+ * when they read, their records, the books and authors they spend time with, their library,
+ * highlights, and reading with Aira.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InsightsScreen(
@@ -69,16 +75,9 @@ fun InsightsScreen(
 ) {
     val haptic = LocalHapticFeedback.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
-    val totalTimeFormatted = run {
-        val totalMinutes = (uiState.totalReadingTimeMillis / (1000 * 60)).toInt()
-        val hours = totalMinutes / 60
-        val mins = totalMinutes % 60
-        if (hours > 0) stringResource(R.string.duration_hours_minutes, hours, mins) else stringResource(R.string.duration_minutes, mins)
-    }
-
     val layoutDirection = LocalLayoutDirection.current
-    val sectionShape = RoundedCornerShape(MaterialTheme.corners.large)
+    val report = uiState.report
+    val hasReading = report.sessionCount > 0
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -115,192 +114,124 @@ fun InsightsScreen(
         ) {
             if (uiState.isLoading) {
                 CircularWavyProgressIndicator()
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        top = MaterialTheme.spacing.s,
-                        bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 8.dp,
-                        start = MaterialTheme.spacing.m + paddingValues.calculateStartPadding(layoutDirection),
-                        end = MaterialTheme.spacing.m + paddingValues.calculateEndPadding(layoutDirection)
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+                return@Box
+            }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    top = MaterialTheme.spacing.s,
+                    bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 8.dp,
+                    start = MaterialTheme.spacing.m + paddingValues.calculateStartPadding(layoutDirection),
+                    end = MaterialTheme.spacing.m + paddingValues.calculateEndPadding(layoutDirection)
+                ),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.s)
+            ) {
+                item(key = "week") { WeekHeroCard(report) }
+                item(key = "glance") { GlanceRow(report) }
+
+                // The generated insights, as one grouped list
+                item(key = "forYouHeader") {
+                    InsightSectionHeader(
+                        title = stringResource(R.string.insights_for_you_title),
+                        subtitle = stringResource(R.string.insights_for_you_subtitle)
+                    )
+                }
+                item(key = "insights") {
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        report.insights.forEachIndexed { index, insight ->
+                            InsightItem(insight = insight, shape = itemShape(index, report.insights.size))
+                        }
+                    }
+                }
+
+                item(key = "heatmap") {
+                    Heatmap(intensities = report.heatmap, readByDay = report.readByDay)
+                }
+
+                section(
+                    key = "rhythm",
+                    title = { stringResource(R.string.insights_rhythm_title) },
+                    subtitle = { stringResource(R.string.insights_rhythm_subtitle) }
                 ) {
+                    if (hasReading) RhythmCard(report.partsOfDay)
+                    else EmptyInsightPlaceholder(stringResource(R.string.insights_rhythm_empty))
+                }
 
-                    // The three stats read as one grouped block (primary / secondary / tertiary
-                    // containers, tight gap, large corners only on the outer edges) -- the
-                    // Sessions insights treatment, laid out horizontally.
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            GlanceStatCard(
-                                icon = {
-                                    Icon(
-                                        Icons.Outlined.Timer,
-                                        null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(MaterialTheme.icons.medium)
-                                    )
-                                },
-                                value = totalTimeFormatted,
-                                label = "Time read",
-                                modifier = Modifier.weight(1f),
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                shape = rowItemShape(index = 0, count = 3)
-                            )
-                            GlanceStatCard(
-                                icon = {
-                                    Icon(
-                                        Icons.Outlined.AutoStories,
-                                        null,
-                                        tint = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.size(MaterialTheme.icons.medium)
-                                    )
-                                },
-                                value = "${uiState.streakCount}",
-                                label = "Day streak",
-                                modifier = Modifier.weight(1f),
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                shape = rowItemShape(index = 1, count = 3)
-                            )
-                            GlanceStatCard(
-                                icon = {
-                                    Icon(
-                                        Icons.Outlined.CheckCircle,
-                                        null,
-                                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                                        modifier = Modifier.size(MaterialTheme.icons.medium)
-                                    )
-                                },
-                                value = "${uiState.finishedBooksCount}",
-                                label = "Finished",
-                                modifier = Modifier.weight(1f),
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                shape = rowItemShape(index = 2, count = 3)
-                            )
-                        }
-                    }
+                if (hasReading) {
+                    section(
+                        key = "records",
+                        title = { stringResource(R.string.insights_bests_title) },
+                        subtitle = { stringResource(R.string.insights_bests_subtitle) }
+                    ) { RecordsCard(report.records) }
+                }
 
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = sectionShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
-                            )
-                        ) {
-                            PeakHourCard(
-                                peakHour = uiState.peakHour,
-                                modifier = Modifier.padding(MaterialTheme.spacing.m)
-                            )
-                        }
-                    }
+                section(
+                    key = "topBooks",
+                    title = { stringResource(R.string.insights_top_books_title) },
+                    subtitle = { stringResource(R.string.insights_top_books_subtitle) }
+                ) {
+                    if (report.topBooks.isEmpty()) EmptyInsightPlaceholder(stringResource(R.string.insights_top_books_empty))
+                    else TopBooksCard(report.topBooks)
+                }
 
+                section(
+                    key = "library",
+                    title = { stringResource(R.string.insights_library_title) },
+                    subtitle = { stringResource(R.string.insights_library_subtitle) }
+                ) {
+                    if (report.library.total == 0) EmptyInsightPlaceholder(stringResource(R.string.insights_library_empty))
+                    else LibraryCard(report.library)
+                }
 
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = sectionShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
-                            )
-                        ) {
-                            Column(Modifier.padding(MaterialTheme.spacing.m)) {
-                                InsightSectionHeader(
-                                    title = stringResource(R.string.insights_library_title),
-                                    subtitle = stringResource(R.string.insights_library_subtitle)
-                                )
-                                Spacer(Modifier.height(MaterialTheme.spacing.m))
-                                val totalBooks = uiState.progressBrackets.notStarted +
-                                        uiState.progressBrackets.inProgress +
-                                        uiState.progressBrackets.finished
-                                if (totalBooks == 0) {
-                                    EmptyDistributionPlaceholder(stringResource(R.string.insights_library_empty))
-                                } else {
-                                    ProgressBracketsCard(progressBrackets = uiState.progressBrackets)
-                                }
-                            }
-                        }
-                    }
+                section(
+                    key = "authors",
+                    title = { stringResource(R.string.insights_authors_title) },
+                    subtitle = { stringResource(R.string.insights_authors_subtitle) }
+                ) {
+                    if (report.topAuthors.isEmpty()) EmptyInsightPlaceholder(stringResource(R.string.insights_authors_empty))
+                    else AuthorsCard(report.topAuthors)
+                }
 
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = sectionShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
-                            )
-                        ) {
-                            Column(Modifier.padding(MaterialTheme.spacing.m)) {
-                                InsightSectionHeader(
-                                    title = stringResource(R.string.insights_authors_title),
-                                    subtitle = stringResource(R.string.insights_authors_subtitle)
-                                )
-                                Spacer(Modifier.height(MaterialTheme.spacing.m))
-                                if (uiState.topAuthors.isEmpty()) {
-                                    EmptyDistributionPlaceholder(stringResource(R.string.insights_authors_empty))
-                                } else {
-                                    TopAuthorsCard(topAuthors = uiState.topAuthors)
-                                }
-                            }
-                        }
-                    }
+                section(
+                    key = "highlights",
+                    title = { stringResource(R.string.insights_highlights_section_title) },
+                    subtitle = { stringResource(R.string.insights_highlights_section_subtitle) }
+                ) {
+                    if (report.highlights.total == 0) EmptyInsightPlaceholder(stringResource(R.string.insights_highlights_empty))
+                    else HighlightsCard(report.highlights)
+                }
 
-                    if (showAira) item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = sectionShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
-                            )
-                        ) {
-                            Column(Modifier.padding(MaterialTheme.spacing.m)) {
-                                InsightSectionHeader(
-                                    title = stringResource(R.string.insights_aira_title),
-                                    subtitle = stringResource(R.string.insights_aira_subtitle)
-                                )
-                                Spacer(Modifier.height(MaterialTheme.spacing.m))
-                                AiraEngagementCard(
-                                    totalQuestionsAsked = uiState.totalQuestionsAsked,
-                                    mostExploredBookId = uiState.mostExploredBookName
-                                )
-                            }
-                        }
-                    }
-
+                if (showAira) {
+                    section(
+                        key = "aira",
+                        title = { stringResource(R.string.insights_aira_title) },
+                        subtitle = { stringResource(R.string.insights_aira_subtitle) }
+                    ) { AiraCard(report.aira) }
                 }
             }
         }
     }
 }
-// Horizontal counterpart of itemShape: a row of cards reads as one grouped block, with large
-// corners only on the outer edges and small corners where neighbours meet.
-@Composable
-private fun rowItemShape(index: Int, count: Int): Shape {
-    val largeCorner = MaterialTheme.corners.large
-    val smallCorner = MaterialTheme.corners.small
 
-    return when {
-        count == 1 -> RoundedCornerShape(largeCorner)
-        index == 0 -> RoundedCornerShape(
-            topStart = largeCorner,
-            bottomStart = largeCorner,
-            topEnd = smallCorner,
-            bottomEnd = smallCorner
-        )
-
-        index == count - 1 -> RoundedCornerShape(
-            topStart = smallCorner,
-            bottomStart = smallCorner,
-            topEnd = largeCorner,
-            bottomEnd = largeCorner
-        )
-
-        else -> RoundedCornerShape(smallCorner)
+/** A titled section on its own card. */
+private fun LazyListScope.section(
+    key: String,
+    title: @Composable () -> String,
+    subtitle: @Composable () -> String,
+    content: @Composable () -> Unit
+) {
+    item(key = key) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(MaterialTheme.corners.large),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+        ) {
+            Column(Modifier.padding(MaterialTheme.spacing.m)) {
+                InsightSectionHeader(title = title(), subtitle = subtitle())
+                Spacer(Modifier.height(MaterialTheme.spacing.s))
+                content()
+            }
+        }
     }
 }

@@ -473,8 +473,6 @@
         <item quantity="many">%1$d книг</item>
         <item quantity="other">%1$d книги</item>
     </plurals>
-    <string name="peak_none_title">Данных пока нет</string>
-    <string name="peak_none_body">Начните читать, чтобы узнать свой ритм</string>
     <string name="peak_morning">Вы читаете по утрам</string>
     <string name="peak_afternoon">Ваше время для чтения — день</string>
     <string name="peak_evening">Вечер — ваше время для книг</string>
@@ -483,7 +481,130 @@
     <string name="heatmap_subtitle">Ваш год в пикселях</string>
     <string name="heatmap_less">Меньше</string>
     <string name="heatmap_more">Больше</string>
-    <string name="none">Нет</string>
+    <string name="insights_for_you_title">Для вас</string>
+    <string name="insights_for_you_subtitle">Как вы читаете и что попробовать дальше</string>
+    <string name="insights_this_week">Эта неделя</string>
+    <string name="insights_days_of_week">%1$d/7</string>
+    <string name="insights_days_label">дней</string>
+    <string name="insights_trend_none">На этой неделе пока ничего не прочитано</string>
+    <string name="insights_trend_fresh">Новое начало на этой неделе</string>
+    <string name="insights_trend_more">На %1$s больше, чем на прошлой неделе</string>
+    <string name="insights_trend_less">На %1$s меньше, чем на прошлой неделе</string>
+    <string name="insights_trend_same">Примерно как на прошлой неделе</string>
+    <string name="insights_glance_time">Время чтения</string>
+    <string name="insights_glance_streak">Дней подряд</string>
+    <string name="insights_glance_finished">Прочитано</string>
+    <string name="insights_rhythm_title">Ваш ритм</string>
+    <string name="insights_rhythm_subtitle">Когда вы читаете в течение дня</string>
+    <string name="insights_rhythm_empty">Почитайте немного, чтобы узнать свой ритм</string>
+    <string name="insights_part_morning">Утро</string>
+    <string name="insights_part_afternoon">День</string>
+    <string name="insights_part_evening">Вечер</string>
+    <string name="insights_part_night">Ночь</string>
+    <string name="insights_bests_title">Личные рекорды</string>
+    <string name="insights_bests_subtitle">Ваши читательские рекорды на сегодня</string>
+    <string name="insights_best_session">Самая долгая сессия</string>
+    <string name="insights_avg_session">Средняя сессия</string>
+    <string name="insights_best_day">Лучший день</string>
+    <string name="insights_best_streak">Самая длинная серия</string>
+    <string name="insights_top_books_title">Больше всего читали</string>
+    <string name="insights_top_books_subtitle">Книги, с которыми вы провели больше всего времени</string>
+    <string name="insights_top_books_empty">Почитайте книгу, чтобы она появилась здесь</string>
+    <string name="insights_percent_read">Прочитано %1$d%%</string>
+    <string name="insights_status_finished">Прочитано</string>
+    <string name="insights_status_reading">Читаю</string>
+    <string name="insights_status_not_started">Не начато</string>
+    <string name="insights_highlights_section_title">Выделения и заметки</string>
+    <string name="insights_highlights_section_subtitle">Что вам запомнилось</string>
+    <string name="insights_highlights_empty">Выделите отрывок во время чтения, чтобы увидеть его здесь</string>
+    <string name="insights_highlights_label">Выделения</string>
+    <string name="insights_notes_label">Заметки</string>
+    <string name="insights_this_month_label">В этом месяце</string>
+    <string name="insights_most_highlighted">Больше всего выделений</string>
+    <plurals name="insights_visuals_created">
+        <item quantity="one">Создано %1$d изображение</item>
+        <item quantity="few">Создано %1$d изображения</item>
+        <item quantity="many">Создано %1$d изображений</item>
+        <item quantity="other">Создано %1$d изображения</item>
+    </plurals>
+    <string name="insights_no_reading">Без чтения</string>
+    <string name="insights_under_minute">Меньше минуты</string>
+    <string name="insights_seed_title">Статистика растёт вместе с чтением</string>
+    <string name="insights_seed_body">Откройте книгу и почитайте немного. Здесь начнут появляться закономерности вашего чтения.</string>
+    <string name="insights_quiet_title">Тихая неделя</string>
+    <string name="insights_quiet_body">Последний раз вы читали %1$s. Десять минут сегодня помогут вернуться к истории.</string>
+    <string name="insights_steady_title">Вы читали %1$d из последних 7 дней</string>
+    <string name="insights_steady_body">Понемногу каждый день — так и дочитываются книги. Сохраняйте этот ритм.</string>
+    <string name="insights_up_title">Больше чтения, чем на прошлой неделе</string>
+    <string name="insights_up_body">%1$s на этой неделе против %2$s на прошлой.</string>
+    <string name="insights_down_title">Меньше чтения, чем на прошлой неделе</string>
+    <string name="insights_down_body">Пока %1$s против %2$s на прошлой неделе. Глава перед сном быстро складывается в часы.</string>
+    <string name="insights_streak_risk_title">Не прерывайте серию</string>
+    <plurals name="insights_streak_risk_body">
+        <item quantity="one">Сегодня вы ещё не читали. Несколько страниц сохранят вашу серию в %1$d день.</item>
+        <item quantity="few">Сегодня вы ещё не читали. Несколько страниц сохранят вашу серию в %1$d дня.</item>
+        <item quantity="many">Сегодня вы ещё не читали. Несколько страниц сохранят вашу серию в %1$d дней.</item>
+        <item quantity="other">Сегодня вы ещё не читали. Несколько страниц сохранят вашу серию в %1$d дня.</item>
+    </plurals>
+    <string name="insights_record_title">Ваша самая длинная серия</string>
+    <plurals name="insights_record_body">
+        <item quantity="one">%1$d день подряд — ваш лучший результат. Почитайте завтра, чтобы стало %2$d.</item>
+        <item quantity="few">%1$d дня подряд — ваш лучший результат. Почитайте завтра, чтобы стало %2$d.</item>
+        <item quantity="many">%1$d дней подряд — ваш лучший результат. Почитайте завтра, чтобы стало %2$d.</item>
+        <item quantity="other">%1$d дня подряд — ваш лучший результат. Почитайте завтра, чтобы стало %2$d.</item>
+    </plurals>
+    <plurals name="insights_near_record_title">
+        <item quantity="one">%1$d день до рекорда</item>
+        <item quantity="few">%1$d дня до рекорда</item>
+        <item quantity="many">%1$d дней до рекорда</item>
+        <item quantity="other">%1$d дня до рекорда</item>
+    </plurals>
+    <plurals name="insights_near_record_body">
+        <item quantity="one">Ваша самая длинная серия — %1$d день. Читайте каждый день, чтобы её побить.</item>
+        <item quantity="few">Ваша самая длинная серия — %1$d дня. Читайте каждый день, чтобы её побить.</item>
+        <item quantity="many">Ваша самая длинная серия — %1$d дней. Читайте каждый день, чтобы её побить.</item>
+        <item quantity="other">Ваша самая длинная серия — %1$d дня. Читайте каждый день, чтобы её побить.</item>
+    </plurals>
+    <string name="insights_time_morning">%1$d%% вашего времени чтения приходится на утро.</string>
+    <string name="insights_time_afternoon">%1$d%% вашего времени чтения приходится на день.</string>
+    <string name="insights_time_evening">%1$d%% вашего времени чтения приходится на вечер.</string>
+    <string name="insights_time_night">%1$d%% вашего времени чтения приходится на ночь.</string>
+    <string name="insights_short_title">Вы читаете короткими подходами</string>
+    <string name="insights_short_body">В среднем ваша сессия длится %1$s. Короткие тоже считаются: из них складывается следующая глава.</string>
+    <string name="insights_long_title">Вы погружаетесь в долгое чтение</string>
+    <string name="insights_long_body">В среднем ваша сессия длится %1$s. Это настоящее время для вдумчивого чтения.</string>
+    <string name="insights_finish_title">Около %1$s до конца книги «%2$s»</string>
+    <string name="insights_finish_body">Столько потребуется, чтобы дочитать, в том темпе, в каком вы читали до сих пор.</string>
+    <string name="insights_waiting_title">«%1$s» ждёт вас</string>
+    <string name="insights_waiting_body">Прочитано %1$d%%, последний раз вы открывали книгу %2$s.</string>
+    <plurals name="insights_unread_title">
+        <item quantity="one">%1$d книга ещё не начата</item>
+        <item quantity="few">%1$d книги ещё не начаты</item>
+        <item quantity="many">%1$d книг ещё не начато</item>
+        <item quantity="other">%1$d книги ещё не начаты</item>
+    </plurals>
+    <string name="insights_unread_body">Выберите, что читать дальше, чтобы книга была наготове, когда вы закончите текущую.</string>
+    <plurals name="insights_hours_title">
+        <item quantity="one">%1$d час чтения</item>
+        <item quantity="few">%1$d часа чтения</item>
+        <item quantity="many">%1$d часов чтения</item>
+        <item quantity="other">%1$d часа чтения</item>
+    </plurals>
+    <string name="insights_hours_body">Столько времени вы провели с книгами в Quill.</string>
+    <plurals name="insights_highlights_title">
+        <item quantity="one">%1$d выделение в этом месяце</item>
+        <item quantity="few">%1$d выделения в этом месяце</item>
+        <item quantity="many">%1$d выделений в этом месяце</item>
+        <item quantity="other">%1$d выделения в этом месяце</item>
+    </plurals>
+    <string name="insights_highlights_body">Больше всего выделений в книге «%1$s».</string>
+    <string name="insights_notes_title">Попробуйте добавить заметку</string>
+    <plurals name="insights_notes_body">
+        <item quantity="one">У вас %1$d выделение. Строчка о том, чем вас зацепил отрывок, поможет к нему вернуться.</item>
+        <item quantity="few">У вас %1$d выделения. Строчка о том, чем вас зацепил отрывок, поможет к нему вернуться.</item>
+        <item quantity="many">У вас %1$d выделений. Строчка о том, чем вас зацепил отрывок, поможет к нему вернуться.</item>
+        <item quantity="other">У вас %1$d выделения. Строчка о том, чем вас зацепил отрывок, поможет к нему вернуться.</item>
+    </plurals>
     <string name="unknown_book">Неизвестная книга</string>
     <string name="no_downloads_list">Скачанных книг нет.</string>
     <string name="delete_download_title">Удалить загрузку?</string>
@@ -665,10 +786,7 @@
     <string name="aira_cap_themes_body">Исследуйте глубокий смысл символов, мотивов и замысла автора.</string>
     <string name="aira_cap_spoilers_title">Защита от спойлеров</string>
     <string name="aira_cap_spoilers_body">Aira ограничивает свои знания вашим точным прогрессом, чтобы сберечь историю.</string>
-    <string name="aira_closing_title">Для тех,\nкто читает\nбез остановки.</string>
-    <string name="aira_vision_1">Книги оживают благодаря контексту, а не спойлерам.</string>
-    <string name="aira_vision_2">Каждый ответ — с самой страницы.</string>
-    <string name="aira_vision_3">Спутник в чтении, который растёт вместе с вами.</string>
+    <string name="aira_note_body">Я здесь для маленьких моментов: забытое имя, незнакомое слово, сцена, которую хочется представить. Спросите, и я верну вас в историю.</string>
     <string name="aira_hero_tagline">Ваш ИИ-помощник для чтения</string>
     <string name="aira_p1_title">Опора на текст</string>
     <string name="aira_p1_body">Aira не гадает. Её ответы строятся только на реальных отрывках книги, которую вы читаете.</string>
@@ -677,7 +795,6 @@
     <string name="aira_p3_title">Бережёт сюжет</string>
     <string name="aira_p3_body">Знания Aira строго ограничены вашим прогрессом. Она никогда не раскроет события и повороты из глав, которые вы ещё не прочитали.</string>
     <string name="capabilities">Возможности</string>
-    <string name="vision">Видение</string>
     <string name="attributions_subtitle">Создано при поддержке сообщества</string>
     <string name="credit_design_title">Дизайн и иллюстрации</string>
     <string name="credit_design_subtitle">Иллюстрации:</string>
@@ -708,7 +825,7 @@
     <string name="wn_4_page_title">Спрашивайте Aira прямо со страницы</string>
     <string name="wn_4_page_body">Выделите любое слово или отрывок во время чтения — и Aira уже рядом. Узнавайте значения слов, разбирайте сложные строки и выясняйте, чем важен момент, не выходя из книги.</string>
     <string name="wn_4_character_title">Спутник по героям</string>
-    <string name="wn_4_character_body">Выделите имя персонажа, чтобы вспомнить, кто он, узнать, чем он занят в последнее время, или проследить весь его путь. Всегда без спойлеров.</string>
+    <string name="wn_4_character_body">Выделите имя персонажа, чтобы вспомнить, кто он, или узнать, чем он занят в последнее время. Всегда без спойлеров.</string>
     <string name="wn_4_visualize_body">Превращайте любой отрывок в живописную иллюстрацию. Изображения хранятся в галерее «Иллюстрации», и одно касание возвращает вас к отрывку, из которого они появились.</string>
     <string name="wn_4_highlights_body">Более удобное выделение текста, а все выделения собраны в одном месте — и из него можно сразу вернуться к нужному месту в книге.</string>
     <string name="wn_4_reader_title">Переосмысленная читалка</string>
@@ -841,4 +958,6 @@
     <string name="guest_aira_step_export">Экспортируйте библиотеку в разделе Ещё › Резервная копия, чтобы ничего не потерять</string>
     <string name="guest_aira_step_exit">Выйдите из гостевого режима — тоже в разделе «Ещё»</string>
     <string name="guest_aira_step_signup">Зарегистрируйтесь, импортируйте копию и спрашивайте Aira до %1$d раз в день бесплатно</string>
+
+    <!-- How to use Aira (tutorial) -->
 </resources>

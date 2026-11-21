@@ -13,7 +13,9 @@ val insightsModule = module {
         InsightsRepositoryImpl(
             bookDao = get(),
             readingSessionDao = get(),
-            airaMessageDao = get()
+            airaMessageDao = get(),
+            highlightDao = get(),
+            visualDao = get()
         )
     }
 

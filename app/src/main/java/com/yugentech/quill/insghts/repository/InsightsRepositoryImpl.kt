@@ -3,8 +3,11 @@ package com.yugentech.quill.insghts.repository
 import com.yugentech.quill.database.dao.AiraMessageDao
 import com.yugentech.quill.database.dao.BookDao
 import com.yugentech.quill.database.dao.BookQuestionCount
+import com.yugentech.quill.database.dao.HighlightDao
 import com.yugentech.quill.database.dao.ReadingSessionDao
+import com.yugentech.quill.database.dao.VisualDao
 import com.yugentech.quill.database.entity.BookEntity
+import com.yugentech.quill.database.entity.HighlightEntity
 import com.yugentech.quill.database.entity.ReadingSessionEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,7 +19,9 @@ import com.yugentech.quill.localization.AppStrings
 class InsightsRepositoryImpl(
     private val bookDao: BookDao,
     private val readingSessionDao: ReadingSessionDao,
-    private val airaMessageDao: AiraMessageDao
+    private val airaMessageDao: AiraMessageDao,
+    private val highlightDao: HighlightDao,
+    private val visualDao: VisualDao
 ) : InsightsRepository {
 
     override fun getAllSessionsFlow(): Flow<List<ReadingSessionEntity>> =
@@ -31,6 +36,12 @@ class InsightsRepositoryImpl(
 
     override fun getFinishedBooksCountFlow(): Flow<Int> =
         bookDao.getFinishedBooksCountFlow()
+
+    override fun getAllHighlightsFlow(): Flow<List<HighlightEntity>> =
+        highlightDao.getAllHighlightsFlow()
+
+    override fun getVisualsCountFlow(): Flow<Int> =
+        visualDao.getVisualsCountFlow()
 
     override fun getTotalUserQuestionsFlow(): Flow<Int> =
         airaMessageDao.getTotalUserQuestionsFlow()

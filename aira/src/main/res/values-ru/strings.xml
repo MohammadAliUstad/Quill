@@ -14,7 +14,6 @@
     <string name="airachat_not_encountered">В прочитанном пока не встречалось «%1$s».</string>
     <string name="airachat_q_who_is">Кто такой %1$s?</string>
     <string name="airachat_q_recent_role">Что %1$s делает в последнее время?</string>
-    <string name="airachat_q_journey">Какой путь прошёл персонаж %1$s?</string>
     <string name="airachat_q_significance">Какое значение имеет «%1$s»?</string>
     <string name="airachat_q_define">Что означает %1$s?</string>
     <string name="airachat_q_what_is">Что такое %1$s?</string>

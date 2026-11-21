@@ -57,7 +57,7 @@ Bring your own EPUBs or pick from thousands of free classics on **Project Gutenb
 
 - **Meet the New Aira:** rebuilt from the ground up. Aira knows whether you're asking about your book or anything else, answers straight from the pages you've read, never spoils what's ahead, and can read her answers aloud.
 - **Ask Aira From the Page:** select any word or passage while reading to define words, explain tricky lines, or find out why a moment matters, without leaving the book.
-- **Character Companion:** select a character's name to recall who they are, see what they're up to lately, or trace their whole journey so far. Always spoiler-free.
+- **Character Companion:** select a character's name to recall who they are or see what they're up to lately. Always spoiler-free.
 - **Visualize Scenes:** turn any passage into a painted illustration, kept in a Visuals gallery that takes you right back to the passage it came from.
 - **Highlights:** a smoother way to select text, plus highlights you can revisit from one place and jump straight back to.
 - **A Reimagined Reader:** new reading settings, a cleaner table of contents, a warm night light, and page turning with your volume keys.
@@ -87,11 +87,11 @@ Select text while reading and the Aira peek bar offers quick actions based on wh
 |---|---|
 | Nothing | Summarize chapter · Who are the characters? · What are the themes? |
 | A word | Define · What is this? |
-| A name | **Who is this?** · **Recent Role** · **Journey So Far** |
+| A name | **Who is this?** · **Recent Role** |
 | A short phrase | Explain this |
 | A passage | Explain this · What's the significance? · **Visualize this** |
 
-- **Character companion:** recall who a character is, see what they're up to lately, or trace their whole journey through the story so far.
+- **Character companion:** recall who a character is or see what they're up to lately.
 - **Chapter summaries** are built from the full chapter text, and theme questions consider the current chapter alongside the rest of what you've read.
 - Answers type out smoothly, and if you select something that isn't a character's name, Aira kindly tells you so.
 
@@ -214,7 +214,7 @@ When a book is added, a background worker (WorkManager) processes it:
 - **Action-specific strategies** for the character tools:
   - **Who is this?** takes the character's first mentions verbatim, then spreads picks evenly across your reading progress in zones, ranked by how much each passage actually describes them (personality, role, relationships, appearance).
   - **Recent Role** uses their latest appearances.
-  - **Journey So Far** splits their arc 20/60/20: their introduction, a scattered and semantically ranked middle, and their most recent scenes.
+  - **Character arc questions** asked in chat ("how has she changed?") split their arc 20/60/20: their introduction, a scattered and semantically ranked middle, and their most recent scenes.
   - Overlapping duplicate chunks are removed, and a per-chapter cap stops any single chapter from dominating.
 - **Chapter summaries** read the chapter straight from the EPUB rather than stitching overlapping chunks back together.
 

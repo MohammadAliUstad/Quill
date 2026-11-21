@@ -73,14 +73,17 @@ fun SubscribedContent(
                     haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                     onBack()
                 },
+                // The same size and label weight as onboarding's Continue button
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(58.dp),
                 shape = CircleShape
             ) {
                 Text(
                     text = stringResource(R.string.continue_reading),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
                 )
             }
 

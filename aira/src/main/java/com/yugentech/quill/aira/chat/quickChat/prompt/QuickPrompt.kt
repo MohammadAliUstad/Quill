@@ -5,7 +5,6 @@ sealed class QuickPrompt {
     data class WhatAreTheThemes(val chapterIndex: Int) : QuickPrompt()
     data class RecallCharacter(val name: String) : QuickPrompt()
     data class RecentRole(val name: String) : QuickPrompt()
-    data class JourneySoFar(val name: String, val currentChapterIndex: Int) : QuickPrompt()
     data class WhatIsTheSignificance(val text: String, val chapterIndex: Int) : QuickPrompt()
     data class SummarizeChapter(val chapterIndex: Int) : QuickPrompt()
     data class DefineWord(val word: String) : QuickPrompt()

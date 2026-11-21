@@ -172,9 +172,11 @@ fun HighlightSheet(
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                         onSave(selectedColorInt)
                     },
+                    // The same size and shape as onboarding's Continue button
+                    shape = CircleShape,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(58.dp)
                 ) {
                     Text(
                         text = stringResource(R.string.reader_save_highlight),

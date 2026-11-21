@@ -5,7 +5,6 @@ enum class QuickChatType {
     WHO_ARE_CHARACTERS,
     RECALL_CHARACTER,
     RECENT_ROLE,
-    JOURNEY_SO_FAR,
     WHAT_ARE_THEMES,
     DEFINE_WORD,
     WHAT_IS_THIS,

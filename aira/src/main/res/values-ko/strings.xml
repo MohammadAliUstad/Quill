@@ -14,7 +14,6 @@
     <string name="airachat_not_encountered">지금까지 읽은 부분에서는 ‘%1$s’을(를) 아직 보지 못했어요.</string>
     <string name="airachat_q_who_is">%1$s은(는) 누구야?</string>
     <string name="airachat_q_recent_role">%1$s은(는) 최근에 무엇을 하고 있어?</string>
-    <string name="airachat_q_journey">%1$s의 지금까지의 여정은 어땠어?</string>
     <string name="airachat_q_significance">‘%1$s’은(는) 어떤 의미가 있어?</string>
     <string name="airachat_q_define">%1$s은(는) 무슨 뜻이야?</string>
     <string name="airachat_q_what_is">%1$s은(는) 뭐야?</string>

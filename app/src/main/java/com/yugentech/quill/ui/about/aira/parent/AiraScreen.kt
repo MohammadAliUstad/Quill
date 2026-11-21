@@ -33,7 +33,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.ui.about.aira.components.CapabilitiesCarousel
-import com.yugentech.quill.ui.about.aira.components.ClosingCard
+import com.yugentech.quill.ui.about.aira.components.AiraNote
 import com.yugentech.quill.ui.about.aira.components.HeroSection
 import com.yugentech.quill.ui.about.aira.components.SectionLabel
 import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
@@ -101,12 +101,7 @@ fun AiraAboutScreen(onBack: () -> Unit) {
                 }
             }
 
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SectionLabel(stringResource(R.string.vision))
-                    ClosingCard()
-                }
-            }
+            item { AiraNote() }
 
             item {
                 // Matches Hajime's Meet Sensei disclaimer: an info icon ahead of the note.

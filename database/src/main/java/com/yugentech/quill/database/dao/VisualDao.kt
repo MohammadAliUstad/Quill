@@ -13,6 +13,10 @@ interface VisualDao {
     @Query("SELECT * FROM visuals WHERE bookId = :bookId ORDER BY createdAt DESC")
     fun getVisualsForBookFlow(bookId: String): Flow<List<VisualEntity>>
 
+    // For Insights: how many scenes have been brought to life across the library
+    @Query("SELECT COUNT(*) FROM visuals")
+    fun getVisualsCountFlow(): Flow<Int>
+
     @Query("SELECT * FROM visuals WHERE bookId = :bookId")
     suspend fun getVisualsForBook(bookId: String): List<VisualEntity>
 

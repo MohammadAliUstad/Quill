@@ -39,7 +39,9 @@ import com.yugentech.quill.reader.ui.components.highlightSheet.luminance
 import com.yugentech.quill.reader.viewmodel.reader.ReaderCommand
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -372,12 +374,6 @@ fun ReadiumEngine(
                 })();
             """.trimIndent()
 
-            try { nav.evaluateJavascript(smoothScrollJs) } catch (e: Exception) {}
-
-            delay(50)
-            nav.go(loc, animated = false)
-            delay(400)
-
             val resetJs = """
                 (function() {
                     document.documentElement.style.scrollBehavior = 'auto';
@@ -385,7 +381,20 @@ fun ReadiumEngine(
                 })();
             """.trimIndent()
 
-            try { nav.evaluateJavascript(resetJs) } catch (e: Exception) {}
+            try { nav.evaluateJavascript(smoothScrollJs) } catch (e: Exception) {}
+
+            try {
+                delay(50)
+                nav.go(loc, animated = false)
+                delay(400)
+            } finally {
+                // Always undo smooth scrolling, even when this jump is interrupted: left on, it
+                // turns every later scroll into a slide (Chromium's selection reveal included,
+                // which then flickers past the selection guard)
+                withContext(NonCancellable) {
+                    try { nav.evaluateJavascript(resetJs) } catch (e: Exception) {}
+                }
+            }
 
             onTargetLocatorComplete()
         }
@@ -442,7 +451,8 @@ fun ReadiumEngine(
         var lastSyncedJson: String? = null
 
         while (true) {
-            delay(100)
+            // Checked often, so a settled selection gets its toolbar without a noticeable wait
+            delay(50)
             val json = try {
                 nav.evaluateJavascript("""
                     (function() {
@@ -619,11 +629,41 @@ fun ReadiumEngine(
                     function getScroll() { return sd ? sd.get.call(scrollEl) : scrollEl.scrollLeft; }
                     function setScroll(v) { if (sd && sd.set) sd.set.call(scrollEl, v); else scrollEl.scrollLeft = v; }
 
+                    // Puts the page back if it has moved at all while text is selected. Chromium's
+                    // reveal (when a handle reaches a paragraph begun on the previous page) can
+                    // nudge it just a few dozen pixels, which a looser tolerance let through.
+                    // Whether this selection began in paged mode (pages laid out side by side, so
+                    // the document is wider than the screen). Scroll mode is left as it was.
+                    var pagedSelection = false;
+                    function isPaged() { return scrollEl.scrollWidth > window.innerWidth + 1; }
+
+                    function holdPage() {
+                        if (window.__quillSelectionActive && pagedSelection && Math.abs(getScroll() - lockedScrollLeft) > 0.5) {
+                            setScroll(lockedScrollLeft);
+                        }
+                    }
+
                     function rafGuard() {
                         if (!window.__quillSelectionActive) { rafId = null; return; }
-                        if (Math.abs(getScroll() - lockedScrollLeft) > 50) setScroll(lockedScrollLeft);
+                        holdPage();
                         rafId = requestAnimationFrame(rafGuard);
                     }
+
+                    // While text is selected, every scroll is instant. A smooth one runs on the
+                    // compositor, drawing a few frames of its slide before the guard can stop it.
+                    var instantStyle = document.createElement('style');
+                    instantStyle.textContent = 'html, body { scroll-behavior: auto !important; }';
+                    function setInstantScroll(on) {
+                        if (on) {
+                            if (!instantStyle.isConnected) (document.head || document.documentElement).appendChild(instantStyle);
+                        } else if (instantStyle.isConnected) {
+                            instantStyle.remove();
+                        }
+                    }
+
+                    // Scroll events arrive before the next frame's animation callbacks: catching
+                    // a drift here puts the page back that much sooner
+                    window.addEventListener('scroll', holdPage, { passive: true, capture: true });
 
                     document.addEventListener('selectionchange', function() {
                         var sel = window.getSelection();
@@ -637,15 +677,21 @@ fun ReadiumEngine(
                             if (selChangeTimer) { clearTimeout(selChangeTimer); selChangeTimer = null; }
                             if (window.__quillSelectionActive) {
                                 window.__quillSelectionActive = false;
+                                setInstantScroll(false);
                             }
                             return;
                         }
 
                         // ── Selection started ─────────────────────────────────────────────────
                         if (!window.__quillSelectionActive) {
+                            pagedSelection = isPaged();
+                            if (pagedSelection) setInstantScroll(true);
                             lockedScrollLeft = getScroll();
                             window.__quillSelectionActive = true;
                             if (!rafId) rafId = requestAnimationFrame(rafGuard);
+                        } else {
+                            // The handle moved: if that pulled the page, put it back right away
+                            holdPage();
                         }
 
                         // ── Bridge Trigger (Zero-lag Haptics) ───────────────────────────────
@@ -692,17 +738,22 @@ fun ReadiumEngine(
                         }
 
                         // ── Debounce: mark selection as actively changing ──────────────────────
-                        // The toolbar is only shown once this flag clears (300 ms of no changes).
+                        // The toolbar is only shown once this flag clears (once the selection holds still).
                         // The changes in this burst are counted so the poll can tell a handle
                         // drag (many) from the system adjusting a fresh selection (one or two).
                         if (!window.__quillSelChanging) window.__quillSelChangeCount = 0;
                         window.__quillSelChangeCount = (window.__quillSelChangeCount || 0) + 1;
                         window.__quillSelChanging = true;
+                        // How long the selection must hold still to count as settled. A fresh
+                        // selection (a change or two) settles quickly, so the toolbar comes up
+                        // promptly; a handle drag (a run of changes) waits longer, so a brief pause
+                        // mid-drag doesn't pop the toolbar up under the finger.
+                        var settleMs = window.__quillSelChangeCount >= $DRAG_CHANGE_COUNT ? 250 : 90;
                         if (selChangeTimer) clearTimeout(selChangeTimer);
                         selChangeTimer = setTimeout(function() {
                             window.__quillSelChanging = false;
                             window.__quillSelChangeCount = 0;
-                        }, 300);
+                        }, settleMs);
                     });
                 })();
             """.trimIndent()

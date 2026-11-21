@@ -2,21 +2,25 @@ package com.yugentech.quill.insghts.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yugentech.quill.database.dao.BookQuestionCount
+import com.yugentech.quill.database.entity.BookEntity
+import com.yugentech.quill.database.entity.HighlightEntity
+import com.yugentech.quill.database.entity.ReadingSessionEntity
+import com.yugentech.quill.insghts.engine.InsightsEngine
 import com.yugentech.quill.insghts.repository.InsightsRepository
 import com.yugentech.quill.insghts.state.InsightsUiState
-import com.yugentech.quill.insghts.state.ProgressBrackets
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
-import java.util.Calendar
-import com.yugentech.quill.R
-import com.yugentech.quill.localization.AppStrings
+import java.time.ZoneId
 
 class InsightsViewModel(
     private val insightsRepository: InsightsRepository
@@ -29,71 +33,53 @@ class InsightsViewModel(
         loadInsights()
     }
 
+    // Everything Quill keeps about the reader, worked into one report whenever any of it changes
     private fun loadInsights() {
-        val sessionActivityFlow = combine(
+        val readingFlow = combine(
             insightsRepository.getAllSessionsFlow(),
             insightsRepository.getStreakFlow(),
-            insightsRepository.getFinishedBooksCountFlow()
-        ) { sessions, streak, finishedCount ->
-            Triple(sessions, streak, finishedCount)
-        }
-
-        val libraryActivityFlow = combine(
             insightsRepository.getAllBooksFlow(),
+            insightsRepository.getAllHighlightsFlow()
+        ) { sessions, streak, books, highlights -> ReadingData(sessions, streak, books, highlights) }
+
+        val airaFlow = combine(
+            insightsRepository.getVisualsCountFlow(),
             insightsRepository.getTotalUserQuestionsFlow(),
             insightsRepository.getQuestionsPerBookFlow()
-        ) { books, totalQuestions, questionsPerBook ->
-            Triple(books, totalQuestions, questionsPerBook)
-        }
+        ) { visuals, questions, perBook -> AiraData(visuals, questions, perBook) }
 
-        combine(sessionActivityFlow, libraryActivityFlow) { sessionData, libraryData ->
-            val (sessions, streak, finishedCount) = sessionData
-            val (books, totalQuestions, questionsPerBook) = libraryData
-
-            val hourlyCounts = IntArray(24)
-            var totalTime = 0L
-
-            sessions.forEach { session ->
-                totalTime += session.durationMillis
-                val cal = Calendar.getInstance().apply { timeInMillis = session.startTime }
-                hourlyCounts[cal.get(Calendar.HOUR_OF_DAY)]++
-            }
-
-            val peakHourIndex = hourlyCounts.indices.maxByOrNull { hourlyCounts[it] }
-            val validPeakHour = if (peakHourIndex != null && hourlyCounts[peakHourIndex] > 0) {
-                peakHourIndex
-            } else null
-
-            val mostExploredBookId = questionsPerBook.maxByOrNull { it.count }?.bookId
-            val mostExploredBookName = books.find { it.id == mostExploredBookId }?.title ?: AppStrings.get(R.string.none)
-
-            InsightsUiState(
-                totalReadingTimeMillis = totalTime,
-                streakCount = streak,
-                finishedBooksCount = finishedCount,
-                peakHour = validPeakHour,
-                topAuthors = books.filter { it.author.isNotBlank() }
-                    .groupingBy { it.author }
-                    .eachCount()
-                    .entries
-                    .sortedByDescending { it.value }
-                    .take(5)
-                    .associate { it.key to it.value },
-                progressBrackets = ProgressBrackets(
-                    notStarted = books.count { it.progressPercent == 0f },
-                    inProgress = books.count { it.progressPercent > 0f && it.progressPercent < 1f },
-                    finished = finishedCount
-                ),
-                totalQuestionsAsked = totalQuestions,
-                mostExploredBookName = mostExploredBookName,
-                isLoading = false
+        combine(readingFlow, airaFlow) { reading, aira ->
+            InsightsEngine.analyze(
+                now = System.currentTimeMillis(),
+                zone = ZoneId.systemDefault(),
+                sessions = reading.sessions,
+                books = reading.books,
+                highlights = reading.highlights,
+                streak = reading.streak,
+                visuals = aira.visuals,
+                totalQuestions = aira.questions,
+                questionsPerBook = aira.perBook
             )
         }
-            .onEach { state -> _uiState.update { state } }
+            .flowOn(Dispatchers.Default)
+            .onEach { report -> _uiState.update { InsightsUiState(report = report, isLoading = false) } }
             .catch { e ->
-                Timber.Forest.e(e, "Error loading insights")
+                Timber.e(e, "Error loading insights")
                 _uiState.update { it.copy(errorMessage = e.message, isLoading = false) }
             }
             .launchIn(viewModelScope)
     }
+
+    private data class ReadingData(
+        val sessions: List<ReadingSessionEntity>,
+        val streak: Int,
+        val books: List<BookEntity>,
+        val highlights: List<HighlightEntity>
+    )
+
+    private data class AiraData(
+        val visuals: Int,
+        val questions: Int,
+        val perBook: List<BookQuestionCount>
+    )
 }

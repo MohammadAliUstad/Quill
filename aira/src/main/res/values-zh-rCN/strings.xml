@@ -14,7 +14,6 @@
     <string name="airachat_not_encountered">在你目前读过的内容里，我还没遇到“%1$s”。</string>
     <string name="airachat_q_who_is">%1$s是谁？</string>
     <string name="airachat_q_recent_role">%1$s最近在做什么？</string>
-    <string name="airachat_q_journey">%1$s到目前为止经历了什么？</string>
     <string name="airachat_q_significance">“%1$s”有什么意义？</string>
     <string name="airachat_q_define">%1$s是什么意思？</string>
     <string name="airachat_q_what_is">%1$s是什么？</string>

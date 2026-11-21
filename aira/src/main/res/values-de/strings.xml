@@ -14,7 +14,6 @@
     <string name="airachat_not_encountered">„%1$s“ ist mir in dem, was du bisher gelesen hast, noch nicht begegnet.</string>
     <string name="airachat_q_who_is">Wer ist %1$s?</string>
     <string name="airachat_q_recent_role">Was hat %1$s in letzter Zeit gemacht?</string>
-    <string name="airachat_q_journey">Wie verlief der Weg von %1$s bisher?</string>
     <string name="airachat_q_significance">Welche Bedeutung hat „%1$s“?</string>
     <string name="airachat_q_define">Was bedeutet %1$s?</string>
     <string name="airachat_q_what_is">Was ist %1$s?</string>

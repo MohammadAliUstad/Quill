@@ -129,26 +129,6 @@ class QuickChatRepositoryImpl(
                 )
             }
 
-            is QuickPrompt.JourneySoFar -> {
-                val retrieved = ragRetriever.retrieveForJourney(
-                    bookId = bookId,
-                    characterName = quickPrompt.name,
-                    spoilerLockEnabled = true
-                )
-                if (retrieved.isEmpty()) {
-                    emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_not_encountered, quickPrompt.name)))
-                    return@flow
-                }
-                logRetrievedChunks("JourneySoFar", quickPrompt.name, retrieved)
-                QuickChatPayload(
-                    actionType = QuickChatType.JOURNEY_SO_FAR,
-                    bookTitle = book.title,
-                    bookAuthor = book.author,
-                    context = QuickBuilder.buildContextBlock(retrieved),
-                    query = quickPrompt.name
-                )
-            }
-
             is QuickPrompt.WhatAreTheThemes -> {
                 val localFilePath = book.localFilePath
                 val chapter = localFilePath?.let {
@@ -364,7 +344,6 @@ class QuickChatRepositoryImpl(
         is QuickPrompt.WhatAreTheThemes -> AiraStrings.get(R.string.airachat_q_themes)
         is QuickPrompt.RecallCharacter -> AiraStrings.get(R.string.airachat_q_who_is, name)
         is QuickPrompt.RecentRole -> AiraStrings.get(R.string.airachat_q_recent_role, name)
-        is QuickPrompt.JourneySoFar -> AiraStrings.get(R.string.airachat_q_journey, name)
         is QuickPrompt.WhatIsTheSignificance -> AiraStrings.get(R.string.airachat_q_significance, text)
         is QuickPrompt.SummarizeChapter -> AiraStrings.get(R.string.airachat_q_summarize)
         is QuickPrompt.DefineWord -> AiraStrings.get(R.string.airachat_q_define, word)

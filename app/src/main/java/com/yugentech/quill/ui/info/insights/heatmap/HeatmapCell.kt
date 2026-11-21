@@ -1,6 +1,8 @@
-package com.yugentech.quill.ui.info.insights.components.heatMap
+package com.yugentech.quill.ui.info.insights.heatmap
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,35 +15,42 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/** One day: -1 is outside the range (drawn empty), 0 no reading, 1–5 more reading. */
 @Composable
 fun HeatmapCell(
     intensity: Int,
-    size: Dp,
-    dayOfMonth: Int? = null
+    size: Dp = 24.dp,
+    dayOfMonth: Int? = null,
+    isSelected: Boolean = false,
+    onClick: (() -> Unit)? = null
 ) {
+    val colors = MaterialTheme.colorScheme
     val backgroundColor = when {
         intensity == -1 -> Color.Transparent
-        intensity == 0 -> MaterialTheme.colorScheme.surfaceContainerHighest
-        intensity < 2 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-        intensity < 4 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
-        else -> MaterialTheme.colorScheme.primary
+        intensity == 0 -> colors.surfaceContainerHighest
+        intensity < 2 -> colors.primary.copy(alpha = 0.25f)
+        intensity < 4 -> colors.primary.copy(alpha = 0.55f)
+        else -> colors.primary
     }
-
     val textColor = when {
         intensity == -1 -> Color.Transparent
-        intensity == 0 -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        intensity < 2 -> MaterialTheme.colorScheme.primary
-        intensity < 4 -> MaterialTheme.colorScheme.onPrimaryContainer
-        else -> MaterialTheme.colorScheme.onPrimary
+        intensity == 0 -> colors.onSurfaceVariant.copy(alpha = 0.5f)
+        intensity < 2 -> colors.primary
+        intensity < 4 -> colors.onPrimaryContainer
+        else -> colors.onPrimary
     }
+    val shape = RoundedCornerShape(size * 0.25f)
 
     Box(
         modifier = Modifier
             .size(size)
-            .clip(RoundedCornerShape(size * 0.25f))
-            .background(backgroundColor),
+            .clip(shape)
+            .background(backgroundColor)
+            .then(if (isSelected) Modifier.border(2.dp, colors.onSurface, shape) else Modifier)
+            .then(if (onClick != null && intensity != -1) Modifier.clickable(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center
     ) {
         if (dayOfMonth != null && intensity != -1) {

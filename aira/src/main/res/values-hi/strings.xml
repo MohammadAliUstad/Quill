@@ -14,7 +14,6 @@
     <string name="airachat_not_encountered">आपने अब तक जो पढ़ा है, उसमें मुझे “%1$s” नहीं मिला।</string>
     <string name="airachat_q_who_is">%1$s कौन है?</string>
     <string name="airachat_q_recent_role">%1$s हाल में क्या कर रहा है?</string>
-    <string name="airachat_q_journey">अब तक %1$s का सफ़र कैसा रहा है?</string>
     <string name="airachat_q_significance">“%1$s” का क्या महत्व है?</string>
     <string name="airachat_q_define">%1$s का क्या अर्थ है?</string>
     <string name="airachat_q_what_is">%1$s क्या है?</string>

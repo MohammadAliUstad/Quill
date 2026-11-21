@@ -422,8 +422,6 @@
     <string name="no_questions_yet">Aún no hay preguntas</string>
     <string name="total_conversations">Conversaciones totales con Aira</string>
     <string name="most_explored">Lo más explorado con Aira</string>
-    <string name="peak_none_title">Aún no hay datos</string>
-    <string name="peak_none_body">Empieza a leer para descubrir tu ritmo</string>
     <string name="peak_morning">Lees por las mañanas</string>
     <string name="peak_afternoon">Las tardes son tu momento de leer</string>
     <string name="peak_evening">Al caer la noche te acomodas a leer</string>
@@ -432,7 +430,121 @@
     <string name="heatmap_subtitle">Tu año en píxeles</string>
     <string name="heatmap_less">Menos</string>
     <string name="heatmap_more">Más</string>
-    <string name="none">Ninguno</string>
+    <string name="insights_for_you_title">Para ti</string>
+    <string name="insights_for_you_subtitle">Patrones en tu forma de leer y qué probar después</string>
+    <string name="insights_this_week">Esta semana</string>
+    <string name="insights_days_of_week">%1$d/7</string>
+    <string name="insights_days_label">días</string>
+    <string name="insights_trend_none">Aún no has leído esta semana</string>
+    <string name="insights_trend_fresh">Un nuevo comienzo esta semana</string>
+    <string name="insights_trend_more">%1$s más que la semana pasada</string>
+    <string name="insights_trend_less">%1$s menos que la semana pasada</string>
+    <string name="insights_trend_same">Más o menos igual que la semana pasada</string>
+    <string name="insights_glance_time">Tiempo leído</string>
+    <string name="insights_glance_streak">Días seguidos</string>
+    <string name="insights_glance_finished">Terminados</string>
+    <string name="insights_rhythm_title">Tu ritmo</string>
+    <string name="insights_rhythm_subtitle">Cuándo lees a lo largo del día</string>
+    <string name="insights_rhythm_empty">Lee un rato para descubrir tu ritmo</string>
+    <string name="insights_part_morning">Mañana</string>
+    <string name="insights_part_afternoon">Tarde</string>
+    <string name="insights_part_evening">Noche</string>
+    <string name="insights_part_night">Madrugada</string>
+    <string name="insights_bests_title">Récords personales</string>
+    <string name="insights_bests_subtitle">Tus marcas de lectura hasta ahora</string>
+    <string name="insights_best_session">Sesión más larga</string>
+    <string name="insights_avg_session">Sesión media</string>
+    <string name="insights_best_day">Mejor día</string>
+    <string name="insights_best_streak">Racha más larga</string>
+    <string name="insights_top_books_title">Lo más leído</string>
+    <string name="insights_top_books_subtitle">Los libros con los que más tiempo has pasado</string>
+    <string name="insights_top_books_empty">Lee un libro un rato para verlo aquí</string>
+    <string name="insights_percent_read">%1$d %% leído</string>
+    <string name="insights_status_finished">Terminados</string>
+    <string name="insights_status_reading">Leyendo</string>
+    <string name="insights_status_not_started">Sin empezar</string>
+    <string name="insights_highlights_section_title">Subrayados y notas</string>
+    <string name="insights_highlights_section_subtitle">Lo que te llamó la atención</string>
+    <string name="insights_highlights_empty">Subraya un pasaje mientras lees para verlo aquí</string>
+    <string name="insights_highlights_label">Subrayados</string>
+    <string name="insights_notes_label">Notas</string>
+    <string name="insights_this_month_label">Este mes</string>
+    <string name="insights_most_highlighted">El más subrayado</string>
+    <plurals name="insights_visuals_created">
+        <item quantity="one">%1$d imagen creada</item>
+        <item quantity="many">%1$d imágenes creadas</item>
+        <item quantity="other">%1$d imágenes creadas</item>
+    </plurals>
+    <string name="insights_no_reading">Sin lectura</string>
+    <string name="insights_under_minute">Menos de un minuto</string>
+    <string name="insights_seed_title">Tus estadísticas crecen a medida que lees</string>
+    <string name="insights_seed_body">Abre un libro y lee un rato. Aquí empezarán a aparecer patrones en tu forma de leer.</string>
+    <string name="insights_quiet_title">Una semana tranquila</string>
+    <string name="insights_quiet_body">Leíste por última vez %1$s. Diez minutos hoy te devuelven al hilo de la historia.</string>
+    <string name="insights_steady_title">Leíste %1$d de los últimos 7 días</string>
+    <string name="insights_steady_body">Un poco cada día es como se terminan los libros. Sigue con este ritmo.</string>
+    <string name="insights_up_title">Más lectura que la semana pasada</string>
+    <string name="insights_up_body">%1$s esta semana, frente a %2$s la semana pasada.</string>
+    <string name="insights_down_title">Menos lectura que la semana pasada</string>
+    <string name="insights_down_body">%1$s hasta ahora, frente a %2$s la semana pasada. Un capítulo antes de dormir suma rápido.</string>
+    <string name="insights_streak_risk_title">Mantén tu racha</string>
+    <plurals name="insights_streak_risk_body">
+        <item quantity="one">Aún no has leído hoy. Unas pocas páginas mantienen viva tu racha de %1$d día.</item>
+        <item quantity="many">Aún no has leído hoy. Unas pocas páginas mantienen viva tu racha de %1$d días.</item>
+        <item quantity="other">Aún no has leído hoy. Unas pocas páginas mantienen viva tu racha de %1$d días.</item>
+    </plurals>
+    <string name="insights_record_title">Tu racha más larga hasta ahora</string>
+    <plurals name="insights_record_body">
+        <item quantity="one">%1$d día seguido, tu mejor racha. Lee mañana para llegar a %2$d.</item>
+        <item quantity="many">%1$d días seguidos, tu mejor racha. Lee mañana para llegar a %2$d.</item>
+        <item quantity="other">%1$d días seguidos, tu mejor racha. Lee mañana para llegar a %2$d.</item>
+    </plurals>
+    <plurals name="insights_near_record_title">
+        <item quantity="one">A %1$d día de tu récord</item>
+        <item quantity="many">A %1$d días de tu récord</item>
+        <item quantity="other">A %1$d días de tu récord</item>
+    </plurals>
+    <plurals name="insights_near_record_body">
+        <item quantity="one">Tu racha más larga es de %1$d día. Sigue leyendo cada día para superarla.</item>
+        <item quantity="many">Tu racha más larga es de %1$d días. Sigue leyendo cada día para superarla.</item>
+        <item quantity="other">Tu racha más larga es de %1$d días. Sigue leyendo cada día para superarla.</item>
+    </plurals>
+    <string name="insights_time_morning">El %1$d %% de tu tiempo de lectura es por la mañana.</string>
+    <string name="insights_time_afternoon">El %1$d %% de tu tiempo de lectura es por la tarde.</string>
+    <string name="insights_time_evening">El %1$d %% de tu tiempo de lectura es al anochecer.</string>
+    <string name="insights_time_night">El %1$d %% de tu tiempo de lectura es de madrugada.</string>
+    <string name="insights_short_title">Lees en ratos cortos</string>
+    <string name="insights_short_body">Tus sesiones duran de media %1$s. Las cortas también cuentan: todas suman hasta el siguiente capítulo.</string>
+    <string name="insights_long_title">Te sumerges en lecturas largas</string>
+    <string name="insights_long_body">Tus sesiones duran de media %1$s. Eso es tiempo de verdad para leer a fondo.</string>
+    <string name="insights_finish_title">Quedan unos %1$s de %2$s</string>
+    <string name="insights_finish_body">Al ritmo con el que lo has leído hasta ahora, es lo que falta para llegar al final.</string>
+    <string name="insights_waiting_title">%1$s te está esperando</string>
+    <string name="insights_waiting_body">Llevas el %1$d %% y lo abriste por última vez %2$s.</string>
+    <plurals name="insights_unread_title">
+        <item quantity="one">%1$d libro sin empezar</item>
+        <item quantity="many">%1$d libros sin empezar</item>
+        <item quantity="other">%1$d libros sin empezar</item>
+    </plurals>
+    <string name="insights_unread_body">Elige cuál leer después, para tenerlo listo cuando termines el actual.</string>
+    <plurals name="insights_hours_title">
+        <item quantity="one">%1$d hora de lectura</item>
+        <item quantity="many">%1$d horas de lectura</item>
+        <item quantity="other">%1$d horas de lectura</item>
+    </plurals>
+    <string name="insights_hours_body">Es el tiempo que has pasado con tus libros en Quill.</string>
+    <plurals name="insights_highlights_title">
+        <item quantity="one">%1$d subrayado este mes</item>
+        <item quantity="many">%1$d subrayados este mes</item>
+        <item quantity="other">%1$d subrayados este mes</item>
+    </plurals>
+    <string name="insights_highlights_body">Tu libro más subrayado es %1$s.</string>
+    <string name="insights_notes_title">Prueba a añadir una nota</string>
+    <plurals name="insights_notes_body">
+        <item quantity="one">Has hecho %1$d subrayado. Una línea sobre por qué te marcó un pasaje hace más fácil volver a él.</item>
+        <item quantity="many">Has hecho %1$d subrayados. Una línea sobre por qué te marcó un pasaje hace más fácil volver a él.</item>
+        <item quantity="other">Has hecho %1$d subrayados. Una línea sobre por qué te marcó un pasaje hace más fácil volver a él.</item>
+    </plurals>
     <string name="unknown_book">Libro desconocido</string>
     <string name="no_downloads_list">No hay libros descargados.</string>
     <string name="delete_download_title">¿Eliminar la descarga?</string>
@@ -614,10 +726,7 @@
     <string name="aira_cap_themes_body">Explora el significado profundo de los símbolos, los motivos y la intención del autor.</string>
     <string name="aira_cap_spoilers_title">Protección contra spoilers</string>
     <string name="aira_cap_spoilers_body">Aira limita su conocimiento a tu progreso exacto de lectura para proteger la historia.</string>
-    <string name="aira_closing_title">Hecha para los\nlectores que\nnunca paran.</string>
-    <string name="aira_vision_1">Los libros cobran vida con contexto, no con spoilers.</string>
-    <string name="aira_vision_2">Cada pregunta, respondida desde la propia página.</string>
-    <string name="aira_vision_3">Una compañera de lectura que crece contigo.</string>
+    <string name="aira_note_body">Estoy aquí para los pequeños momentos: un nombre que olvidaste, una palabra que no conoces, una escena que quieres imaginar. Pregunta y te devuelvo a la historia.</string>
     <string name="aira_hero_tagline">Tu asistente de lectura con IA</string>
     <string name="aira_p1_title">Basada en el texto</string>
     <string name="aira_p1_body">Aira no adivina. Sus respuestas salen siempre de los pasajes reales del libro que estás leyendo.</string>
@@ -626,7 +735,6 @@
     <string name="aira_p3_title">Protege la trama</string>
     <string name="aira_p3_body">El conocimiento de Aira se limita estrictamente a tu progreso. Nunca revelará hechos ni giros de capítulos que no hayas leído.</string>
     <string name="capabilities">Capacidades</string>
-    <string name="vision">Visión</string>
     <string name="attributions_subtitle">Impulsado por la comunidad</string>
     <string name="credit_design_title">Diseño e ilustraciones</string>
     <string name="credit_design_subtitle">Ilustraciones de</string>
@@ -657,7 +765,7 @@
     <string name="wn_4_page_title">Pregunta a Aira desde la página</string>
     <string name="wn_4_page_body">Selecciona cualquier palabra o pasaje mientras lees y Aira estará ahí. Define palabras, explica líneas difíciles o descubre por qué importa un momento, sin salir del libro.</string>
     <string name="wn_4_character_title">Guía de personajes</string>
-    <string name="wn_4_character_body">Selecciona el nombre de un personaje para recordar quién es, ver qué ha hecho últimamente o repasar todo su recorrido. Siempre sin spoilers.</string>
+    <string name="wn_4_character_body">Selecciona el nombre de un personaje para recordar quién es o ver qué ha hecho últimamente. Siempre sin spoilers.</string>
     <string name="wn_4_visualize_body">Convierte cualquier pasaje en una ilustración pintada. Tus imágenes se guardan en una galería, y al tocar una vuelves directamente al pasaje del que salió.</string>
     <string name="wn_4_highlights_body">Una forma más fluida de seleccionar texto, y resaltados que puedes repasar en un solo lugar y desde los que vuelves directamente al libro.</string>
     <string name="wn_4_reader_title">Un lector reinventado</string>
@@ -835,4 +943,6 @@
     <string name="guest_aira_step_export">Exporta tu biblioteca desde Más › Copia de seguridad para no perder nada</string>
     <string name="guest_aira_step_exit">Sal del modo invitado, también en Más</string>
     <string name="guest_aira_step_signup">Regístrate, importa tu copia y pregúntale a Aira hasta %1$d veces al día gratis</string>
+
+    <!-- How to use Aira (tutorial) -->
 </resources>

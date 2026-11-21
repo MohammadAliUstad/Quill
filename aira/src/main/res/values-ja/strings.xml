@@ -14,7 +14,6 @@
     <string name="airachat_not_encountered">ここまでに読んだ部分では、「%1$s」はまだ出てきていません。</string>
     <string name="airachat_q_who_is">%1$sは誰？</string>
     <string name="airachat_q_recent_role">%1$sは最近何をしている？</string>
-    <string name="airachat_q_journey">%1$sのこれまでの歩みは？</string>
     <string name="airachat_q_significance">「%1$s」にはどんな意味がある？</string>
     <string name="airachat_q_define">%1$sはどういう意味？</string>
     <string name="airachat_q_what_is">%1$sとは何？</string>

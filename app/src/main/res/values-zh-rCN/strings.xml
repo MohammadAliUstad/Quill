@@ -422,8 +422,6 @@
     <string name="no_questions_yet">还没有提问</string>
     <string name="total_conversations">与 Aira 的对话总数</string>
     <string name="most_explored">与 Aira 探讨最多</string>
-    <string name="peak_none_title">暂无数据</string>
-    <string name="peak_none_body">开始阅读，发现你的阅读节奏</string>
     <string name="peak_morning">你是早晨型读者</string>
     <string name="peak_afternoon">午后是你的阅读时光</string>
     <string name="peak_evening">你喜欢在傍晚安静读书</string>
@@ -432,7 +430,103 @@
     <string name="heatmap_subtitle">用像素记录你的一年</string>
     <string name="heatmap_less">少</string>
     <string name="heatmap_more">多</string>
-    <string name="none">无</string>
+    <string name="insights_for_you_title">为你推荐</string>
+    <string name="insights_for_you_subtitle">你的阅读规律，以及接下来可以尝试的事</string>
+    <string name="insights_this_week">本周</string>
+    <string name="insights_days_of_week">%1$d/7</string>
+    <string name="insights_days_label">天</string>
+    <string name="insights_trend_none">本周还没有阅读</string>
+    <string name="insights_trend_fresh">本周新的开始</string>
+    <string name="insights_trend_more">比上周多 %1$s</string>
+    <string name="insights_trend_less">比上周少 %1$s</string>
+    <string name="insights_trend_same">和上周差不多</string>
+    <string name="insights_glance_time">阅读时长</string>
+    <string name="insights_glance_streak">连续天数</string>
+    <string name="insights_glance_finished">已读完</string>
+    <string name="insights_rhythm_title">你的节奏</string>
+    <string name="insights_rhythm_subtitle">你一天中什么时候阅读</string>
+    <string name="insights_rhythm_empty">读一会儿，发现你的阅读节奏</string>
+    <string name="insights_part_morning">早晨</string>
+    <string name="insights_part_afternoon">下午</string>
+    <string name="insights_part_evening">傍晚</string>
+    <string name="insights_part_night">夜间</string>
+    <string name="insights_bests_title">个人最佳</string>
+    <string name="insights_bests_subtitle">到目前为止的阅读纪录</string>
+    <string name="insights_best_session">最长单次</string>
+    <string name="insights_avg_session">平均单次</string>
+    <string name="insights_best_day">最佳一天</string>
+    <string name="insights_best_streak">最长连续</string>
+    <string name="insights_top_books_title">读得最多</string>
+    <string name="insights_top_books_subtitle">你花时间最多的书</string>
+    <string name="insights_top_books_empty">读一会儿书，它就会出现在这里</string>
+    <string name="insights_percent_read">已读 %1$d%%</string>
+    <string name="insights_status_finished">已读完</string>
+    <string name="insights_status_reading">在读</string>
+    <string name="insights_status_not_started">未开始</string>
+    <string name="insights_highlights_section_title">划线与笔记</string>
+    <string name="insights_highlights_section_subtitle">打动你的地方</string>
+    <string name="insights_highlights_empty">阅读时划线标记一段文字，它就会出现在这里</string>
+    <string name="insights_highlights_label">划线</string>
+    <string name="insights_notes_label">笔记</string>
+    <string name="insights_this_month_label">本月</string>
+    <string name="insights_most_highlighted">划线最多</string>
+    <plurals name="insights_visuals_created">
+        <item quantity="other">已生成 %1$d 张配图</item>
+    </plurals>
+    <string name="insights_no_reading">未阅读</string>
+    <string name="insights_under_minute">不到一分钟</string>
+    <string name="insights_seed_title">读得越多，洞察越多</string>
+    <string name="insights_seed_body">打开一本书读一会儿，你的阅读规律就会开始出现在这里。</string>
+    <string name="insights_quiet_title">安静的一周</string>
+    <string name="insights_quiet_body">你上次阅读是在 %1$s。今天读上十分钟，就能重新接上故事。</string>
+    <string name="insights_steady_title">过去 7 天中你有 %1$d 天在阅读</string>
+    <string name="insights_steady_body">每天读一点，书就是这样读完的。保持这个节奏吧。</string>
+    <string name="insights_up_title">比上周读得多</string>
+    <string name="insights_up_body">本周 %1$s，上周 %2$s。</string>
+    <string name="insights_down_title">比上周读得少</string>
+    <string name="insights_down_body">本周目前 %1$s，上周 %2$s。睡前读一章，很快就能积少成多。</string>
+    <string name="insights_streak_risk_title">保持你的连续阅读</string>
+    <plurals name="insights_streak_risk_body">
+        <item quantity="other">你今天还没有阅读。读几页就能延续你 %1$d 天的连续纪录。</item>
+    </plurals>
+    <string name="insights_record_title">你迄今最长的连续纪录</string>
+    <plurals name="insights_record_body">
+        <item quantity="other">已连续 %1$d 天，这是你的最佳纪录。明天继续读，就能达到 %2$d 天。</item>
+    </plurals>
+    <plurals name="insights_near_record_title">
+        <item quantity="other">距离纪录还差 %1$d 天</item>
+    </plurals>
+    <plurals name="insights_near_record_body">
+        <item quantity="other">你最长的连续纪录是 %1$d 天。每天坚持阅读，打破它吧。</item>
+    </plurals>
+    <string name="insights_time_morning">你 %1$d%% 的阅读时间在早晨。</string>
+    <string name="insights_time_afternoon">你 %1$d%% 的阅读时间在下午。</string>
+    <string name="insights_time_evening">你 %1$d%% 的阅读时间在傍晚。</string>
+    <string name="insights_time_night">你 %1$d%% 的阅读时间在夜间。</string>
+    <string name="insights_short_title">你习惯碎片化阅读</string>
+    <string name="insights_short_body">你平均每次阅读 %1$s。短时间也算数：它们会一起把你带到下一章。</string>
+    <string name="insights_long_title">你喜欢沉浸式长时间阅读</string>
+    <string name="insights_long_body">你平均每次阅读 %1$s。这是真正用来深度阅读的时间。</string>
+    <string name="insights_finish_title">《%2$s》还剩约 %1$s</string>
+    <string name="insights_finish_body">按你目前的阅读速度，读完全书大约还需要这么久。</string>
+    <string name="insights_waiting_title">《%1$s》在等你</string>
+    <string name="insights_waiting_body">你已读到 %1$d%%，上次打开是在 %2$s。</string>
+    <plurals name="insights_unread_title">
+        <item quantity="other">%1$d 本书还没开始读</item>
+    </plurals>
+    <string name="insights_unread_body">先选好下一本，读完手头这本时就能马上开始。</string>
+    <plurals name="insights_hours_title">
+        <item quantity="other">阅读 %1$d 小时</item>
+    </plurals>
+    <string name="insights_hours_body">这是你在 Quill 中与书相伴的时间。</string>
+    <plurals name="insights_highlights_title">
+        <item quantity="other">本月划线 %1$d 处</item>
+    </plurals>
+    <string name="insights_highlights_body">你划线最多的书是《%1$s》。</string>
+    <string name="insights_notes_title">试着添加一条笔记</string>
+    <plurals name="insights_notes_body">
+        <item quantity="other">你已划线 %1$d 处。写一句为什么这段文字打动了你，以后回看会更容易。</item>
+    </plurals>
     <string name="unknown_book">未知图书</string>
     <string name="no_downloads_list">当前没有已下载的图书。</string>
     <string name="delete_download_title">要删除下载内容吗？</string>
@@ -614,10 +708,7 @@
     <string name="aira_cap_themes_body">探索符号、动机和作者意图背后的深层含义。</string>
     <string name="aira_cap_spoilers_title">防剧透保护</string>
     <string name="aira_cap_spoilers_body">Aira 把她的知识严格限定在你的阅读进度，守护故事的惊喜。</string>
-    <string name="aira_closing_title">为永不止步的\n读者\n而生。</string>
-    <string name="aira_vision_1">让书籍因语境而鲜活，而不是因剧透。</string>
-    <string name="aira_vision_2">每个问题都从书页本身找到答案。</string>
-    <string name="aira_vision_3">一位与你一同成长的阅读伙伴。</string>
+    <string name="aira_note_body">我为那些小小的时刻而在：一个忘了的名字，一个不认识的词，一个想在脑海里看见的场景。问我吧，我会带你回到故事里。</string>
     <string name="aira_hero_tagline">你的 AI 阅读助手</string>
     <string name="aira_p1_title">立足原文</string>
     <string name="aira_p1_body">Aira 不会瞎猜。她的回答严格取自你正在阅读的这本书的原文段落。</string>
@@ -626,7 +717,6 @@
     <string name="aira_p3_title">守护情节</string>
     <string name="aira_p3_body">Aira 的知识严格限定在你的阅读进度。她绝不会透露你尚未读到的章节中的情节或反转。</string>
     <string name="capabilities">能力</string>
-    <string name="vision">愿景</string>
     <string name="attributions_subtitle">由社区驱动</string>
     <string name="credit_design_title">设计与插画</string>
     <string name="credit_design_subtitle">插画作者</string>
@@ -657,7 +747,7 @@
     <string name="wn_4_page_title">在书页上直接问 Aira</string>
     <string name="wn_4_page_body">阅读时选中任意词语或段落，Aira 就在那里。查词义、解释难懂的句子，或弄明白某个时刻为何重要，都无需离开这本书。</string>
     <string name="wn_4_character_title">角色助手</string>
-    <string name="wn_4_character_body">选中人物的名字，即可回想他是谁、最近在做什么，或回顾他至今的完整经历。始终无剧透。</string>
+    <string name="wn_4_character_body">选中人物的名字，即可回想他是谁或最近在做什么。始终无剧透。</string>
     <string name="wn_4_visualize_body">把任意段落变成一幅绘画插图。你的图片都保存在画廊里，点按其中一张即可直接回到它所来自的段落。</string>
     <string name="wn_4_highlights_body">更顺手的文字选择，以及可以集中回顾、并能直接跳回书中原处的高亮。</string>
     <string name="wn_4_reader_title">重新构想的阅读器</string>
@@ -819,4 +909,6 @@
     <string name="guest_aira_step_export">在“多 › 备份”中导出你的书库，确保什么都不会丢失</string>
     <string name="guest_aira_step_exit">同样在“多”中退出访客模式</string>
     <string name="guest_aira_step_signup">注册并导入备份后，每天可免费向 Aira 提问最多 %1$d 次</string>
+
+    <!-- How to use Aira (tutorial) -->
 </resources>

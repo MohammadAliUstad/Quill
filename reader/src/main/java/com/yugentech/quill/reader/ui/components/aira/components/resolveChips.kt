@@ -30,7 +30,6 @@ fun resolveChips(
             if (looksLikeProperNoun) {
                 add(R.string.reader_chip_who_is_this to QuickPrompt.RecallCharacter(word))
                 add(R.string.reader_chip_recent_role to QuickPrompt.RecentRole(word))
-                add(R.string.reader_chip_journey to QuickPrompt.JourneySoFar(word, currentChapterIndex))
             }
         }
         in 2..3 -> buildList {
@@ -38,7 +37,6 @@ fun resolveChips(
             if (looksLikeProperNoun) {
                 add(R.string.reader_chip_who_is_this to QuickPrompt.RecallCharacter(trimmed))
                 add(R.string.reader_chip_recent_role to QuickPrompt.RecentRole(trimmed))
-                add(R.string.reader_chip_journey to QuickPrompt.JourneySoFar(trimmed, currentChapterIndex))
             }
         }
         else -> listOf(
