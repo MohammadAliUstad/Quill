@@ -54,7 +54,7 @@ val authModule = module {
         )
     }
 
-    // Export and import of a guest's library, in More
+    // Export and import of a guest's library, in Settings
     viewModel {
         GuestBackupViewModel(
             authRepository = get(),

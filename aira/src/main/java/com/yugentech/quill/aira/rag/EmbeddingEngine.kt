@@ -53,7 +53,7 @@ class EmbeddingEngine(
                 ortSession = ortEnv!!.createSession(cachedModelFile.absolutePath, options)
                 tokenizer = WordPieceTokenizer(context)
             } catch (e: Exception) {
-                Timber.e(e, "✗ Failed to initialize EmbeddingEngine")
+                Timber.e(e, "Failed to initialize EmbeddingEngine")
             }
         }
     }
@@ -101,7 +101,7 @@ class EmbeddingEngine(
             return@withContext normalize(pooled)
 
         } catch (e: Exception) {
-            Timber.e(e, "✗ Inference failed for text: ${text.take(50)}...")
+            Timber.e(e, "Embedding inference failed")
             return@withContext null
         }
     }

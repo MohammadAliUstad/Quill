@@ -118,7 +118,6 @@ class BillingService(context: Context) {
                     prefs.getString(KEY_USER_ID, null) == userId &&
                     prefs.getBoolean(KEY_IS_PRO, false)
         }
-        Timber.d("Billing user changed")
     }
 
     // Only for the account Play was asked about: it may have changed while Play was answering
@@ -201,11 +200,9 @@ class BillingService(context: Context) {
     }
 
     private fun startConnection(attempt: CompletableDeferred<Boolean>) {
-        Timber.d("BillingClient connecting")
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(result: BillingResult) {
                 if (result.responseCode == BillingResponseCode.OK) {
-                    Timber.d("BillingClient connected")
                     attempt.complete(true)
                     scope.launch {
                         querySubProducts()

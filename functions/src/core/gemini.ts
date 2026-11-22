@@ -1,10 +1,11 @@
 import {
-  GoogleGenerativeAI,
   Content,
+  GoogleGenAI,
   HarmBlockThreshold,
   HarmCategory,
   SafetySetting,
-} from "@google/generative-ai";
+  ThinkingLevel,
+} from "@google/genai";
 import { HttpsError } from "firebase-functions/v2/https";
 
 /**
@@ -19,10 +20,7 @@ const SAFETY_SETTINGS: SafetySetting[] = [
   HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
 ].map((category) => ({ category, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH }));
 
-/**
- * The finish reasons that mean a safety filter stopped the answer. Plain strings: the API sends
- * newer reasons (PROHIBITED_CONTENT, BLOCKLIST, SPII) than this SDK version's enum knows.
- */
+/** The finish reasons that mean a safety filter stopped the answer. */
 const BLOCK_REASONS = new Set<string>(["SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST", "SPII"]);
 
 /**
@@ -36,37 +34,42 @@ export const contentBlockedError = (reason: string) =>
     { reason: "content_blocked", blockReason: reason }
   );
 
-export const callGemini = async (
-  key: string,
-  modelName: string,
-  contents: Content[],
-  systemInstruction?: string,
-  temperature = 0.4,
-  maxOutputTokens = 4096
-): Promise<string> => {
-  const genAI = new GoogleGenerativeAI(key);
-  const model = genAI.getGenerativeModel({
-    model: modelName,
-    systemInstruction: systemInstruction,
-    safetySettings: SAFETY_SETTINGS,
-  });
+export interface GeminiRequest {
+  model: string;
+  contents: Content[];
+  systemInstruction?: string;
+  thinkingLevel: ThinkingLevel;
+  /** Covers the model's thinking as well as the answer, so leave room for both. */
+  maxOutputTokens: number;
+  /** Plain JSON out, for the router. */
+  json?: boolean;
+}
+
+/**
+ * One Gemini call. Temperature is left at the model's default: Gemini 3 models are tuned for it,
+ * and Google advises against lowering it.
+ */
+export const callGemini = async (key: string, request: GeminiRequest): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: key });
 
   try {
-    const result = await model.generateContent({
-      contents,
-      generationConfig: {
-        temperature,
-        maxOutputTokens,
+    const response = await ai.models.generateContent({
+      model: request.model,
+      contents: request.contents,
+      config: {
+        systemInstruction: request.systemInstruction,
+        safetySettings: SAFETY_SETTINGS,
+        maxOutputTokens: request.maxOutputTokens,
+        thinkingConfig: { thinkingLevel: request.thinkingLevel },
+        ...(request.json ? { responseMimeType: "application/json" } : {}),
       },
     });
 
-    const response = result.response;
-
     // A refusal: the prompt itself was blocked, or the answer was stopped by a safety filter
     const promptBlock = response.promptFeedback?.blockReason;
-    const finishReason = response.candidates?.[0]?.finishReason;
+    const finishReason = String(response.candidates?.[0]?.finishReason ?? "");
     const blockReason =
-      promptBlock ?? (finishReason && BLOCK_REASONS.has(finishReason) ? finishReason : undefined);
+      promptBlock ?? (BLOCK_REASONS.has(finishReason) ? finishReason : undefined);
     if (blockReason) {
       console.warn("Gemini blocked the request:", {
         blockReason,
@@ -75,12 +78,11 @@ export const callGemini = async (
       throw contentBlockedError(String(blockReason));
     }
 
-    const text = response.text();
-
+    const text = response.text?.trim();
     if (!text) {
-      throw new HttpsError("internal", "No text content in Gemini response");
+      // The finish reason goes in the message: the app shows its own note for MAX_TOKENS
+      throw new HttpsError("internal", `No text content in Gemini response (${finishReason || "unknown"})`);
     }
-
     return text;
   } catch (error: any) {
     // Already a deliberate error (a block, or the empty-response check above)
@@ -88,15 +90,12 @@ export const callGemini = async (
       throw error;
     }
 
-    console.error("Gemini SDK Error:", error);
+    console.error("Gemini SDK error:", error);
 
-    if (error.message?.includes("429") || error.status === 429) {
+    if (error?.status === 429 || error?.message?.includes("429")) {
       throw new HttpsError("resource-exhausted", "Gemini API quota exceeded");
     }
 
-    throw new HttpsError(
-      "internal",
-      `Gemini API failed: ${error.message || "Unknown SDK error"}`
-    );
+    throw new HttpsError("internal", `Gemini API failed: ${error?.message || "Unknown SDK error"}`);
   }
 };

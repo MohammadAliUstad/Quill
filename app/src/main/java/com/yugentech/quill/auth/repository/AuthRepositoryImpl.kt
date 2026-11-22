@@ -10,7 +10,6 @@ import com.yugentech.quill.domain.AuthResult
 import com.yugentech.quill.domain.AuthUser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import timber.log.Timber
 
 // Implementation that delegates calls to the underlying AuthService, plus the local guest
 class AuthRepositoryImpl(
@@ -32,7 +31,6 @@ class AuthRepositoryImpl(
     private fun adoptAnonymousGuest() {
         val user = authService.currentUser ?: return
         if (!user.isAnonymous) return
-        Timber.i("Moving an anonymous Firebase guest to a local guest")
         guestSession.adopt(user.uid)
         authService.signOut()
     }
@@ -73,37 +71,31 @@ class AuthRepositoryImpl(
         email: String,
         password: String
     ): AuthResult<FirebaseUser> {
-        Timber.i("Sign up requested")
         return authService.signUp(name, email, password)
     }
 
     // Authenticates an existing user
     override suspend fun signIn(email: String, password: String): AuthResult<FirebaseUser> {
-        Timber.i("Sign in requested")
         return authService.signIn(email, password)
     }
 
     // Triggers a password recovery email for the user
     override suspend fun sendPasswordResetEmail(email: String): AuthResult<Unit> {
-        Timber.i("Password reset requested")
         return authService.sendPasswordResetEmail(email)
     }
 
     // Logs the current user out of the application
     override fun signOut() {
-        Timber.i("Signing out current user")
         authService.signOut()
     }
 
     // Prepares the intent required to launch the Google Sign-In flow
     override suspend fun getGoogleSignInIntent(webClientId: String): AuthResult<PendingIntent> {
-        Timber.d("Requesting Google Sign-In Intent")
         return authService.getGoogleSignInIntent(webClientId)
     }
 
     // Processes the result returned from the Google Sign-In activity
     override suspend fun handleGoogleSignInResult(data: Intent?): AuthResult<FirebaseUser> {
-        Timber.i("Handling Google Sign-In result")
         return authService.handleGoogleSignInResult(data)
     }
 
@@ -111,12 +103,10 @@ class AuthRepositoryImpl(
         get() = authService.currentUser == null && guestSession.guestId.value != null
 
     override fun startGuest() {
-        Timber.i("Guest mode started")
         guestSession.start()
     }
 
     override fun endGuest() {
-        Timber.i("Guest mode ended")
         guestSession.end()
     }
 }

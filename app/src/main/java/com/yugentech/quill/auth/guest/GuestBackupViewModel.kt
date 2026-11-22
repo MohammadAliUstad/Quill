@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * The Backup rows in More. Guests and signed-in users can both export and import. Importing into
+ * The Backup rows in Settings. Guests and signed-in users can both export and import. Importing into
  * an account is how a guest's saved file comes into it, and what's added then syncs to that account.
  */
 class GuestBackupViewModel(

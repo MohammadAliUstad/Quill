@@ -2,7 +2,7 @@ package com.yugentech.quill.ui.tabs.libraryScreen.components
 
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import com.yugentech.quill.ui.shared.maintenance.MaintenanceAwareCover
+import com.yugentech.quill.ui.common.components.MaintenanceAwareCover
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,9 +30,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.yugentech.quill.database.view.LibraryBookView
-import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
+import com.yugentech.quill.ui.common.util.toCoverThumbnailUrl
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -76,10 +75,10 @@ fun HistoryCarousel(
         HistoryCard(
             book = book,
             onClick = { onBookClick(book) },
-            // FIX: Explicitly set the WIDTH here to prevent squishing
+            // An explicit width, or the carousel squeezes the card
             modifier = Modifier
-                .width(280.dp)  // <--- ADDED THIS (Forces the card to be wide)
-                .height(130.dp) // Fixed Height
+                .width(280.dp)
+                .height(130.dp)
                 .maskClip(RoundedCornerShape(16.dp))
         )
     }
@@ -156,7 +155,7 @@ fun HistoryCard(
                     .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 10.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // --- TOP: Title ---
+                // TOP: Title
                 Column {
                     Text(
                         text = book.title,
@@ -176,7 +175,7 @@ fun HistoryCard(
                     )
                 }
 
-                // --- BOTTOM: Stats ---
+                // BOTTOM: Stats
                 Column {
                     // Time Info
                     Text(

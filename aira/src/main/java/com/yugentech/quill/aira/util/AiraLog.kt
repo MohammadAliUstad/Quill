@@ -10,8 +10,6 @@ import timber.log.Timber
 object AiraLog {
     private const val TAG = "Aira"
 
-    fun d(message: String) = Timber.tag(TAG).d(message)
-
     fun w(message: String) = Timber.tag(TAG).w(message)
 
     /** A failure, with the Cloud Function's error code and details when the call was what failed. */

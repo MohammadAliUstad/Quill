@@ -16,7 +16,7 @@ import com.yugentech.theme.LocalThemeReveal
 import com.yugentech.theme.builder.getColorScheme
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.theme.tokens.spacing
-import com.yugentech.quill.ui.main.components.SectionHeader
+import com.yugentech.quill.ui.common.components.SectionHeader
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
 

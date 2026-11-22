@@ -63,7 +63,6 @@ class ThemeService(
         }
 
     suspend fun updateThemeConfig(config: ThemeConfiguration) {
-        Timber.d("Saving theme config: Font=${config.appFont}, Mode=${config.themeMode}...")
         dataStore.edit { prefs ->
             prefs[THEME_MODE_KEY] = config.themeMode.name
             prefs[COLOR_THEME_KEY] = config.colorTheme.name
@@ -74,7 +73,6 @@ class ThemeService(
     }
 
     suspend fun resetToDefaults() {
-        Timber.i("Resetting theme preferences to default")
         dataStore.edit { it.clear() }
     }
 }

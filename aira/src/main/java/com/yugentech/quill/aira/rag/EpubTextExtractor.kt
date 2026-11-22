@@ -46,7 +46,7 @@ class EpubTextExtractor(
     fun extractStream(filePath: String): Flow<ChapterText> = flow {
         val file = File(filePath)
         if (!file.exists()) {
-            Timber.e("✗ File not found at path: $filePath")
+            Timber.e("EPUB file not found")
             return@flow
         }
 
@@ -57,13 +57,13 @@ class EpubTextExtractor(
             val publicationOpener = PublicationOpener(parser, emptyList(), onCreatePublication = {})
 
             val asset = assetRetriever.retrieve(file).getOrElse { err ->
-                Timber.e("✗ Failed to retrieve asset: $err")
+                Timber.e("Failed to retrieve EPUB asset: $err")
                 return@flow
             }
 
             val publication = publicationOpener.open(asset, allowUserInteraction = false)
                 .getOrElse { err ->
-                    Timber.e("✗ Failed to open publication: $err")
+                    Timber.e("Failed to open EPUB: $err")
                     return@flow
                 }
 
@@ -111,14 +111,14 @@ class EpubTextExtractor(
                         )
                     }
                 } catch (e: Exception) {
-                    Timber.w(e, "Error parsing chapter $index ('$finalTitle')")
+                    Timber.w(e, "Failed to parse an EPUB chapter")
                 }
             }
 
             publication.close()
 
         } catch (e: Exception) {
-            Timber.e(e, "✗ Fatal error during EPUB extraction stream")
+            Timber.e(e, "EPUB extraction failed")
         }
     }.flowOn(Dispatchers.IO)
 
@@ -171,7 +171,7 @@ class EpubTextExtractor(
                     )
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Error extracting chapter $chapterIndex from $filePath")
+                Timber.e(e, "Failed to extract an EPUB chapter")
                 null
             } finally {
                 publication.close()
@@ -181,7 +181,7 @@ class EpubTextExtractor(
     private suspend fun openPublication(filePath: String): Publication? {
         val file = File(filePath)
         if (!file.exists()) {
-            Timber.e("✗ File not found at path: $filePath")
+            Timber.e("EPUB file not found")
             return null
         }
 
@@ -192,16 +192,16 @@ class EpubTextExtractor(
             val publicationOpener = PublicationOpener(parser, emptyList(), onCreatePublication = {})
 
             val asset = assetRetriever.retrieve(file).getOrElse { err ->
-                Timber.e("✗ Failed to retrieve asset: $err")
+                Timber.e("Failed to retrieve EPUB asset: $err")
                 return null
             }
 
             publicationOpener.open(asset, allowUserInteraction = false).getOrElse { err ->
-                Timber.e("✗ Failed to open publication: $err")
+                Timber.e("Failed to open EPUB: $err")
                 return null
             }
         } catch (e: Exception) {
-            Timber.w(e, "Failed to open publication for $filePath")
+            Timber.w(e, "Failed to open EPUB")
             null
         }
     }

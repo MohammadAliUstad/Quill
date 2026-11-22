@@ -44,16 +44,17 @@ import com.yugentech.quill.domain.BillingEvent
 import com.yugentech.quill.ui.about.about.components.AppInfoCard
 import com.yugentech.quill.ui.about.about.components.DonationDialog
 import com.yugentech.quill.ui.about.about.components.ThankYouDialog
-import com.yugentech.quill.ui.about.about.components.about.AboutContent
-import com.yugentech.quill.ui.main.components.SectionHeader
-import com.yugentech.quill.ui.main.components.ToastMessage
-import com.yugentech.quill.ui.tabs.moreScreen.components.SettingsListItem
+import com.yugentech.quill.ui.about.about.components.AboutContent
+import com.yugentech.quill.ui.common.components.SectionHeader
+import com.yugentech.quill.ui.common.components.ToastMessage
+import com.yugentech.quill.ui.common.components.SettingsListItem
 import com.yugentech.theme.tokens.AppConstants
 import com.yugentech.theme.tokens.spacing
 import org.koin.androidx.compose.koinViewModel
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
 import com.yugentech.quill.localization.AppStrings
+import com.yugentech.quill.ui.about.about.viewmodel.AboutViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

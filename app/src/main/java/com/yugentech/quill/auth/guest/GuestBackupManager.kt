@@ -132,7 +132,6 @@ class GuestBackupManager(
                 ?: contentResolver.openOutputStream(uri, "w")
                 ?: return@withContext false
             stream.bufferedWriter(Charsets.UTF_8).use { it.write(json.toString(2)) }
-            Timber.i("Guest backup exported")
             true
         } catch (e: Exception) {
             Timber.e(e, "Guest backup export failed")
@@ -164,7 +163,6 @@ class GuestBackupManager(
             importReadingSessions(json.optJSONArray(KEY_READING_SESSIONS))
             json.optJSONObject(KEY_PROFILE)?.let { importProfile(userId, it) }
 
-            Timber.i("Guest backup imported: $booksAdded books, $highlightsAdded highlights")
             ImportSummary(booksAdded, highlightsAdded)
         } catch (e: Exception) {
             Timber.e(e, "Guest backup import failed")

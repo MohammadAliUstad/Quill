@@ -6,10 +6,10 @@ import com.yugentech.quill.database.entity.BookEntity
 import com.yugentech.quill.database.entity.HighlightEntity
 import com.yugentech.quill.database.entity.ReadingSessionEntity
 import com.yugentech.quill.database.model.BookSource
-import com.yugentech.quill.insghts.engine.InsightIcon
-import com.yugentech.quill.insghts.engine.InsightsEngine
-import com.yugentech.quill.insghts.engine.InsightsReport
-import com.yugentech.quill.insghts.engine.LibraryStats
+import com.yugentech.quill.insights.engine.InsightIcon
+import com.yugentech.quill.insights.engine.InsightsEngine
+import com.yugentech.quill.insights.engine.InsightsReport
+import com.yugentech.quill.insights.engine.LibraryStats
 import com.yugentech.quill.localization.UiText
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

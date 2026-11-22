@@ -3,6 +3,7 @@ package com.yugentech.quill.bookDetails.repository
 import androidx.work.BackoffPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.yugentech.quill.bookDetails.worker.BookDownloadWorker
@@ -19,6 +20,8 @@ import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.quill.aira.rag.BookEmbeddingWorker
 import com.yugentech.theme.tokens.AppConstants.SHELF
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 import java.io.File
 
@@ -98,6 +101,17 @@ class BookDetailsRepositoryImpl(
 
         cloudSyncRepository.scheduleBackgroundSync()
     }
+
+    override fun observeDownloadProgress(bookId: String): Flow<Float?> =
+        workManager.getWorkInfosForUniqueWorkFlow("download_$bookId")
+            .map { infos ->
+                val running = infos.firstOrNull { it.state == WorkInfo.State.RUNNING }
+                    ?: return@map null
+                val total = running.progress.getLong(BookDownloadWorker.KEY_TOTAL_BYTES, 0L)
+                val percent = running.progress.getFloat(BookDownloadWorker.KEY_PROGRESS_PERCENT, -1f)
+                if (total <= 0L || percent < 0f || percent >= 100f) null else percent / 100f
+            }
+            .distinctUntilChanged()
 
     override suspend fun removeDownload(bookId: String) {
         val book = bookDao.getBookEntity(bookId)

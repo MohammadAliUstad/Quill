@@ -46,7 +46,7 @@ import com.yugentech.quill.theme.viewmodel.ThemeViewModel
 import com.yugentech.theme.models.ThemeMode
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
-import com.yugentech.quill.ui.main.components.pressClickable
+import com.yugentech.quill.ui.common.components.pressClickable
 import kotlin.math.PI
 import kotlin.math.floor
 import kotlin.math.hypot

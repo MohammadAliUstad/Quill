@@ -1,6 +1,8 @@
 package com.yugentech.quill.reader.ui.components.aira.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -67,6 +69,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 import com.yugentech.quill.reader.R
 import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.reader.ui.common.components.ThinkingIndicator
+import com.yugentech.quill.reader.ui.common.components.TypewriterText
+import com.yugentech.quill.reader.ui.common.components.longPressToCopy
 
 // From the avatar above and from the input field below to the thinking dots
 private val ThinkingGap = 20.dp
@@ -85,6 +90,13 @@ private sealed class ResponseAreaState {
     data class Response(val text: String) : ResponseAreaState()
     data class Image(val path: String) : ResponseAreaState()
     data object Chips : ResponseAreaState()
+}
+
+/** Between the thinking dots and a reply (or a note in its place), in either direction. */
+private fun isThinkingSwap(from: ResponseAreaState, to: ResponseAreaState): Boolean {
+    fun isReply(s: ResponseAreaState) = s is ResponseAreaState.Response || s is ResponseAreaState.Error
+    return (from == ResponseAreaState.Loading && isReply(to)) ||
+        (isReply(from) && to == ResponseAreaState.Loading)
 }
 
 @Composable
@@ -123,11 +135,17 @@ fun PeekResponseArea(
                     // Surface in AiraPeekBar -- letting this AnimatedContent also animate its
                     // own bounds would double-animate the same resize with a different
                     // curve/duration, producing a jittery combined motion. snap() here just
-                    // means this transition only crossfades content in place, instantly
+                    // means this transition only changes content in place, instantly
                     // matching whatever size the outer animation is currently interpolating to.
-                    (fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 8 }) togetherWith
-                        fadeOut(tween(160)) using
-                        SizeTransform(clip = false, sizeAnimationSpec = { _, _ -> snap() })
+                    val sizeSnap = SizeTransform(clip = false, sizeAnimationSpec = { _, _ -> snap() })
+                    // Thinking dots and a reply swap straight over, as in a chat: the reply's own
+                    // typewriter reveal is the motion, and a crossfade would overlap the two.
+                    if (isThinkingSwap(initialState, targetState)) {
+                        EnterTransition.None togetherWith ExitTransition.None using sizeSnap
+                    } else {
+                        (fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 8 }) togetherWith
+                            fadeOut(tween(160)) using sizeSnap
+                    }
                 },
                 label = "PeekResponseAreaTransition"
             ) { state ->

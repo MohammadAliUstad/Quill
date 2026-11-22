@@ -18,7 +18,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -29,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.view.LibraryBookView
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.ui.common.books.BookItem
 
 private const val MAX_ROW_BOOKS = 8
 
@@ -67,9 +72,16 @@ fun BookRow(
 
     val listState = rememberLazyListState()
 
-    LaunchedEffect(displayedBooks.firstOrNull()) {
-        if (displayedBooks.isNotEmpty()) {
-            listState.animateScrollToItem(0)
+    // Glide back to the start when a different book takes the front (one just added or read),
+    // but not when the row is only composed again -- coming back from a book's page relaunches
+    // every effect, and scrolling then threw away where the user had left the row. The last
+    // front book is saved alongside the row's scroll, so it survives that trip too.
+    val firstId = displayedBooks.firstOrNull()?.id
+    var lastFirstId by rememberSaveable { mutableStateOf(firstId) }
+    LaunchedEffect(firstId) {
+        if (firstId != lastFirstId) {
+            lastFirstId = firstId
+            if (firstId != null) listState.animateScrollToItem(0)
         }
     }
 

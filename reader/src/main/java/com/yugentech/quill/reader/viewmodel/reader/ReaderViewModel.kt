@@ -290,7 +290,7 @@ class ReaderViewModel(
         backgroundSoundRepository.playPreview(sound, 1.0f)
     }
 
-    /** Silences the background sound at once, as the reader closes (before its exit animation). */
+    /** Fades the background sound out as the reader closes, starting with its exit animation. */
     fun stopSoundOnExit() {
         backgroundSoundRepository.stop()
     }

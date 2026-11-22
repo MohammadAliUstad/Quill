@@ -605,7 +605,6 @@ class RagRetriever(
         private const val PASSAGE_WINDOW_BEFORE = 1
         private const val PASSAGE_WINDOW_AFTER = 1
         private const val ANCHOR_MIN_SCORE = 0.40f
-        private const val RRF_MIN_SCORE = 0.015f
 
         private const val CHARACTER_UNRANKED_SCORE = 1.0f
 

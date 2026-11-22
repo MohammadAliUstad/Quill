@@ -11,13 +11,13 @@ import androidx.navigation.compose.composable
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
 import com.yugentech.quill.navigation.screen.AppScreen
-import com.yugentech.quill.ui.info.insights.InsightsScreen
-import com.yugentech.quill.insghts.viewmodel.InsightsViewModel
-import com.yugentech.quill.ui.access.subscriptions.parent.GuestAiraScreen
+import com.yugentech.quill.ui.info.insights.parent.InsightsScreen
+import com.yugentech.quill.insights.viewmodel.InsightsViewModel
+import com.yugentech.quill.ui.access.guestAira.parent.GuestAiraScreen
 import com.yugentech.quill.ui.access.subscriptions.parent.SubscriptionsScreen
 import org.koin.androidx.compose.koinViewModel
 
-// The profile (name and avatar) is edited in sheets on the More screen, so there's no
+// The profile (name and avatar) is edited in sheets on the Settings screen, so there's no
 // Edit Profile route here any more.
 fun NavGraphBuilder.accountGraph(
     navController: NavHostController,

@@ -51,7 +51,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.reader.sound.model.BackgroundSound
-import com.yugentech.quill.reader.ui.components.settingsSheet.components.SettingsSwitchItem
+import com.yugentech.quill.reader.ui.common.components.SettingsSwitchItem
 import com.yugentech.theme.tokens.corners
 import com.yugentech.theme.tokens.spacing
 import com.yugentech.quill.reader.R

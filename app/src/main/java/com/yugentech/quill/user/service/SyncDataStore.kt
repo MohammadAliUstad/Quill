@@ -23,12 +23,10 @@ class SyncDataStore(
         .map { prefs -> prefs[userFetchDoneKey] ?: false }
 
     suspend fun setUserFetchDone(done: Boolean) {
-        Timber.d("Setting user fetch done: $done")
         dataStore.edit { it[userFetchDoneKey] = done }
     }
 
     suspend fun clearSyncFlags() {
-        Timber.d("Clearing sync flags due to logout")
         dataStore.edit { it[userFetchDoneKey] = false }
     }
 }

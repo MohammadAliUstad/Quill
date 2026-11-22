@@ -26,7 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.R
-import com.yugentech.quill.ui.sources.standard.components.rememberBackAfterText
+import com.yugentech.quill.ui.common.components.rememberBackAfterText
 import java.time.Instant
 
 /**
@@ -37,7 +37,7 @@ import java.time.Instant
 fun ShelfHeader(
     title: String,
     subtitle: String?,
-    onSeeAllClick: (() -> Unit)?,
+    onSeeAllClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current

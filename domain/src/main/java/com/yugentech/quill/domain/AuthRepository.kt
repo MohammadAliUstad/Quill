@@ -17,8 +17,7 @@ interface AuthRepository {
     suspend fun getGoogleSignInIntent(webClientId: String): AuthResult<PendingIntent>
     suspend fun handleGoogleSignInResult(data: Intent?): AuthResult<FirebaseUser>
 
-    // --- Guest mode ---
-
+    // Guest mode
     /** Whether the app is in guest mode: a local guest ID, with no Firebase account. */
     val isGuest: Boolean
 

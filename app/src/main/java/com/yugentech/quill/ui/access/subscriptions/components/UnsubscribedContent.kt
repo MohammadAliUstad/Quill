@@ -16,6 +16,8 @@ import com.android.billingclient.api.ProductDetails
 import com.yugentech.quill.ui.access.subscriptions.parent.planOptions
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.ui.access.common.components.FeatureHighlights
+import com.yugentech.quill.ui.access.common.components.ProFeaturesSection
 
 @Composable
 fun UnsubscribedContent(

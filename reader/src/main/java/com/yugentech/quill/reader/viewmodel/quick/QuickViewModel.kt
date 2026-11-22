@@ -142,7 +142,7 @@ class QuickViewModel(
             }
 
             is AiraResponse.Error -> {
-                AiraLog.w("PeekBar showing error: ${response.message}")
+                AiraLog.w("Peek bar showed an error")
                 _uiState.update {
                     it.copy(
                         isLoading = false,

@@ -5,7 +5,6 @@ import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import androidx.core.view.size
 import com.yugentech.theme.tokens.AppConstants.ASKAIRA
 import com.yugentech.theme.tokens.AppConstants.HIGHLIGHT
 import org.readium.r2.shared.publication.Locator

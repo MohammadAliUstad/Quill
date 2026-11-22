@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderOverlayState
+import com.yugentech.quill.reader.ui.components.overlay.ReaderOverlayState
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
 import kotlin.math.abs

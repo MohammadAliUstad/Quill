@@ -1,11 +1,7 @@
 package com.yugentech.quill.aira.localization
 
 import android.content.Context
-import android.content.res.Configuration
-import android.os.Build
-import android.os.LocaleList
 import androidx.annotation.StringRes
-import java.util.Locale
 
 /**
  * Aira's own messages (errors, and the stand-in questions a chip tap records in the chat

@@ -7,9 +7,9 @@ import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.ui.about.aira.parent.AiraAboutScreen
 import com.yugentech.quill.ui.about.whatsNew.parent.WhatsNewScreen
 import com.yugentech.quill.ui.about.about.parent.AboutScreen
-import com.yugentech.quill.ui.about.about.parent.AboutViewModel
+import com.yugentech.quill.ui.about.about.viewmodel.AboutViewModel
 import com.yugentech.quill.ui.about.attributions.parent.AttributionsScreen
-import com.yugentech.quill.ui.about.about.parent.MoreAppsScreen
+import com.yugentech.quill.ui.about.moreApps.parent.MoreAppsScreen
 import org.koin.androidx.compose.koinViewModel
 
 fun NavGraphBuilder.aboutGraph(

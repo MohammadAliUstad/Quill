@@ -48,26 +48,26 @@ import com.yugentech.quill.ui.main.components.BottomBar
 import com.yugentech.quill.ui.main.components.ExitConfirmationDialog
 import com.yugentech.quill.ui.main.components.LogoutConfirmationDialog
 import com.yugentech.quill.ui.main.components.QuillTab
-import com.yugentech.quill.ui.main.components.ResumeFab
-import com.yugentech.quill.ui.main.components.ToastMessage
+import com.yugentech.quill.ui.common.components.ResumeFab
+import com.yugentech.quill.ui.common.components.ToastMessage
 import com.yugentech.quill.sources.discover.viewmodel.DiscoverViewModel
 import com.yugentech.quill.ui.tabs.discoverScreen.components.SubjectsSheet
 import com.yugentech.quill.ui.tabs.discoverScreen.parent.DiscoverScreen
 import com.yugentech.quill.ui.tabs.libraryScreen.parent.LibraryScreen
 import com.yugentech.quill.ui.info.indexing.viewmodel.IndexingViewModel
-import com.yugentech.quill.ui.tabs.moreScreen.parent.MoreScreen
-import com.yugentech.quill.ui.main.importBooks.FilePickerBottomSheet
-import com.yugentech.quill.ui.main.importBooks.ImportResult
-import com.yugentech.quill.ui.main.importBooks.ImportStatusSheet
-import com.yugentech.quill.ui.main.importBooks.ImportViewModel
-import com.yugentech.quill.ui.shared.scrim.rememberSmoothBottomScrimBrush
+import com.yugentech.quill.ui.tabs.settingsScreen.parent.SettingsScreen
+import com.yugentech.quill.ui.main.components.FilePickerBottomSheet
+import com.yugentech.quill.library.importer.ImportResult
+import com.yugentech.quill.ui.main.components.ImportStatusSheet
+import com.yugentech.quill.library.viewmodel.ImportViewModel
+import com.yugentech.quill.ui.common.components.rememberSmoothBottomScrimBrush
 import com.yugentech.quill.user.viewmodel.UserViewModel
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
 import com.yugentech.quill.localization.AppStrings
-import com.yugentech.quill.announcements.ui.AnnouncementHost
+import com.yugentech.quill.ui.main.components.AnnouncementHost
 
 private val quillTabs = listOf(
     QuillTab.Library,
@@ -270,7 +270,7 @@ fun MainScreen(
                             viewModel = discoverViewModel,
                         )
 
-                        QuillTab.Settings -> MoreScreen(
+                        QuillTab.Settings -> SettingsScreen(
                             contentPadding = innerPadding,
                             userData = userData,
                             streakCount = userUiState.streakCount,

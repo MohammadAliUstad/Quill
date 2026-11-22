@@ -17,12 +17,12 @@
     <string name="language_name_japanese">Japonés</string>
     <string name="language_name_korean">Coreano</string>
     <string name="language_name_chinese">Chino</string>
-    <string name="more_title">Más</string>
+    <string name="settings_title">Ajustes</string>
     <string name="more_section_ai">IA</string>
     <string name="more_meet_aira">Conoce a Aira</string>
     <string name="more_meet_aira_subtitle">Descubre a tu compañera de lectura con IA</string>
     <string name="more_subscriptions">Suscripciones</string>
-    <string name="more_subscriptions_subtitle">Gestiona tu plan y desbloquea las funciones Pro</string>
+    <string name="more_subscriptions_subtitle">Gestiona tu plan y tus consultas diarias a Aira</string>
     <string name="more_indexing">Biblioteca en indexación</string>
     <string name="more_indexing_subtitle">Aira está leyendo tus libros.</string>
     <string name="more_section_library">Biblioteca</string>
@@ -98,8 +98,6 @@
     <string name="onboarding_library_tap">Toca un libro</string>
     <string name="onboarding_library_title">Una biblioteca tuya</string>
     <string name="onboarding_library_body">Importa tus propios EPUB o descarga clásicos gratuitos de Standard Ebooks, y ordénalos en tus estanterías.</string>
-    <string name="onboarding_reader_title">Lee a tu manera</string>
-    <string name="onboarding_reader_body">Fuentes, espaciado, temas de página, sonidos ambientales y una cálida luz nocturna. Resalta las líneas que se te quedan.</string>
     <string name="onboarding_aira_lock">Bloqueo de spoilers · hasta el capítulo 3</string>
     <string name="onboarding_aira_title">Conoce a Aira</string>
     <string name="onboarding_aira_body">Tu compañera de lectura responde a partir del propio libro y nunca te adelanta lo que viene.</string>
@@ -130,7 +128,7 @@
     <string name="theme_name_twilight">Crepúsculo</string>
     <string name="tab_library">Biblioteca</string>
     <string name="tab_discover">Descubrir</string>
-    <string name="tab_more">Más</string>
+    <string name="tab_settings">Ajustes</string>
     <string name="sign_out_confirm">¿Seguro que quieres cerrar la sesión de tu cuenta?</string>
     <string name="cancel">Cancelar</string>
     <string name="exit_app_title">Salir de la app</string>
@@ -297,7 +295,7 @@
     <string name="aira_reset_body">Se borrará todo el historial de chat de este libro. No se puede deshacer.</string>
     <string name="delete">Eliminar</string>
     <string name="aira_input_hint">Pregúntame lo que quieras</string>
-    <string name="aira_thinking">Aira está pensando…</string>
+    <string name="aira_thinking">Aira está pensando</string>
     <string name="stop">Detener</string>
     <string name="send">Enviar</string>
     <string name="limit_reached">Límite alcanzado</string>
@@ -319,7 +317,12 @@
     <string name="delete_book">Eliminar libro</string>
     <string name="book_cover">Portada del libro</string>
     <string name="add_to_library">Añadir a la biblioteca</string>
-    <string name="downloaded">Descargado</string>
+    <string name="book_source_imported">Importado</string>
+    <plurals name="book_page_count">
+        <item quantity="one">%d página</item>
+        <item quantity="many">%d páginas</item>
+        <item quantity="other">%d páginas</item>
+    </plurals>
     <string name="downloading">Descargando</string>
     <string name="retry_download">Reintentar descarga</string>
     <string name="download">Descargar</string>
@@ -560,22 +563,22 @@
     <string name="billed_monthly">facturado mensualmente</string>
     <string name="billed_annually">facturado anualmente</string>
     <string name="tier_basic">Lector básico</string>
-    <string name="tier_basic_subtitle">Biblioteca estándar</string>
-    <string name="tier_basic_body">Disfruta de un entorno de lectura bonito y sin distracciones, con 5 consultas diarias al asistente de IA.</string>
+    <string name="tier_basic_subtitle">5 consultas al día</string>
+    <string name="tier_basic_body">Todo lo que Aira puede hacer, con 5 consultas al día. Tu límite se renueva cada día.</string>
     <string name="quill_pro">Quill Pro</string>
-    <string name="tier_pro_subtitle">Compañera de lectura con IA</string>
-    <string name="tier_pro_body">Potencia a Aira con 50 consultas diarias al asistente de IA. Analiza a fondo temas, tramas ocultas y motivaciones de los personajes, y da vida a más escenas como ilustraciones pintadas.</string>
+    <string name="tier_pro_subtitle">50 consultas al día</string>
+    <string name="tier_pro_body">La misma Aira, con diez veces más consultas diarias: 50 al día para conversaciones más largas y más ilustraciones. Tu límite se renueva cada día.</string>
     <string name="query_cost_note">Cada pregunta a Aira usa 1 consulta. Cada imagen generada usa 3 consultas.</string>
     <string name="restoring">Restaurando</string>
     <string name="restore">Restaurar</string>
     <string name="cancel_anytime">Cancela cuando quieras. Se aplican términos y condiciones.</string>
     <string name="get_plan_pro">Obtener Pro %1$s</string>
-    <string name="subscribed_body">Has desbloqueado la experiencia de lectura completa. Disfruta de 50 consultas diarias (1 por pregunta, 3 por imagen generada) y deja que Aira te ayude a profundizar en tu biblioteca, explorar temas complejos y descubrir nuevas ideas.</string>
+    <string name="subscribed_body">Gracias por apoyar Quill. Tienes 50 consultas diarias a Aira, y tu límite se renueva cada día.</string>
     <string name="manage_subscription">Gestionar suscripción</string>
     <string name="select_plan">Elige un plan</string>
     <string name="subscription">Suscripción</string>
     <string name="premium_purchased">Premium adquirido</string>
-    <string name="subscription_subtitle">Pregúntale a Aira sin límites</string>
+    <string name="subscription_subtitle">Pregúntale más a Aira, cada día</string>
     <string name="restore_not_found_title">No se encontró ninguna suscripción</string>
     <string name="restore_not_found_message">No hay una suscripción activa a Quill Pro en esta cuenta de Google. Si te suscribiste con otra cuenta, cambia a ella en Google Play e inténtalo de nuevo.</string>
     <string name="restore_failed_title">No se pudieron restaurar las compras</string>
@@ -700,12 +703,6 @@
     <string name="aira_cap_spoilers_body">Aira limita su conocimiento a tu progreso exacto de lectura para proteger la historia.</string>
     <string name="aira_note_body">Estoy aquí para los pequeños momentos: un nombre que olvidaste, una palabra que no conoces, una escena que quieres imaginar. Pregunta y te devuelvo a la historia.</string>
     <string name="aira_hero_tagline">Tu asistente de lectura con IA</string>
-    <string name="aira_p1_title">Basada en el texto</string>
-    <string name="aira_p1_body">Aira no adivina. Sus respuestas salen siempre de los pasajes reales del libro que estás leyendo.</string>
-    <string name="aira_p2_title">Consciente del contexto</string>
-    <string name="aira_p2_body">Sabe exactamente en qué capítulo vas y recuerda vuestra conversación para charlar con naturalidad.</string>
-    <string name="aira_p3_title">Protege la trama</string>
-    <string name="aira_p3_body">El conocimiento de Aira se limita estrictamente a tu progreso. Nunca revelará hechos ni giros de capítulos que no hayas leído.</string>
     <string name="capabilities">Capacidades</string>
     <string name="attributions_subtitle">Impulsado por la comunidad</string>
     <string name="credit_design_title">Diseño e ilustraciones</string>
@@ -821,12 +818,12 @@
     <string name="announcement_v5_title">Novedades de Quill 5.0</string>
     <string name="announcement_v5_message">Una bienvenida e inicio de sesión renovados, una pantalla de Apariencia rediseñada, cargas más tranquilas, y Quill ya habla diez idiomas.</string>
     <string name="announcement_language_title">Quill habla tu idioma</string>
-    <string name="announcement_language_message">Elige entre diez idiomas cuando quieras en Más › Apariencia › Idioma. Quill cambia al instante.</string>
+    <string name="announcement_language_message">Elige entre diez idiomas cuando quieras en Ajustes › Apariencia › Idioma. Quill cambia al instante.</string>
     <string name="announcement_choose_language">Elegir idioma</string>
     <string name="wn_5_languages_title">Quill en tu idioma</string>
-    <string name="wn_5_languages_body">Quill ya habla diez idiomas: inglés, español, portugués, francés, alemán, hindi, ruso, japonés, coreano y chino. Elige el tuyo en Más › Apariencia › Idioma y toda la app cambia al instante.</string>
+    <string name="wn_5_languages_body">Quill ya habla diez idiomas: inglés, español, portugués, francés, alemán, hindi, ruso, japonés, coreano y chino. Elige el tuyo en Ajustes › Apariencia › Idioma y toda la app cambia al instante.</string>
     <string name="wn_5_welcome_title">Una bienvenida renovada</string>
-    <string name="wn_5_welcome_body">Un nuevo recorrido inicial sobre un fondo tranquilo y fijo, con un botón para volver atrás, además de pantallas de inicio de sesión y registro rediseñadas. Repite el recorrido cuando quieras desde Más.</string>
+    <string name="wn_5_welcome_body">Un nuevo recorrido inicial sobre un fondo tranquilo y fijo, con un botón para volver atrás, además de pantallas de inicio de sesión y registro rediseñadas. Repite el recorrido cuando quieras desde Ajustes.</string>
     <string name="wn_5_appearance_title">Una pantalla de Apariencia rediseñada</string>
     <string name="wn_5_appearance_body">Temas de color en tarjetas con un disco de paleta para cada uno, pequeñas vistas previas de teléfono en claro y oscuro, una tarjeta AMOLED estrellada y un suave fundido en toda la pantalla cuando cambian tus colores.</string>
     <string name="wn_5_loading_title">Cargas más tranquilas</string>
@@ -902,19 +899,24 @@
     <string name="wn_5_guest_title">Lee sin cuenta</string>
     <string name="wn_5_guest_body">Toca Invitado en la pantalla de inicio de sesión para empezar a leer al instante. Como invitado, tu biblioteca se queda en tu teléfono y nunca va a la nube. Aira y Pro necesitan una cuenta. Salir del modo invitado borra tu biblioteca, así que puedes exportarla al salir.</string>
     <string name="wn_5_backup_title">Haz una copia y llévala contigo</string>
-    <string name="wn_5_backup_body">Los invitados pueden exportar sus libros, su progreso, sus resaltados y su historial de lectura a un archivo desde Más › Copia de seguridad, e importarlo en cualquier teléfono. ¿Has iniciado sesión? Importa ese archivo en Más y se sincroniza con tu cuenta. Importar nunca duplica nada.</string>
+    <string name="wn_5_backup_body">Los invitados pueden exportar sus libros, su progreso, sus resaltados y su historial de lectura a un archivo desde Ajustes › Copia de seguridad, e importarlo en cualquier teléfono. ¿Has iniciado sesión? Importa ese archivo en Ajustes y se sincroniza con tu cuenta. Importar nunca duplica nada.</string>
+    <string name="wn_5_dock_title">Ajustes y un dock flotante</string>
+    <string name="wn_5_dock_body">Las pestañas ahora flotan en un dock en la parte inferior de la pantalla, con un botón + al lado para añadir tus propios libros. Más ahora se llama Ajustes, y todo sigue ahí.</string>
+    <string name="wn_5_discover_title">Un Descubrir más sencillo</string>
+    <string name="wn_5_discover_body">Cada estante de Descubrir tiene ahora Ver todo, un botón Temas te permite explorar por tema y un aviso te indica cuándo Standard Ebooks está en mantenimiento. Project Gutenberg y la pestaña Fuentes ya no están. Los libros de Gutenberg que habías descargado siguen en tu biblioteca como libros propios; los que no habías descargado se han eliminado, junto con sus resaltados, historial de lectura, chats con Aira e imágenes.</string>
+    <string name="wn_5_insights_title">Unas Estadísticas renovadas</string>
+    <string name="wn_5_insights_body">Las Estadísticas se han rehecho con tu semana de un vistazo, un mapa de calor de lectura, ideas sacadas de tus propios hábitos, tu ritmo de lectura, tus récords personales, tus libros y autores más leídos, tus resaltados y cómo lees con Aira.</string>
+    <string name="wn_5_aira_title">Una Aira más cuidadosa</string>
+    <string name="wn_5_aira_body">Aira se ciñe aún más a lo que has leído, así que no te desvelará lo que viene, ni siquiera en libros que ya conoce. Se centra en la lectura, y un brillo suave rodea la barra de preguntas mientras responde.</string>
+    <string name="wn_5_plans_title">Planes más claros</string>
+    <string name="wn_5_plans_body">Los dos planes tienen la misma Aira; Pro sube tu límite diario de 5 a 50 consultas. Al restaurar una compra ahora ves cómo ha ido, y los invitados tienen una nueva página Conoce a Aira.</string>
+    <string name="wn_5_reader_title">Mejoras en la lectura</string>
+    <string name="wn_5_reader_body">Los sonidos ambientales ahora aparecen y se desvanecen con suavidad, la barra del texto seleccionado aparece de forma más fiable, en el modo de desplazamiento el capítulo solo cambia con un deslizamiento lateral deliberado y el grosor de la fuente se ajusta en pasos más finos.</string>
     <!-- Guest mode: Aira's introduction in place of the subscription screen -->
-    <string name="guest_aira_title">Aira necesita una cuenta</string>
     <string name="tier_label_current">Plan actual</string>
     <string name="tier_label_upgrade">Mejora a</string>
-    <string name="guest_aira_section_plans">Lo que te da una cuenta</string>
-    <string name="guest_aira_section_features">Lo que Aira puede hacer</string>
     <string name="guest_tier_label_free">Gratis con una cuenta</string>
-    <string name="guest_tier_label_pro">O llega más lejos con</string>
-    <string name="guest_aira_reason">El modo invitado guarda todo en tu teléfono, pero Aira responde desde la nube, así que necesita una cuenta para funcionar. Es cuestión de un minuto, y tu biblioteca viene contigo.</string>
-    <string name="guest_aira_step_export">Exporta tu biblioteca desde Más › Copia de seguridad para no perder nada</string>
-    <string name="guest_aira_step_exit">Sal del modo invitado, también en Más</string>
-    <string name="guest_aira_step_signup">Regístrate, importa tu copia y pregúntale a Aira hasta %1$d veces al día gratis</string>
+    <string name="guest_tier_label_pro">O pregunta más con</string>
 
     <!-- How to use Aira (tutorial) -->
 </resources>

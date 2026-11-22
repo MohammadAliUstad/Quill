@@ -30,7 +30,6 @@ class UserRepositoryImpl(
 
     override suspend fun upsertUser(userData: UserData) {
         try {
-            Timber.d("Upserting user locally: ${userData.userId}")
             val entity = UserEntity.fromUserData(userData)
             userDao.saveUser(entity)
         } catch (e: Exception) {
@@ -45,7 +44,6 @@ class UserRepositoryImpl(
 
     override suspend fun syncUser(userData: UserData): UserResult<Unit> {
         if (isGuest) return UserResult.Success(Unit)
-        Timber.i("Syncing user data to cloud: ${userData.userId}")
         return userService.uploadUser(userData)
     }
 
@@ -69,11 +67,9 @@ class UserRepositoryImpl(
                 syncDataStore.setUserFetchDone(false)
             }
 
-            Timber.i("Performing initial user profile fetch")
             when (val result = userService.fetchUser(userId)) {
                 is UserResult.Success -> {
                     val userData = result.data
-                    Timber.d("Fetched user profile from cloud. Saving locally.")
 
                     val entity = UserEntity.fromUserData(userData)
                     userDao.saveUser(entity)

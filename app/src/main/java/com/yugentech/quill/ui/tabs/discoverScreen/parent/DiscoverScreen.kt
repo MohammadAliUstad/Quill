@@ -16,16 +16,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.isImeVisible
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
@@ -55,7 +50,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -64,27 +58,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.sources.discover.viewmodel.DiscoverViewModel
-import com.yugentech.quill.sources.discover.viewmodel.NEW_ARRIVALS
-import com.yugentech.quill.ui.sources.standard.components.BooksGrid
-import com.yugentech.quill.ui.shared.search.NoSearchResults
-import com.yugentech.quill.ui.shared.search.SearchStateLayout
-import com.yugentech.quill.ui.sources.standard.components.AnimatedSearchIcon
-import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
-import com.yugentech.quill.ui.sources.standard.components.SearchSuggestions
+import com.yugentech.quill.ui.common.books.BooksGrid
+import com.yugentech.quill.ui.common.components.NoSearchResults
+import com.yugentech.quill.ui.common.components.SearchStateLayout
+import com.yugentech.quill.ui.tabs.discoverScreen.components.AnimatedSearchIcon
+import com.yugentech.quill.ui.common.components.rememberSmoothScrimBrush
+import com.yugentech.quill.ui.tabs.discoverScreen.components.SearchSuggestions
 import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfRow
-import com.yugentech.quill.ui.tabs.discoverScreen.components.BookShelfSkeleton
+import com.yugentech.quill.ui.common.components.BookShelfSkeleton
 import com.yugentech.quill.ui.tabs.discoverScreen.components.DiscoverMaintenanceCard
 import com.yugentech.quill.ui.tabs.discoverScreen.components.ShelfHeader
 import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarousel
-import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroCarouselSkeleton
-import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
-import com.yugentech.quill.ui.tabs.libraryScreen.components.LibraryParallaxBackground
+import com.yugentech.quill.ui.common.components.HeroCarouselSkeleton
+import com.yugentech.quill.ui.common.util.toCoverThumbnailUrl
+import com.yugentech.quill.ui.common.components.LibraryParallaxBackground
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
-import getSubtitleForCategory
-import getTitleForCategory
+import com.yugentech.quill.ui.common.util.getSubtitleForCategory
+import com.yugentech.quill.ui.common.util.getTitleForCategory
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 import com.yugentech.quill.R
@@ -133,7 +126,6 @@ fun DiscoverScreen(
         }
     }
 
-    // --- PARALLAX LOGIC START ---
     val parallaxScrollOffset by remember {
         derivedStateOf {
             if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset else 10000
@@ -144,7 +136,7 @@ fun DiscoverScreen(
 
     var parallaxCoverUrl by remember { mutableStateOf<String?>(null) }
 
-    // 3. Whenever the user scrolls (changing the visible books), or every 6 seconds, pick a new background
+    // Whenever the user scrolls (changing the visible books), or every 6 seconds, pick a new background
     LaunchedEffect(visibleHeroBooks) {
         if (visibleHeroBooks.isNotEmpty()) {
             // Instantly change to a random visible book when they scroll to it
@@ -159,7 +151,6 @@ fun DiscoverScreen(
             parallaxCoverUrl = uiState.heroBooks.firstOrNull()?.coverUrl
         }
     }
-    // --- PARALLAX LOGIC END ---
 
     BackHandler(enabled = searchExpanded) {
         searchExpanded = false
@@ -173,7 +164,7 @@ fun DiscoverScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // --- THE PARALLAX LAYER ---
+        // The parallax layer
         if (parallaxCoverUrl != null) {
             LibraryParallaxBackground(
                 coverUrl = parallaxCoverUrl?.toCoverThumbnailUrl(),
@@ -182,7 +173,7 @@ fun DiscoverScreen(
             )
         }
 
-        // --- THE SCROLLING CONTENT ---
+        // The scrolling content
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -215,8 +206,7 @@ fun DiscoverScreen(
                     ShelfHeader(
                         title = stringResource(R.string.new_releases),
                         subtitle = stringResource(R.string.new_releases_subtitle),
-                        onSeeAllClick = { onShelfClick(NEW_ARRIVALS) },
-                        modifier = Modifier.padding(start = 16.dp, end = 4.dp, bottom = 12.dp)
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                     )
 
                     HeroCarousel(
@@ -227,7 +217,7 @@ fun DiscoverScreen(
                 }
             }
 
-            // --- CATEGORY ROWS ---
+            // Category rows
             uiState.categoryRows.forEach { (categoryName, books) ->
                 item(key = categoryName) {
                     if (books.isNotEmpty()) {
@@ -248,7 +238,7 @@ fun DiscoverScreen(
             }
         }
 
-        // --- THE SEARCH BAR AREA ---
+        // The search bar area
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)

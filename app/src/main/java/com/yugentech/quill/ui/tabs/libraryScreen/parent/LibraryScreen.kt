@@ -47,15 +47,15 @@ import com.yugentech.quill.R
 import com.yugentech.quill.database.mapper.toBook
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
-import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
+import com.yugentech.quill.ui.common.components.rememberSmoothScrimBrush
 import com.yugentech.quill.ui.tabs.libraryScreen.components.BookRow
 import com.yugentech.quill.ui.tabs.libraryScreen.components.HistoryCarousel
 import com.yugentech.quill.ui.tabs.libraryScreen.components.LastReadBookCard
-import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
-import com.yugentech.quill.ui.tabs.libraryScreen.components.LibraryParallaxBackground
+import com.yugentech.quill.ui.common.util.toCoverThumbnailUrl
+import com.yugentech.quill.ui.common.components.LibraryParallaxBackground
 import kotlinx.coroutines.delay
 import androidx.compose.ui.res.stringResource
-import com.yugentech.quill.ui.tabs.libraryScreen.components.shelfTitle
+import com.yugentech.quill.ui.common.util.shelfTitle
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.fadeIn
@@ -98,7 +98,9 @@ fun LibraryScreen(
 
     val scrollState = rememberScrollState()
 
-    // THE FIX: Coercion Protection Strategy.
+    // The scroll position is kept by hand: saved only when a scroll by the user settles, and
+    // restored once the content is tall enough again. Coming back to the tab, the rows reload
+    // and the content is briefly shorter, so the clamped position must not overwrite the real one.
     var savedScroll by rememberSaveable { mutableIntStateOf(0) }
 
     LaunchedEffect(scrollState) {
@@ -121,7 +123,7 @@ fun LibraryScreen(
     }
 
     // After a book import, glide down to the very bottom so the user sees where the freshly
-    // added book went. "My Shelf" was unsubscribed while the user was away on the Sources tab,
+    // added book went. "My Shelf" was unsubscribed while the user was away on another tab,
     // so it re-queries from scratch on remount -- give that a moment to land before measuring.
     LaunchedEffect(scrollToBottom) {
         if (scrollToBottom) {

@@ -8,7 +8,7 @@ import com.yugentech.quill.domain.QuotaRepository
 import com.yugentech.quill.quota.repository.QuotaRepositoryImpl
 import com.yugentech.quill.quota.service.QuotaService
 import com.yugentech.quill.quota.manager.GlobalSyncManager
-import com.yugentech.quill.ui.about.about.parent.AboutViewModel
+import com.yugentech.quill.ui.about.about.viewmodel.AboutViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module

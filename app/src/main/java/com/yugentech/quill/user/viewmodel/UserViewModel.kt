@@ -3,7 +3,7 @@ package com.yugentech.quill.user.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.quill.database.model.UserData
-import com.yugentech.quill.insghts.repository.InsightsRepository
+import com.yugentech.quill.insights.repository.InsightsRepository
 import com.yugentech.quill.user.repository.UserRepository
 import com.yugentech.quill.user.state.UserUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,7 +54,7 @@ class UserViewModel(
             .launchIn(viewModelScope)
     }
 
-    // Used by the name and avatar sheets on the More screen's profile card.
+    // Used by the name and avatar sheets on the Settings screen's profile card.
     fun updateName(name: String) {
         val user = _uiState.value.user ?: return
         if (name != user.name) viewModelScope.launch { upsertUser(user.copy(name = name)) }

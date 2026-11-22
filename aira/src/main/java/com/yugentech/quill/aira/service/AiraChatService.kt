@@ -17,7 +17,6 @@ import com.yugentech.quill.database.entity.AiraMessageRole
 import com.yugentech.quill.domain.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import timber.log.Timber
 
 class AiraChatService(
     private val intentDetectionRepository: IntentDetectionRepository,
@@ -30,12 +29,9 @@ class AiraChatService(
 ) {
 
     fun ask(bookId: String, query: String, selectedText: String? = null): Flow<AiraResponse> = flow {
-        AiraLog.d(
-            "Ask book=$bookId query=\"$query\" selectedText=${selectedText?.let { "\"${it.take(60)}\"" } ?: "null"}"
-        )
         val book = bookDao.getBookEntity(bookId)
         if (book == null) {
-            AiraLog.w("Ask book=$bookId: the book isn't in the database")
+            AiraLog.w("Ask: book not found")
             emit(AiraResponse.Error(resolveErrorMessage(IllegalStateException("Book $bookId not found"))))
             return@flow
         }
@@ -45,17 +41,20 @@ class AiraChatService(
             userDao.getUser(userId)?.name?.takeIf { it.isNotBlank() }
         } ?: authRepository.currentUserName
 
+        // The latest question and Aira's reply to it, for resolving a follow-up's references
+        val lastAnswerIndex = recentHistory.indexOfLast { it.role == AiraMessageRole.AIRA }
+        val lastQuestion = recentHistory.take(lastAnswerIndex.coerceAtLeast(0))
+            .lastOrNull { it.role == AiraMessageRole.USER }?.content
+        val lastAnswer = recentHistory.getOrNull(lastAnswerIndex)?.content
+
         try {
             val intent = intentDetectionRepository.detectIntent(
                 query = query,
                 title = book.title,
                 author = book.author,
-                selectedText = selectedText
-            )
-            Timber.d(
-                "AiraChat intent for query=\"$query\" selectedText=${
-                    selectedText?.let { "\"${it.take(60)}\"" } ?: "null"
-                } -> $intent"
+                selectedText = selectedText,
+                lastQuestion = lastQuestion,
+                lastAnswer = lastAnswer
             )
 
             val responseFlow = when (intent) {
@@ -102,7 +101,7 @@ class AiraChatService(
             }
 
         } catch (e: Exception) {
-            AiraLog.failure("Ask query=\"$query\"", e)
+            AiraLog.failure("Ask", e)
             emit(AiraResponse.Error(resolveErrorMessage(e)))
         }
     }

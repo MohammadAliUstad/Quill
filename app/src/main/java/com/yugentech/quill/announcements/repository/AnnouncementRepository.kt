@@ -6,7 +6,6 @@ import com.yugentech.quill.announcements.datastore.AnnouncementDataStore
 import com.yugentech.quill.announcements.model.Announcement
 import com.yugentech.quill.user.datastore.UserDataStore
 import kotlinx.coroutines.flow.first
-import timber.log.Timber
 
 /**
  * Resolves pending announcements for the running app version.
@@ -47,7 +46,6 @@ class AnnouncementRepositoryImpl(
         if (!SHOW_ANNOUNCEMENTS_EVERY_LAUNCH && !isOnboardingCompleted && lastAckVersion == 0) {
             val allIds = catalog.map { it.id }
             announcementDataStore.markAllSeen(allIds, currentVersionCode)
-            Timber.i("Fresh install detected: marked all announcements as seen")
             return emptyList()
         }
 

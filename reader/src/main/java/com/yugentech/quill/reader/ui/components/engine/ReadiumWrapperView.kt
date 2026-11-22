@@ -11,7 +11,6 @@ import android.webkit.WebView
 import android.widget.FrameLayout
 import androidx.fragment.app.FragmentContainerView
 import org.readium.r2.shared.publication.Locator
-import timber.log.Timber
 import kotlin.math.abs
 
 /**
@@ -178,7 +177,6 @@ class ReadiumWrapperView @JvmOverloads constructor(
             return@OnPreDrawListener true
         }
         correctionsInARow++
-        Timber.d("Selection page lock: page drifted %d -> %d, restored", lockedScrollX, webView.scrollX)
         webView.scrollTo(lockedScrollX, webView.scrollY)
         false
     }

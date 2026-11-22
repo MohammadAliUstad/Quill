@@ -29,7 +29,7 @@ import com.yugentech.theme.AppFont
 import com.yugentech.theme.builder.getFontFamily
 import com.yugentech.theme.tokens.spacing
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
-import com.yugentech.quill.ui.main.components.SectionHeader
+import com.yugentech.quill.ui.common.components.SectionHeader
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
 

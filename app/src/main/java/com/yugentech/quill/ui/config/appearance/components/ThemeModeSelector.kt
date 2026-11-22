@@ -49,9 +49,10 @@ import com.yugentech.theme.SLOW_FADE_MS
 import com.yugentech.theme.builder.getColorScheme
 import com.yugentech.theme.models.ThemeMode
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
-import com.yugentech.quill.ui.main.components.SectionHeader
+import com.yugentech.quill.ui.common.components.SectionHeader
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.ui.common.components.selectionOutline
 
 /**
  * Light, Dark and System as three tiny phones drawn in the colours each would give, System split

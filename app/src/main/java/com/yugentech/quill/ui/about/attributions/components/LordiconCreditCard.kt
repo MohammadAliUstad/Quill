@@ -4,7 +4,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.yugentech.quill.R
 import com.yugentech.theme.tokens.icons
-import com.yugentech.quill.ui.main.components.TintedLottieIcon
+import com.yugentech.quill.ui.common.components.TintedLottieIcon
 import androidx.compose.ui.res.stringResource
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement

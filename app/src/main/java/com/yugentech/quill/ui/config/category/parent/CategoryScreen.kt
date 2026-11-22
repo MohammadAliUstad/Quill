@@ -1,30 +1,19 @@
 package com.yugentech.quill.ui.config.category.parent
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -48,7 +37,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.yugentech.quill.R
 import com.yugentech.quill.category.viewmodel.CategoryViewModel
 import com.yugentech.quill.database.model.Category
@@ -59,7 +47,7 @@ import com.yugentech.quill.ui.config.category.components.DragDropList
 import com.yugentech.quill.ui.config.category.components.PinnedShelfItem
 import com.yugentech.quill.ui.config.category.components.RenameCategoryDialog
 import androidx.compose.ui.res.stringResource
-import com.yugentech.quill.ui.main.components.ResumeFab
+import com.yugentech.quill.ui.common.components.ResumeFab
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

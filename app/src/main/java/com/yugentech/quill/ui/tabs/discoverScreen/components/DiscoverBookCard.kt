@@ -26,7 +26,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import com.yugentech.quill.database.model.Book
-import com.yugentech.quill.ui.tabs.discoverScreen.util.thumbnailCoverUrl
+import com.yugentech.quill.ui.common.util.thumbnailCoverUrl
+import com.yugentech.quill.ui.common.components.loadingPulse
 
 
 @Composable

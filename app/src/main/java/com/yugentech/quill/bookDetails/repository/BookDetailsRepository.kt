@@ -11,6 +11,13 @@ interface BookDetailsRepository {
     suspend fun isBookInLibrary(bookId: String): Boolean
     suspend fun getBookOnce(bookId: String): BookEntity?
     suspend fun startDownload(book: Book)
+
+    /**
+     * How far the book's download has got, 0..1, while its file is coming in and its size is
+     * known; null otherwise (not started reporting yet, size unknown, or the file is in and
+     * being unpacked).
+     */
+    fun observeDownloadProgress(bookId: String): Flow<Float?>
     suspend fun removeDownload(bookId: String)
     suspend fun deleteBook(bookId: String)
     suspend fun updateCategory(book: Book, newCategory: String)

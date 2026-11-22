@@ -37,8 +37,8 @@ import com.yugentech.quill.reader.viewmodel.quick.QuickViewModel
 import com.yugentech.quill.reader.settings.model.ReaderSettings
 import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.ui.components.engine.ReadiumEngine
-import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderAction
-import com.yugentech.quill.reader.ui.components.overlay.parent.ReaderMenuOverlay
+import com.yugentech.quill.reader.ui.components.overlay.ReaderAction
+import com.yugentech.quill.reader.ui.components.overlay.ReaderMenuOverlay
 import com.yugentech.quill.reader.ui.components.settingsSheet.SettingsSheet
 import com.yugentech.quill.reader.ui.components.soundSheet.SoundSelectionSheet
 import com.yugentech.quill.reader.ui.components.tocSheet.TocSheet
@@ -157,7 +157,7 @@ private fun ReaderSuccess(
 
     val isPagedMode = preferences.epub.scroll == false
 
-    // --- MODE TRANSITION ORCHESTRATION ---
+    // Mode transition orchestration
     var engineScrollMode by remember { mutableStateOf(preferences.epub.scroll ?: true) }
     var isTransitioningMode by remember { mutableStateOf(true) }
 
@@ -255,7 +255,7 @@ private fun ReaderSuccess(
             )
         }
 
-        // --- NIGHT LIGHT OVERLAY ---
+        // Night light overlay
         if (preferences.nightLight) {
             Box(
                 modifier = Modifier

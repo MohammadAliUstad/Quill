@@ -44,17 +44,17 @@ val airaModule = module {
     }
 
 
-    // --- Intent Detection ---
+    // Intent detection
     single { IntentDetectionService(functions = get()) }
     single { IntentDetectionRepository(detectionService = get()) }
 
-    // --- Services ---
+    // Services
     single { GeneralChatService(functions = get()) }
     single { BookChatService(functions = get()) }
     single { QuickChatService(functions = get()) }
     single { VisualizeService(functions = get()) }
 
-    // --- Repositories ---
+    // Repositories
     single<BookChatRepository> { 
         BookChatRepositoryImpl(
             chatService = get(),

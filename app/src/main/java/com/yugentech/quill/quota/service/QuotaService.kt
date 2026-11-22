@@ -26,7 +26,7 @@ class QuotaService(
                 lastResetDate = doc.getString(QuotaFields.LAST_RESET_DATE)
             )
         } catch (e: Exception) {
-            Timber.e(e, "Failed to fetch quota for user: $userId")
+            Timber.e(e, "Failed to fetch quota")
             null
         }
     }
@@ -38,9 +38,8 @@ class QuotaService(
                 QuotaFields.LAST_RESET_DATE to todayDateString()
             )
             quotaDocRef(userId).set(data).await()
-            Timber.d("Quota initialized for user: $userId")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to init quota for user: $userId")
+            Timber.e(e, "Failed to init quota")
         }
     }
 
@@ -51,9 +50,8 @@ class QuotaService(
                 QuotaFields.LAST_RESET_DATE to todayDateString()
             )
             quotaDocRef(userId).set(data, SetOptions.merge()).await()
-            Timber.d("Quota reset for user: $userId")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to reset quota for user: $userId")
+            Timber.e(e, "Failed to reset quota")
         }
     }
 
@@ -62,9 +60,8 @@ class QuotaService(
             quotaDocRef(userId).update(
                 QuotaFields.QUERIES_USED, FieldValue.increment(amount.toLong())
             ).await()
-            Timber.d("Quota incremented by $amount for user: $userId")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to increment quota for user: $userId")
+            Timber.e(e, "Failed to increment quota")
         }
     }
 }

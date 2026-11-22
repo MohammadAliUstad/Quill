@@ -2,7 +2,7 @@ package com.yugentech.quill.ui.tabs.libraryScreen.components
 
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import com.yugentech.quill.ui.shared.maintenance.MaintenanceAwareCover
+import com.yugentech.quill.ui.common.components.MaintenanceAwareCover
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,9 +37,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.yugentech.quill.database.view.LibraryBookView
-import com.yugentech.quill.ui.tabs.discoverScreen.util.toCoverThumbnailUrl
+import com.yugentech.quill.ui.common.util.toCoverThumbnailUrl
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -112,7 +111,6 @@ fun LastReadBookCard(
                 )
         )
 
-        // UPDATED: Switched from ElevatedCard to standard Card with 0 elevation
         Card(
             onClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)

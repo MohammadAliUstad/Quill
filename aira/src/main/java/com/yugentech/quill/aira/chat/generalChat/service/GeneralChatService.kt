@@ -1,7 +1,7 @@
 package com.yugentech.quill.aira.chat.generalChat.service
 
 import com.google.firebase.functions.FirebaseFunctions
-import com.yugentech.quill.aira.chat.generalChat.model.GeneralChatPayload
+import com.yugentech.quill.aira.chat.generalChat.payload.GeneralChatPayload
 import kotlinx.coroutines.tasks.await
 
 class GeneralChatService(

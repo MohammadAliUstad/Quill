@@ -86,7 +86,7 @@ class NavTransitions(private val slideDistancePx: Int) {
     fun popEnter(scope: AnimatedContentTransitionScope<NavBackStackEntry>): EnterTransition =
         scope.verticalDirection()?.let { sharedAxisYIn(it, scope.duration()) }
             ?: if (scope.switchesSection() && !scope.replayHop()) fadeThroughIn(scope.duration())
-            // Finishing the replay moves on to More, so it reads forward rather than back
+            // Finishing the replay moves on to Settings, so it reads forward rather than back
             else sharedAxisIn(forward = scope.replayHop(), scope.duration())
 
     fun popExit(scope: AnimatedContentTransitionScope<NavBackStackEntry>): ExitTransition =
@@ -178,7 +178,7 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.verticalDirection(
 }
 
 /**
- * Opening the onboarding replay from More, or going back from it to the app. It moves like any
+ * Opening the onboarding replay from Settings, or going back from it to the app. It moves like any
  * other screen, with the standard shared axis X at 300 ms (forward both ways), rather than the
  * section fade through and its zoom that first-run onboarding uses on its way into the app.
  */

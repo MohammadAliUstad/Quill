@@ -15,11 +15,9 @@ class UserService(
 
     suspend fun uploadUser(userData: UserData): UserResult<Unit> {
         return try {
-            Timber.d("Uploading user profile for: ${userData.userId}")
             val uploadData = userData.toMap()
 
             profileDocRef(userData.userId).set(uploadData).await()
-            Timber.i("User profile uploaded successfully")
             UserResult.Success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to upload user profile")
@@ -29,7 +27,6 @@ class UserService(
 
     suspend fun fetchUser(userId: String): UserResult<UserData> {
         return try {
-            Timber.d("Fetching user profile for: $userId")
             val document = profileDocRef(userId).get().await()
 
             if (!document.exists()) {
@@ -44,7 +41,6 @@ class UserService(
                 avatarId = document.getLong("avatarId")?.toInt() ?: 0
             )
 
-            Timber.i("User profile fetched successfully")
             UserResult.Success(userData)
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch user profile")

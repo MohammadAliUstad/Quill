@@ -26,7 +26,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.yugentech.quill.auth.state.AuthState
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
@@ -38,12 +37,12 @@ import com.yugentech.quill.navigation.navgraph.mainGraph
 import com.yugentech.quill.navigation.navgraph.settingsGraph
 import com.yugentech.quill.navigation.navgraph.sourceGraph
 import com.yugentech.quill.navigation.screen.AppScreen
-import com.yugentech.quill.ui.access.onboarding.OnboardingScreen
-import com.yugentech.quill.ui.access.onboarding.components.AuraBackgroundState
-import com.yugentech.quill.ui.access.onboarding.components.AuraRoutes
-import com.yugentech.quill.ui.access.onboarding.components.AuraTheme
-import com.yugentech.quill.ui.access.onboarding.components.LocalAuraBackground
-import com.yugentech.quill.ui.access.onboarding.components.QuillAuraBackground
+import com.yugentech.quill.ui.access.onboarding.parent.OnboardingScreen
+import com.yugentech.quill.ui.access.common.components.AuraBackgroundState
+import com.yugentech.quill.ui.access.common.components.AuraRoutes
+import com.yugentech.quill.ui.access.common.components.AuraTheme
+import com.yugentech.quill.ui.access.common.components.LocalAuraBackground
+import com.yugentech.quill.ui.access.common.components.QuillAuraBackground
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 import com.yugentech.quill.R
@@ -77,7 +76,6 @@ fun AppNavHost(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                Timber.d("Google Sign-In Activity Result OK")
                 authViewModel.handleGoogleSignInResult(result.data)
             } else {
                 Timber.w("Google Sign-In Activity Result Cancelled or Failed")
@@ -87,7 +85,6 @@ fun AppNavHost(
 
     LaunchedEffect(authState.intent) {
         authState.intent?.let {
-            Timber.d("Launching Google Sign-In Intent")
             launcher.launch(IntentSenderRequest.Builder(it).build())
         }
     }
@@ -141,7 +138,6 @@ fun AppNavHost(
 
     LaunchedEffect(shouldNavigateToHome) {
         if (shouldNavigateToHome) {
-            Timber.d("Popping back to Main screen")
             navController.popBackStack(AppScreen.Main.route, inclusive = false)
             onNavigatedToHome()
         }
@@ -188,7 +184,7 @@ fun AppNavHost(
             )
         }
 
-        // The onboarding again, from More: finishing, skipping or backing out returns there
+        // The onboarding again, from Settings: finishing, skipping or backing out returns there
         composable(AppScreen.OnboardingReplay.route) {
             OnboardingScreen(
                 onFinish = { navController.popBackStack() },

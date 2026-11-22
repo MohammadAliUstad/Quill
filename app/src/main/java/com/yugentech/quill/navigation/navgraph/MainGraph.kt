@@ -7,14 +7,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.yugentech.quill.ui.tabs.libraryScreen.viewmodel.SeeAllViewModel
+import com.yugentech.quill.ui.tabs.libraryScreen.allBooks.viewmodel.SeeAllViewModel
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.domain.AuthRepository
 import com.yugentech.quill.library.viewmodel.LibraryViewModel
 import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.reader.ReaderActivity
 import com.yugentech.quill.ui.main.parent.MainScreen
-import com.yugentech.quill.ui.tabs.libraryScreen.parent.AllBooksScreen
+import com.yugentech.quill.ui.tabs.libraryScreen.allBooks.parent.AllBooksScreen
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import androidx.compose.runtime.remember

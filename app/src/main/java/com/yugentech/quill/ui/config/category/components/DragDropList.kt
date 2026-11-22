@@ -35,13 +35,13 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.database.model.Category
-import com.yugentech.quill.ui.main.components.itemShape
+import com.yugentech.theme.shapes.itemShape
 import com.yugentech.theme.tokens.corners
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
-import com.yugentech.quill.ui.tabs.libraryScreen.components.shelfTitle
+import com.yugentech.quill.ui.common.util.shelfTitle
 
 @Composable
 fun DragDropList(

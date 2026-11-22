@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.Instant
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -97,7 +96,6 @@ class ReminderManager(
     }
 
     fun scheduleDailyReminder(hour: Int, minute: Int) {
-        Timber.d("Daily reminder at $hour:${minute.toString().padStart(2, '0')}")
         scheduler.scheduleDailyReminder(
             id = DAILY_REMINDER_ID,
             hour = hour,
@@ -152,7 +150,6 @@ class ReminderManager(
 
         ReminderStore.saveDayPlan(context, plan.copy(done = true))
         if (message != null) {
-            Timber.d("Nudge after $daysAway days away")
             ReminderReceiver.showReminder(context, NUDGE_NOTIFICATION_ID, APP_NAME, message, nudge = true)
         }
     }

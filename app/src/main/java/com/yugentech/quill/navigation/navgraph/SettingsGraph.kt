@@ -10,7 +10,7 @@ import com.yugentech.quill.ui.info.storage.parent.StorageScreen
 import com.yugentech.quill.ui.info.indexing.parent.IndexingQueueScreen
 import com.yugentech.quill.ui.info.indexing.viewmodel.IndexingViewModel
 import com.yugentech.quill.theme.viewmodel.ThemeViewModel
-import com.yugentech.quill.ui.config.language.LanguageScreen
+import com.yugentech.quill.ui.config.language.parent.LanguageScreen
 import org.koin.androidx.compose.koinViewModel
 
 fun NavGraphBuilder.settingsGraph(
@@ -32,7 +32,7 @@ fun NavGraphBuilder.settingsGraph(
         )
     }
 
-    // More > Language: the app's own language, apart from the phone's
+    // Settings > Language: the app's own language, apart from the phone's
     composable(AppScreen.Language.route) {
         LanguageScreen(onNavigateBack = { navController.popBackStack() })
     }

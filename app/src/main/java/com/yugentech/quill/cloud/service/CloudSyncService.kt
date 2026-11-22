@@ -22,13 +22,11 @@ class CloudSyncService(
 
     suspend fun syncBookToCloud(book: BookEntity): Result<Unit> {
         if (book.source == BookSource.USER_IMPORTED) {
-            Timber.d("Skipping cloud sync for user-imported book: ${book.title}")
             return Result.success(Unit)
         }
 
         return try {
             val userId = authRepository.currentUser ?: throw Exception("User not logged in")
-            Timber.d("Syncing book progress to cloud: ${book.title}")
 
             val data = mapOf(
                 "id" to book.id,
@@ -59,12 +57,10 @@ class CloudSyncService(
 
     suspend fun fetchCloudLibrary(): Result<List<Map<String, Any>>> {
         return try {
-            Timber.d("Fetching cloud library")
 
             val snapshot = libraryCollection().get().await()
             val booksData = snapshot.documents.mapNotNull { it.data }
 
-            Timber.i("Fetched ${booksData.size} books from cloud")
             Result.success(booksData)
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch cloud library")
@@ -75,7 +71,6 @@ class CloudSyncService(
     suspend fun deleteBookFromCloud(bookId: String): Result<Unit> {
         return try {
             val userId = authRepository.currentUser ?: throw Exception("User not logged in")
-            Timber.d("Deleting book from cloud: $bookId")
 
             firestore.collection("users")
                 .document(userId)
@@ -96,7 +91,6 @@ class CloudSyncService(
 
     suspend fun syncCategoryToCloud(category: CategoryEntity): Result<Unit> {
         return try {
-            Timber.d("Syncing category to cloud: ${category.name}")
 
             val data = mapOf(
                 "id" to category.id.toString(),
@@ -118,12 +112,10 @@ class CloudSyncService(
 
     suspend fun fetchCategories(): Result<List<Map<String, Any>>> {
         return try {
-            Timber.d("Fetching categories from cloud")
 
             val snapshot = categoryCollection().get().await()
             val categories = snapshot.documents.mapNotNull { it.data }
 
-            Timber.i("Fetched ${categories.size} categories from cloud")
             Result.success(categories)
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch categories")
@@ -133,11 +125,9 @@ class CloudSyncService(
 
     suspend fun deleteCategoryFromCloud(categoryId: String): Result<Unit> {
         return try {
-            Timber.d("Deleting category $categoryId from cloud")
 
             categoryCollection().document(categoryId).delete().await()
 
-            Timber.i("Successfully deleted category $categoryId from cloud")
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to delete category from cloud")

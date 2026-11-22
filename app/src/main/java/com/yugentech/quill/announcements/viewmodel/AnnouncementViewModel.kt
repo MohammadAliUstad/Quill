@@ -36,7 +36,6 @@ class AnnouncementViewModel(
         viewModelScope.launch {
             try {
                 val pending = repository.getPendingAnnouncements()
-                Timber.d("Pending announcements count: ${pending.size}")
 
                 if (pending.isNotEmpty()) {
                     val first = pending.first()

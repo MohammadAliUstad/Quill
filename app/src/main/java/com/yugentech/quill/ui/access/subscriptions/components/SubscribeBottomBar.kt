@@ -2,7 +2,7 @@ package com.yugentech.quill.ui.access.subscriptions.components
 
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import com.yugentech.quill.reader.ui.components.aira.components.ThinkingIndicator
+import com.yugentech.quill.reader.ui.common.components.ThinkingIndicator
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
@@ -19,14 +19,14 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -43,6 +43,15 @@ import com.yugentech.quill.ui.access.subscriptions.parent.planOptions
 import com.yugentech.theme.tokens.dimensions.AppAnimations
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
+
+/** The Restore label sliding up and out of its button. */
+private const val RESTORE_SLIDE_OUT_MILLIS = 320
+
+/** How long the label has to clear the button before the dots start rising in. */
+private const val RESTORE_STAGGER_MILLIS = 180
+
+/** The dots (or the label, on the way back) rising into place from the button's bottom edge. */
+private const val RESTORE_SLIDE_IN_MILLIS = 420
 
 @Composable
 fun SubscribeBottomBar(
@@ -96,35 +105,40 @@ fun SubscribeBottomBar(
                     },
                     enabled = !isRestoring,
                     modifier = Modifier.height(52.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    // No vertical padding, so the animation below spans the button's full height
+                    contentPadding = PaddingValues(horizontal = 12.dp)
                 ) {
                     AnimatedContent(
                         targetState = isRestoring,
-                        // The label slides up and out as Aira's thinking dots rise in from below,
-                        // both at once (and back the same way when it's done). Clipped to the button,
-                        // so neither shows outside it while moving.
+                        // The label slides up and out of the button, then Aira's thinking dots
+                        // rise in from its bottom edge (and back the same way when it's done).
+                        // Each travels the button's full height, clipped to it.
                         transitionSpec = {
-                            val enter = tween<IntOffset>(
-                                durationMillis = AppAnimations.Durations.Smooth,
-                                easing = AppAnimations.Easings.EmphasizedDecelerate
-                            )
                             val exit = tween<IntOffset>(
-                                durationMillis = AppAnimations.Durations.Smooth,
+                                durationMillis = RESTORE_SLIDE_OUT_MILLIS,
                                 easing = AppAnimations.Easings.Accelerate
                             )
+                            val enter = tween<IntOffset>(
+                                durationMillis = RESTORE_SLIDE_IN_MILLIS,
+                                delayMillis = RESTORE_STAGGER_MILLIS,
+                                easing = AppAnimations.Easings.EmphasizedDecelerate
+                            )
                             (slideInVertically(enter) { it } + fadeIn(
-                                tween(AppAnimations.Durations.Smooth)
+                                tween(RESTORE_SLIDE_IN_MILLIS, delayMillis = RESTORE_STAGGER_MILLIS)
                             )) togetherWith (slideOutVertically(exit) { -it } + fadeOut(
-                                tween(AppAnimations.Durations.Rapid)
+                                tween(RESTORE_SLIDE_OUT_MILLIS)
                             )) using SizeTransform(clip = true)
                         },
                         contentAlignment = Alignment.Center,
-                        modifier = Modifier.clipToBounds(),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .clipToBounds(),
                         label = "restore_button_state"
                     ) { restoring ->
                         // The label is laid out either way, so the button keeps its width while
                         // the dots show, and the Pro button beside it doesn't shift
-                        Box(contentAlignment = Alignment.Center) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
                             Text(
                                 text = stringResource(R.string.restore),
                                 style = MaterialTheme.typography.labelLarge,

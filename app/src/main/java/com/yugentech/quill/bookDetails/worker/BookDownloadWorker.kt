@@ -80,9 +80,9 @@ class BookDownloadWorker(
 
                             setProgress(
                                 workDataOf(
-                                    "PROGRESS_PERCENT" to progressPercent,
-                                    "BYTES_DOWNLOADED" to bytesDownloaded,
-                                    "TOTAL_BYTES" to totalBytes
+                                    KEY_PROGRESS_PERCENT to progressPercent,
+                                    KEY_BYTES_DOWNLOADED to bytesDownloaded,
+                                    KEY_TOTAL_BYTES to totalBytes
                                 )
                             )
                             lastProgressUpdate = currentTime
@@ -115,7 +115,7 @@ class BookDownloadWorker(
             }
 
         } catch (e: Exception) {
-            Timber.e(e, "Download failed for $bookId")
+            Timber.e(e, "Book download failed")
             
             if (file.exists()) file.delete()
 
@@ -139,5 +139,12 @@ class BookDownloadWorker(
                 }
             }
         }
+    }
+
+    companion object {
+        /** The progress it reports while the file comes in, read by the book's page. */
+        const val KEY_PROGRESS_PERCENT = "PROGRESS_PERCENT"
+        const val KEY_BYTES_DOWNLOADED = "BYTES_DOWNLOADED"
+        const val KEY_TOTAL_BYTES = "TOTAL_BYTES"
     }
 }
