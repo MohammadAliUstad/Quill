@@ -8,9 +8,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.yugentech.quill.auth.viewmodel.AuthViewModel
 import com.yugentech.quill.navigation.screen.AppScreen
-import com.yugentech.quill.ui.access.signIn.SignInScreen
-import com.yugentech.quill.ui.access.signUp.SignUpScreen
-import timber.log.Timber
+import com.yugentech.quill.ui.access.signIn.parent.SignInScreen
+import com.yugentech.quill.ui.access.signUp.parent.SignUpScreen
 
 fun NavGraphBuilder.authGraph(
     navController: NavHostController,
@@ -21,7 +20,6 @@ fun NavGraphBuilder.authGraph(
     composable(
         route = AppScreen.SignIn.route
     ) {
-        Timber.v("Composing SignIn Screen")
         BackHandler { (context as? Activity)?.finish() }
 
         SignInScreen(
@@ -49,7 +47,6 @@ fun NavGraphBuilder.authGraph(
     composable(
         route = AppScreen.SignUp.route
     ) {
-        Timber.v("Composing SignUp Screen")
         BackHandler { navController.popBackStack() }
 
         SignUpScreen(

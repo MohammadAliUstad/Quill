@@ -1,20 +1,32 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { callGemini } from "../../core/gemini";
+import { SETTINGS } from "../../core/models";
 
 const geminiKey = defineSecret("GEMINI_API_KEY");
+
+/** Keeps the previous answer short in the router's prompt: it's there only to resolve references. */
+const MAX_LAST_ANSWER_CHARS = 1200;
 
 const buildRouterPrompt = (
   bookTitle: string,
   bookAuthor: string,
   query: string,
-  selectedText?: string
+  selectedText?: string,
+  lastQuestion?: string,
+  lastAnswer?: string
 ): string => `
 You are a query classifier for a book reading app.
 The user is currently reading "${bookTitle}" by ${bookAuthor}.
 ${
   selectedText
     ? `The reader highlighted this passage from the book before asking their question:\n"""\n${selectedText}\n"""\nResolve any pronoun or vague reference in the question (e.g. "he", "this", "why did they") against who or what this passage is about.\n`
+    : ""
+}${
+  lastQuestion
+    ? `This question follows on from the previous exchange in the conversation:\nPREVIOUS QUESTION: ${lastQuestion}\n${
+        lastAnswer ? `PREVIOUS ANSWER: ${lastAnswer.slice(0, MAX_LAST_ANSWER_CHARS)}\n` : ""
+      }If the question depends on it ("why did she do that?", "and him?", "what happened next?"), first work out what it is really asking in full (who "she" is, what "that" was), and classify and build every field below from that full question. If it's a new topic, ignore the previous exchange.\n`
     : ""
 }
 Classify whether the following question requires retrieving specific passages from the book, or can be answered from general knowledge.
@@ -27,13 +39,21 @@ RAG is required when the question asks about:
 - A summary of the current chapter
 - A theme or the significance of something, when grounded in the story itself
 
+Any question about what happens, has happened or will happen in the story ALWAYS requires RAG,
+however it's phrased: the plot, the ending, who dies, survives, marries, wins or is guilty,
+whether something works out, what a character will do, or a synopsis or overview of the story.
+Answering those without the passages could spoil the book, so never classify them as not
+requiring RAG. When unsure whether a question touches the plot, choose RAG.
+
 RAG is NOT required when the question asks about:
-- General information about the book (synopsis, genre)
+- The book's genre or form, or when and how it was written (not its plot)
 - The author's background or other works
 - Historical or cultural context around the book
 - General literary discussion or recommendations
 - Casual conversation or greetings
 - The meaning of a specific word or phrase (a vocabulary question, not a plot question)
+- Anything unrelated to the book or reading (code, sport, news, unrelated people): classify it
+  as not requiring RAG; the chat that handles it will decline politely
 
 GROUNDING RULE — this is critical: only use a name if you are certain it belongs to a character,
 place, or thing in THIS specific book, "${bookTitle}" by ${bookAuthor}. Never invent, guess, or
@@ -113,22 +133,27 @@ export const detectIntent = onCall(
       throw new HttpsError("unauthenticated", "Login required");
     }
 
-    const { query, bookTitle, bookAuthor, selectedText } = request.data;
+    // lastQuestion and lastAnswer come only from newer apps
+    const { query, bookTitle, bookAuthor, selectedText, lastQuestion, lastAnswer } = request.data;
 
     if (!query) {
       throw new HttpsError("invalid-argument", "Query is required");
     }
 
-    const routerPrompt = buildRouterPrompt(bookTitle, bookAuthor, query, selectedText);
-
-    const text = await callGemini(
-      geminiKey.value(),
-      "gemini-2.5-flash-lite",
-      [{ role: "user", parts: [{ text: routerPrompt }] }],
-      undefined, // No system instruction needed for this specific one
-      0.1,
-      256
+    const routerPrompt = buildRouterPrompt(
+      bookTitle,
+      bookAuthor,
+      query,
+      selectedText || undefined,
+      typeof lastQuestion === "string" && lastQuestion.trim() ? lastQuestion.trim() : undefined,
+      typeof lastAnswer === "string" && lastAnswer.trim() ? lastAnswer.trim() : undefined
     );
+
+    const text = await callGemini(geminiKey.value(), {
+      ...SETTINGS.detectIntent,
+      contents: [{ role: "user", parts: [{ text: routerPrompt }] }],
+      json: true,
+    });
 
     return { response: text.trim() };
   }

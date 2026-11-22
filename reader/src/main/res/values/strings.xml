@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name" translatable="false">Quill</string>
     <string name="reader_sound_none">None</string>
     <string name="reader_sound_rain">Rain</string>
     <string name="reader_sound_brown_noise">Brown Noise</string>

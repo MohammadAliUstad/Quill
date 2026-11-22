@@ -1,8 +1,8 @@
 package com.yugentech.quill.di.modules.books
 
-import com.yugentech.quill.insghts.repository.InsightsRepository
-import com.yugentech.quill.insghts.repository.InsightsRepositoryImpl
-import com.yugentech.quill.insghts.viewmodel.InsightsViewModel
+import com.yugentech.quill.insights.repository.InsightsRepository
+import com.yugentech.quill.insights.repository.InsightsRepositoryImpl
+import com.yugentech.quill.insights.viewmodel.InsightsViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 

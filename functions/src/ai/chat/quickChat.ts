@@ -1,8 +1,22 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { callGemini } from "../../core/gemini";
+import { SETTINGS } from "../../core/models";
+import { readerContextFrom, ReaderContext, spoilerRule } from "../prompts/aira";
 
 const geminiKey = defineSecret("GEMINI_API_KEY");
+
+// Added to every chip's prompt except the dictionary: the same ending and spoiler rules as chat.
+// The chips' own formats above stay exactly as they are; the app lays some of them out by line.
+const quickRules = (ctx: ReaderContext) => `
+SPOILERS
+${spoilerRule(ctx)}
+
+ALSO
+- Stop when the task is done. Don't end with a question, an invitation to keep talking, or an
+  offer of more help.
+- Talk about the book itself, not about "the passages" or "the text provided".
+`.trim();
 
 type PromptBuilder = (bookTitle: string, bookAuthor: string, query?: string) => string;
 
@@ -308,7 +322,11 @@ export const quickChat = onCall(
       throw new HttpsError("invalid-argument", "Unknown action type");
     }
 
-    const systemPrompt = promptBuilder(bookTitle, bookAuthor, query);
+    const basePrompt = promptBuilder(bookTitle, bookAuthor, query);
+    const systemPrompt =
+      actionType === "DEFINE_WORD"
+        ? basePrompt
+        : `${basePrompt}\n\n${quickRules(readerContextFrom(request.data))}`;
 
     const finalQueryText = `
       CONTEXT:
@@ -318,14 +336,11 @@ export const quickChat = onCall(
       ${query || "Process the context above based on your instructions."}
     `.trim();
 
-    const text = await callGemini(
-      geminiKey.value(),
-      "gemini-2.5-flash-lite",
-      [{ role: "user", parts: [{ text: finalQueryText }] }],
-      systemPrompt,
-      0.4,
-      1024
-    );
+    const text = await callGemini(geminiKey.value(), {
+      ...SETTINGS.quickChat,
+      contents: [{ role: "user", parts: [{ text: finalQueryText }] }],
+      systemInstruction: systemPrompt,
+    });
 
     return { response: text.trim() };
   }

@@ -6,7 +6,6 @@ import com.yugentech.quill.database.dao.UserDao
 import com.yugentech.quill.database.model.BookSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.io.File
 
 /**
@@ -31,6 +30,5 @@ class GuestDataManager(
             .forEach { book -> book.localFilePath?.let { runCatching { File(it).delete() } } }
         cloudSyncRepository.wipeLocalData()
         userDao.deleteUser(guestId)
-        Timber.i("Guest local data deleted")
     }
 }

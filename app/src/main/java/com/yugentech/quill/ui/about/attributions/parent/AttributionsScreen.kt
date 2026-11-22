@@ -29,8 +29,8 @@ import com.yugentech.quill.ui.about.attributions.components.AttributionsTopBar
 import com.yugentech.quill.ui.about.attributions.components.LibraryItem
 import com.yugentech.quill.ui.about.attributions.components.LicensesContent
 import com.yugentech.quill.ui.about.attributions.components.OpenSourceCard
-import com.yugentech.quill.ui.main.components.SectionHeader
-import com.yugentech.quill.ui.main.components.itemShape
+import com.yugentech.quill.ui.common.components.SectionHeader
+import com.yugentech.theme.shapes.itemShape
 import com.yugentech.theme.tokens.AppConstants.GITHUB_URL
 import com.yugentech.theme.tokens.spacing
 import com.yugentech.quill.R

@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Which book sources are down for maintenance right now, for the whole app: the Sources card and
- * a book's download show it from here, so they never disagree.
+ * Which book sources are down for maintenance right now, for the whole app: Discover and a
+ * book's download show it from here, so they never disagree.
  *
  * Each online source is asked directly, by a request to its own site ([check], [checkIfDue]):
  * marked down when it answers for maintenance, and up again by the next check that finds it back.

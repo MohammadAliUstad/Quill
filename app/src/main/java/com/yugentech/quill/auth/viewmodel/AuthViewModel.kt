@@ -64,7 +64,6 @@ class AuthViewModel(
         viewModelScope.launch {
             authRepository.authState.collect { user ->
                 if (user != null) {
-                    Timber.d("Auth state update: User logged in ${user.uid} (guest: ${user.isGuest})")
                     // A guest's ID never leaves the phone, crash reports included
                     FirebaseCrashlytics.getInstance().setUserId(if (user.isGuest) "" else user.uid)
 
@@ -72,7 +71,6 @@ class AuthViewModel(
                         loadUserProfile(user)
                     }
                 } else {
-                    Timber.d("Auth state update: User logged out")
                     FirebaseCrashlytics.getInstance().setUserId("")
 
                     _authState.update {
@@ -113,7 +111,6 @@ class AuthViewModel(
         viewModelScope.launch {
             when (val result = authRepository.signUp(name, email, password)) {
                 is AuthResult.Success -> {
-                    Timber.i("Sign up successful, creating local profile")
                     val firebaseUser = result.data
                     val newUser = UserData(
                         userId = firebaseUser.uid,
@@ -174,7 +171,7 @@ class AuthViewModel(
         }
     }
 
-    // --- Guest mode ---
+    // Guest mode
     // A guest exists only on this phone: a local ID, no Firebase account, and a library that
     // never leaves the device. Aira, Pro and cloud sync need an account. To keep their reading
     // in an account they export a backup file, leave guest mode, sign in, and import it there.
@@ -191,7 +188,6 @@ class AuthViewModel(
      */
     fun exitGuestMode() {
         val guestId = authRepository.currentUser ?: return
-        Timber.i("User requested to exit guest mode")
         _authState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             try {
@@ -213,7 +209,6 @@ class AuthViewModel(
     }
 
     fun signOut() {
-        Timber.i("User requested sign out")
         _authState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             cloudSyncRepository.wipeLocalData()
@@ -227,7 +222,6 @@ class AuthViewModel(
         viewModelScope.launch {
             when (val result = authRepository.sendPasswordResetEmail(email)) {
                 is AuthResult.Success -> {
-                    Timber.i("Password reset email sent to $email")
                     _forgotPasswordState.value = ForgotPasswordState.Success
                 }
 
@@ -257,7 +251,6 @@ class AuthViewModel(
                 is UserResult.Success -> {
                     val localUser = userRepository.getUser(user.uid)
                     if (localUser != null) {
-                        Timber.d("Local profile loaded for ${user.uid}")
                         _authState.update {
                             it.copy(
                                 isInitializing = false,

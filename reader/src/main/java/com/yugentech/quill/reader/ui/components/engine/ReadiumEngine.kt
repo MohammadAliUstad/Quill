@@ -1,5 +1,6 @@
 package com.yugentech.quill.reader.ui.components.engine
 
+import timber.log.Timber
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -565,7 +566,7 @@ fun ReadiumEngine(
             try {
                 nav.evaluateJavascript(js)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e, "Failed to run reader script")
             }
         }
 

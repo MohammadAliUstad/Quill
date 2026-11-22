@@ -39,7 +39,6 @@ class CloudSyncRepositoryImpl(
 
     override suspend fun syncLibraryOnLogin(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            Timber.d("Starting library and category sync on login")
 
             bookDao.deleteAllBooks()
             categoryDao.deleteAllUserCategories()
@@ -59,7 +58,6 @@ class CloudSyncRepositoryImpl(
 
                 if (categoryEntities.isNotEmpty()) {
                     categoryDao.insertCategories(categoryEntities)
-                    Timber.i("Successfully synced ${categoryEntities.size} categories to local database")
                 }
             } else {
                 Timber.e("Failed to fetch categories from cloud")
@@ -95,7 +93,7 @@ class CloudSyncRepositoryImpl(
                             localChapters = parsedData.chapters
                             localTotalPages = parsedData.totalPages
                         } catch (e: Exception) {
-                            Timber.e(e, "Silent parse failed for existing book: $bookId")
+                            Timber.e(e, "Failed to parse a synced book")
                         }
                     }
 
@@ -132,7 +130,6 @@ class CloudSyncRepositoryImpl(
                 }
 
                 bookDao.insertBooks(entitiesToInsert)
-                Timber.i("Successfully synced ${entitiesToInsert.size} books to local database")
                 Result.success(Unit)
             } else {
                 Timber.e("Failed to fetch library from cloud")
@@ -147,7 +144,6 @@ class CloudSyncRepositoryImpl(
     }
 
     override suspend fun wipeLocalData() = withContext(Dispatchers.IO) {
-        Timber.d("Wiping local data on sign out")
         bookDao.deleteAllBooks()
         categoryDao.deleteAllUserCategories()
     }
@@ -160,7 +156,6 @@ class CloudSyncRepositoryImpl(
             val booksToSync = unsyncedBooks.filter { it.source != BookSource.USER_IMPORTED }
 
             if (booksToSync.isEmpty()) {
-                Timber.d("No unsynced books to upload")
                 bookDao.markAllBooksAsSynced()
                 return@withContext Result.success(Unit)
             }
@@ -171,7 +166,6 @@ class CloudSyncRepositoryImpl(
 
             bookDao.markAllBooksAsSynced()
 
-            Timber.i("Successfully uploaded ${booksToSync.size} books to cloud")
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to upload books to cloud")
@@ -185,7 +179,6 @@ class CloudSyncRepositoryImpl(
             val unsyncedCategories = categoryDao.getUnsyncedCategories()
 
             if (unsyncedCategories.isEmpty()) {
-                Timber.d("No unsynced categories to upload")
                 return@withContext Result.success(Unit)
             }
 
@@ -194,7 +187,6 @@ class CloudSyncRepositoryImpl(
             }
 
             categoryDao.markAllAsSynced()
-            Timber.i("Successfully uploaded ${unsyncedCategories.size} categories to cloud")
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to upload categories to cloud")
@@ -206,9 +198,8 @@ class CloudSyncRepositoryImpl(
         if (isGuest) return@withContext
         try {
             cloudSyncService.deleteCategoryFromCloud(categoryId)
-            Timber.i("Successfully deleted category document $categoryId from cloud")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to delete category $categoryId from cloud")
+            Timber.e(e, "Failed to delete category from cloud")
         }
     }
 
@@ -216,15 +207,13 @@ class CloudSyncRepositoryImpl(
         if (isGuest) return@withContext
         try {
             cloudSyncService.deleteBookFromCloud(bookId)
-            Timber.i("Successfully deleted book document $bookId from cloud")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to delete book $bookId from cloud")
+            Timber.e(e, "Failed to delete book from cloud")
         }
     }
 
     override fun scheduleBackgroundSync() {
         if (isGuest) return
-        Timber.d("Scheduling background sync in 15 seconds")
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -244,7 +233,6 @@ class CloudSyncRepositoryImpl(
 
     override suspend fun syncCategoriesOnLogin(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            Timber.d("Starting category-only sync on login")
 
             bookDao.deleteAllBooks()
             categoryDao.deleteAllUserCategories()
@@ -266,7 +254,6 @@ class CloudSyncRepositoryImpl(
 
                 if (categoryEntities.isNotEmpty()) {
                     categoryDao.insertCategories(categoryEntities)
-                    Timber.i("Successfully restored ${categoryEntities.size} categories")
                 }
 
                 Result.success(Unit)

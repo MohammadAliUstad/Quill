@@ -7,7 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.yugentech.quill.navigation.screen.AppScreen
 import com.yugentech.quill.sources.discover.viewmodel.ShelfViewModel
-import com.yugentech.quill.ui.tabs.discoverScreen.shelf.ShelfScreen
+import com.yugentech.quill.ui.shelf.parent.ShelfScreen
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import java.net.URLDecoder

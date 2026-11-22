@@ -3,9 +3,9 @@ package com.yugentech.quill.di.modules.shared
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepository
 import com.yugentech.quill.bookDetails.repository.BookDetailsRepositoryImpl
 import com.yugentech.quill.bookDetails.viewmodel.BookDetailsViewModel
-import com.yugentech.quill.ui.shared.bookDetails.parent.HighlightsViewModel
-import com.yugentech.quill.ui.shared.bookDetails.parent.VisualsViewModel
-import com.yugentech.quill.ui.shared.airaChat.viewmodel.AiraViewModel
+import com.yugentech.quill.ui.book.highlights.viewmodel.HighlightsViewModel
+import com.yugentech.quill.ui.book.visuals.viewmodel.VisualsViewModel
+import com.yugentech.quill.ui.book.airaChat.viewmodel.AiraViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 

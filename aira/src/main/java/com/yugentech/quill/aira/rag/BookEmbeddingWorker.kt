@@ -161,7 +161,7 @@ class BookEmbeddingWorker(
 
             Result.success()
         } catch (e: Exception) {
-            Timber.e(e, "Indexing $bookId failed")
+            Timber.e(e, "Book indexing failed")
             Result.failure()
         }
     }

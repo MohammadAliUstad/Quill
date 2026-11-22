@@ -17,12 +17,12 @@
     <string name="language_name_japanese">Japanisch</string>
     <string name="language_name_korean">Koreanisch</string>
     <string name="language_name_chinese">Chinesisch</string>
-    <string name="more_title">Mehr</string>
+    <string name="settings_title">Einstellungen</string>
     <string name="more_section_ai">KI</string>
     <string name="more_meet_aira">Lerne Aira kennen</string>
     <string name="more_meet_aira_subtitle">Deine KI-Lesebegleiterin</string>
     <string name="more_subscriptions">Abos</string>
-    <string name="more_subscriptions_subtitle">Verwalte dein Abo und schalte Pro-Funktionen frei</string>
+    <string name="more_subscriptions_subtitle">Verwalte dein Abo und dein tägliches Aira-Kontingent</string>
     <string name="more_indexing">Bibliothek wird indexiert</string>
     <string name="more_indexing_subtitle">Aira liest deine Bücher.</string>
     <string name="more_section_library">Bibliothek</string>
@@ -98,8 +98,6 @@
     <string name="onboarding_library_tap">Tippe auf ein Buch</string>
     <string name="onboarding_library_title">Eine Bibliothek, die dir gehört</string>
     <string name="onboarding_library_body">Importiere deine eigenen EPUBs oder lade kostenlose Klassiker von Standard Ebooks herunter und sortiere sie in deine Regale.</string>
-    <string name="onboarding_reader_title">Lies auf deine Art</string>
-    <string name="onboarding_reader_body">Schriften, Abstände, Seitenthemen, Hintergrundklänge und ein warmes Nachtlicht. Markiere die Zeilen, die dir bleiben.</string>
     <string name="onboarding_aira_lock">Spoilerschutz · bis Kapitel 3</string>
     <string name="onboarding_aira_title">Lerne Aira kennen</string>
     <string name="onboarding_aira_body">Deine Lesebegleiterin antwortet aus dem Buch selbst und verrät nie, was noch kommt.</string>
@@ -130,7 +128,7 @@
     <string name="theme_name_twilight">Dämmerung</string>
     <string name="tab_library">Bibliothek</string>
     <string name="tab_discover">Entdecken</string>
-    <string name="tab_more">Mehr</string>
+    <string name="tab_settings">Einstellungen</string>
     <string name="sign_out_confirm">Möchtest du dich wirklich von deinem Konto abmelden?</string>
     <string name="cancel">Abbrechen</string>
     <string name="exit_app_title">App beenden</string>
@@ -297,7 +295,7 @@
     <string name="aira_reset_body">Dein gesamter Chatverlauf zu diesem Buch wird gelöscht. Das kann nicht rückgängig gemacht werden.</string>
     <string name="delete">Löschen</string>
     <string name="aira_input_hint">Frag mich, was du willst</string>
-    <string name="aira_thinking">Aira denkt nach …</string>
+    <string name="aira_thinking">Aira denkt nach</string>
     <string name="stop">Stopp</string>
     <string name="send">Senden</string>
     <string name="limit_reached">Limit erreicht</string>
@@ -319,7 +317,11 @@
     <string name="delete_book">Buch löschen</string>
     <string name="book_cover">Buchcover</string>
     <string name="add_to_library">Zur Bibliothek hinzufügen</string>
-    <string name="downloaded">Heruntergeladen</string>
+    <string name="book_source_imported">Importiert</string>
+    <plurals name="book_page_count">
+        <item quantity="one">%d Seite</item>
+        <item quantity="other">%d Seiten</item>
+    </plurals>
     <string name="downloading">Wird heruntergeladen</string>
     <string name="retry_download">Download wiederholen</string>
     <string name="download">Herunterladen</string>
@@ -551,22 +553,22 @@
     <string name="billed_monthly">monatliche Abrechnung</string>
     <string name="billed_annually">jährliche Abrechnung</string>
     <string name="tier_basic">Basisleser</string>
-    <string name="tier_basic_subtitle">Standardbibliothek</string>
-    <string name="tier_basic_body">Genieße eine schöne, ruhige Leseumgebung mit 5 täglichen Anfragen an die KI-Assistentin.</string>
+    <string name="tier_basic_subtitle">5 Anfragen pro Tag</string>
+    <string name="tier_basic_body">Alles, was Aira kann, mit 5 Anfragen pro Tag. Dein Kontingent wird täglich zurückgesetzt.</string>
     <string name="quill_pro">Quill Pro</string>
-    <string name="tier_pro_subtitle">KI-Lesebegleiterin</string>
-    <string name="tier_pro_body">Mach Aira stärker mit 50 täglichen Anfragen an die KI-Assistentin. Analysiere Themen, verborgene Handlungsstränge und Motive der Figuren im Detail und erwecke mehr Szenen als gemalte Illustrationen zum Leben.</string>
+    <string name="tier_pro_subtitle">50 Anfragen pro Tag</string>
+    <string name="tier_pro_body">Dieselbe Aira mit dem zehnfachen Tageskontingent: 50 Anfragen pro Tag für längere Gespräche und mehr Illustrationen. Dein Kontingent wird täglich zurückgesetzt.</string>
     <string name="query_cost_note">Jede Frage an Aira verbraucht 1 Anfrage. Jedes generierte Bild verbraucht 3 Anfragen.</string>
     <string name="restoring">Wird wiederhergestellt</string>
     <string name="restore">Wiederherstellen</string>
     <string name="cancel_anytime">Jederzeit kündbar. Es gelten die AGB.</string>
     <string name="get_plan_pro">Pro %1$s holen</string>
-    <string name="subscribed_body">Du hast das volle Leseerlebnis freigeschaltet. Genieße 50 tägliche Anfragen (1 pro Frage, 3 pro generiertem Bild) und lass dir von Aira helfen, tiefer in deine Bibliothek einzutauchen, komplexe Themen zu erkunden und Neues zu entdecken.</string>
+    <string name="subscribed_body">Danke, dass du Quill unterstützt. Du hast 50 Aira-Anfragen pro Tag, und dein Kontingent wird täglich zurückgesetzt.</string>
     <string name="manage_subscription">Abo verwalten</string>
     <string name="select_plan">Wähle ein Abo</string>
     <string name="subscription">Abo</string>
     <string name="premium_purchased">Premium gekauft</string>
-    <string name="subscription_subtitle">Frag Aira ohne Grenzen</string>
+    <string name="subscription_subtitle">Frag Aira mehr, jeden Tag</string>
     <string name="restore_not_found_title">Kein Abo gefunden</string>
     <string name="restore_not_found_message">Für dieses Google-Konto gibt es kein aktives Quill Pro-Abo. Wenn du mit einem anderen Konto abonniert hast, wechsle in Google Play zu diesem Konto und versuche es erneut.</string>
     <string name="restore_failed_title">Käufe konnten nicht wiederhergestellt werden</string>
@@ -691,12 +693,6 @@
     <string name="aira_cap_spoilers_body">Aira beschränkt ihr Wissen genau auf deinen Lesefortschritt, um die Geschichte zu schützen.</string>
     <string name="aira_note_body">Ich bin für die kleinen Momente da: ein Name, den du vergessen hast, ein Wort, das du nicht kennst, eine Szene, die du dir vorstellen möchtest. Frag einfach, und ich bringe dich zurück in die Geschichte.</string>
     <string name="aira_hero_tagline">Deine KI-Leseassistentin</string>
-    <string name="aira_p1_title">Fest im Text verankert</string>
-    <string name="aira_p1_body">Aira rät nicht. Ihre Antworten stammen ausschließlich aus den tatsächlichen Passagen des Buches, das du liest.</string>
-    <string name="aira_p2_title">Kontextbewusst</string>
-    <string name="aira_p2_body">Sie weiß genau, in welchem Kapitel du bist, und merkt sich euer Gespräch für einen natürlichen Austausch.</string>
-    <string name="aira_p3_title">Schützt die Handlung</string>
-    <string name="aira_p3_body">Airas Wissen ist strikt an deinen Lesefortschritt gebunden. Sie verrät nie Ereignisse oder Wendungen aus Kapiteln, die du noch nicht gelesen hast.</string>
     <string name="capabilities">Fähigkeiten</string>
     <string name="attributions_subtitle">Getragen von der Community</string>
     <string name="credit_design_title">Design und Illustrationen</string>
@@ -812,12 +808,12 @@
     <string name="announcement_v5_title">Neu in Quill 5.0</string>
     <string name="announcement_v5_message">Ein neuer Willkommens- und Anmeldebildschirm, eine überarbeitete Darstellung, ruhigeres Laden, und Quill spricht jetzt zehn Sprachen.</string>
     <string name="announcement_language_title">Quill spricht deine Sprache</string>
-    <string name="announcement_language_message">Wähle jederzeit unter Mehr › Darstellung › Sprache aus zehn Sprachen. Quill wechselt sofort.</string>
+    <string name="announcement_language_message">Wähle jederzeit unter Einstellungen › Darstellung › Sprache aus zehn Sprachen. Quill wechselt sofort.</string>
     <string name="announcement_choose_language">Sprache wählen</string>
     <string name="wn_5_languages_title">Quill in deiner Sprache</string>
-    <string name="wn_5_languages_body">Quill spricht jetzt zehn Sprachen: Englisch, Spanisch, Portugiesisch, Französisch, Deutsch, Hindi, Russisch, Japanisch, Koreanisch und Chinesisch. Wähle deine unter Mehr › Darstellung › Sprache, und die ganze App wechselt sofort.</string>
+    <string name="wn_5_languages_body">Quill spricht jetzt zehn Sprachen: Englisch, Spanisch, Portugiesisch, Französisch, Deutsch, Hindi, Russisch, Japanisch, Koreanisch und Chinesisch. Wähle deine unter Einstellungen › Darstellung › Sprache, und die ganze App wechselt sofort.</string>
     <string name="wn_5_welcome_title">Ein neuer Empfang</string>
-    <string name="wn_5_welcome_body">Eine neue Einführungstour auf einem ruhigen, stillen Hintergrund mit einer Zurück-Schaltfläche, dazu neu gestaltete Anmelde- und Registrierungsbildschirme. Sieh dir die Tour jederzeit unter Mehr noch einmal an.</string>
+    <string name="wn_5_welcome_body">Eine neue Einführungstour auf einem ruhigen, stillen Hintergrund mit einer Zurück-Schaltfläche, dazu neu gestaltete Anmelde- und Registrierungsbildschirme. Sieh dir die Tour jederzeit unter Einstellungen noch einmal an.</string>
     <string name="wn_5_appearance_title">Ein neu gestalteter Darstellungs-Bildschirm</string>
     <string name="wn_5_appearance_body">Farbthemen als Karten mit einer Palettenscheibe für jedes, kleine Telefonvorschauen für Hell und Dunkel, eine Sternen-AMOLED-Karte und ein sanfter Übergang über den ganzen Bildschirm, wenn sich deine Farben ändern.</string>
     <string name="wn_5_loading_title">Ruhigeres Laden</string>
@@ -885,19 +881,24 @@
     <string name="wn_5_guest_title">Lesen ohne Konto</string>
     <string name="wn_5_guest_body">Tippe auf dem Anmeldebildschirm auf Gast, um sofort mit dem Lesen zu beginnen. Als Gast bleibt deine Bibliothek auf deinem Handy und geht nie in die Cloud. Aira und Pro brauchen ein Konto. Beim Verlassen des Gastmodus wird deine Bibliothek gelöscht, du kannst sie also vorher exportieren.</string>
     <string name="wn_5_backup_title">Sichern und mitnehmen</string>
-    <string name="wn_5_backup_body">Gäste können ihre Bücher, ihren Fortschritt, ihre Markierungen und ihren Leseverlauf unter Mehr › Sicherung in eine Datei exportieren und auf jedem Handy importieren. Angemeldet? Importiere die Datei unter Mehr, dann wird sie mit deinem Konto synchronisiert. Beim Importieren wird nichts doppelt angelegt.</string>
+    <string name="wn_5_backup_body">Gäste können ihre Bücher, ihren Fortschritt, ihre Markierungen und ihren Leseverlauf unter Einstellungen › Sicherung in eine Datei exportieren und auf jedem Handy importieren. Angemeldet? Importiere die Datei unter Einstellungen, dann wird sie mit deinem Konto synchronisiert. Beim Importieren wird nichts doppelt angelegt.</string>
+    <string name="wn_5_dock_title">Einstellungen und ein schwebendes Dock</string>
+    <string name="wn_5_dock_body">Die Tabs schweben jetzt in einem Dock am unteren Bildschirmrand, daneben eine +-Schaltfläche zum Hinzufügen eigener Bücher. „Mehr“ heißt jetzt „Einstellungen“, und alles ist weiterhin dort.</string>
+    <string name="wn_5_discover_title">Entdecken, aufgeräumt</string>
+    <string name="wn_5_discover_body">Jedes Regal unter Entdecken hat jetzt „Alle ansehen“, über „Themen“ stöberst du nach Themen, und ein Hinweis zeigt, wenn Standard Ebooks gewartet wird. Project Gutenberg und der Quellen-Tab sind entfallen. Heruntergeladene Gutenberg-Bücher bleiben als eigene Bücher in deiner Bibliothek; nicht heruntergeladene wurden entfernt, samt Markierungen, Leseverlauf, Aira-Chats und Bildern.</string>
+    <string name="wn_5_insights_title">Neue Statistiken</string>
+    <string name="wn_5_insights_body">Die Statistiken wurden neu aufgebaut: deine Woche auf einen Blick, eine Lese-Heatmap, Erkenntnisse aus deinen eigenen Gewohnheiten, dein Leserhythmus, persönliche Bestwerte, deine meistgelesenen Bücher und Autoren, deine Markierungen und wie du mit Aira liest.</string>
+    <string name="wn_5_aira_title">Eine noch umsichtigere Aira</string>
+    <string name="wn_5_aira_body">Aira hält sich noch strenger an das, was du schon gelesen hast, und verrät nichts von dem, was noch kommt, selbst bei Büchern, die sie kennt. Sie bleibt beim Lesen, und während sie antwortet, umkreist ein sanftes Leuchten die Eingabeleiste.</string>
+    <string name="wn_5_plans_title">Klarere Tarife</string>
+    <string name="wn_5_plans_body">Beide Tarife bieten dieselbe Aira; Pro erhöht dein Tageskontingent von 5 auf 50 Anfragen. Beim Wiederherstellen eines Kaufs siehst du jetzt, wie es ausgegangen ist, und Gäste bekommen eine neue Seite „Lerne Aira kennen“.</string>
+    <string name="wn_5_reader_title">Feinschliff beim Lesen</string>
+    <string name="wn_5_reader_body">Hintergrundklänge blenden jetzt sanft ein und aus, die Leiste für markierten Text erscheint zuverlässiger, im Scrollmodus wechselt das Kapitel nur bei einem bewussten Wischen zur Seite, und die Schriftstärke lässt sich feiner einstellen.</string>
     <!-- Guest mode: Aira's introduction in place of the subscription screen -->
-    <string name="guest_aira_title">Aira braucht ein Konto</string>
     <string name="tier_label_current">Aktueller Plan</string>
     <string name="tier_label_upgrade">Upgrade auf</string>
-    <string name="guest_aira_section_plans">Was ein Konto bringt</string>
-    <string name="guest_aira_section_features">Was Aira kann</string>
     <string name="guest_tier_label_free">Kostenlos mit Konto</string>
-    <string name="guest_tier_label_pro">Oder mehr mit</string>
-    <string name="guest_aira_reason">Im Gastmodus bleibt alles auf deinem Handy, aber Aira antwortet aus der Cloud und braucht deshalb ein Konto. Das dauert eine Minute, und deine Bibliothek kommt mit.</string>
-    <string name="guest_aira_step_export">Exportiere deine Bibliothek unter Mehr › Sicherung, damit nichts verloren geht</string>
-    <string name="guest_aira_step_exit">Verlasse den Gastmodus, ebenfalls unter Mehr</string>
-    <string name="guest_aira_step_signup">Registriere dich, importiere deine Sicherung und frag Aira bis zu %1$d-mal am Tag kostenlos</string>
+    <string name="guest_tier_label_pro">Oder frag mehr mit</string>
 
     <!-- How to use Aira (tutorial) -->
 </resources>

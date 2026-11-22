@@ -10,7 +10,6 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -64,10 +63,19 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.annotation.RawRes
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.toArgb
+import com.airbnb.lottie.LottieProperty
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.airbnb.lottie.compose.rememberLottieDynamicProperties
+import com.airbnb.lottie.compose.rememberLottieDynamicProperty
 import kotlinx.coroutines.delay
 import androidx.graphics.shapes.Morph
-import com.yugentech.quill.ui.shared.shapes.BloomShapes
-import com.yugentech.quill.ui.shared.shapes.MorphShape
+import com.yugentech.quill.ui.common.components.BloomShapes
+import com.yugentech.quill.ui.common.components.MorphShape
 import kotlin.random.Random
 
 /** Height of the dock. */
@@ -119,8 +127,7 @@ fun BottomBar(
         Surface(
             modifier = Modifier.height(DockHeight),
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -131,12 +138,7 @@ fun BottomBar(
                     DockTab(
                         tab = tab,
                         isSelected = tab == currentTab,
-                        onClick = {
-                            if (tab != currentTab) {
-                                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                onTabSelected(tab)
-                            }
-                        }
+                        onClick = { if (tab != currentTab) onTabSelected(tab) }
                     )
                 }
             }
@@ -177,11 +179,6 @@ private fun DockTab(
         animationSpec = motion.fastSpatialSpec(),
         label = "dockTabPad"
     )
-    val iconRes = when (tab) {
-        QuillTab.Library -> R.drawable.anim_library_enter
-        QuillTab.Discover -> R.drawable.avd_explore_enter
-        QuillTab.Settings -> R.drawable.anim_more_enter
-    }
     val title = stringResource(tab.title)
 
     Row(
@@ -202,7 +199,12 @@ private fun DockTab(
             .padding(horizontal = horizontalPad)
     ) {
         CompositionLocalProvider(LocalContentColor provides content) {
-            AnimatedNavIcon(selected = isSelected, avdRes = iconRes)
+            when (tab) {
+                QuillTab.Library -> AnimatedNavIcon(selected = isSelected, avdRes = R.drawable.anim_library_enter)
+                QuillTab.Discover -> AnimatedNavIcon(selected = isSelected, avdRes = R.drawable.avd_explore_enter)
+                // The cog from Sessions' dock, a Lottie rather than an animated vector
+                QuillTab.Settings -> LottieNavIcon(selected = isSelected, animation = R.raw.settings)
+            }
         }
         // The name slides out beside the icon on the selected tab only
         AnimatedVisibility(
@@ -332,4 +334,43 @@ private fun AnimatedNavIcon(
         // The tab itself carries the name
         contentDescription = null
     )
+}
+
+/**
+ * A Lottie tab icon, as in Sessions: plays once each time its tab is selected and finishes even
+ * if the tab is left mid-play. Drawn in the tab's content colour, like the vector icons.
+ */
+@Composable
+private fun LottieNavIcon(
+    selected: Boolean,
+    @RawRes animation: Int
+) {
+    var isPlaying by remember { mutableStateOf(false) }
+    LaunchedEffect(selected) {
+        if (selected) isPlaying = true
+    }
+
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(animation))
+    val color = LocalContentColor.current.toArgb()
+    val dynamicProperties = rememberLottieDynamicProperties(
+        rememberLottieDynamicProperty(LottieProperty.COLOR, color, "**"),
+        rememberLottieDynamicProperty(LottieProperty.STROKE_COLOR, color, "**")
+    )
+
+    LottieAnimation(
+        composition = composition,
+        isPlaying = isPlaying,
+        iterations = 1,
+        dynamicProperties = dynamicProperties,
+        maintainOriginalImageBounds = true,
+        modifier = Modifier.size(24.dp)
+    )
+
+    LaunchedEffect(isPlaying, composition) {
+        val played = composition ?: return@LaunchedEffect
+        if (isPlaying) {
+            delay(played.duration.toLong())
+            isPlaying = false
+        }
+    }
 }

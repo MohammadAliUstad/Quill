@@ -17,12 +17,12 @@
     <string name="language_name_japanese">जापानी</string>
     <string name="language_name_korean">कोरियाई</string>
     <string name="language_name_chinese">चीनी</string>
-    <string name="more_title">ज़्यादा</string>
+    <string name="settings_title">सेटिंग्स</string>
     <string name="more_section_ai">AI</string>
     <string name="more_meet_aira">Aira से मिलें</string>
     <string name="more_meet_aira_subtitle">अपनी AI पढ़ने की साथी के बारे में जानें</string>
     <string name="more_subscriptions">सदस्यताएँ</string>
-    <string name="more_subscriptions_subtitle">अपना प्लान मैनेज करें और Pro सुविधाएँ अनलॉक करें</string>
+    <string name="more_subscriptions_subtitle">अपना प्लान और Aira के रोज़ाना सवाल मैनेज करें</string>
     <string name="more_indexing">लाइब्रेरी इंडेक्स हो रही है</string>
     <string name="more_indexing_subtitle">Aira आपकी किताबें पढ़ रही है।</string>
     <string name="more_section_library">लाइब्रेरी</string>
@@ -98,8 +98,6 @@
     <string name="onboarding_library_tap">किसी किताब पर टैप करें</string>
     <string name="onboarding_library_title">आपकी अपनी लाइब्रेरी</string>
     <string name="onboarding_library_body">अपनी EPUB फ़ाइलें इंपोर्ट करें या Standard Ebooks से मुफ़्त क्लासिक डाउनलोड करें, फिर उन्हें अपनी शेल्फ़ में सजाएँ।</string>
-    <string name="onboarding_reader_title">अपने तरीक़े से पढ़ें</string>
-    <string name="onboarding_reader_body">फ़ॉन्ट, स्पेसिंग, पेज थीम, बैकग्राउंड आवाज़ें और एक गर्म नाइट लाइट। जो पंक्तियाँ मन में बस जाएँ, उन्हें हाइलाइट करें।</string>
     <string name="onboarding_aira_lock">स्पॉइलर लॉक · अध्याय 3 तक</string>
     <string name="onboarding_aira_title">Aira से मिलें</string>
     <string name="onboarding_aira_body">आपकी पढ़ने की साथी किताब से ही जवाब देती है, और आगे क्या होगा यह कभी नहीं बताती।</string>
@@ -130,7 +128,7 @@
     <string name="theme_name_twilight">सांझ</string>
     <string name="tab_library">लाइब्रेरी</string>
     <string name="tab_discover">खोजें</string>
-    <string name="tab_more">ज़्यादा</string>
+    <string name="tab_settings">सेटिंग्स</string>
     <string name="sign_out_confirm">क्या आप वाकई अपने खाते से साइन आउट करना चाहते हैं?</string>
     <string name="cancel">रद्द करें</string>
     <string name="exit_app_title">ऐप से बाहर निकलें</string>
@@ -297,7 +295,7 @@
     <string name="aira_reset_body">इस किताब का पूरा चैट इतिहास मिट जाएगा। इसे वापस नहीं लाया जा सकता।</string>
     <string name="delete">मिटाएं</string>
     <string name="aira_input_hint">मुझसे कुछ भी पूछें</string>
-    <string name="aira_thinking">Aira सोच रही है…</string>
+    <string name="aira_thinking">Aira सोच रही है</string>
     <string name="stop">रोकें</string>
     <string name="send">भेजें</string>
     <string name="limit_reached">सीमा पूरी हुई</string>
@@ -319,7 +317,11 @@
     <string name="delete_book">किताब हटाएँ</string>
     <string name="book_cover">किताब का कवर</string>
     <string name="add_to_library">लाइब्रेरी में जोड़ें</string>
-    <string name="downloaded">डाउनलोड हो गई</string>
+    <string name="book_source_imported">इंपोर्ट किया गया</string>
+    <plurals name="book_page_count">
+        <item quantity="one">%d पेज</item>
+        <item quantity="other">%d पेज</item>
+    </plurals>
     <string name="downloading">डाउनलोड हो रही है</string>
     <string name="retry_download">फिर से डाउनलोड करें</string>
     <string name="download">डाउनलोड करें</string>
@@ -551,22 +553,22 @@
     <string name="billed_monthly">हर महीने बिल</string>
     <string name="billed_annually">हर साल बिल</string>
     <string name="tier_basic">बेसिक पाठक</string>
-    <string name="tier_basic_subtitle">स्टैंडर्ड लाइब्रेरी</string>
-    <string name="tier_basic_body">रोज़ 5 AI सहायक सवालों के साथ, पढ़ने का एक सुंदर और एकाग्र माहौल पाएँ।</string>
+    <string name="tier_basic_subtitle">रोज़ 5 सवाल</string>
+    <string name="tier_basic_body">Aira की हर सुविधा, रोज़ 5 सवालों के साथ। आपकी सीमा हर दिन फिर से शुरू होती है।</string>
     <string name="quill_pro">Quill Pro</string>
-    <string name="tier_pro_subtitle">AI पढ़ने की साथी</string>
-    <string name="tier_pro_body">रोज़ 50 AI सहायक सवालों के साथ Aira की ताक़त बढ़ाएँ। विषयों, छिपी कहानियों और किरदारों की प्रेरणाओं को गहराई से समझें, और ज़्यादा दृश्यों को पेंट किए गए चित्रों में जीवंत करें।</string>
+    <string name="tier_pro_subtitle">रोज़ 50 सवाल</string>
+    <string name="tier_pro_body">वही Aira, दस गुना ज़्यादा रोज़ाना सवालों के साथ: लंबी बातचीत और ज़्यादा चित्रों के लिए रोज़ 50 सवाल। आपकी सीमा हर दिन फिर से शुरू होती है।</string>
     <string name="query_cost_note">Aira से हर सवाल में 1 सवाल लगता है। हर बनाए गए चित्र में 3 सवाल लगते हैं।</string>
     <string name="restoring">रीस्टोर हो रहा है</string>
     <string name="restore">रीस्टोर करें</string>
     <string name="cancel_anytime">कभी भी रद्द करें। नियम और शर्तें लागू।</string>
     <string name="get_plan_pro">%1$s Pro लें</string>
-    <string name="subscribed_body">आपने पढ़ने का पूरा अनुभव अनलॉक कर लिया है। रोज़ 50 सवालों (हर सवाल पर 1, हर चित्र पर 3) का आनंद लें और Aira के साथ अपनी लाइब्रेरी में गहराई से उतरें, मुश्किल विषय समझें और नई बातें खोजें।</string>
+    <string name="subscribed_body">Quill का साथ देने के लिए धन्यवाद। आपके पास रोज़ Aira से 50 सवाल हैं, और आपकी सीमा हर दिन फिर से शुरू होती है।</string>
     <string name="manage_subscription">सदस्यता मैनेज करें</string>
     <string name="select_plan">एक प्लान चुनें</string>
     <string name="subscription">सदस्यता</string>
     <string name="premium_purchased">प्रीमियम ख़रीदा गया</string>
-    <string name="subscription_subtitle">Aira से बिना सीमा के पूछें</string>
+    <string name="subscription_subtitle">Aira से रोज़ ज़्यादा पूछें</string>
     <string name="restore_not_found_title">कोई सदस्यता नहीं मिली</string>
     <string name="restore_not_found_message">इस Google खाते पर कोई सक्रिय Quill Pro सदस्यता नहीं है। अगर आपने किसी दूसरे खाते से सदस्यता ली थी, तो Google Play में उस खाते पर जाएँ और फिर से कोशिश करें।</string>
     <string name="restore_failed_title">खरीदारी रीस्टोर नहीं हो सकी</string>
@@ -691,12 +693,6 @@
     <string name="aira_cap_spoilers_body">कहानी बचाने के लिए Aira अपनी जानकारी को आपकी ठीक-ठीक प्रगति तक सीमित रखती है।</string>
     <string name="aira_note_body">मैं छोटे-छोटे पलों के लिए हूँ: कोई नाम जो आप भूल गए, कोई शब्द जो आप नहीं जानते, कोई दृश्य जिसे आप आँखों के सामने देखना चाहते हैं। पूछिए, और मैं आपको कहानी में वापस ले चलूँगी।</string>
     <string name="aira_hero_tagline">आपकी AI पढ़ने की सहायक</string>
-    <string name="aira_p1_title">किताब पर आधारित</string>
-    <string name="aira_p1_body">Aira अंदाज़ा नहीं लगाती। उसके जवाब हमेशा उसी किताब के असली अंशों से आते हैं जिसे आप पढ़ रहे हैं।</string>
-    <string name="aira_p2_title">संदर्भ समझने वाली</string>
-    <string name="aira_p2_body">वह ठीक-ठीक जानती है कि आप किस अध्याय में हैं, और सहज बातचीत के लिए आपकी चल रही बातचीत याद रखती है।</string>
-    <string name="aira_p3_title">कहानी की रक्षा</string>
-    <string name="aira_p3_body">Aira की जानकारी सख़्ती से आपकी पढ़ने की प्रगति तक सीमित है। जो अध्याय आपने नहीं पढ़े, उनकी घटनाएँ या मोड़ वह कभी नहीं बताएगी।</string>
     <string name="capabilities">क्षमताएँ</string>
     <string name="attributions_subtitle">समुदाय की ताकत से</string>
     <string name="credit_design_title">डिज़ाइन और चित्र</string>
@@ -812,12 +808,12 @@
     <string name="announcement_v5_title">Quill 5.0 में नया क्या है</string>
     <string name="announcement_v5_message">नया स्वागत और साइन-इन, नए रूप में दिखावट स्क्रीन, शांत लोडिंग, और अब Quill दस भाषाओं में बात करता है।</string>
     <string name="announcement_language_title">Quill आपकी भाषा बोलता है</string>
-    <string name="announcement_language_message">और › दिखावट › भाषा में जाकर कभी भी दस भाषाओं में से चुनें। Quill तुरंत बदल जाता है।</string>
+    <string name="announcement_language_message">सेटिंग्स › दिखावट › भाषा में जाकर कभी भी दस भाषाओं में से चुनें। Quill तुरंत बदल जाता है।</string>
     <string name="announcement_choose_language">भाषा चुनें</string>
     <string name="wn_5_languages_title">Quill आपकी भाषा में</string>
-    <string name="wn_5_languages_body">Quill अब दस भाषाएँ बोलता है: अंग्रेज़ी, स्पेनिश, पुर्तगाली, फ़्रेंच, जर्मन, हिन्दी, रूसी, जापानी, कोरियाई और चीनी। और › दिखावट › भाषा में अपनी भाषा चुनें, और पूरा ऐप तुरंत बदल जाता है।</string>
+    <string name="wn_5_languages_body">Quill अब दस भाषाएँ बोलता है: अंग्रेज़ी, स्पेनिश, पुर्तगाली, फ़्रेंच, जर्मन, हिन्दी, रूसी, जापानी, कोरियाई और चीनी। सेटिंग्स › दिखावट › भाषा में अपनी भाषा चुनें, और पूरा ऐप तुरंत बदल जाता है।</string>
     <string name="wn_5_welcome_title">नया स्वागत</string>
-    <string name="wn_5_welcome_body">शांत, स्थिर बैकग्राउंड पर पहली बार का नया टूर, पीछे जाने के बटन के साथ, और नए सिरे से बनी साइन-इन और साइन-अप स्क्रीन। टूर को कभी भी और से फिर देखें।</string>
+    <string name="wn_5_welcome_body">शांत, स्थिर बैकग्राउंड पर पहली बार का नया टूर, पीछे जाने के बटन के साथ, और नए सिरे से बनी साइन-इन और साइन-अप स्क्रीन। टूर को कभी भी सेटिंग्स से फिर देखें।</string>
     <string name="wn_5_appearance_title">नए रूप में दिखावट स्क्रीन</string>
     <string name="wn_5_appearance_body">रंग थीम अब कार्ड के रूप में, हर थीम की पैलेट डिस्क के साथ, लाइट और डार्क के लिए छोटे फ़ोन प्रीव्यू, सितारों वाला AMOLED कार्ड, और रंग बदलने पर पूरी स्क्रीन पर हल्का फ़ेड।</string>
     <string name="wn_5_loading_title">शांत लोडिंग</string>
@@ -885,19 +881,24 @@
     <string name="wn_5_guest_title">बिना खाते के पढ़ें</string>
     <string name="wn_5_guest_body">तुरंत पढ़ना शुरू करने के लिए साइन-इन स्क्रीन पर गेस्ट पर टैप करें। गेस्ट के रूप में आपकी लाइब्रेरी आपके फ़ोन पर ही रहती है और कभी क्लाउड पर नहीं जाती। Aira और Pro के लिए खाता चाहिए। गेस्ट मोड छोड़ने पर आपकी लाइब्रेरी मिट जाती है, इसलिए जाते समय आप उसे एक्सपोर्ट कर सकते हैं।</string>
     <string name="wn_5_backup_title">बैकअप लें और साथ ले जाएँ</string>
-    <string name="wn_5_backup_body">गेस्ट ज़्यादा › बैकअप से अपनी किताबें, प्रगति, हाइलाइट और पढ़ने का इतिहास एक फ़ाइल में एक्सपोर्ट कर सकते हैं और उसे किसी भी फ़ोन पर इंपोर्ट कर सकते हैं। साइन इन हैं? वह फ़ाइल ज़्यादा में इंपोर्ट करें और वह आपके खाते से सिंक हो जाएगी। इंपोर्ट करने से कुछ भी दोहराया नहीं जाता।</string>
+    <string name="wn_5_backup_body">गेस्ट सेटिंग्स › बैकअप से अपनी किताबें, प्रगति, हाइलाइट और पढ़ने का इतिहास एक फ़ाइल में एक्सपोर्ट कर सकते हैं और उसे किसी भी फ़ोन पर इंपोर्ट कर सकते हैं। साइन इन हैं? वह फ़ाइल सेटिंग्स में इंपोर्ट करें और वह आपके खाते से सिंक हो जाएगी। इंपोर्ट करने से कुछ भी दोहराया नहीं जाता।</string>
+    <string name="wn_5_dock_title">सेटिंग्स और तैरता डॉक</string>
+    <string name="wn_5_dock_body">टैब अब स्क्रीन के नीचे एक तैरते डॉक में हैं, और उसके बगल में अपनी किताबें जोड़ने के लिए + बटन है। \"और\" अब \"सेटिंग्स\" कहलाता है, और सब कुछ अब भी वहीं है।</string>
+    <string name="wn_5_discover_title">आसान खोजें</string>
+    <string name="wn_5_discover_body">खोजें की हर शेल्फ़ पर अब \"सभी देखें\" है, \"विषय\" बटन से आप विषय के हिसाब से ब्राउज़ कर सकते हैं, और Standard Ebooks के मेंटेनेंस में होने पर एक सूचना दिखती है। Project Gutenberg और सोर्स टैब हटा दिए गए हैं। Gutenberg की जो किताबें आपने डाउनलोड की थीं, वे आपकी अपनी किताबों के रूप में लाइब्रेरी में बनी रहेंगी; जो डाउनलोड नहीं की थीं, वे अपनी हाइलाइट, पढ़ने के इतिहास, Aira चैट और चित्रों के साथ हटा दी गई हैं।</string>
+    <string name="wn_5_insights_title">नई इनसाइट</string>
+    <string name="wn_5_insights_body">इनसाइट को नए सिरे से बनाया गया है: एक नज़र में आपका हफ़्ता, पढ़ने का हीटमैप, आपकी अपनी आदतों से निकली बातें, आपकी पढ़ने की लय, निजी रिकॉर्ड, सबसे ज़्यादा पढ़ी गई किताबें और लेखक, आपकी हाइलाइट और आप Aira के साथ कैसे पढ़ते हैं।</string>
+    <string name="wn_5_aira_title">और भी सावधान Aira</string>
+    <string name="wn_5_aira_body">Aira अब और भी सख़्ती से उतना ही बताती है जितना आपने पढ़ा है, इसलिए वह आगे की कहानी नहीं बताएगी, उन किताबों में भी जिन्हें वह पहले से जानती है। वह पढ़ने पर ही ध्यान रखती है, और जवाब देते समय सवाल वाली पट्टी के चारों ओर हल्की चमक घूमती है।</string>
+    <string name="wn_5_plans_title">साफ़ प्लान</string>
+    <string name="wn_5_plans_body">दोनों प्लान में वही Aira है; Pro आपकी रोज़ की सीमा 5 से बढ़ाकर 50 सवाल कर देता है। ख़रीदारी रिस्टोर करने पर अब आपको उसका नतीजा दिखता है, और गेस्ट के लिए \"Aira से मिलें\" का नया पेज है।</string>
+    <string name="wn_5_reader_title">पढ़ने में निखार</string>
+    <string name="wn_5_reader_body">बैकग्राउंड आवाज़ें अब धीरे से शुरू और बंद होती हैं, चुने गए टेक्स्ट की पट्टी ज़्यादा भरोसे से दिखती है, स्क्रॉल मोड में अध्याय सिर्फ़ जान-बूझकर बगल में स्वाइप करने पर बदलता है, और फ़ॉन्ट की मोटाई अब बारीकी से बदलती है।</string>
     <!-- Guest mode: Aira's introduction in place of the subscription screen -->
-    <string name="guest_aira_title">Aira के लिए खाता चाहिए</string>
     <string name="tier_label_current">मौजूदा प्लान</string>
     <string name="tier_label_upgrade">अपग्रेड करें</string>
-    <string name="guest_aira_section_plans">खाते से क्या मिलता है</string>
-    <string name="guest_aira_section_features">Aira क्या कर सकती है</string>
     <string name="guest_tier_label_free">खाते के साथ मुफ़्त</string>
-    <string name="guest_tier_label_pro">या और आगे बढ़ें</string>
-    <string name="guest_aira_reason">गेस्ट मोड सब कुछ आपके फ़ोन पर रखता है, लेकिन Aira क्लाउड से जवाब देती है, इसलिए उसे काम करने के लिए खाता चाहिए। इसमें एक मिनट लगता है, और आपकी लाइब्रेरी साथ आती है।</string>
-    <string name="guest_aira_step_export">ज़्यादा › बैकअप से अपनी लाइब्रेरी एक्सपोर्ट करें, ताकि कुछ न खोए</string>
-    <string name="guest_aira_step_exit">गेस्ट मोड छोड़ें, यह भी ज़्यादा में है</string>
-    <string name="guest_aira_step_signup">साइन अप करें, अपना बैकअप इंपोर्ट करें, और Aira से रोज़ %1$d बार तक मुफ़्त में पूछें</string>
+    <string name="guest_tier_label_pro">या ज़्यादा पूछें</string>
 
     <!-- How to use Aira (tutorial) -->
 </resources>

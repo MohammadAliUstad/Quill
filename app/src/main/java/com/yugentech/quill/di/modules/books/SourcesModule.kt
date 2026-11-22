@@ -6,7 +6,7 @@ import com.yugentech.quill.sources.standard.repository.StandardRepository
 import com.yugentech.quill.sources.standard.repository.StandardRepositoryImpl
 import com.yugentech.quill.sources.standard.service.StandardApiService
 import com.yugentech.quill.sources.discover.viewmodel.ShelfViewModel
-import com.yugentech.quill.ui.main.importBooks.ImportViewModel
+import com.yugentech.quill.library.viewmodel.ImportViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 

@@ -12,8 +12,6 @@ import android.os.Build
 import android.provider.Settings
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
@@ -33,18 +31,6 @@ import kotlin.random.Random
 
 /** Speed multiplier for every beam below this point (1 = normal, 2 = twice as fast). */
 val LocalBeamSpeed = compositionLocalOf { 1.0 }
-
-/**
- * Sets the speed of every `BorderBeam` / `Modifier.borderBeam` inside [content].
- *
- *     BeamSpeed(1.5) { Column { ... } }
- *
- * Changing it while a beam runs speeds it up or slows it down smoothly, without jumping.
- */
-@Composable
-fun BeamSpeed(speed: Double, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalBeamSpeed provides speed, content = content)
-}
 
 /** True when the user turned animations off (the Android equivalent of Reduce Motion). */
 private fun isReduceMotionEnabled(context: Context): Boolean =

@@ -10,7 +10,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 /**
  * Sets billing and Aira's quota up for whoever is signed in, for as long as the app runs.
@@ -34,7 +33,6 @@ class GlobalSyncManager(
 
     private fun startObserving() {
         applicationScope.launch {
-            Timber.d("Starting Global Sync for Billing & Quota...")
 
             // collectLatest: everything below stops when the account changes
             authRepository.authState.collectLatest { user ->

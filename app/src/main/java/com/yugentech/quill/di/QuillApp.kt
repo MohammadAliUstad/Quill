@@ -41,7 +41,9 @@ import org.koin.androidx.workmanager.koin.workManagerFactory
 import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 import timber.log.Timber
+import com.yugentech.quill.utils.ReleaseTree
 
 class QuillApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
@@ -56,12 +58,10 @@ class QuillApp : Application(), Configuration.Provider, ImageLoaderFactory {
         AppStrings.init(this)
         ReaderStrings.init(this)
         AiraStrings.init { LocaleContext.localized(this) }
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
-        }
+        Timber.plant(if (BuildConfig.DEBUG) Timber.DebugTree() else ReleaseTree())
 
         startKoin {
-            androidLogger()
+            androidLogger(if (BuildConfig.DEBUG) Level.INFO else Level.NONE)
             androidContext(this@QuillApp)
             workManagerFactory()
 

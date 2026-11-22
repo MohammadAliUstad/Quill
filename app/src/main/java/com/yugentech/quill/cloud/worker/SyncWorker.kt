@@ -13,14 +13,12 @@ class SyncWorker(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
-        Timber.d("SyncWorker started: Pushing local changes to cloud")
 
         return try {
             val categoryResult = cloudSyncRepository.syncCategoriesToCloud()
             val bookResult = cloudSyncRepository.syncBooksToCloud()
 
             if (categoryResult.isSuccess && bookResult.isSuccess) {
-                Timber.i("SyncWorker completed successfully")
                 Result.success()
             } else {
                 Timber.w("SyncWorker encountered an error, queuing for retry")

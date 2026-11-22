@@ -38,11 +38,11 @@ class StandardRepositoryImpl(
         standardApi.checkSite()
         Result.success(null)
     } catch (e: ServerMaintenanceException) {
-        Timber.w("standardebooks.org is down for maintenance, back after ${e.backAfter}")
+        Timber.w("Source is down for maintenance")
         Result.success(e)
     } catch (e: Exception) {
         if (e is kotlinx.coroutines.CancellationException) throw e
-        Timber.w(e, "Couldn't ask standardebooks.org whether it's down")
+        Timber.w(e, "Source maintenance check failed")
         Result.failure(e)
     }
 
@@ -58,7 +58,7 @@ class StandardRepositoryImpl(
             Result.success(Unit)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.w(e, "Background sync failed. UI will just continue showing cached data.")
+            Timber.w(e, "Background sync failed")
             Result.failure(e)
         }
     }
@@ -89,7 +89,7 @@ class StandardRepositoryImpl(
             }
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.w(e, "Category sync failed. UI will show cached categories.")
+            Timber.w(e, "Category sync failed")
             Result.failure(e)
         }
     }
@@ -105,7 +105,7 @@ class StandardRepositoryImpl(
             Result.success(Unit)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.w(e, "Topic sync failed for: $topic")
+            Timber.w(e, "Topic sync failed")
             Result.failure(e)
         }
     }

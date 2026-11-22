@@ -7,6 +7,7 @@ import com.yugentech.quill.sources.standard.model.OpdsFeedResult
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
+import timber.log.Timber
 
 object StandardMapper {
 
@@ -116,7 +117,7 @@ object StandardMapper {
                 eventType = parser.next()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "Failed to parse the feed")
         }
 
         return OpdsFeedResult(books, nextPageUrl)
@@ -170,7 +171,7 @@ object StandardMapper {
                 eventType = parser.next()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "Failed to parse the feed")
         }
 
         return categories.distinct()
@@ -237,7 +238,7 @@ object StandardMapper {
                 eventType = parser.next()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "Failed to parse the feed")
         }
 
         return collections

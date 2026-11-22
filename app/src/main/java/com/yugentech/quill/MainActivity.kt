@@ -3,7 +3,7 @@ package com.yugentech.quill
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import com.yugentech.quill.sources.shared.SourceMaintenanceMonitor
-import com.yugentech.quill.ui.shared.maintenance.LocalSourcesDown
+import com.yugentech.quill.ui.common.components.LocalSourcesDown
 import org.koin.compose.koinInject
 import android.content.Context
 import android.graphics.Color

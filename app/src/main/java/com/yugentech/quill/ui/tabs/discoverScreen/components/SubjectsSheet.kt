@@ -41,7 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.yugentech.quill.R
 import com.yugentech.theme.SheetTheme
-import getTitleForCategory
+import com.yugentech.quill.ui.common.util.getTitleForCategory
 import kotlinx.coroutines.launch
 
 /** The shapes marking each subject, taken in turn. */

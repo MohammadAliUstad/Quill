@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
@@ -76,18 +77,29 @@ class BookDetailsViewModel(
         )
     }
 
-    val uiState: StateFlow<BookDetailsUiState> = combine(bookState, maintenanceMonitor.down) { state, down ->
+    val uiState: StateFlow<BookDetailsUiState> = combine(
+        bookState,
+        maintenanceMonitor.down,
+        // Starts empty so the page never waits on WorkManager to answer before showing
+        repository.observeDownloadProgress(targetBookId).onStart { emit(null) }
+    ) { state, down, downloadProgress ->
         val maintenance = state.book?.let { down[it.source] }
-        state.copy(isSourceDown = maintenance != null, sourceBackAfter = maintenance?.backAfter)
+        state.copy(
+            isSourceDown = maintenance != null,
+            sourceBackAfter = maintenance?.backAfter,
+            downloadProgress = downloadProgress.takeIf {
+                state.book?.downloadStatus == DownloadStatus.DOWNLOADING
+            }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = BookDetailsUiState(
-            book = fetchedBook.value ?: passedBook,
-            chapters = passedBook?.chapters ?: emptyList(),
-            isLoading = true,
-            isDescriptionExpanded = passedBook?.downloadStatus != DownloadStatus.DOWNLOADED
-        )
+        // Nothing until the library has answered, even for a book opened from Discover with
+        // its catalogue copy in hand: that copy knows nothing of the user's shelf, progress or
+        // download, so showing it first made the page visibly change a moment later. The
+        // library answers in a frame or two, and a book that isn't in it falls back to the
+        // catalogue copy then, as from the Library tab.
+        initialValue = BookDetailsUiState(isLoading = true)
     )
 
     val categories = repository.getAllCategories()
@@ -98,6 +110,11 @@ class BookDetailsViewModel(
     }
 
     fun onDownloadClick() {
+        // A new download hands the description back to the book's state: open while it
+        // downloads, closing once it's on the device for the chapters to take over. Without
+        // this, an earlier tap on it, or a deleted download, would hold it open for good. A tap
+        // while it downloads still has the final say.
+        userExpandedOverride.value = null
         viewModelScope.launch {
             uiState.value.book?.let { repository.startDownload(it) }
         }

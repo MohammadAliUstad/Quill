@@ -1,57 +1,47 @@
 package com.yugentech.quill.ui.about.whatsNew.parent
 
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Backup
-import androidx.compose.material.icons.filled.NoAccounts
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoStories
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Explore
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Highlight
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.NoAccounts
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.WavingHand
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -64,24 +54,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.yugentech.quill.ui.main.components.itemShape
-import com.yugentech.theme.tokens.corners
+import androidx.compose.ui.res.stringResource
+import com.yugentech.quill.R
+import com.yugentech.quill.ui.about.whatsNew.components.UpdateCard
+import com.yugentech.quill.ui.about.whatsNew.components.VersionSectionHeader
+import com.yugentech.quill.ui.about.whatsNew.state.UpdateItem
 import com.yugentech.theme.tokens.dimensions.AppAnimations
 import com.yugentech.theme.tokens.spacing
-import com.yugentech.quill.R
-import androidx.compose.ui.res.stringResource
-import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.filled.WavingHand
-import androidx.compose.material.icons.filled.HourglassTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,6 +79,31 @@ fun WhatsNewScreen(
 
     // 5.0.0: the release this build is, shown first without a header (the top bar names it)
     val v5Updates = listOf(
+        UpdateItem(
+            stringResource(R.string.wn_5_dock_title),
+            stringResource(R.string.wn_5_dock_body),
+            Icons.Default.Settings
+        ),
+        UpdateItem(
+            stringResource(R.string.wn_5_discover_title),
+            stringResource(R.string.wn_5_discover_body),
+            Icons.Default.Explore
+        ),
+        UpdateItem(
+            stringResource(R.string.wn_5_aira_title),
+            stringResource(R.string.wn_5_aira_body),
+            Icons.Default.AutoAwesome
+        ),
+        UpdateItem(
+            stringResource(R.string.wn_5_insights_title),
+            stringResource(R.string.wn_5_insights_body),
+            Icons.Default.Insights
+        ),
+        UpdateItem(
+            stringResource(R.string.wn_5_plans_title),
+            stringResource(R.string.wn_5_plans_body),
+            Icons.Default.WorkspacePremium
+        ),
         UpdateItem(
             stringResource(R.string.wn_5_guest_title),
             stringResource(R.string.wn_5_guest_body),
@@ -119,6 +128,11 @@ fun WhatsNewScreen(
             stringResource(R.string.wn_5_appearance_title),
             stringResource(R.string.wn_5_appearance_body),
             Icons.Default.Brush
+        ),
+        UpdateItem(
+            stringResource(R.string.wn_5_reader_title),
+            stringResource(R.string.wn_5_reader_body),
+            Icons.Default.AutoStories
         ),
         UpdateItem(
             stringResource(R.string.wn_5_loading_title),
@@ -335,114 +349,3 @@ fun WhatsNewScreen(
         }
     }
 }
-
-@Composable
-private fun VersionSectionHeader(
-    version: String,
-    isLatest: Boolean,
-    expanded: Boolean = true,
-    onClick: (() -> Unit)? = null
-) {
-    val chevronRotation by animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f,
-        label = "chevron"
-    )
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(MaterialTheme.corners.medium))
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(
-                horizontal = if (onClick != null) MaterialTheme.spacing.s else 0.dp,
-                vertical = MaterialTheme.spacing.m
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = stringResource(R.string.more_version, version),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (isLatest) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        if (onClick != null) {
-            Icon(
-                imageVector = Icons.Default.ExpandMore,
-                contentDescription = if (expanded) stringResource(R.string.collapse) else stringResource(R.string.expand),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.graphicsLayer { rotationZ = chevronRotation }
-            )
-        }
-    }
-}
-
-// A few expressive shapes, cycled through so the list doesn't look like a column of dots.
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private val updateIconShapes = listOf(
-    MaterialShapes.Cookie9Sided,
-    MaterialShapes.Clover4Leaf,
-    MaterialShapes.Sunny,
-    MaterialShapes.Pill
-)
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun UpdateCard(item: UpdateItem, index: Int, totalCount: Int) {
-    val shape = itemShape(index, totalCount)
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = shape,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(MaterialTheme.spacing.m)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(updateIconShapes[index % updateIconShapes.size].toShape())
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-            ) {
-                Icon(
-                    imageVector = item.icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = item.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-private data class UpdateItem(
-    val title: String,
-    val description: String,
-    val icon: ImageVector
-)

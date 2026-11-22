@@ -1,8 +1,7 @@
 package com.yugentech.quill.ui.access.subscriptions.parent
 
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.app.Activity
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -39,44 +38,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.Info
-import com.yugentech.quill.billing.viewmodel.RestoreResult
+import com.yugentech.quill.R
 import com.yugentech.quill.billing.viewmodel.SubscriptionViewModel
-import com.yugentech.quill.ui.main.components.QuillDialog
 import com.yugentech.quill.domain.BillingEvent
+import com.yugentech.quill.localization.AppStrings
+import com.yugentech.quill.ui.access.subscriptions.components.RestoreResultDialog
 import com.yugentech.quill.ui.access.subscriptions.components.SubscribeBottomBar
 import com.yugentech.quill.ui.access.subscriptions.components.SubscribedContent
 import com.yugentech.quill.ui.access.subscriptions.components.UnsubscribedContent
-import androidx.annotation.StringRes
-import com.yugentech.quill.R
-import androidx.compose.ui.res.stringResource
-import com.yugentech.quill.localization.AppStrings
-
-/** Why Restore didn't bring Pro back. Only an OK button: there's nothing to choose. */
-@Composable
-private fun RestoreResultDialog(result: RestoreResult, onDismiss: () -> Unit) {
-    val notFound = result == RestoreResult.NotFound
-    QuillDialog(
-        icon = if (notFound) Icons.Outlined.Info else Icons.Outlined.ErrorOutline,
-        title = stringResource(if (notFound) R.string.restore_not_found_title else R.string.restore_failed_title),
-        message = stringResource(
-            when (result) {
-                RestoreResult.NotFound -> R.string.restore_not_found_message
-                RestoreResult.ConnectionFailed -> R.string.billing_connect_failed
-                RestoreResult.NeedsAccount -> R.string.guest_subscribe_needs_account
-                RestoreResult.NotSignedIn -> R.string.billing_login_restore
-            }
-        ),
-        primaryLabel = stringResource(R.string.ok),
-        onPrimary = onDismiss,
-        onDismiss = onDismiss
-    )
-}
 
 data class PlanOption(
     val basePlanId: String,

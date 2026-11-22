@@ -74,6 +74,8 @@ import org.readium.r2.shared.publication.Locator
 private val STATUS_BAR_CLEARANCE = 16.dp
 private val EDGE_FADE_HEIGHT = 20.dp
 private val MIN_SHEET_HEIGHT = 220.dp
+// Space under the input pill, above the nav bar
+private val INPUT_BOTTOM_GAP = 4.dp
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -145,10 +147,6 @@ fun AiraPeekBar(
     var responseContentHeightPx by remember { mutableStateOf(0f) }
     // Hoisted so the drag handle's callback (defined further up the tree) can read it.
     val responseScrollState = rememberScrollState()
-    // Matches the sheet Column's windowInsetsPadding(navigationBars) + padding(bottom = 4.dp).
-    val sheetBottomChromePx = with(density) {
-        WindowInsets.navigationBars.getBottom(this) + 4.dp.toPx()
-    }
 
     val visibleState = remember { MutableTransitionState(isVisible) }
     visibleState.targetState = isVisible
@@ -291,11 +289,10 @@ fun AiraPeekBar(
                             .then(sheetHeightModifier)
                             .onSizeChanged { measuredHeightPx = it.height.toFloat() }
                     ) {
+                        // No nav bar inset here: the input row below takes it itself, so the
+                        // limit bar can run down to the screen's bottom edge, as in the Aira chat.
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .windowInsetsPadding(WindowInsets.navigationBars)
-                                .padding(bottom = 4.dp)
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             // The input stays a plain, non-animated Column sibling, pinned to the
                             // sheet's bottom edge -- animateContentSize() measures its child once at
@@ -434,18 +431,27 @@ fun AiraPeekBar(
                                 // own colour at its bottom. Always there, like the chat's, so it shows
                                 // the moment a reply runs under the pill; over the empty sheet it's
                                 // the sheet's colour on itself, so it can't be seen.
+                                // The input row's height now includes the nav bar inset under the
+                                // pill; the fade finishes above it and that strip stays solid, so
+                                // nothing shows behind the gesture bar.
+                                val fadeHeight = EDGE_FADE_HEIGHT + inputRowHeight
+                                val solidFraction = if (fadeHeight > 0.dp) {
+                                    ((navBottom + INPUT_BOTTOM_GAP) / fadeHeight).coerceIn(0f, 1f)
+                                } else 0f
+                                val fadeEnd = 1f - solidFraction
                                 Box(
                                     modifier = Modifier
                                         .align(Alignment.BottomCenter)
                                         .fillMaxWidth()
-                                        .height(EDGE_FADE_HEIGHT + inputRowHeight)
+                                        .height(fadeHeight)
                                         .background(
                                             Brush.verticalGradient(
                                                 0.00f to Color.Transparent,
-                                                0.15f to sheetColor.copy(alpha = 0.1f),
-                                                0.35f to sheetColor.copy(alpha = 0.4f),
-                                                0.55f to sheetColor.copy(alpha = 0.7f),
-                                                0.75f to sheetColor.copy(alpha = 0.9f),
+                                                0.15f * fadeEnd to sheetColor.copy(alpha = 0.1f),
+                                                0.35f * fadeEnd to sheetColor.copy(alpha = 0.4f),
+                                                0.55f * fadeEnd to sheetColor.copy(alpha = 0.7f),
+                                                0.75f * fadeEnd to sheetColor.copy(alpha = 0.9f),
+                                                fadeEnd to sheetColor,
                                                 1.00f to sheetColor
                                             )
                                         )
@@ -473,14 +479,13 @@ fun AiraPeekBar(
                                                     // content below, so its height is already folded
                                                     // into responseContentHeightPx via the content's
                                                     // own top padding -- adding it again here would
-                                                    // double-count it. The sheet's own bottom chrome
-                                                    // (nav bar inset + 4dp padding on the Column) does
-                                                    // count though -- leaving it out capped the drag
-                                                    // short of the natural height, so a shrunk sheet
-                                                    // could never be dragged fully open again and its
-                                                    // response stayed scrollable by that difference.
+                                                    // double-count it. The sheet's bottom chrome (nav
+                                                    // bar inset, plus the input's 4dp gap) is part of
+                                                    // the input row's measured height, so it counts
+                                                    // through inputRowHeightPx -- leaving it out capped
+                                                    // the drag short of the natural height.
                                                     val naturalContentHeightPx =
-                                                        responseContentHeightPx + inputRowHeightPx + sheetBottomChromePx
+                                                        responseContentHeightPx + inputRowHeightPx
                                                     // Never below the minimum, or coerceIn would throw
                                                     // for a reply shorter than MIN_SHEET_HEIGHT.
                                                     val maxAllowedPx = naturalContentHeightPx
@@ -517,25 +522,34 @@ fun AiraPeekBar(
                                 label = "InputBarSwap"
                             ) { isLimitReached ->
                                 if (!isLimitReached) {
-                                    InputBar(
-                                        inputText = inputText,
-                                        onInputChange = { inputText = it },
-                                        airaUiState = shownUiState,
-                                        canSend = canSend,
-                                        buttonContainerColor = buttonContainerColor,
-                                        buttonContentColor = buttonContentColor,
-                                        horizontalPadding = horizontalPadding,
-                                        focusRequester = focusRequester,
-                                        onFocusChanged = { isFocused = it },
-                                        onSend = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                                            send(it)
-                                        },
-                                        onStop = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                            onStop()
-                                        }
-                                    )
+                                    // The pill sits above the nav bar; the limit bar instead
+                                    // takes the inset as its own padding and fills to the edge.
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .windowInsetsPadding(WindowInsets.navigationBars)
+                                            .padding(bottom = INPUT_BOTTOM_GAP)
+                                    ) {
+                                        InputBar(
+                                            inputText = inputText,
+                                            onInputChange = { inputText = it },
+                                            airaUiState = shownUiState,
+                                            canSend = canSend,
+                                            buttonContainerColor = buttonContainerColor,
+                                            buttonContentColor = buttonContentColor,
+                                            horizontalPadding = horizontalPadding,
+                                            focusRequester = focusRequester,
+                                            onFocusChanged = { isFocused = it },
+                                            onSend = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                                send(it)
+                                            },
+                                            onStop = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                                onStop()
+                                            }
+                                        )
+                                    }
                                 } else {
                                     QuotaLimitBar(
                                         isPro = shownUiState.isPro

@@ -2,7 +2,7 @@ package com.yugentech.quill.sources.shared
 
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.localization.UiText
-import com.yugentech.quill.util.toUserFriendlyMessage
+import com.yugentech.quill.utils.toUserFriendlyMessage
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow

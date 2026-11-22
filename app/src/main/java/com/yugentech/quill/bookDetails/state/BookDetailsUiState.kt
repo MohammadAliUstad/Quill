@@ -14,5 +14,7 @@ data class BookDetailsUiState(
      * (after [sourceBackAfter], if the source said when).
      */
     val isSourceDown: Boolean = false,
-    val sourceBackAfter: Instant? = null
+    val sourceBackAfter: Instant? = null,
+    /** How far the running download has got, 0..1, when that's known; null otherwise. */
+    val downloadProgress: Float? = null
 )

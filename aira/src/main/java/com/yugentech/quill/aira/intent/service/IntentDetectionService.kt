@@ -10,7 +10,9 @@ class IntentDetectionService(
         query: String,
         bookTitle: String,
         bookAuthor: String,
-        selectedText: String? = null
+        selectedText: String? = null,
+        lastQuestion: String? = null,
+        lastAnswer: String? = null
     ): String {
         val payload = hashMapOf(
             "query" to query,
@@ -18,6 +20,11 @@ class IntentDetectionService(
             "bookAuthor" to bookAuthor,
             "selectedText" to (selectedText ?: "")
         )
+        // The previous exchange, so a follow-up like "why did she do that?" can be resolved
+        if (!lastQuestion.isNullOrBlank()) {
+            payload["lastQuestion"] = lastQuestion
+            if (!lastAnswer.isNullOrBlank()) payload["lastAnswer"] = lastAnswer
+        }
 
         val result = functions
             .getHttpsCallable("detectIntent")

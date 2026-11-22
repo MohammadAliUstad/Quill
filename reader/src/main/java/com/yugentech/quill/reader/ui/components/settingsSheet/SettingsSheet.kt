@@ -67,7 +67,7 @@ import com.yugentech.quill.reader.ui.components.engine.ReaderDefaults
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.CustomSettingsSlider
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.FontChip
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.SectionLabel
-import com.yugentech.quill.reader.ui.components.settingsSheet.components.SettingsSwitchItem
+import com.yugentech.quill.reader.ui.common.components.SettingsSwitchItem
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.ThemeOption
 import com.yugentech.quill.reader.ui.components.settingsSheet.components.ThemePreset
 import com.yugentech.theme.tokens.spacing
@@ -226,7 +226,7 @@ fun SettingsSheet(
                         }
                     }
 
-                    // --- READING MODE (Paged vs Scroll) ---
+                    // READING MODE (Paged vs Scroll)
                     item {
                         Column(modifier = Modifier.graphicsLayer { alpha = nonSliderAlpha }) {
                             SectionLabel(text = stringResource(R.string.reader_reading_mode))
@@ -392,9 +392,14 @@ fun SettingsSheet(
                                 label = "Font Weight",
                                 value = currentFontWeight,
                                 valueString = String.format(Locale.US, "%.1fx", currentFontWeight),
-                                onValueChange = { onPreferencesChange(epub.copy(fontWeight = it.toDouble())) },
+                                // Rounded to a tenth so float drift can't show as 0.9 when it's 1.0
+                                onValueChange = {
+                                    onPreferencesChange(epub.copy(fontWeight = (it * 10).roundToInt() / 10.0))
+                                },
+                                // Stops every 0.1, so the 1.0 default is one of them (every 0.2
+                                // from 0.5 skipped it: the slider snapped to 0.9 or 1.1)
                                 valueRange = 0.5f..2.5f,
-                                steps = 9,
+                                steps = 19,
                                 activeSlider = activeSlider,
                                 onDraggingChanged = onDraggingChanged
                             )
@@ -451,7 +456,7 @@ fun SettingsSheet(
                         }
                     }
 
-                    // --- SYSTEM & ADVANCED SETTINGS ---
+                    // System & advanced settings
                     item {
                         Column(
                             modifier = Modifier.graphicsLayer { alpha = nonSliderAlpha },

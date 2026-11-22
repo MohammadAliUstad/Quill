@@ -36,7 +36,7 @@ import com.yugentech.quill.ui.about.aira.components.CapabilitiesCarousel
 import com.yugentech.quill.ui.about.aira.components.AiraNote
 import com.yugentech.quill.ui.about.aira.components.HeroSection
 import com.yugentech.quill.ui.about.aira.components.SectionLabel
-import com.yugentech.quill.ui.shared.scrim.rememberSmoothScrimBrush
+import com.yugentech.quill.ui.common.components.rememberSmoothScrimBrush
 import com.yugentech.quill.R
 import androidx.compose.ui.res.stringResource
 

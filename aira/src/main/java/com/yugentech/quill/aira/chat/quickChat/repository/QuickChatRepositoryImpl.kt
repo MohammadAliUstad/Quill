@@ -21,11 +21,9 @@ import com.yugentech.quill.database.dao.VisualDao
 import com.yugentech.quill.database.entity.AiraMessageEntity
 import com.yugentech.quill.database.entity.AiraMessageRole
 import com.yugentech.quill.database.entity.VisualEntity
-import com.yugentech.quill.database.model.RetrievedChunk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
-import timber.log.Timber
 import java.io.File
 import java.util.UUID
 import com.yugentech.quill.aira.localization.AiraStrings
@@ -44,7 +42,6 @@ class QuickChatRepositoryImpl(
 ) : QuickChatRepository {
 
     override suspend fun ask(bookId: String, quickPrompt: QuickPrompt): Flow<AiraResponse> = flow {
-        AiraLog.d("QuickChat[${quickPrompt.javaClass.simpleName}] book=$bookId")
         val book = bookDao.getBookEntity(bookId)
         if (book == null) {
             emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_book_not_found)))
@@ -99,7 +96,6 @@ class QuickChatRepositoryImpl(
                     emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_not_encountered, quickPrompt.name)))
                     return@flow
                 }
-                logRetrievedChunks("RecallCharacter", quickPrompt.name, retrieved)
                 QuickChatPayload(
                     actionType = QuickChatType.RECALL_CHARACTER,
                     bookTitle = book.title,
@@ -119,7 +115,6 @@ class QuickChatRepositoryImpl(
                     emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_not_encountered, quickPrompt.name)))
                     return@flow
                 }
-                logRetrievedChunks("RecentRole", quickPrompt.name, retrieved)
                 QuickChatPayload(
                     actionType = QuickChatType.RECENT_ROLE,
                     bookTitle = book.title,
@@ -287,7 +282,6 @@ class QuickChatRepositoryImpl(
 
         try {
             val responseText = actionService.getQuickChatResponse(payload)
-            Timber.d("QuickChat[${payload.actionType}] query=\"${payload.query}\" response: $responseText")
 
             if (responseText.isBlank()) {
                 emit(AiraResponse.Error(AiraStrings.get(R.string.airachat_no_response)))
@@ -325,16 +319,6 @@ class QuickChatRepositoryImpl(
         }
     }
 
-    // Shows exactly which chapters/chunks are going into the LLM call for the
-    // character-retrieval quick actions, without dumping the full chunk text.
-    private fun logRetrievedChunks(label: String, name: String, chunks: List<RetrievedChunk>) {
-        Timber.d(
-            "$label chunks for \"$name\" (${chunks.size}):\n" +
-                chunks.joinToString("\n") { chunk ->
-                    "[Ch ${chunk.chapterIndex} chunk ${chunk.chunkIndex}] ${chunk.text.take(80)}"
-                }
-        )
-    }
 
     // A chip tap never produces a real typed question, so one is stood in for it here purely
     // for the chat history transcript -- CustomQuestion is the one exception, since it already

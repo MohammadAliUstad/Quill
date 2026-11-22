@@ -26,11 +26,11 @@ import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yugentech.quill.R
+import com.yugentech.quill.ui.common.components.CapabilityItem
 import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -134,10 +134,3 @@ fun CapabilitiesCarousel() {
         }
     }
 }
-
-data class CapabilityItem(
-    val icon: ImageVector,
-    val title: String,
-    val description: String,
-    val slot: Int
-)

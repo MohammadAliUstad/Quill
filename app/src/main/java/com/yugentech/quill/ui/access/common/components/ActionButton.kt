@@ -1,0 +1,65 @@
+package com.yugentech.quill.ui.access.common.components
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import com.yugentech.theme.tokens.components
+import com.yugentech.theme.tokens.corners
+import com.yugentech.theme.tokens.dimensions.AppAnimations
+import com.yugentech.theme.tokens.icons
+import com.yugentech.theme.tokens.strokes
+
+@Composable
+fun ActionButton(
+    text: String,
+    isLoading: Boolean,
+    onClick: () -> Unit,
+    enabled: Boolean = !isLoading
+) {
+    val fadeThrough = AppAnimations.Transitions.rememberExpressiveFadeThrough()
+
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(MaterialTheme.components.buttonMedium),
+        shape = RoundedCornerShape(MaterialTheme.corners.extraLarge),
+        enabled = enabled && !isLoading,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    ) {
+        AnimatedContent(
+            targetState = isLoading,
+            transitionSpec = { fadeThrough() },
+            label = "loading"
+        ) { loading ->
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(MaterialTheme.icons.mediumSmall),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = MaterialTheme.strokes.medium
+                )
+            } else {
+                Text(
+                    text = text,
+                    // SemiBold, like the Google and Guest buttons beneath it
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
+        }
+    }
+}

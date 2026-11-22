@@ -14,10 +14,14 @@ class IntentDetectionRepository(
         query: String,
         title: String,
         author: String,
-        selectedText: String? = null
+        selectedText: String? = null,
+        lastQuestion: String? = null,
+        lastAnswer: String? = null
     ): Intent {
         return try {
-            val rawResponse = detectionService.detectIntent(query, title, author, selectedText)
+            val rawResponse = detectionService.detectIntent(
+                query, title, author, selectedText, lastQuestion, lastAnswer
+            )
 
             val cleaned = rawResponse
                 .replace("```json", "", ignoreCase = true)
@@ -41,7 +45,7 @@ class IntentDetectionRepository(
             }
         } catch (e: Exception) {
             // Not fatal: the question still goes to general chat, just without the book's passages
-            AiraLog.failure("DetectIntent query=\"$query\" (falling back to general chat)", e)
+            AiraLog.failure("DetectIntent", e)
             Intent.General
         }
     }

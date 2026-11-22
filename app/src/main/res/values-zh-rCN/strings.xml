@@ -17,12 +17,12 @@
     <string name="language_name_japanese">日语</string>
     <string name="language_name_korean">韩语</string>
     <string name="language_name_chinese">中文</string>
-    <string name="more_title">多</string>
+    <string name="settings_title">设置</string>
     <string name="more_section_ai">AI</string>
     <string name="more_meet_aira">认识 Aira</string>
     <string name="more_meet_aira_subtitle">了解你的 AI 阅读伙伴</string>
     <string name="more_subscriptions">订阅</string>
-    <string name="more_subscriptions_subtitle">管理方案并解锁 Pro 功能</string>
+    <string name="more_subscriptions_subtitle">管理方案和 Aira 每日次数</string>
     <string name="more_indexing">正在为书库建立索引</string>
     <string name="more_indexing_subtitle">Aira 正在阅读你的书。</string>
     <string name="more_section_library">图书馆</string>
@@ -98,8 +98,6 @@
     <string name="onboarding_library_tap">点按一本书</string>
     <string name="onboarding_library_title">属于你的书库</string>
     <string name="onboarding_library_body">导入你自己的 EPUB，或从 Standard Ebooks 下载免费经典，再整理到你的书架上。</string>
-    <string name="onboarding_reader_title">按你的方式阅读</string>
-    <string name="onboarding_reader_body">字体、间距、页面主题、环境音和温暖的夜灯。为打动你的句子添加高亮。</string>
     <string name="onboarding_aira_lock">防剧透锁 · 截至第 3 章</string>
     <string name="onboarding_aira_title">认识 Aira</string>
     <string name="onboarding_aira_body">你的阅读伙伴只根据书本身作答，绝不剧透后面的内容。</string>
@@ -130,7 +128,7 @@
     <string name="theme_name_twilight">暮光</string>
     <string name="tab_library">图书馆</string>
     <string name="tab_discover">发现</string>
-    <string name="tab_more">多</string>
+    <string name="tab_settings">设置</string>
     <string name="sign_out_confirm">确定要退出当前账号吗？</string>
     <string name="cancel">取消</string>
     <string name="exit_app_title">退出应用</string>
@@ -297,7 +295,7 @@
     <string name="aira_reset_body">这本书的所有聊天记录都将被删除，且无法撤消。</string>
     <string name="delete">删除</string>
     <string name="aira_input_hint">问我任何问题</string>
-    <string name="aira_thinking">Aira 正在思考…</string>
+    <string name="aira_thinking">Aira 正在思考</string>
     <string name="stop">停止</string>
     <string name="send">发送</string>
     <string name="limit_reached">已达上限</string>
@@ -319,7 +317,10 @@
     <string name="delete_book">删除图书</string>
     <string name="book_cover">图书封面</string>
     <string name="add_to_library">加入书库</string>
-    <string name="downloaded">已下载</string>
+    <string name="book_source_imported">已导入</string>
+    <plurals name="book_page_count">
+        <item quantity="other">%d 页</item>
+    </plurals>
     <string name="downloading">正在下载</string>
     <string name="retry_download">重新下载</string>
     <string name="download">下载</string>
@@ -542,22 +543,22 @@
     <string name="billed_monthly">按月计费</string>
     <string name="billed_annually">按年计费</string>
     <string name="tier_basic">基础读者</string>
-    <string name="tier_basic_subtitle">标准书库</string>
-    <string name="tier_basic_body">享受美观而专注的阅读环境，每天可向 AI 助手提问 5 次。</string>
+    <string name="tier_basic_subtitle">每天 5 次</string>
+    <string name="tier_basic_body">Aira 的全部功能，每天 5 次。次数每天重置。</string>
     <string name="quill_pro">Quill Pro</string>
-    <string name="tier_pro_subtitle">AI 阅读伙伴</string>
-    <string name="tier_pro_body">每天可向 AI 助手提问 50 次，让 Aira 更强大。深入分析主题、隐藏情节和人物动机，并把更多场景化为绘画插图。</string>
+    <string name="tier_pro_subtitle">每天 50 次</string>
+    <string name="tier_pro_body">同样的 Aira，十倍的每日次数：每天 50 次，可进行更长的对话、生成更多插图。次数每天重置。</string>
     <string name="query_cost_note">每向 Aira 提一个问题消耗 1 次，每生成一张图片消耗 3 次。</string>
     <string name="restoring">正在恢复</string>
     <string name="restore">恢复</string>
     <string name="cancel_anytime">可随时取消。适用相关条款与条件。</string>
     <string name="get_plan_pro">获取%1$s Pro</string>
-    <string name="subscribed_body">你已解锁完整的阅读体验。尽享每天 50 次提问（每个问题 1 次，每张图片 3 次），让 Aira 帮你深入书库、探索复杂主题、发现新见解。</string>
+    <string name="subscribed_body">感谢支持 Quill。你每天可以向 Aira 提问 50 次，次数每天重置。</string>
     <string name="manage_subscription">管理订阅</string>
     <string name="select_plan">选择方案</string>
     <string name="subscription">订阅</string>
     <string name="premium_purchased">已购买高级版</string>
-    <string name="subscription_subtitle">无限制地向 Aira 提问</string>
+    <string name="subscription_subtitle">每天向 Aira 多问一些</string>
     <string name="restore_not_found_title">未找到订阅</string>
     <string name="restore_not_found_message">此 Google 账号没有有效的 Quill Pro 订阅。如果你是用其他账号订阅的，请在 Google Play 中切换到该账号后重试。</string>
     <string name="restore_failed_title">无法恢复购买</string>
@@ -682,12 +683,6 @@
     <string name="aira_cap_spoilers_body">Aira 把她的知识严格限定在你的阅读进度，守护故事的惊喜。</string>
     <string name="aira_note_body">我为那些小小的时刻而在：一个忘了的名字，一个不认识的词，一个想在脑海里看见的场景。问我吧，我会带你回到故事里。</string>
     <string name="aira_hero_tagline">你的 AI 阅读助手</string>
-    <string name="aira_p1_title">立足原文</string>
-    <string name="aira_p1_body">Aira 不会瞎猜。她的回答严格取自你正在阅读的这本书的原文段落。</string>
-    <string name="aira_p2_title">理解语境</string>
-    <string name="aira_p2_body">她清楚知道你读到了哪一章，并记得你们的对话，让交流自然流畅。</string>
-    <string name="aira_p3_title">守护情节</string>
-    <string name="aira_p3_body">Aira 的知识严格限定在你的阅读进度。她绝不会透露你尚未读到的章节中的情节或反转。</string>
     <string name="capabilities">能力</string>
     <string name="attributions_subtitle">由社区驱动</string>
     <string name="credit_design_title">设计与插画</string>
@@ -803,12 +798,12 @@
     <string name="announcement_v5_title">Quill 5.0 新功能</string>
     <string name="announcement_v5_message">全新的欢迎页和登录界面，重新设计的外观页面，更平和的加载效果，而且 Quill 现在支持十种语言。</string>
     <string name="announcement_language_title">Quill 说你的语言</string>
-    <string name="announcement_language_message">随时在“更多” › “外观” › “语言”中从十种语言里选择。Quill 会立即切换。</string>
+    <string name="announcement_language_message">随时在“设置” › “外观” › “语言”中从十种语言里选择。Quill 会立即切换。</string>
     <string name="announcement_choose_language">选择语言</string>
     <string name="wn_5_languages_title">用你的语言使用 Quill</string>
-    <string name="wn_5_languages_body">Quill 现在支持十种语言：英语、西班牙语、葡萄牙语、法语、德语、印地语、俄语、日语、韩语和中文。在“更多” › “外观” › “语言”中选择你的语言，整个应用会立即切换。</string>
+    <string name="wn_5_languages_body">Quill 现在支持十种语言：英语、西班牙语、葡萄牙语、法语、德语、印地语、俄语、日语、韩语和中文。在“设置” › “外观” › “语言”中选择你的语言，整个应用会立即切换。</string>
     <string name="wn_5_welcome_title">全新的欢迎体验</string>
-    <string name="wn_5_welcome_body">全新的首次使用导览，背景安静不动，还有返回按钮；登录和注册页面也重新设计。随时可以在“更多”中重看导览。</string>
+    <string name="wn_5_welcome_body">全新的首次使用导览，背景安静不动，还有返回按钮；登录和注册页面也重新设计。随时可以在“设置”中重看导览。</string>
     <string name="wn_5_appearance_title">重新设计的外观页面</string>
     <string name="wn_5_appearance_body">配色主题以卡片呈现，每个主题都有调色盘圆盘，浅色和深色的小手机预览，星光点点的 AMOLED 卡片，以及颜色变化时覆盖全屏的柔和渐变。</string>
     <string name="wn_5_loading_title">更平和的加载</string>
@@ -868,19 +863,24 @@
     <string name="wn_5_guest_title">无需账号即可阅读</string>
     <string name="wn_5_guest_body">在登录界面点按“访客”即可立即开始阅读。作为访客，你的书库只保存在手机上，绝不会上传到云端。Aira 和 Pro 需要账号。退出访客模式会删除你的书库，因此你可以在离开时将其导出。</string>
     <string name="wn_5_backup_title">备份并随身携带</string>
-    <string name="wn_5_backup_body">访客可以在“多 › 备份”中将书籍、阅读进度、高亮和阅读记录导出为文件，并在任何手机上导入。已登录？在“多”中导入该文件，它会同步到你的账号。导入绝不会产生重复内容。</string>
+    <string name="wn_5_backup_body">访客可以在“设置 › 备份”中将书籍、阅读进度、高亮和阅读记录导出为文件，并在任何手机上导入。已登录？在“设置”中导入该文件，它会同步到你的账号。导入绝不会产生重复内容。</string>
+    <string name="wn_5_dock_title">设置与悬浮停靠栏</string>
+    <string name="wn_5_dock_body">标签页现在悬浮在屏幕底部的停靠栏中，旁边的 + 按钮可以添加你自己的书。“更多”现已更名为“设置”，所有内容都还在。</string>
+    <string name="wn_5_discover_title">更简洁的发现</string>
+    <string name="wn_5_discover_body">“发现”中的每个书架现在都有“查看全部”，“主题”按钮可按主题浏览，Standard Ebooks 维护时也会显示提示。Project Gutenberg 和“来源”标签页已移除。你已下载的 Gutenberg 书籍会作为你自己的书保留在图书馆中；未下载的书已被删除，连同它们的高亮、阅读记录、Aira 对话和图片。</string>
+    <string name="wn_5_insights_title">全新数据洞察</string>
+    <string name="wn_5_insights_body">数据洞察已全面重做：一目了然的本周概览、阅读热力图、根据你的习惯生成的洞察、阅读节奏、个人纪录、读得最多的书和作者、你的高亮，以及你和 Aira 一起阅读的情况。</string>
+    <string name="wn_5_aira_title">更谨慎的 Aira</string>
+    <string name="wn_5_aira_body">Aira 会更严格地只谈你读过的内容，即使是她已经了解的书，也不会透露后面的情节。她专注于阅读，回答时输入栏周围会有柔和的光芒环绕。</string>
+    <string name="wn_5_plans_title">更清晰的方案</string>
+    <string name="wn_5_plans_body">两种方案的 Aira 完全相同；Pro 将每日次数从 5 次提高到 50 次。恢复购买时现在会告诉你结果，访客也有了全新的“认识 Aira”页面。</string>
+    <string name="wn_5_reader_title">阅读体验打磨</string>
+    <string name="wn_5_reader_body">环境音现在会柔和地淡入淡出，选中文字时的工具栏出现得更稳定；在滚动模式下，只有刻意横向滑动才会切换章节；字体粗细也能更精细地调整。</string>
     <!-- Guest mode: Aira's introduction in place of the subscription screen -->
-    <string name="guest_aira_title">使用 Aira 需要账号</string>
     <string name="tier_label_current">当前方案</string>
     <string name="tier_label_upgrade">升级到</string>
-    <string name="guest_aira_section_plans">账号能带来什么</string>
-    <string name="guest_aira_section_features">Aira 能做什么</string>
     <string name="guest_tier_label_free">有账号即可免费使用</string>
-    <string name="guest_tier_label_pro">或者更进一步</string>
-    <string name="guest_aira_reason">访客模式会把一切都保存在你的手机上，但 Aira 需要通过云端回答，所以必须有账号才能使用。只需一分钟，你的书库也会一起带过去。</string>
-    <string name="guest_aira_step_export">在“多 › 备份”中导出你的书库，确保什么都不会丢失</string>
-    <string name="guest_aira_step_exit">同样在“多”中退出访客模式</string>
-    <string name="guest_aira_step_signup">注册并导入备份后，每天可免费向 Aira 提问最多 %1$d 次</string>
+    <string name="guest_tier_label_pro">或者多问一些</string>
 
     <!-- How to use Aira (tutorial) -->
 </resources>

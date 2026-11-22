@@ -26,7 +26,6 @@ import kotlinx.coroutines.delay
 fun HeroCarousel(
     books: List<Book>,
     onBookClick: (Book) -> Unit,
-    // FIX: Replaced LazyListState with a callback
     onVisibleBooksChanged: (List<Book>) -> Unit = {}
 ) {
     if (books.isEmpty()) return
@@ -40,7 +39,7 @@ fun HeroCarousel(
         pageCount = { pageCount }
     )
 
-    // FIX: Notify the parent screen whenever the page changes
+    // Tells the screen which books are showing, for its parallax background
     LaunchedEffect(pagerState.currentPage, pairedBooks) {
         if (pairedBooks.isNotEmpty()) {
             val actualIndex = pagerState.currentPage % pairedBooks.size

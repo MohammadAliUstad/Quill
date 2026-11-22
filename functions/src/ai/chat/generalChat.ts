@@ -1,36 +1,27 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { callGemini } from "../../core/gemini";
+import { SETTINGS } from "../../core/models";
+import { buildChatPrompt, cleanHistory, ReaderContext, readerContextFrom } from "../prompts/aira";
 
 const geminiKey = defineSecret("GEMINI_API_KEY");
 
-const buildSystemPrompt = (bookTitle: string, bookAuthor: string, userName?: string): string => `
-You are Aira, an AI reading companion built into a book-reading app. You're currently helping${
-  userName ? ` ${userName}` : ""
-} with "${bookTitle}" by ${bookAuthor}. Speak like a warm, knowledgeable friend who has actually
-read this book and loves talking about it -- never like an AI assistant, a critic, or a lawyer
-hedging every claim.${
-  userName
-    ? ` You know their name is ${userName}. Use it sparingly -- at most once per response, and
-only on the rare occasion it genuinely fits, the way a friend might drop your name once mid-chat.
-Never use it as a bookend at both the start and end of the same message, and most responses
-shouldn't use it at all -- don't force it in just because you have it available.`
+// Answered from the model's own knowledge, which includes how the book ends: the spoiler rule in
+// the base prompt is what keeps that out.
+const task = (ctx: ReaderContext) => `
+Talk about it the way a well-read friend would: the author's life and other work, the history and
+culture around the book, how it was received, what a word or phrase means, or a passing remark
+like a greeting or thanks (answer that in a line). Bring in the detail that makes it interesting
+rather than an encyclopedia summary. If it's outside what you're for, decline as described above.${
+  ctx.spoilerLock
+    ? `
+If it asks what happens in the story, you have no passages here: say you'd rather not risk
+spoiling anything, and that if they ask about the part they've read you'll look at the book.`
     : ""
 }
-
-This question doesn't need specific passages from the book to answer -- it's the kind of thing
-you'd chat about naturally: the author's background or other works, historical or cultural
-context, general literary discussion, a word's meaning, or just casual conversation. Answer from
-your own knowledge, concisely and engagingly.
-
-End your response with one natural, warm follow-up -- a genuine question or observation that
-invites the reader to keep talking, specific to what you just discussed. Not a generic "let me
-know if you have more questions."
-
-Use plain text only. No markdown, no bold, no headers.
 `.trim();
 
-const buildUserQuery = (query: string, selectedText?: string): string => `
+const buildUserMessage = (query: string, selectedText?: string): string => `
 ${selectedText ? `HIGHLIGHTED PASSAGE:\n${selectedText}\n\n` : ""}QUESTION:
 ${query}
 `.trim();
@@ -42,26 +33,22 @@ export const generalChat = onCall(
       throw new HttpsError("unauthenticated", "Login required");
     }
 
-    const { query, bookTitle, bookAuthor, history, selectedText, userName } = request.data;
+    const { query, history, selectedText } = request.data;
 
     if (!query) {
       throw new HttpsError("invalid-argument", "Query is required");
     }
 
-    const systemPrompt = buildSystemPrompt(bookTitle, bookAuthor, userName);
-    const userQueryText = buildUserQuery(query, selectedText);
+    const ctx = readerContextFrom(request.data);
 
-    const text = await callGemini(
-      geminiKey.value(),
-      "gemini-2.5-flash-lite",
-      [
-        ...(history ?? []),
-        { role: "user", parts: [{ text: userQueryText }] },
+    const text = await callGemini(geminiKey.value(), {
+      ...SETTINGS.generalChat,
+      contents: [
+        ...cleanHistory(history),
+        { role: "user", parts: [{ text: buildUserMessage(query, selectedText || undefined) }] },
       ],
-      systemPrompt,
-      0.4,
-      4096
-    );
+      systemInstruction: buildChatPrompt(ctx, "knowledge", task(ctx)),
+    });
 
     return { response: text };
   }

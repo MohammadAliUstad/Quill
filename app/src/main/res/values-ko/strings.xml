@@ -17,12 +17,12 @@
     <string name="language_name_japanese">일본어</string>
     <string name="language_name_korean">한국어</string>
     <string name="language_name_chinese">중국어</string>
-    <string name="more_title">많음</string>
+    <string name="settings_title">설정</string>
     <string name="more_section_ai">AI</string>
     <string name="more_meet_aira">Aira 소개</string>
     <string name="more_meet_aira_subtitle">AI 독서 동반자에 대해 알아보세요</string>
     <string name="more_subscriptions">구독</string>
-    <string name="more_subscriptions_subtitle">요금제를 관리하고 Pro 기능을 사용하세요</string>
+    <string name="more_subscriptions_subtitle">요금제와 Aira 일일 이용 횟수를 관리하세요</string>
     <string name="more_indexing">라이브러리 색인 중</string>
     <string name="more_indexing_subtitle">Aira가 책을 읽고 있어요.</string>
     <string name="more_section_library">도서관</string>
@@ -98,8 +98,6 @@
     <string name="onboarding_library_tap">책을 탭하세요</string>
     <string name="onboarding_library_title">나만의 서재</string>
     <string name="onboarding_library_body">내 EPUB 파일을 가져오거나 Standard Ebooks에서 무료 고전을 다운로드해 책장에 정리하세요.</string>
-    <string name="onboarding_reader_title">내 방식대로 읽기</string>
-    <string name="onboarding_reader_body">글꼴, 간격, 페이지 테마, 배경음, 따뜻한 야간 조명. 마음에 남는 문장에는 하이라이트를.</string>
     <string name="onboarding_aira_lock">스포일러 잠금 · 3장까지</string>
     <string name="onboarding_aira_title">Aira를 만나 보세요</string>
     <string name="onboarding_aira_body">독서 동반자는 책 내용으로만 답하고, 앞으로의 내용은 절대 미리 알려 주지 않아요.</string>
@@ -130,7 +128,7 @@
     <string name="theme_name_twilight">황혼</string>
     <string name="tab_library">도서관</string>
     <string name="tab_discover">둘러보기</string>
-    <string name="tab_more">많음</string>
+    <string name="tab_settings">설정</string>
     <string name="sign_out_confirm">계정에서 로그아웃할까요?</string>
     <string name="cancel">취소</string>
     <string name="exit_app_title">앱 종료</string>
@@ -297,7 +295,7 @@
     <string name="aira_reset_body">이 책의 채팅 기록이 모두 삭제됩니다. 되돌릴 수 없습니다.</string>
     <string name="delete">삭제</string>
     <string name="aira_input_hint">무엇이든 물어보세요</string>
-    <string name="aira_thinking">Aira가 생각하는 중…</string>
+    <string name="aira_thinking">Aira가 생각하는 중</string>
     <string name="stop">중지</string>
     <string name="send">보내기</string>
     <string name="limit_reached">한도 도달</string>
@@ -319,7 +317,10 @@
     <string name="delete_book">책 삭제</string>
     <string name="book_cover">책 표지</string>
     <string name="add_to_library">서재에 추가</string>
-    <string name="downloaded">다운로드됨</string>
+    <string name="book_source_imported">가져온 책</string>
+    <plurals name="book_page_count">
+        <item quantity="other">%d페이지</item>
+    </plurals>
     <string name="downloading">다운로드 중</string>
     <string name="retry_download">다운로드 다시 시도</string>
     <string name="download">다운로드</string>
@@ -542,22 +543,22 @@
     <string name="billed_monthly">월간 결제</string>
     <string name="billed_annually">연간 결제</string>
     <string name="tier_basic">기본 독자</string>
-    <string name="tier_basic_subtitle">표준 서재</string>
-    <string name="tier_basic_body">아름답고 집중하기 좋은 독서 환경과 하루 5회의 AI 도우미 질문을 누리세요.</string>
+    <string name="tier_basic_subtitle">하루 5회</string>
+    <string name="tier_basic_body">Aira의 모든 기능을 하루 5회까지. 이용 횟수는 매일 초기화됩니다.</string>
     <string name="quill_pro">Quill Pro</string>
-    <string name="tier_pro_subtitle">AI 독서 동반자</string>
-    <string name="tier_pro_body">하루 50회의 AI 도우미 질문으로 Aira를 강화하세요. 주제, 숨겨진 줄거리, 인물의 동기를 깊이 분석하고 더 많은 장면을 그림으로 생생하게 만들어 보세요.</string>
+    <string name="tier_pro_subtitle">하루 50회</string>
+    <string name="tier_pro_body">같은 Aira를 10배의 횟수로. 하루 50회로 더 긴 대화와 더 많은 그림을 즐기세요. 이용 횟수는 매일 초기화됩니다.</string>
     <string name="query_cost_note">Aira에게 질문할 때마다 1회, 그림을 만들 때마다 3회가 사용됩니다.</string>
     <string name="restoring">복원 중</string>
     <string name="restore">복원</string>
     <string name="cancel_anytime">언제든지 해지할 수 있습니다. 이용약관이 적용됩니다.</string>
     <string name="get_plan_pro">%1$s Pro 시작하기</string>
-    <string name="subscribed_body">모든 독서 경험이 열렸어요. 하루 50회(질문당 1회, 그림당 3회)를 누리며 Aira와 함께 서재를 깊이 탐구하고, 복잡한 주제를 살펴보고, 새로운 통찰을 발견해 보세요.</string>
+    <string name="subscribed_body">Quill을 응원해 주셔서 감사합니다. Aira에게 하루 50회 질문할 수 있으며, 이용 횟수는 매일 초기화됩니다.</string>
     <string name="manage_subscription">구독 관리</string>
     <string name="select_plan">요금제 선택</string>
     <string name="subscription">구독</string>
     <string name="premium_purchased">프리미엄 구매 완료</string>
-    <string name="subscription_subtitle">제한 없이 Aira에게 질문하세요</string>
+    <string name="subscription_subtitle">매일 Aira에게 더 많이 질문하세요</string>
     <string name="restore_not_found_title">구독을 찾을 수 없어요</string>
     <string name="restore_not_found_message">이 Google 계정에는 활성화된 Quill Pro 구독이 없어요. 다른 계정으로 구독했다면 Google Play에서 그 계정으로 전환한 뒤 다시 시도해 주세요.</string>
     <string name="restore_failed_title">구매를 복원하지 못했어요</string>
@@ -682,12 +683,6 @@
     <string name="aira_cap_spoilers_body">Aira는 이야기를 지키기 위해 지식을 내 독서 진행 상황까지로 정확히 제한해요.</string>
     <string name="aira_note_body">저는 작은 순간들을 위해 있어요. 잊어버린 이름, 모르는 단어, 그려 보고 싶은 장면. 물어보시면 다시 이야기 속으로 돌아가게 도와드릴게요.</string>
     <string name="aira_hero_tagline">AI 독서 도우미</string>
-    <string name="aira_p1_title">본문에 기반한 답변</string>
-    <string name="aira_p1_body">Aira는 추측하지 않아요. 답변은 지금 읽고 있는 책의 실제 구절에서만 가져옵니다.</string>
-    <string name="aira_p2_title">맥락을 이해</string>
-    <string name="aira_p2_body">지금 몇 장을 읽고 있는지 정확히 알고, 나눈 대화도 기억해 자연스럽게 이야기할 수 있어요.</string>
-    <string name="aira_p3_title">줄거리를 지켜요</string>
-    <string name="aira_p3_body">Aira의 지식은 내 독서 진행 상황까지로 엄격히 제한됩니다. 아직 읽지 않은 장의 사건이나 반전은 절대 알려 주지 않아요.</string>
     <string name="capabilities">할 수 있는 일</string>
     <string name="attributions_subtitle">커뮤니티의 힘으로</string>
     <string name="credit_design_title">디자인 및 일러스트</string>
@@ -803,12 +798,12 @@
     <string name="announcement_v5_title">Quill 5.0의 새로운 기능</string>
     <string name="announcement_v5_message">새로워진 환영 화면과 로그인, 다시 디자인한 화면 설정, 더 차분해진 로딩, 그리고 이제 Quill은 10개 언어를 지원해요.</string>
     <string name="announcement_language_title">Quill이 당신의 언어로</string>
-    <string name="announcement_language_message">더보기 › 화면 › 언어에서 언제든 10개 언어 중에서 고를 수 있어요. Quill은 바로 전환됩니다.</string>
+    <string name="announcement_language_message">설정 › 화면 스타일 › 언어에서 언제든 10개 언어 중에서 고를 수 있어요. Quill은 바로 전환됩니다.</string>
     <string name="announcement_choose_language">언어 선택</string>
     <string name="wn_5_languages_title">내 언어로 쓰는 Quill</string>
-    <string name="wn_5_languages_body">Quill이 이제 10개 언어를 지원합니다: 영어, 스페인어, 포르투갈어, 프랑스어, 독일어, 힌디어, 러시아어, 일본어, 한국어, 중국어. 더보기 › 화면 › 언어에서 고르면 앱 전체가 바로 바뀌어요.</string>
+    <string name="wn_5_languages_body">Quill이 이제 10개 언어를 지원합니다: 영어, 스페인어, 포르투갈어, 프랑스어, 독일어, 힌디어, 러시아어, 일본어, 한국어, 중국어. 설정 › 화면 스타일 › 언어에서 고르면 앱 전체가 바로 바뀌어요.</string>
     <string name="wn_5_welcome_title">새로워진 환영 화면</string>
-    <string name="wn_5_welcome_body">차분하고 움직이지 않는 배경 위의 새 첫 실행 둘러보기와 뒤로 가기 버튼, 그리고 새로 디자인한 로그인·회원가입 화면. 둘러보기는 더보기에서 언제든 다시 볼 수 있어요.</string>
+    <string name="wn_5_welcome_body">차분하고 움직이지 않는 배경 위의 새 첫 실행 둘러보기와 뒤로 가기 버튼, 그리고 새로 디자인한 로그인·회원가입 화면. 둘러보기는 설정에서 언제든 다시 볼 수 있어요.</string>
     <string name="wn_5_appearance_title">새롭게 디자인한 화면 설정</string>
     <string name="wn_5_appearance_body">테마마다 팔레트 원판이 있는 카드형 색상 테마, 라이트·다크 미니 휴대전화 미리보기, 별이 반짝이는 AMOLED 카드, 그리고 색이 바뀔 때 화면 전체에 부드럽게 퍼지는 페이드.</string>
     <string name="wn_5_loading_title">더 차분해진 로딩</string>
@@ -868,19 +863,24 @@
     <string name="wn_5_guest_title">계정 없이 읽기</string>
     <string name="wn_5_guest_body">로그인 화면에서 게스트를 탭하면 바로 읽기 시작할 수 있습니다. 게스트의 서재는 휴대전화에만 남고 클라우드로 전송되지 않습니다. Aira와 Pro에는 계정이 필요합니다. 게스트 모드를 종료하면 서재가 삭제되므로, 나가기 전에 내보낼 수 있습니다.</string>
     <string name="wn_5_backup_title">백업해서 가져가세요</string>
-    <string name="wn_5_backup_body">게스트는 많음 › 백업에서 책, 진행 상황, 하이라이트, 독서 기록을 파일로 내보내고 어느 휴대전화에서든 가져올 수 있습니다. 로그인했나요? 많음에서 그 파일을 가져오면 계정에 동기화됩니다. 가져오기로 중복되는 항목은 없습니다.</string>
+    <string name="wn_5_backup_body">게스트는 설정 › 백업에서 책, 진행 상황, 하이라이트, 독서 기록을 파일로 내보내고 어느 휴대전화에서든 가져올 수 있습니다. 로그인했나요? 설정에서 그 파일을 가져오면 계정에 동기화됩니다. 가져오기로 중복되는 항목은 없습니다.</string>
+    <string name="wn_5_dock_title">설정과 떠 있는 독</string>
+    <string name="wn_5_dock_body">탭이 이제 화면 아래에 떠 있는 독에 모였고, 옆의 + 버튼으로 내 책을 추가할 수 있어요. 더보기는 이제 설정이라는 이름이 되었고, 모든 항목은 그대로 있어요.</string>
+    <string name="wn_5_discover_title">더 간결해진 둘러보기</string>
+    <string name="wn_5_discover_body">둘러보기의 모든 책장에 모두 보기가 생겼고, 주제 버튼으로 주제별로 찾아볼 수 있으며, Standard Ebooks가 점검 중일 때는 알림이 표시돼요. Project Gutenberg와 소스 탭은 없어졌어요. 다운로드한 Gutenberg 책은 내 책으로 도서관에 남고, 다운로드하지 않은 책은 하이라이트, 독서 기록, Aira 대화, 이미지와 함께 삭제되었어요.</string>
+    <string name="wn_5_insights_title">새로워진 인사이트</string>
+    <string name="wn_5_insights_body">인사이트를 새로 만들었어요. 한눈에 보는 이번 주, 독서 히트맵, 내 습관에서 나온 인사이트, 독서 리듬, 개인 최고 기록, 가장 많이 읽은 책과 작가, 하이라이트, 그리고 Aira와 함께 읽은 기록을 보여줘요.</string>
+    <string name="wn_5_aira_title">더 신중해진 Aira</string>
+    <string name="wn_5_aira_body">Aira는 읽은 부분까지만 더욱 엄격하게 지켜서, 이미 알고 있는 책이라도 앞으로의 내용을 알려주지 않아요. 독서에 집중하고, 답하는 동안에는 입력창 주위로 은은한 빛이 돌아요.</string>
+    <string name="wn_5_plans_title">더 명확해진 요금제</string>
+    <string name="wn_5_plans_body">두 요금제 모두 같은 Aira를 제공하며, Pro는 하루 이용 횟수를 5회에서 50회로 늘려줘요. 구매를 복원하면 이제 결과를 알려주고, 게스트를 위한 새 Aira 소개 페이지도 생겼어요.</string>
+    <string name="wn_5_reader_title">다듬어진 독서 화면</string>
+    <string name="wn_5_reader_body">배경음이 이제 부드럽게 커지고 작아지며, 선택한 텍스트의 도구 막대가 더 안정적으로 나타나요. 스크롤 모드에서는 의도적으로 옆으로 스와이프할 때만 장이 바뀌고, 글꼴 굵기를 더 세밀하게 조절할 수 있어요.</string>
     <!-- Guest mode: Aira's introduction in place of the subscription screen -->
-    <string name="guest_aira_title">Aira를 사용하려면 계정이 필요합니다</string>
     <string name="tier_label_current">현재 요금제</string>
     <string name="tier_label_upgrade">업그레이드</string>
-    <string name="guest_aira_section_plans">계정으로 누리는 것</string>
-    <string name="guest_aira_section_features">Aira가 할 수 있는 일</string>
     <string name="guest_tier_label_free">계정으로 무료</string>
-    <string name="guest_tier_label_pro">더 많이 쓰려면</string>
-    <string name="guest_aira_reason">게스트 모드는 모든 것을 휴대전화에 보관하지만, Aira는 클라우드에서 답하기 때문에 계정이 필요합니다. 1분이면 충분하고, 서재도 그대로 가져갈 수 있습니다.</string>
-    <string name="guest_aira_step_export">많음 › 백업에서 서재를 내보내 아무것도 잃지 않도록 하세요</string>
-    <string name="guest_aira_step_exit">많음에서 게스트 모드를 종료하세요</string>
-    <string name="guest_aira_step_signup">가입하고 백업을 가져온 뒤, Aira에게 하루 최대 %1$d번 무료로 질문하세요</string>
+    <string name="guest_tier_label_pro">더 많이 질문하려면</string>
 
     <!-- How to use Aira (tutorial) -->
 </resources>

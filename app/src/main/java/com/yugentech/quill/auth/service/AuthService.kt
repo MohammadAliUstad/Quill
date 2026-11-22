@@ -27,7 +27,6 @@ class AuthService(
     val authStateFlow: Flow<FirebaseUser?> = callbackFlow {
         val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
-            Timber.d("Auth state changed. User: ${user?.uid ?: "null"}")
             trySend(user)
         }
         auth.addAuthStateListener(authStateListener)
@@ -41,7 +40,6 @@ class AuthService(
     // Creates a new account with email and password and updates the display name
     suspend fun signUp(name: String, email: String, password: String): AuthResult<FirebaseUser> {
         return try {
-            Timber.d("Attempting sign up for email: $email")
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val user = result.user!!
 
@@ -49,7 +47,6 @@ class AuthService(
                 UserProfileChangeRequest.Builder().setDisplayName(name).build()
             ).await()
 
-            Timber.i("User signed up successfully: ${user.uid}")
             AuthResult.Success(user)
         } catch (e: Exception) {
             Timber.e(e, "Sign up failed")
@@ -60,9 +57,7 @@ class AuthService(
     // Authenticates an existing user using email and password
     suspend fun signIn(email: String, password: String): AuthResult<FirebaseUser> {
         return try {
-            Timber.d("Attempting sign in for email: $email")
             val result = auth.signInWithEmailAndPassword(email, password).await()
-            Timber.i("User signed in successfully: ${result.user?.uid}")
             AuthResult.Success(result.user!!)
         } catch (e: Exception) {
             Timber.w(e, "Sign in failed")
@@ -73,7 +68,6 @@ class AuthService(
     // Sends a password recovery email to the specified address
     suspend fun sendPasswordResetEmail(email: String): AuthResult<Unit> {
         return try {
-            Timber.d("Sending password reset email to: $email")
             auth.sendPasswordResetEmail(email).await()
             AuthResult.Success(Unit)
         } catch (e: Exception) {
@@ -84,7 +78,6 @@ class AuthService(
 
     // Logs the user out of Firebase and the Google One Tap client
     fun signOut() {
-        Timber.i("Signing out user")
         auth.signOut()
         oneTapClient.signOut()
     }
@@ -92,7 +85,6 @@ class AuthService(
     // Builds the Google One Tap sign-in request and returns the pending intent to launch it
     suspend fun getGoogleSignInIntent(webClientId: String): AuthResult<PendingIntent> {
         return try {
-            Timber.d("Preparing Google One Tap Sign-In intent")
             val signInRequest = BeginSignInRequest.builder()
                 .setGoogleIdTokenRequestOptions(
                     BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
@@ -125,11 +117,9 @@ class AuthService(
                 ?: return AuthResult.Error(AppStrings.get(R.string.google_error_no_token))
                     .also { Timber.e("Missing Google ID Token") }
 
-            Timber.d("Google ID Token retrieved, exchanging for Firebase Credential")
             val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
             val result = auth.signInWithCredential(firebaseCredential).await()
 
-            Timber.i("Google Sign-In successful: ${result.user?.uid}")
             AuthResult.Success(result.user!!)
         } catch (e: Exception) {
             Timber.e(e, "Google Sign-In handling failed")

@@ -30,7 +30,13 @@ enum class RestoreResult {
 }
 
 // How long Restore shows its thinking dots at the least, from the tap
-private const val MIN_RESTORING_MILLIS = 1_800L
+private const val MIN_RESTORING_MILLIS = 2_500L
+
+/**
+ * After the dots go, how long before the result shows: long enough for Restore to slide back
+ * into its button (the stagger plus the slide-in in SubscribeBottomBar) and settle.
+ */
+private const val RESULT_AFTER_MILLIS = 700L
 
 /**
  * The subscription screen. It only starts purchases and shows how they ended: saving Pro to the
@@ -106,6 +112,7 @@ class SubscriptionViewModel(
             val shownFor = SystemClock.elapsedRealtime() - startedAt
             delay((MIN_RESTORING_MILLIS - shownFor).coerceAtLeast(0))
             _isRestoring.value = false
+            delay(RESULT_AFTER_MILLIS)
 
             when (wasRestored) {
                 true -> _events.emit(BillingEvent.SubscriptionActivated)
