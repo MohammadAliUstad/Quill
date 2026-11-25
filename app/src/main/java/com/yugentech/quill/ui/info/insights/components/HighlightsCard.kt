@@ -33,9 +33,9 @@ import com.yugentech.quill.R
 import com.yugentech.quill.insights.engine.HighlightStats
 import com.yugentech.theme.tokens.spacing
 
-/** Highlights, notes and this month's, the colours used most, and the most highlighted book. */
+/** Highlights and visuals made, the colours used most, and the most highlighted book. */
 @Composable
-fun HighlightsCard(stats: HighlightStats, modifier: Modifier = Modifier) {
+fun HighlightsCard(stats: HighlightStats, visuals: Int, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.m)) {
         Row(
@@ -46,12 +46,11 @@ fun HighlightsCard(stats: HighlightStats, modifier: Modifier = Modifier) {
         ) {
             listOf(
                 stats.total to R.string.insights_highlights_label,
-                stats.notes to R.string.insights_notes_label,
-                stats.thisMonth to R.string.insights_this_month_label
+                visuals to R.string.visuals
             ).forEachIndexed { index, (count, label) ->
                 val content = if (index == 0) colors.onSecondaryContainer else colors.onSurface
                 Surface(
-                    shape = rowItemShape(index, 3),
+                    shape = rowItemShape(index, 2),
                     color = if (index == 0) colors.secondaryContainer else colors.surfaceContainerHigh,
                     contentColor = content,
                     modifier = Modifier

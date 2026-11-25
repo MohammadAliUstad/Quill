@@ -403,8 +403,6 @@
     <string name="heatmap_subtitle">픽셀로 보는 나의 1년</string>
     <string name="heatmap_less">적음</string>
     <string name="heatmap_more">많음</string>
-    <string name="insights_for_you_title">나를 위한 인사이트</string>
-    <string name="insights_for_you_subtitle">나의 독서 패턴과 다음에 해 볼 것</string>
     <string name="insights_this_week">이번 주</string>
     <string name="insights_days_of_week">%1$d/7</string>
     <string name="insights_days_label">일</string>
@@ -436,12 +434,10 @@
     <string name="insights_status_finished">완독</string>
     <string name="insights_status_reading">읽는 중</string>
     <string name="insights_status_not_started">시작 전</string>
-    <string name="insights_highlights_section_title">하이라이트와 메모</string>
-    <string name="insights_highlights_section_subtitle">마음에 남은 부분</string>
-    <string name="insights_highlights_empty">읽으면서 구절을 하이라이트하면 여기에 표시돼요</string>
+    <string name="insights_highlights_section_title">하이라이트와 그림</string>
+    <string name="insights_highlights_section_subtitle">마음에 남은 부분과 그려 낸 장면</string>
+    <string name="insights_highlights_empty">읽으면서 구절을 하이라이트하거나 그림을 만들면 여기에 표시돼요</string>
     <string name="insights_highlights_label">하이라이트</string>
-    <string name="insights_notes_label">메모</string>
-    <string name="insights_this_month_label">이번 달</string>
     <string name="insights_most_highlighted">가장 많이 하이라이트한 책</string>
     <plurals name="insights_visuals_created">
         <item quantity="other">비주얼 %1$d개 생성</item>
@@ -484,10 +480,6 @@
     <string name="insights_finish_body">지금까지 읽은 속도라면 끝까지 이만큼 걸려요.</string>
     <string name="insights_waiting_title">%1$s이(가) 기다리고 있어요</string>
     <string name="insights_waiting_body">%1$d%%까지 읽었고, 마지막으로 연 건 %2$s예요.</string>
-    <plurals name="insights_unread_title">
-        <item quantity="other">아직 시작하지 않은 책 %1$d권</item>
-    </plurals>
-    <string name="insights_unread_body">다음에 읽을 책을 골라 두면 지금 책을 다 읽었을 때 바로 시작할 수 있어요.</string>
     <plurals name="insights_hours_title">
         <item quantity="other">독서 %1$d시간</item>
     </plurals>
@@ -496,10 +488,6 @@
         <item quantity="other">이번 달 하이라이트 %1$d개</item>
     </plurals>
     <string name="insights_highlights_body">가장 많이 하이라이트한 책은 %1$s예요.</string>
-    <string name="insights_notes_title">메모를 남겨 보세요</string>
-    <plurals name="insights_notes_body">
-        <item quantity="other">하이라이트가 %1$d개 있어요. 그 구절이 왜 마음에 남았는지 한 줄 적어 두면 다시 찾기 쉬워요.</item>
-    </plurals>
     <string name="unknown_book">알 수 없는 책</string>
     <string name="no_downloads_list">다운로드된 책이 없습니다.</string>
     <string name="delete_download_title">다운로드를 삭제할까요?</string>
@@ -795,7 +783,7 @@
     <string name="announcement_got_it">확인</string>
     <string name="announcement_see_whats_new">새로운 기능 보기</string>
     <string name="announcement_maybe_later">나중에</string>
-    <string name="announcement_v5_title">Quill 5.0의 새로운 기능</string>
+    <string name="announcement_v5_title">Quill 5.0.0의 새로운 기능</string>
     <string name="announcement_v5_message">새로워진 환영 화면과 로그인, 다시 디자인한 화면 설정, 더 차분해진 로딩, 그리고 이제 Quill은 10개 언어를 지원해요.</string>
     <string name="announcement_language_title">Quill이 당신의 언어로</string>
     <string name="announcement_language_message">설정 › 화면 스타일 › 언어에서 언제든 10개 언어 중에서 고를 수 있어요. Quill은 바로 전환됩니다.</string>

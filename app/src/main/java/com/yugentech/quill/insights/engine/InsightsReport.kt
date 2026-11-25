@@ -4,13 +4,13 @@ import com.yugentech.quill.localization.UiText
 import java.time.LocalDate
 
 // Everything the Insights screen draws, worked out by InsightsEngine from what Quill stores:
-// reading sessions, the library, highlights and notes, and Aira's chats and visuals.
+// reading sessions, the library, highlights, and Aira's chats and visuals.
 
 /** How an insight reads: something going well, something to know, or something to work on. */
 enum class InsightTone { GOOD, NEUTRAL, NUDGE }
 
 /** The picture an insight carries; the screen turns it into an icon on an expressive shape. */
-enum class InsightIcon { STREAK, TREND_UP, TREND_DOWN, CLOCK, CALENDAR, SPEED, DEEP, FINISH, BOOKMARK, SHELF, MILESTONE, HIGHLIGHT, NOTE, SEEDLING }
+enum class InsightIcon { STREAK, TREND_UP, TREND_DOWN, CLOCK, CALENDAR, SPEED, DEEP, FINISH, BOOKMARK, MILESTONE, HIGHLIGHT, SEEDLING }
 
 /** One generated observation: a short headline and a sentence on what it means or what to try. */
 data class Insight(
@@ -57,10 +57,10 @@ data class LibraryStats(val notStarted: Int = 0, val inProgress: Int = 0, val fi
     val total: Int get() = notStarted + inProgress + finished
 }
 
-/** Highlights and notes across the library. */
+/** Highlights across the library. */
 data class HighlightStats(
     val total: Int = 0,
-    val notes: Int = 0,
+    /** Highlights made in the last 30 days, for the "highlighting a lot lately" insight. */
     val thisMonth: Int = 0,
     val mostHighlightedTitle: String? = null,
     val mostHighlightedCount: Int = 0,

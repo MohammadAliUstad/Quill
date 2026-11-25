@@ -404,8 +404,6 @@
     <string name="heatmap_subtitle">पिक्सल में आपका साल</string>
     <string name="heatmap_less">कम</string>
     <string name="heatmap_more">ज़्यादा</string>
-    <string name="insights_for_you_title">आपके लिए</string>
-    <string name="insights_for_you_subtitle">आपके पढ़ने के पैटर्न, और आगे क्या आज़माएँ</string>
     <string name="insights_this_week">इस हफ़्ते</string>
     <string name="insights_days_of_week">%1$d/7</string>
     <string name="insights_days_label">दिन</string>
@@ -437,12 +435,10 @@
     <string name="insights_status_finished">पूरी हुईं</string>
     <string name="insights_status_reading">पढ़ रहे हैं</string>
     <string name="insights_status_not_started">शुरू नहीं हुईं</string>
-    <string name="insights_highlights_section_title">हाइलाइट और नोट्स</string>
-    <string name="insights_highlights_section_subtitle">जो आपके मन को छू गया</string>
-    <string name="insights_highlights_empty">पढ़ते समय कोई अंश हाइलाइट करें, वह यहाँ दिखेगा</string>
+    <string name="insights_highlights_section_title">हाइलाइट और चित्र</string>
+    <string name="insights_highlights_section_subtitle">जो आपके मन को छू गया, और जिसे आपने जीवंत किया</string>
+    <string name="insights_highlights_empty">पढ़ते समय कोई अंश हाइलाइट करें या चित्र बनाएँ, वह यहाँ दिखेगा</string>
     <string name="insights_highlights_label">हाइलाइट</string>
-    <string name="insights_notes_label">नोट्स</string>
-    <string name="insights_this_month_label">इस महीने</string>
     <string name="insights_most_highlighted">सबसे ज़्यादा हाइलाइट की गई</string>
     <plurals name="insights_visuals_created">
         <item quantity="one">%1$d विज़ुअल बनाया</item>
@@ -490,11 +486,6 @@
     <string name="insights_finish_body">अब तक जिस रफ़्तार से आपने इसे पढ़ा है, उससे अंत तक पहुँचने में इतना समय लगेगा।</string>
     <string name="insights_waiting_title">%1$s आपका इंतज़ार कर रही है</string>
     <string name="insights_waiting_body">आप %1$d%% पढ़ चुके हैं, और आख़िरी बार इसे %2$s खोला था।</string>
-    <plurals name="insights_unread_title">
-        <item quantity="one">%1$d किताब अभी शुरू नहीं हुई</item>
-        <item quantity="other">%1$d किताबें अभी शुरू नहीं हुईं</item>
-    </plurals>
-    <string name="insights_unread_body">अगली किताब अभी चुन लें, ताकि मौजूदा किताब पूरी होते ही वह तैयार रहे।</string>
     <plurals name="insights_hours_title">
         <item quantity="one">%1$d घंटा पढ़ाई</item>
         <item quantity="other">%1$d घंटे पढ़ाई</item>
@@ -505,11 +496,6 @@
         <item quantity="other">इस महीने %1$d हाइलाइट</item>
     </plurals>
     <string name="insights_highlights_body">सबसे ज़्यादा हाइलाइट आपने %1$s में किए हैं।</string>
-    <string name="insights_notes_title">एक नोट जोड़कर देखें</string>
-    <plurals name="insights_notes_body">
-        <item quantity="one">आपने %1$d हाइलाइट किया है। कोई अंश आपको क्यों छू गया, इस पर एक पंक्ति लिखने से उस पर लौटना आसान होता है।</item>
-        <item quantity="other">आपने %1$d हाइलाइट किए हैं। कोई अंश आपको क्यों छू गया, इस पर एक पंक्ति लिखने से उस पर लौटना आसान होता है।</item>
-    </plurals>
     <string name="unknown_book">अज्ञात किताब</string>
     <string name="no_downloads_list">अभी कोई किताब डाउनलोड नहीं है।</string>
     <string name="delete_download_title">डाउनलोड हटाएँ?</string>
@@ -805,7 +791,7 @@
     <string name="announcement_got_it">समझ गया</string>
     <string name="announcement_see_whats_new">नया क्या है देखें</string>
     <string name="announcement_maybe_later">बाद में</string>
-    <string name="announcement_v5_title">Quill 5.0 में नया क्या है</string>
+    <string name="announcement_v5_title">Quill 5.0.0 में नया क्या है</string>
     <string name="announcement_v5_message">नया स्वागत और साइन-इन, नए रूप में दिखावट स्क्रीन, शांत लोडिंग, और अब Quill दस भाषाओं में बात करता है।</string>
     <string name="announcement_language_title">Quill आपकी भाषा बोलता है</string>
     <string name="announcement_language_message">सेटिंग्स › दिखावट › भाषा में जाकर कभी भी दस भाषाओं में से चुनें। Quill तुरंत बदल जाता है।</string>

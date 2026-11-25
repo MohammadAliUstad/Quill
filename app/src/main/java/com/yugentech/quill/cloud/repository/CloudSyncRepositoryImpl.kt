@@ -72,7 +72,7 @@ class CloudSyncRepositoryImpl(
                 for (cloudData in cloudBooks) {
                     val bookId = cloudData["id"] as? String ?: continue
                     // Project Gutenberg is no longer a source: its books can't be fetched, and
-                    // any kept on this device are now imports (MIGRATION_4_5), which this mustn't
+                    // any kept on this device are now imports (MIGRATION_3_4), which this mustn't
                     // overwrite
                     if (cloudData["source"] == LEGACY_GUTENBERG_SOURCE) continue
 

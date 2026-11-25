@@ -18,15 +18,12 @@ interface HighlightDao {
     @Query("SELECT * FROM highlights WHERE bookId = :bookId")
     suspend fun getHighlightsForBook(bookId: String): List<HighlightEntity>
 
-    // Get all highlights across all books (useful for a "Notes" tab later)
+    // Get all highlights across all books
     @Query("SELECT * FROM highlights ORDER BY createdAt DESC")
     fun getAllHighlightsFlow(): Flow<List<HighlightEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHighlight(highlight: HighlightEntity)
-
-    @Query("UPDATE highlights SET note = :note WHERE id = :highlightId")
-    suspend fun updateNote(highlightId: String, note: String)
 
     @Query("UPDATE highlights SET colorInt = :colorInt WHERE id = :highlightId")
     suspend fun updateColor(highlightId: String, colorInt: Int)

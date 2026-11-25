@@ -33,7 +33,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
-- [What's New in 5.0](#-whats-new-in-50)
+- [What's New in 5.0.0](#-whats-new-in-500)
 - [Key Features](#-key-features)
 - [Screenshots](#-screenshots)
 - [How Aira Works](#how-aira-works)
@@ -53,7 +53,7 @@ Bring your own EPUBs or pick from free classics on **Standard Ebooks**, set the 
 
 ---
 
-## 🆕 What's New in 5.0
+## 🆕 What's New in 5.0.0
 
 - **Settings and a Floating Dock:** the tabs now float in a dock at the bottom of the screen, with a + button beside it for adding your own books. More is now called Settings.
 - **A Simpler Discover:** See all on every shelf, a Subjects button to browse by subject, and a notice when Standard Ebooks is down for maintenance. Project Gutenberg and the Sources tab have been removed: downloaded Gutenberg books stay in your library as your own books, and ones that weren't downloaded are removed along with their highlights, reading history, Aira chats and images.

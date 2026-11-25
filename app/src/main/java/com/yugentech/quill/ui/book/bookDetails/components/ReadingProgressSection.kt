@@ -30,7 +30,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,6 +47,7 @@ import com.yugentech.quill.R
 import com.yugentech.quill.database.model.Book
 import com.yugentech.quill.database.model.DownloadStatus
 import com.yugentech.theme.tokens.dimensions.AppAnimations
+import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -67,9 +70,22 @@ fun ReadingProgressSection(
     book: Book,
     onContinueClick: () -> Unit
 ) {
+    // A clock that ticks just as the label would next change (each whole minute since the
+    // read), so "Just now" moves on to "1 min ago" and onward while the screen stays open,
+    // fading through like any other change
+    var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(book.lastReadTime) {
+        if (book.lastReadTime <= 0) return@LaunchedEffect
+        while (true) {
+            val elapsed = (System.currentTimeMillis() - book.lastReadTime).coerceAtLeast(0L)
+            delay(60_000L - elapsed % 60_000L + 50L)
+            nowMillis = System.currentTimeMillis()
+        }
+    }
+
     val timeAgo = run {
         if (book.lastReadTime <= 0) return@run stringResource(R.string.not_started)
-        val now = Instant.now()
+        val now = Instant.ofEpochMilli(maxOf(nowMillis, System.currentTimeMillis()))
         val readTime = Instant.ofEpochMilli(book.lastReadTime)
         val zone = ZoneId.systemDefault()
         val diffMinutes = ChronoUnit.MINUTES.between(readTime, now)

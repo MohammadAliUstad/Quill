@@ -95,33 +95,53 @@ fun HeroCarousel(
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            pairedBooks.forEachIndexed { index, _ ->
-                val isSelected = (pagerState.currentPage % pairedBooks.size) == index
+        HeroPageDots(
+            count = pairedBooks.size,
+            selected = pagerState.currentPage % pairedBooks.size
+        )
+    }
+}
 
-                val animatedWidth by animateDpAsState(
-                    targetValue = if (isSelected) 24.dp else 8.dp,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                    label = "dot_width"
-                )
-                val animatedColor by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                    label = "dot_color"
-                )
+/**
+ * How many pages the carousel has once loaded: DiscoverViewModel's 10 hero books, two to a page.
+ * The loading skeleton draws this many dots, so the indicator doesn't change when the books arrive.
+ */
+const val HERO_CAROUSEL_PAGES = 5
 
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 3.dp)
-                        .height(8.dp)
-                        .width(animatedWidth)
-                        .clip(CircleShape)
-                        .background(animatedColor)
-                )
-            }
+/**
+ * The carousel's page indicator: 8dp dots 6dp apart, start-aligned 16dp in. The current page's dot
+ * stretches to 24dp on a bouncy spring and turns the primary colour; the others are outlineVariant.
+ * The loading skeleton draws this same indicator (first page selected) rather than a pulsing
+ * placeholder of it, so it already looks loaded and stays put when the cards arrive.
+ */
+@Composable
+fun HeroPageDots(count: Int, selected: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(count) { index ->
+            val isSelected = selected == index
+
+            val animatedWidth by animateDpAsState(
+                targetValue = if (isSelected) 24.dp else 8.dp,
+                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                label = "dot_width"
+            )
+            val animatedColor by animateColorAsState(
+                targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                label = "dot_color"
+            )
+
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 3.dp)
+                    .height(8.dp)
+                    .width(animatedWidth)
+                    .clip(CircleShape)
+                    .background(animatedColor)
+            )
         }
     }
 }

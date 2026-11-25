@@ -30,6 +30,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -53,6 +56,10 @@ private const val RESTORE_STAGGER_MILLIS = 180
 /** The dots (or the label, on the way back) rising into place from the button's bottom edge. */
 private const val RESTORE_SLIDE_IN_MILLIS = 420
 
+/** How far the label and dots travel: the button's height divided by this. */
+private const val RESTORE_TRAVEL_DIVISOR = 3
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscribeBottomBar(
     selectedPlanIndex: Int,
@@ -98,58 +105,62 @@ fun SubscribeBottomBar(
 
                 // Secondary Action: Restore
                 val restoringDescription = stringResource(R.string.restoring)
-                TextButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                        onRestoreClick()
-                    },
-                    enabled = !isRestoring,
-                    modifier = Modifier.height(52.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    // No vertical padding, so the animation below spans the button's full height
-                    contentPadding = PaddingValues(horizontal = 12.dp)
-                ) {
-                    AnimatedContent(
-                        targetState = isRestoring,
-                        // The label slides up and out of the button, then Aira's thinking dots
-                        // rise in from its bottom edge (and back the same way when it's done).
-                        // Each travels the button's full height, clipped to it.
-                        transitionSpec = {
-                            val exit = tween<IntOffset>(
-                                durationMillis = RESTORE_SLIDE_OUT_MILLIS,
-                                easing = AppAnimations.Easings.Accelerate
-                            )
-                            val enter = tween<IntOffset>(
-                                durationMillis = RESTORE_SLIDE_IN_MILLIS,
-                                delayMillis = RESTORE_STAGGER_MILLIS,
-                                easing = AppAnimations.Easings.EmphasizedDecelerate
-                            )
-                            (slideInVertically(enter) { it } + fadeIn(
-                                tween(RESTORE_SLIDE_IN_MILLIS, delayMillis = RESTORE_STAGGER_MILLIS)
-                            )) togetherWith (slideOutVertically(exit) { -it } + fadeOut(
-                                tween(RESTORE_SLIDE_OUT_MILLIS)
-                            )) using SizeTransform(clip = true)
+                // No ripple: the label's slide is the press feedback
+                CompositionLocalProvider(LocalRippleConfiguration provides null) {
+                    TextButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                            onRestoreClick()
                         },
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .clipToBounds(),
-                        label = "restore_button_state"
-                    ) { restoring ->
-                        // The label is laid out either way, so the button keeps its width while
-                        // the dots show, and the Pro button beside it doesn't shift
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
-                            Text(
-                                text = stringResource(R.string.restore),
-                                style = MaterialTheme.typography.labelLarge,
-                                modifier = Modifier.alpha(if (restoring) 0f else 1f)
-                            )
-                            if (restoring) {
-                                ThinkingIndicator(
-                                    modifier = Modifier.semantics {
-                                        contentDescription = restoringDescription
-                                    }
+                        enabled = !isRestoring,
+                        modifier = Modifier.height(52.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        // No vertical padding, so the animation below spans the button's full height
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        AnimatedContent(
+                            targetState = isRestoring,
+                            // The label slides up and out of the button, then Aira's thinking dots
+                            // rise in from below (and back the same way when it's done). Each travels
+                            // a third of the button's height, clipped to it, so the swap reads as a
+                            // short lift rather than a long scroll.
+                            transitionSpec = {
+                                val exit = tween<IntOffset>(
+                                    durationMillis = RESTORE_SLIDE_OUT_MILLIS,
+                                    easing = AppAnimations.Easings.Accelerate
                                 )
+                                val enter = tween<IntOffset>(
+                                    durationMillis = RESTORE_SLIDE_IN_MILLIS,
+                                    delayMillis = RESTORE_STAGGER_MILLIS,
+                                    easing = AppAnimations.Easings.EmphasizedDecelerate
+                                )
+                                (slideInVertically(enter) { it / RESTORE_TRAVEL_DIVISOR } + fadeIn(
+                                    tween(RESTORE_SLIDE_IN_MILLIS, delayMillis = RESTORE_STAGGER_MILLIS)
+                                )) togetherWith (slideOutVertically(exit) { -it / RESTORE_TRAVEL_DIVISOR } + fadeOut(
+                                    tween(RESTORE_SLIDE_OUT_MILLIS)
+                                )) using SizeTransform(clip = true)
+                            },
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .clipToBounds(),
+                            label = "restore_button_state"
+                        ) { restoring ->
+                            // The label is laid out either way, so the button keeps its width while
+                            // the dots show, and the Pro button beside it doesn't shift
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
+                                Text(
+                                    text = stringResource(R.string.restore),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.alpha(if (restoring) 0f else 1f)
+                                )
+                                if (restoring) {
+                                    ThinkingIndicator(
+                                        modifier = Modifier.semantics {
+                                            contentDescription = restoringDescription
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

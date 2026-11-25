@@ -403,8 +403,6 @@
     <string name="heatmap_subtitle">用像素记录你的一年</string>
     <string name="heatmap_less">少</string>
     <string name="heatmap_more">多</string>
-    <string name="insights_for_you_title">为你推荐</string>
-    <string name="insights_for_you_subtitle">你的阅读规律，以及接下来可以尝试的事</string>
     <string name="insights_this_week">本周</string>
     <string name="insights_days_of_week">%1$d/7</string>
     <string name="insights_days_label">天</string>
@@ -436,12 +434,10 @@
     <string name="insights_status_finished">已读完</string>
     <string name="insights_status_reading">在读</string>
     <string name="insights_status_not_started">未开始</string>
-    <string name="insights_highlights_section_title">划线与笔记</string>
-    <string name="insights_highlights_section_subtitle">打动你的地方</string>
-    <string name="insights_highlights_empty">阅读时划线标记一段文字，它就会出现在这里</string>
+    <string name="insights_highlights_section_title">划线与插图</string>
+    <string name="insights_highlights_section_subtitle">打动你的地方，以及你描绘出的场景</string>
+    <string name="insights_highlights_empty">阅读时划线标记一段文字或生成插图，它就会出现在这里</string>
     <string name="insights_highlights_label">划线</string>
-    <string name="insights_notes_label">笔记</string>
-    <string name="insights_this_month_label">本月</string>
     <string name="insights_most_highlighted">划线最多</string>
     <plurals name="insights_visuals_created">
         <item quantity="other">已生成 %1$d 张配图</item>
@@ -484,10 +480,6 @@
     <string name="insights_finish_body">按你目前的阅读速度，读完全书大约还需要这么久。</string>
     <string name="insights_waiting_title">《%1$s》在等你</string>
     <string name="insights_waiting_body">你已读到 %1$d%%，上次打开是在 %2$s。</string>
-    <plurals name="insights_unread_title">
-        <item quantity="other">%1$d 本书还没开始读</item>
-    </plurals>
-    <string name="insights_unread_body">先选好下一本，读完手头这本时就能马上开始。</string>
     <plurals name="insights_hours_title">
         <item quantity="other">阅读 %1$d 小时</item>
     </plurals>
@@ -496,10 +488,6 @@
         <item quantity="other">本月划线 %1$d 处</item>
     </plurals>
     <string name="insights_highlights_body">你划线最多的书是《%1$s》。</string>
-    <string name="insights_notes_title">试着添加一条笔记</string>
-    <plurals name="insights_notes_body">
-        <item quantity="other">你已划线 %1$d 处。写一句为什么这段文字打动了你，以后回看会更容易。</item>
-    </plurals>
     <string name="unknown_book">未知图书</string>
     <string name="no_downloads_list">当前没有已下载的图书。</string>
     <string name="delete_download_title">要删除下载内容吗？</string>
@@ -795,7 +783,7 @@
     <string name="announcement_got_it">知道了</string>
     <string name="announcement_see_whats_new">查看新功能</string>
     <string name="announcement_maybe_later">以后再说</string>
-    <string name="announcement_v5_title">Quill 5.0 新功能</string>
+    <string name="announcement_v5_title">Quill 5.0.0 新功能</string>
     <string name="announcement_v5_message">全新的欢迎页和登录界面，重新设计的外观页面，更平和的加载效果，而且 Quill 现在支持十种语言。</string>
     <string name="announcement_language_title">Quill 说你的语言</string>
     <string name="announcement_language_message">随时在“设置” › “外观” › “语言”中从十种语言里选择。Quill 会立即切换。</string>

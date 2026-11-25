@@ -71,6 +71,7 @@ class DiscoverViewModel(
                     if (books.isNotEmpty() && _uiState.value.heroBooks.isEmpty()) {
                         _uiState.update {
                             it.copy(
+                                // Two to a carousel page: keep HERO_CAROUSEL_PAGES in step
                                 heroBooks = books.take(10),
                                 isFeedLoading = false
                             )

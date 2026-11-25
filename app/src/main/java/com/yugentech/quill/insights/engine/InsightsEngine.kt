@@ -108,9 +108,8 @@ object InsightsEngine {
             sessionStyle(report),
             finishForecast(books, millisByBook),
             waitingBook(books, today, zone),
-            unreadPile(report.library),
             hoursMilestone(report.totalReadMillis),
-            highlightHabit(report.highlights, highlights.size)
+            highlightHabit(report.highlights)
         )
             .sortedByDescending { it.priority }
             .take(MAX_INSIGHTS)
@@ -268,16 +267,6 @@ object InsightsEngine {
         )
     }
 
-    private fun unreadPile(library: LibraryStats): Insight? {
-        if (library.notStarted < UNREAD_PILE) return null
-        return Insight(
-            InsightIcon.SHELF, InsightTone.NEUTRAL,
-            UiText.Plural(R.plurals.insights_unread_title, library.notStarted, library.notStarted),
-            UiText.Res(R.string.insights_unread_body),
-            20
-        )
-    }
-
     /** The last round number of hours passed. */
     private fun hoursMilestone(totalMillis: Long): Insight? {
         val hours = (totalMillis / HOUR).toInt()
@@ -290,23 +279,15 @@ object InsightsEngine {
         )
     }
 
-    /** Highlighting a lot lately (and the book highlighted most), or highlighting without ever adding a note. */
-    private fun highlightHabit(stats: HighlightStats, total: Int): Insight? = when {
-        stats.thisMonth >= ACTIVE_HIGHLIGHTS && stats.mostHighlightedTitle != null -> Insight(
+    /** Highlighting a lot lately, and the book highlighted most. */
+    private fun highlightHabit(stats: HighlightStats): Insight? {
+        if (stats.thisMonth < ACTIVE_HIGHLIGHTS || stats.mostHighlightedTitle == null) return null
+        return Insight(
             InsightIcon.HIGHLIGHT, InsightTone.GOOD,
             UiText.Plural(R.plurals.insights_highlights_title, stats.thisMonth, stats.thisMonth),
             UiText.Res(R.string.insights_highlights_body, stats.mostHighlightedTitle),
             25
         )
-
-        total >= NOTELESS_HIGHLIGHTS && stats.notes == 0 -> Insight(
-            InsightIcon.NOTE, InsightTone.NEUTRAL,
-            UiText.Res(R.string.insights_notes_title),
-            UiText.Plural(R.plurals.insights_notes_body, total, total),
-            15
-        )
-
-        else -> null
     }
 
     // Detail
@@ -364,7 +345,6 @@ object InsightsEngine {
         val mostHighlighted = highlights.groupingBy { it.bookId }.eachCount().maxBy { it.value }
         return HighlightStats(
             total = highlights.size,
-            notes = highlights.count { !it.note.isNullOrBlank() },
             thisMonth = highlights.count { it.createdAt >= now - MONTH },
             mostHighlightedTitle = booksById[mostHighlighted.key]?.title,
             mostHighlightedCount = mostHighlighted.value,
@@ -414,8 +394,6 @@ object InsightsEngine {
     private const val MIN_FORECAST_PROGRESS = 0.05f
     private const val MIN_FORECAST_READ = 20 * MINUTE
     private const val WAITING_DAYS = 21
-    private const val UNREAD_PILE = 5
     private val HOUR_MILESTONES = listOf(1, 5, 10, 25, 50, 100, 250, 500, 1000)
     private const val ACTIVE_HIGHLIGHTS = 5
-    private const val NOTELESS_HIGHLIGHTS = 10
 }

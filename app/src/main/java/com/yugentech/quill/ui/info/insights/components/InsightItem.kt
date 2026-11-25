@@ -13,7 +13,6 @@ import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Eco
-import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.LocalFireDepartment
@@ -21,7 +20,6 @@ import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.BorderColor
-import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
@@ -87,10 +85,8 @@ private fun InsightIcon.vector(): ImageVector = when (this) {
     InsightIcon.DEEP -> Icons.Outlined.SelfImprovement
     InsightIcon.FINISH -> Icons.Outlined.Flag
     InsightIcon.BOOKMARK -> Icons.Outlined.Bookmark
-    InsightIcon.SHELF -> Icons.Outlined.CollectionsBookmark
     InsightIcon.MILESTONE -> Icons.Outlined.EmojiEvents
     InsightIcon.HIGHLIGHT -> Icons.Outlined.BorderColor
-    InsightIcon.NOTE -> Icons.Outlined.EditNote
     InsightIcon.SEEDLING -> Icons.Outlined.Eco
 }
 
@@ -102,7 +98,7 @@ private fun InsightIcon.shape(): Shape = when (this) {
     InsightIcon.TREND_UP, InsightIcon.SPEED, InsightIcon.FINISH -> MaterialShapes.Arrow
     InsightIcon.TREND_DOWN, InsightIcon.BOOKMARK -> MaterialShapes.Cookie7Sided
     InsightIcon.CLOCK, InsightIcon.CALENDAR -> MaterialShapes.Cookie4Sided
-    InsightIcon.DEEP, InsightIcon.SHELF -> MaterialShapes.Clover4Leaf
-    InsightIcon.HIGHLIGHT, InsightIcon.NOTE -> MaterialShapes.Cookie9Sided
+    InsightIcon.DEEP -> MaterialShapes.Clover4Leaf
+    InsightIcon.HIGHLIGHT -> MaterialShapes.Cookie9Sided
     InsightIcon.SEEDLING -> MaterialShapes.Flower
 }.toShape()

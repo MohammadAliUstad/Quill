@@ -112,8 +112,7 @@ class GuestBackupManager(
                         .put("bookId", h.bookId)
                         .put("locatorJson", h.locatorJson)
                         .put("colorInt", h.colorInt)
-                        .put("createdAt", h.createdAt)
-                        .apply { h.note?.let { put("note", it) } })
+                        .put("createdAt", h.createdAt))
                 }
             })
 
@@ -296,7 +295,6 @@ class GuestBackupManager(
                     bookId = bookId,
                     locatorJson = locator,
                     colorInt = o.optInt("colorInt"),
-                    note = o.optText("note", MAX_LONG_TEXT),
                     createdAt = o.optLong("createdAt", System.currentTimeMillis())
                 )
             }

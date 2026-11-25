@@ -14,7 +14,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
@@ -29,6 +28,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.lerp
+import com.yugentech.quill.ui.tabs.discoverScreen.components.HERO_CAROUSEL_PAGES
+import com.yugentech.quill.ui.tabs.discoverScreen.components.HeroPageDots
 
 /** One full breath of a placeholder: from its resting tone to its brightest and back. */
 private const val PULSE_MS = 1600L
@@ -106,22 +107,9 @@ fun HeroCarouselSkeleton(title: String, subtitle: String) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically // Matched alignment to real dots
-        ) {
-            repeat(5) { index ->
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 3.dp)
-                        .height(8.dp)
-                        .width(if (index == 0) 24.dp else 8.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .loadingPulse()
-                )
-            }
-        }
+        // The real page indicator, not a skeleton of it: the carousel's own dots on its first
+        // page, so it already looks loaded and doesn't change when the books arrive
+        HeroPageDots(count = HERO_CAROUSEL_PAGES, selected = 0)
     }
 }
 

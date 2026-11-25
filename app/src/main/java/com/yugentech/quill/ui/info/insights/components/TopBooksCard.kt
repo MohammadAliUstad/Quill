@@ -70,7 +70,11 @@ fun TopBooksCard(books: List<BookTime>, modifier: Modifier = Modifier) {
                         progress = { book.progress.coerceIn(0f, 1f) * growth.value.coerceIn(0f, 1f) },
                         modifier = Modifier.fillMaxWidth(),
                         color = colors.primary,
-                        trackColor = colors.surfaceContainerHighest
+                        trackColor = colors.surfaceContainerHighest,
+                        // A plain, still wave: full height at any progress (the default flattens
+                        // it near the ends) and no travelling motion
+                        amplitude = { 1f },
+                        waveSpeed = 0.dp
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(

@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -117,23 +116,6 @@ fun HighlightCard(
                     color = MaterialTheme.colorScheme.onSurface,
                     fontStyle = FontStyle.Italic
                 )
-
-                if (!highlight.note.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                            .padding(12.dp)
-                    ) {
-                        Text(
-                            text = highlight.note!!,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 

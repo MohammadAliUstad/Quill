@@ -131,12 +131,6 @@ fun InsightsScreen(
                 item(key = "glance") { GlanceRow(report) }
 
                 // The generated insights, as one grouped list
-                item(key = "forYouHeader") {
-                    InsightSectionHeader(
-                        title = stringResource(R.string.insights_for_you_title),
-                        subtitle = stringResource(R.string.insights_for_you_subtitle)
-                    )
-                }
                 item(key = "insights") {
                     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         report.insights.forEachIndexed { index, insight ->
@@ -198,8 +192,11 @@ fun InsightsScreen(
                     title = { stringResource(R.string.insights_highlights_section_title) },
                     subtitle = { stringResource(R.string.insights_highlights_section_subtitle) }
                 ) {
-                    if (report.highlights.total == 0) EmptyInsightPlaceholder(stringResource(R.string.insights_highlights_empty))
-                    else HighlightsCard(report.highlights)
+                    if (report.highlights.total == 0 && report.aira.visuals == 0) {
+                        EmptyInsightPlaceholder(stringResource(R.string.insights_highlights_empty))
+                    } else {
+                        HighlightsCard(report.highlights, visuals = report.aira.visuals)
+                    }
                 }
 
                 if (showAira) {

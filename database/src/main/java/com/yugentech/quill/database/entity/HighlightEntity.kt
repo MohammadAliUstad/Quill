@@ -23,6 +23,5 @@ data class HighlightEntity(
     val bookId: String,
     val locatorJson: String,
     val colorInt: Int,
-    val note: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

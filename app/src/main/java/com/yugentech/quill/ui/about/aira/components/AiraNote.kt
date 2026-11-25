@@ -27,14 +27,15 @@ import com.yugentech.theme.WindSongFont
  */
 @Composable
 fun AiraNote(modifier: Modifier = Modifier) {
-    val primary = MaterialTheme.colorScheme.primary
+    val accent = MaterialTheme.colorScheme.tertiary
+    val content = MaterialTheme.colorScheme.onTertiaryContainer
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
             .clip(RoundedCornerShape(32.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .background(MaterialTheme.colorScheme.tertiaryContainer)
             .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp)
     ) {
         // A large opening quote, set in a serif so it reads as a letter's mark, not an icon
@@ -44,7 +45,7 @@ fun AiraNote(modifier: Modifier = Modifier) {
             fontSize = 72.sp,
             lineHeight = 72.sp,
             fontWeight = FontWeight.Bold,
-            color = primary.copy(alpha = 0.5f),
+            color = accent.copy(alpha = 0.5f),
             modifier = Modifier.offset(x = (-4).dp, y = 8.dp)
         )
 
@@ -53,7 +54,7 @@ fun AiraNote(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Serif),
             fontSize = 18.sp,
             lineHeight = 28.sp,
-            color = MaterialTheme.colorScheme.onSurface
+            color = content
         )
 
         // Signed off at the bottom right, her name in script, as a letter ends
@@ -61,7 +62,7 @@ fun AiraNote(modifier: Modifier = Modifier) {
             text = "Aira",
             fontFamily = WindSongFont,
             fontSize = 36.sp,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = content,
             modifier = Modifier
                 .align(Alignment.End)
                 .padding(top = 16.dp)

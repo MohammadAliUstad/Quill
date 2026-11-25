@@ -405,8 +405,6 @@
     <string name="heatmap_subtitle">Votre année en pixels</string>
     <string name="heatmap_less">Moins</string>
     <string name="heatmap_more">Plus</string>
-    <string name="insights_for_you_title">Pour vous</string>
-    <string name="insights_for_you_subtitle">Vos habitudes de lecture, et quoi essayer ensuite</string>
     <string name="insights_this_week">Cette semaine</string>
     <string name="insights_days_of_week">%1$d/7</string>
     <string name="insights_days_label">jours</string>
@@ -438,12 +436,10 @@
     <string name="insights_status_finished">Terminés</string>
     <string name="insights_status_reading">En cours</string>
     <string name="insights_status_not_started">Non commencés</string>
-    <string name="insights_highlights_section_title">Surlignages et notes</string>
-    <string name="insights_highlights_section_subtitle">Ce qui vous a marqué</string>
-    <string name="insights_highlights_empty">Surlignez un passage pendant votre lecture pour le voir ici</string>
+    <string name="insights_highlights_section_title">Surlignages et images</string>
+    <string name="insights_highlights_section_subtitle">Ce qui vous a marqué, et ce que vous avez fait naître</string>
+    <string name="insights_highlights_empty">Surlignez un passage ou créez une image pendant votre lecture pour le voir ici</string>
     <string name="insights_highlights_label">Surlignages</string>
-    <string name="insights_notes_label">Notes</string>
-    <string name="insights_this_month_label">Ce mois-ci</string>
     <string name="insights_most_highlighted">Le plus surligné</string>
     <plurals name="insights_visuals_created">
         <item quantity="one">%1$d visuel créé</item>
@@ -496,12 +492,6 @@
     <string name="insights_finish_body">Au rythme où vous l\'avez lu jusqu\'ici, c\'est le temps qu\'il faut pour arriver au bout.</string>
     <string name="insights_waiting_title">%1$s vous attend</string>
     <string name="insights_waiting_body">Vous en êtes à %1$d %%, et vous l\'avez ouvert pour la dernière fois %2$s.</string>
-    <plurals name="insights_unread_title">
-        <item quantity="one">%1$d livre pas encore commencé</item>
-        <item quantity="many">%1$d livres pas encore commencés</item>
-        <item quantity="other">%1$d livres pas encore commencés</item>
-    </plurals>
-    <string name="insights_unread_body">Choisissez le prochain, pour qu\'il soit prêt quand vous finirez votre livre actuel.</string>
     <plurals name="insights_hours_title">
         <item quantity="one">%1$d heure de lecture</item>
         <item quantity="many">%1$d heures de lecture</item>
@@ -514,12 +504,6 @@
         <item quantity="other">%1$d surlignages ce mois-ci</item>
     </plurals>
     <string name="insights_highlights_body">Votre livre le plus surligné est %1$s.</string>
-    <string name="insights_notes_title">Essayez d\'ajouter une note</string>
-    <plurals name="insights_notes_body">
-        <item quantity="one">Vous avez fait %1$d surlignage. Une ligne sur ce qui vous a frappé rend le passage plus facile à retrouver.</item>
-        <item quantity="many">Vous avez fait %1$d surlignages. Une ligne sur ce qui vous a frappé rend le passage plus facile à retrouver.</item>
-        <item quantity="other">Vous avez fait %1$d surlignages. Une ligne sur ce qui vous a frappé rend le passage plus facile à retrouver.</item>
-    </plurals>
     <string name="unknown_book">Livre inconnu</string>
     <string name="no_downloads_list">Aucun livre téléchargé pour le moment.</string>
     <string name="delete_download_title">Supprimer le téléchargement ?</string>
@@ -815,7 +799,7 @@
     <string name="announcement_got_it">Compris</string>
     <string name="announcement_see_whats_new">Voir les nouveautés</string>
     <string name="announcement_maybe_later">Plus tard</string>
-    <string name="announcement_v5_title">Nouveautés de Quill 5.0</string>
+    <string name="announcement_v5_title">Nouveautés de Quill 5.0.0</string>
     <string name="announcement_v5_message">Un accueil et une connexion repensés, un écran Apparence redessiné, des chargements plus doux, et Quill parle désormais dix langues.</string>
     <string name="announcement_language_title">Quill parle votre langue</string>
     <string name="announcement_language_message">Choisissez parmi dix langues à tout moment dans Paramètres › Apparence › Langue. Quill change immédiatement.</string>

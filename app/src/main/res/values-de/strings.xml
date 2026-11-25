@@ -404,8 +404,6 @@
     <string name="heatmap_subtitle">Dein Jahr in Pixeln</string>
     <string name="heatmap_less">Weniger</string>
     <string name="heatmap_more">Mehr</string>
-    <string name="insights_for_you_title">Für dich</string>
-    <string name="insights_for_you_subtitle">Muster in deinem Lesen und was du als Nächstes ausprobieren kannst</string>
     <string name="insights_this_week">Diese Woche</string>
     <string name="insights_days_of_week">%1$d/7</string>
     <string name="insights_days_label">Tage</string>
@@ -437,12 +435,10 @@
     <string name="insights_status_finished">Beendet</string>
     <string name="insights_status_reading">Am Lesen</string>
     <string name="insights_status_not_started">Nicht begonnen</string>
-    <string name="insights_highlights_section_title">Markierungen und Notizen</string>
-    <string name="insights_highlights_section_subtitle">Was dir aufgefallen ist</string>
-    <string name="insights_highlights_empty">Markiere beim Lesen eine Passage, um sie hier zu sehen</string>
+    <string name="insights_highlights_section_title">Markierungen und Bilder</string>
+    <string name="insights_highlights_section_subtitle">Was dir aufgefallen ist und was du zum Leben erweckt hast</string>
+    <string name="insights_highlights_empty">Markiere beim Lesen eine Passage oder erstelle ein Bild, um es hier zu sehen</string>
     <string name="insights_highlights_label">Markierungen</string>
-    <string name="insights_notes_label">Notizen</string>
-    <string name="insights_this_month_label">Diesen Monat</string>
     <string name="insights_most_highlighted">Am meisten markiert</string>
     <plurals name="insights_visuals_created">
         <item quantity="one">%1$d Bild erstellt</item>
@@ -490,11 +486,6 @@
     <string name="insights_finish_body">So viel Lesezeit braucht es bis zum Ende, in dem Tempo, in dem du es bisher gelesen hast.</string>
     <string name="insights_waiting_title">%1$s wartet auf dich</string>
     <string name="insights_waiting_body">Du bist zu %1$d %% durch und hast es zuletzt %2$s geöffnet.</string>
-    <plurals name="insights_unread_title">
-        <item quantity="one">%1$d Buch noch nicht begonnen</item>
-        <item quantity="other">%1$d Bücher noch nicht begonnen</item>
-    </plurals>
-    <string name="insights_unread_body">Such dir das nächste aus, damit es bereitliegt, wenn du dein aktuelles Buch beendest.</string>
     <plurals name="insights_hours_title">
         <item quantity="one">%1$d Stunde Lesezeit</item>
         <item quantity="other">%1$d Stunden Lesezeit</item>
@@ -505,11 +496,6 @@
         <item quantity="other">%1$d Markierungen diesen Monat</item>
     </plurals>
     <string name="insights_highlights_body">Am meisten markiert hast du in %1$s.</string>
-    <string name="insights_notes_title">Füge doch eine Notiz hinzu</string>
-    <plurals name="insights_notes_body">
-        <item quantity="one">Du hast %1$d Markierung gesetzt. Eine Zeile dazu, warum dich eine Passage berührt hat, macht es leichter, zu ihr zurückzukehren.</item>
-        <item quantity="other">Du hast %1$d Markierungen gesetzt. Eine Zeile dazu, warum dich eine Passage berührt hat, macht es leichter, zu ihr zurückzukehren.</item>
-    </plurals>
     <string name="unknown_book">Unbekanntes Buch</string>
     <string name="no_downloads_list">Derzeit keine Bücher heruntergeladen.</string>
     <string name="delete_download_title">Download löschen?</string>
@@ -805,7 +791,7 @@
     <string name="announcement_got_it">Verstanden</string>
     <string name="announcement_see_whats_new">Neuigkeiten ansehen</string>
     <string name="announcement_maybe_later">Vielleicht später</string>
-    <string name="announcement_v5_title">Neu in Quill 5.0</string>
+    <string name="announcement_v5_title">Neu in Quill 5.0.0</string>
     <string name="announcement_v5_message">Ein neuer Willkommens- und Anmeldebildschirm, eine überarbeitete Darstellung, ruhigeres Laden, und Quill spricht jetzt zehn Sprachen.</string>
     <string name="announcement_language_title">Quill spricht deine Sprache</string>
     <string name="announcement_language_message">Wähle jederzeit unter Einstellungen › Darstellung › Sprache aus zehn Sprachen. Quill wechselt sofort.</string>

@@ -448,8 +448,6 @@
     <string name="heatmap_subtitle">Your year in pixels</string>
     <string name="heatmap_less">Less</string>
     <string name="heatmap_more">More</string>
-    <string name="insights_for_you_title">For you</string>
-    <string name="insights_for_you_subtitle">Patterns in how you read, and what to try next</string>
     <string name="insights_this_week">This week</string>
     <string name="insights_days_of_week">%1$d/7</string>
     <string name="insights_days_label">days</string>
@@ -481,12 +479,10 @@
     <string name="insights_status_finished">Finished</string>
     <string name="insights_status_reading">Reading</string>
     <string name="insights_status_not_started">Not started</string>
-    <string name="insights_highlights_section_title">Highlights and notes</string>
-    <string name="insights_highlights_section_subtitle">What stood out to you</string>
-    <string name="insights_highlights_empty">Highlight a passage while reading to see it here</string>
+    <string name="insights_highlights_section_title">Highlights and visuals</string>
+    <string name="insights_highlights_section_subtitle">What stood out to you, and what you brought to life</string>
+    <string name="insights_highlights_empty">Highlight a passage or create a visual while reading to see it here</string>
     <string name="insights_highlights_label">Highlights</string>
-    <string name="insights_notes_label">Notes</string>
-    <string name="insights_this_month_label">This month</string>
     <string name="insights_most_highlighted">Most highlighted</string>
     <plurals name="insights_visuals_created">
         <item quantity="one">%1$d visual created</item>
@@ -534,11 +530,6 @@
     <string name="insights_finish_body">At the pace you\'ve read it so far, that\'s the reading it takes to reach the end.</string>
     <string name="insights_waiting_title">%1$s is waiting for you</string>
     <string name="insights_waiting_body">You\'re %1$d%% through, and last opened it %2$s.</string>
-    <plurals name="insights_unread_title">
-        <item quantity="one">%1$d book not started yet</item>
-        <item quantity="other">%1$d books not started yet</item>
-    </plurals>
-    <string name="insights_unread_body">Pick the one to read next, so it\'s ready when you finish your current book.</string>
     <plurals name="insights_hours_title">
         <item quantity="one">%1$d hour of reading</item>
         <item quantity="other">%1$d hours of reading</item>
@@ -549,11 +540,6 @@
         <item quantity="other">%1$d highlights this month</item>
     </plurals>
     <string name="insights_highlights_body">Your most highlighted book is %1$s.</string>
-    <string name="insights_notes_title">Try adding a note</string>
-    <plurals name="insights_notes_body">
-        <item quantity="one">You\'ve made %1$d highlight. A line on why a passage struck you makes it easier to come back to.</item>
-        <item quantity="other">You\'ve made %1$d highlights. A line on why a passage struck you makes it easier to come back to.</item>
-    </plurals>
     <string name="unknown_book">Unknown Book</string>
     <string name="no_downloads_list">No books currently downloaded.</string>
     <string name="delete_download_title">Delete Download?</string>
@@ -850,7 +836,7 @@
     <string name="announcement_got_it">Got it</string>
     <string name="announcement_see_whats_new">See What\'s New</string>
     <string name="announcement_maybe_later">Maybe Later</string>
-    <string name="announcement_v5_title">What\'s New in Quill 5.0</string>
+    <string name="announcement_v5_title">What\'s New in Quill 5.0.0</string>
     <string name="announcement_v5_message">A fresh welcome and sign-in, a redesigned Appearance screen, calmer loading, and Quill now speaks ten languages.</string>
     <string name="announcement_language_title">Quill Speaks Your Language</string>
     <string name="announcement_language_message">Pick from ten languages anytime under Settings › Appearance › Language. Quill switches straight away.</string>

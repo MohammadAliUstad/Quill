@@ -457,8 +457,6 @@
     <string name="heatmap_subtitle">Ваш год в пикселях</string>
     <string name="heatmap_less">Меньше</string>
     <string name="heatmap_more">Больше</string>
-    <string name="insights_for_you_title">Для вас</string>
-    <string name="insights_for_you_subtitle">Как вы читаете и что попробовать дальше</string>
     <string name="insights_this_week">Эта неделя</string>
     <string name="insights_days_of_week">%1$d/7</string>
     <string name="insights_days_label">дней</string>
@@ -490,12 +488,10 @@
     <string name="insights_status_finished">Прочитано</string>
     <string name="insights_status_reading">Читаю</string>
     <string name="insights_status_not_started">Не начато</string>
-    <string name="insights_highlights_section_title">Выделения и заметки</string>
-    <string name="insights_highlights_section_subtitle">Что вам запомнилось</string>
-    <string name="insights_highlights_empty">Выделите отрывок во время чтения, чтобы увидеть его здесь</string>
+    <string name="insights_highlights_section_title">Выделения и иллюстрации</string>
+    <string name="insights_highlights_section_subtitle">Что вам запомнилось и что вы оживили</string>
+    <string name="insights_highlights_empty">Выделите отрывок или создайте иллюстрацию во время чтения, чтобы увидеть их здесь</string>
     <string name="insights_highlights_label">Выделения</string>
-    <string name="insights_notes_label">Заметки</string>
-    <string name="insights_this_month_label">В этом месяце</string>
     <string name="insights_most_highlighted">Больше всего выделений</string>
     <plurals name="insights_visuals_created">
         <item quantity="one">Создано %1$d изображение</item>
@@ -553,13 +549,6 @@
     <string name="insights_finish_body">Столько потребуется, чтобы дочитать, в том темпе, в каком вы читали до сих пор.</string>
     <string name="insights_waiting_title">«%1$s» ждёт вас</string>
     <string name="insights_waiting_body">Прочитано %1$d%%, последний раз вы открывали книгу %2$s.</string>
-    <plurals name="insights_unread_title">
-        <item quantity="one">%1$d книга ещё не начата</item>
-        <item quantity="few">%1$d книги ещё не начаты</item>
-        <item quantity="many">%1$d книг ещё не начато</item>
-        <item quantity="other">%1$d книги ещё не начаты</item>
-    </plurals>
-    <string name="insights_unread_body">Выберите, что читать дальше, чтобы книга была наготове, когда вы закончите текущую.</string>
     <plurals name="insights_hours_title">
         <item quantity="one">%1$d час чтения</item>
         <item quantity="few">%1$d часа чтения</item>
@@ -574,13 +563,6 @@
         <item quantity="other">%1$d выделения в этом месяце</item>
     </plurals>
     <string name="insights_highlights_body">Больше всего выделений в книге «%1$s».</string>
-    <string name="insights_notes_title">Попробуйте добавить заметку</string>
-    <plurals name="insights_notes_body">
-        <item quantity="one">У вас %1$d выделение. Строчка о том, чем вас зацепил отрывок, поможет к нему вернуться.</item>
-        <item quantity="few">У вас %1$d выделения. Строчка о том, чем вас зацепил отрывок, поможет к нему вернуться.</item>
-        <item quantity="many">У вас %1$d выделений. Строчка о том, чем вас зацепил отрывок, поможет к нему вернуться.</item>
-        <item quantity="other">У вас %1$d выделения. Строчка о том, чем вас зацепил отрывок, поможет к нему вернуться.</item>
-    </plurals>
     <string name="unknown_book">Неизвестная книга</string>
     <string name="no_downloads_list">Скачанных книг нет.</string>
     <string name="delete_download_title">Удалить загрузку?</string>
@@ -876,7 +858,7 @@
     <string name="announcement_got_it">Понятно</string>
     <string name="announcement_see_whats_new">Что нового</string>
     <string name="announcement_maybe_later">Может, позже</string>
-    <string name="announcement_v5_title">Что нового в Quill 5.0</string>
+    <string name="announcement_v5_title">Что нового в Quill 5.0.0</string>
     <string name="announcement_v5_message">Новое приветствие и вход, обновлённый экран оформления, более спокойная загрузка, а ещё Quill теперь говорит на десяти языках.</string>
     <string name="announcement_language_title">Quill говорит на вашем языке</string>
     <string name="announcement_language_message">Выбирайте из десяти языков в любое время: Настройки › Оформление › Язык. Quill переключится сразу.</string>
