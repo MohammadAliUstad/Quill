@@ -1,0 +1,63 @@
+name: Social post
+
+on:
+  schedule:
+    - cron: "0 14 * * *" # 14:00 UTC daily: evening in Europe and India, morning in the US
+  workflow_dispatch:
+    inputs:
+      id:
+        description: "Post id from marketing/posts.json (empty = next due post)"
+        required: false
+      only:
+        description: "Comma-separated platforms, e.g. bluesky,mastodon (empty = all)"
+        required: false
+      dry_run:
+        description: "Dry run (show, don't post)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: social-post
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Post
+        env:
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+          MASTODON_URL: ${{ secrets.MASTODON_URL }}
+          MASTODON_TOKEN: ${{ secrets.MASTODON_TOKEN }}
+          INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN }}
+          THREADS_TOKEN: ${{ secrets.THREADS_TOKEN }}
+          INPUT_ID: ${{ inputs.id }}
+          INPUT_ONLY: ${{ inputs.only }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=()
+          if [ -n "$INPUT_ID" ]; then args+=(--id "$INPUT_ID"); fi
+          if [ -n "$INPUT_ONLY" ]; then args+=(--only "$INPUT_ONLY"); fi
+          if [ "$INPUT_DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          node marketing/post.mjs next "${args[@]}"
+
+      - name: Save posting state
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add marketing/state.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Social: update posting state [skip ci]"
+          git pull --rebase
+          git push

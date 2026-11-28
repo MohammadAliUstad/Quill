@@ -8,7 +8,7 @@ import androidx.core.net.toUri
 // Launcher background colours, so each icon sits on the same tile as on the home screen.
 val MyntIconBackground = Color(0xFFFBF6E4)
 val SessionsIconBackground = Color(0xFFFFE6C7)
-val RyoriIconBackground = Color(0xFFFFFBEB)
+val RyoriIconBackground = Color(0xFFFDDCB5)
 val HajimeIconBackground = Color(0xFFF5F0E8)
 
 const val SESSIONS_PACKAGE = "com.yugentech.sessions"

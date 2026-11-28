@@ -1,0 +1,42 @@
+name: Refresh social tokens
+
+# Instagram and Threads tokens expire after 60 days unless refreshed. This refreshes them weekly
+# and writes the new values back into the repo's secrets.
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Refresh tokens
+        env:
+          INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN }}
+          THREADS_TOKEN: ${{ secrets.THREADS_TOKEN }}
+          REFRESHED_ENV: ${{ runner.temp }}/refreshed.env
+        run: node marketing/post.mjs refresh
+
+      - name: Save new tokens as secrets
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}
+          REFRESHED_ENV: ${{ runner.temp }}/refreshed.env
+        run: |
+          [ -f "$REFRESHED_ENV" ] || exit 0
+          while IFS='=' read -r name value; do
+            [ -n "$name" ] || continue
+            printf '%s' "$value" | gh secret set "$name" --repo "$GITHUB_REPOSITORY"
+            echo "Updated $name"
+          done < "$REFRESHED_ENV"
+          rm -f "$REFRESHED_ENV"

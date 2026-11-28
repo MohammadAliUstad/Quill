@@ -1,0 +1,17 @@
+{
+  "posts": [
+    {
+      "id": "hello-world",
+      "draft": true,
+      "date": "2026-12-01",
+      "platforms": ["bluesky", "mastodon", "threads"],
+      "text": "Hello! Quill is a free EPUB reader for Android, with Aira, a reading companion that answers questions about your book without spoiling what's ahead.\n\nGet it on Google Play: https://play.google.com/store/apps/details?id=com.yugentech.quill",
+      "image": "../graphics/Feature Graphic.png",
+      "alt": "Quill, your AI reading companion. A phone shows the book page for Sylvie and Bruno by Lewis Carroll, with Read and Shelf buttons, the chapter list and an Aira button in the corner.",
+      "tags": ["books", "ebooks", "Android"],
+      "overrides": {
+        "mastodon": { "tags": ["introduction", "bookstodon", "books", "ebooks", "Android", "OpenSource"] }
+      }
+    }
+  ]
+}
